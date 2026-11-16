@@ -1,0 +1,286 @@
+{
+  "about": "حالات المراجعة العاشرة (R10-01 إلى R10-04). النتائج المتوقعة كُتبت يدويًا من نص القاعدة، لا من تشغيل أي من النسختين. يشغّلها tests/test_r10.py على المحرك وطبقة البنود بلغة بايثون، و tests/test_r10.mjs على نسختي التطبيق بلغة JavaScript. الخطوة {\"ev\": حدث, \"ok\": true} تعني أن الحدث يُقبل، و\"code\" رمز الرفض المتوقع، و\"refused\": true رفض لا يهم رمزه. {\"do\": \"restore\"} تحفظ الحالة نصًّا وتستعيدها، و{\"do\": \"replay\"} تعيد بناءها من سجل الأحداث المقبولة. expect تُفحص في آخر الحالة، وتُفحص مرة ثانية بعد الحفظ والاستعادة ومرة ثالثة بعد إعادة تشغيل السجل.",
+  "bases": {
+    "lesson_day1": [
+      {"ev": {"type": "session_start", "session": "S1", "kind": "start", "day": 1}, "ok": true},
+      {"ev": {"type": "open_lesson", "session": "S1", "skill": "1-1-1"}, "ok": true},
+      {"ev": {"type": "lesson_opening_result", "session": "S1", "skill": "1-1-1", "outcome": "full_error"}, "ok": true},
+      {"ev": {"type": "understanding_proved", "session": "S1", "skill": "1-1-1"}, "ok": true},
+      {"ev": {"type": "session_end", "session": "S1"}, "ok": true}
+    ],
+    "lesson_day10_check_day11": [
+      {"ev": {"type": "session_start", "session": "S1", "kind": "start", "day": 10}, "ok": true},
+      {"ev": {"type": "open_lesson", "session": "S1", "skill": "1-1-1"}, "ok": true},
+      {"ev": {"type": "lesson_opening_result", "session": "S1", "skill": "1-1-1", "outcome": "full_error"}, "ok": true},
+      {"ev": {"type": "understanding_proved", "session": "S1", "skill": "1-1-1"}, "ok": true},
+      {"ev": {"type": "session_end", "session": "S1"}, "ok": true},
+      {"ev": {"type": "session_start", "session": "S2", "kind": "follow", "day": 11}, "ok": true},
+      {"ev": {"type": "check_started", "session": "S2", "skill": "1-1-1", "check_id": "k1", "content_version": 1}, "ok": true},
+      {"ev": {"type": "session_end", "session": "S2"}, "ok": true}
+    ]
+  },
+  "engine": [
+    {
+      "id": "R10-01-a", "finding": "R10-01", "reproduced_by_reviewer": true,
+      "title": "إبطال جلسة بداية محاولة معلّقة: لا استئناف ولا اعتماد لنتيجتها، والطريق ترك المحاولة ثم محاولة جديدة",
+      "base": "lesson_day1",
+      "steps": [
+        {"ev": {"type": "session_start", "session": "S2", "kind": "follow", "day": 2}, "ok": true},
+        {"ev": {"type": "check_started", "session": "S2", "skill": "1-1-1", "check_id": "k1", "content_version": 1}, "ok": true},
+        {"ev": {"type": "session_end", "session": "S2"}, "ok": true},
+        {"ev": {"type": "invalidate_session", "target": "S2"}, "ok": true},
+        {"ev": {"type": "session_start", "session": "S3", "kind": "follow", "day": 3}, "ok": true},
+        {"ev": {"type": "check_resumed", "session": "S3", "skill": "1-1-1", "check_id": "k1"}, "code": "check_state"},
+        {"ev": {"type": "independence_result", "session": "S3", "skill": "1-1-1", "check_id": "k1", "result": "pass"}, "refused": true},
+        {"ev": {"type": "check_started", "session": "S3", "skill": "1-1-1", "check_id": "k2", "content_version": 1}, "code": "check_pending"}
+      ],
+      "expect": {"state:1-1-1": "stumbled", "check:k1": "needs_restart", "teach:S3": 0, "valid_independent:1-1-1": 0},
+      "then": [
+        {"ev": {"type": "check_abandoned", "check_id": "k1", "reason": "إبطال جلسة بدايتها"}, "ok": true},
+        {"ev": {"type": "check_started", "session": "S3", "skill": "1-1-1", "check_id": "k2", "content_version": 1}, "ok": true},
+        {"ev": {"type": "independence_result", "session": "S3", "skill": "1-1-1", "check_id": "k2", "result": "pass"}, "ok": true}
+      ],
+      "expect_then": {"state:1-1-1": "met", "check:k1": "abandoned", "check:k2": "closed", "valid_independent:1-1-1": 1}
+    },
+    {
+      "id": "R10-01-b", "finding": "R10-01", "reproduced_by_reviewer": false,
+      "title": "إبطال جلسة وسطى استؤنفت فيها المحاولة وعُرضت فيها بنود: النتيجة نفسها",
+      "base": "lesson_day1",
+      "steps": [
+        {"ev": {"type": "session_start", "session": "S2", "kind": "follow", "day": 2}, "ok": true},
+        {"ev": {"type": "check_started", "session": "S2", "skill": "1-1-1", "check_id": "k1", "content_version": 1}, "ok": true},
+        {"ev": {"type": "session_end", "session": "S2"}, "ok": true},
+        {"ev": {"type": "session_start", "session": "S3", "kind": "follow", "day": 3}, "ok": true},
+        {"ev": {"type": "check_resumed", "session": "S3", "skill": "1-1-1", "check_id": "k1"}, "ok": true},
+        {"ev": {"type": "session_end", "session": "S3"}, "ok": true},
+        {"ev": {"type": "invalidate_session", "target": "S3"}, "ok": true},
+        {"ev": {"type": "session_start", "session": "S4", "kind": "follow", "day": 4}, "ok": true},
+        {"ev": {"type": "check_resumed", "session": "S4", "skill": "1-1-1", "check_id": "k1"}, "code": "check_state"},
+        {"ev": {"type": "independence_result", "session": "S4", "skill": "1-1-1", "check_id": "k1", "result": "pass"}, "refused": true}
+      ],
+      "expect": {"state:1-1-1": "stumbled", "check:k1": "needs_restart", "teach:S4": 0, "valid_independent:1-1-1": 0}
+    },
+    {
+      "id": "R10-01-c", "finding": "R10-01", "reproduced_by_reviewer": false,
+      "title": "إبطال جلسة أسهمت في محاولة مكتملة، غير جلسة إغلاقها: يسقط دليل الاجتياز، وتبقى بنوده في السجل، وتُتاح محاولة جديدة",
+      "base": "lesson_day1",
+      "steps": [
+        {"ev": {"type": "session_start", "session": "S2", "kind": "follow", "day": 2}, "ok": true},
+        {"ev": {"type": "check_started", "session": "S2", "skill": "1-1-1", "check_id": "k1", "content_version": 1}, "ok": true},
+        {"ev": {"type": "session_end", "session": "S2"}, "ok": true},
+        {"ev": {"type": "session_start", "session": "S3", "kind": "follow", "day": 3}, "ok": true},
+        {"ev": {"type": "check_resumed", "session": "S3", "skill": "1-1-1", "check_id": "k1"}, "ok": true},
+        {"ev": {"type": "independence_result", "session": "S3", "skill": "1-1-1", "check_id": "k1", "result": "pass", "items": ["i1", "i2", "i3", "i4", "i5", "i6", "i7", "i8", "i9", "i10"]}, "ok": true},
+        {"ev": {"type": "session_end", "session": "S3"}, "ok": true},
+        {"ev": {"type": "invalidate_session", "target": "S2"}, "ok": true},
+        {"do": "restore"},
+        {"do": "replay"}
+      ],
+      "expect": {"state:1-1-1": "stumbled", "valid_independent:1-1-1": 0, "independent_items:1-1-1": ["i1", "i2", "i3", "i4", "i5", "i6", "i7", "i8", "i9", "i10"]},
+      "then": [
+        {"ev": {"type": "session_start", "session": "S4", "kind": "follow", "day": 4}, "ok": true},
+        {"ev": {"type": "check_started", "session": "S4", "skill": "1-1-1", "check_id": "k2", "content_version": 1}, "ok": true}
+      ],
+      "expect_then": {"check:k2": "pending"}
+    },
+    {
+      "id": "R10-01-d", "finding": "R10-01", "reproduced_by_reviewer": false,
+      "title": "إبطال جلسة لا علاقة لها بالمحاولة لا يؤثر فيها",
+      "base": "lesson_day1",
+      "steps": [
+        {"ev": {"type": "session_start", "session": "S2", "kind": "follow", "day": 2}, "ok": true},
+        {"ev": {"type": "check_started", "session": "S2", "skill": "1-1-1", "check_id": "k1", "content_version": 1}, "ok": true},
+        {"ev": {"type": "session_end", "session": "S2"}, "ok": true},
+        {"ev": {"type": "session_start", "session": "S3", "kind": "follow", "day": 3}, "ok": true},
+        {"ev": {"type": "session_end", "session": "S3"}, "ok": true},
+        {"ev": {"type": "invalidate_session", "target": "S3"}, "ok": true},
+        {"ev": {"type": "session_start", "session": "S4", "kind": "follow", "day": 4}, "ok": true},
+        {"ev": {"type": "check_resumed", "session": "S4", "skill": "1-1-1", "check_id": "k1"}, "ok": true},
+        {"ev": {"type": "independence_result", "session": "S4", "skill": "1-1-1", "check_id": "k1", "result": "pass"}, "ok": true}
+      ],
+      "expect": {"state:1-1-1": "met", "check:k1": "closed", "valid_independent:1-1-1": 1}
+    },
+    {
+      "id": "R10-01-e", "finding": "R10-01", "reproduced_by_reviewer": false,
+      "title": "إبطال جلسة محاولة أخفقت لا يُسقط دليل اجتياز محاولة أخرى",
+      "base": "lesson_day1",
+      "steps": [
+        {"ev": {"type": "session_start", "session": "S2", "kind": "follow", "day": 2}, "ok": true},
+        {"ev": {"type": "check_started", "session": "S2", "skill": "1-1-1", "check_id": "k1", "content_version": 1}, "ok": true},
+        {"ev": {"type": "independence_result", "session": "S2", "skill": "1-1-1", "check_id": "k1", "result": "fail"}, "ok": true},
+        {"ev": {"type": "session_end", "session": "S2"}, "ok": true},
+        {"ev": {"type": "session_start", "session": "S3", "kind": "follow", "day": 3}, "ok": true},
+        {"ev": {"type": "resume_lesson", "session": "S3", "skill": "1-1-1"}, "ok": true},
+        {"ev": {"type": "session_end", "session": "S3"}, "ok": true},
+        {"ev": {"type": "session_start", "session": "S4", "kind": "follow", "day": 4}, "ok": true},
+        {"ev": {"type": "check_started", "session": "S4", "skill": "1-1-1", "check_id": "k2", "content_version": 1}, "ok": true},
+        {"ev": {"type": "independence_result", "session": "S4", "skill": "1-1-1", "check_id": "k2", "result": "pass"}, "ok": true},
+        {"ev": {"type": "session_end", "session": "S4"}, "ok": true},
+        {"ev": {"type": "invalidate_session", "target": "S2"}, "ok": true}
+      ],
+      "expect": {"state:1-1-1": "met", "check:k2": "closed", "valid_independent:1-1-1": 1}
+    },
+    {
+      "id": "R10-02-a", "finding": "R10-02", "reproduced_by_reviewer": true,
+      "title": "جلسة بتنبيه تاريخ: يُرفض استئناف الفحص، ولا يُتجاوز المنع بإرسال النتيجة مباشرة، ولا تُستهلك الحصة",
+      "base": "lesson_day10_check_day11",
+      "steps": [
+        {"ev": {"type": "session_start", "session": "S3", "kind": "follow", "day": 5}, "ok": true},
+        {"ev": {"type": "check_resumed", "session": "S3", "skill": "1-1-1", "check_id": "k1"}, "code": "date_unconfirmed"},
+        {"ev": {"type": "independence_result", "session": "S3", "skill": "1-1-1", "check_id": "k1", "result": "pass"}, "code": "date_unconfirmed"}
+      ],
+      "expect": {"clock:S3": true, "state:1-1-1": "stumbled", "check:k1": "pending", "teach:S3": 0, "valid_independent:1-1-1": 0}
+    },
+    {
+      "id": "R10-02-b", "finding": "R10-02", "reproduced_by_reviewer": false,
+      "title": "تأكيد تاريخ أسبق من دليل الفهم لا يسمح باعتماد دليل متناقض زمنيًا",
+      "base": "lesson_day10_check_day11",
+      "steps": [
+        {"ev": {"type": "session_start", "session": "S3", "kind": "follow", "day": 5}, "ok": true},
+        {"ev": {"type": "date_confirmed", "target": "S3"}, "ok": true},
+        {"ev": {"type": "check_resumed", "session": "S3", "skill": "1-1-1", "check_id": "k1"}, "code": "check_same_day"},
+        {"ev": {"type": "independence_result", "session": "S3", "skill": "1-1-1", "check_id": "k1", "result": "pass"}, "refused": true}
+      ],
+      "expect": {"clock:S3": false, "state:1-1-1": "stumbled", "check:k1": "pending", "teach:S3": 0, "valid_independent:1-1-1": 0}
+    },
+    {
+      "id": "R10-02-c", "finding": "R10-02", "reproduced_by_reviewer": false,
+      "title": "الاستئناف في تاريخ صالح يعمل، وموعد الاحتفاظ الأول بعد 7 أيام من يوم جلسة الاجتياز",
+      "base": "lesson_day10_check_day11",
+      "steps": [
+        {"ev": {"type": "session_start", "session": "S3", "kind": "follow", "day": 12}, "ok": true},
+        {"ev": {"type": "check_resumed", "session": "S3", "skill": "1-1-1", "check_id": "k1"}, "ok": true},
+        {"ev": {"type": "independence_result", "session": "S3", "skill": "1-1-1", "check_id": "k1", "result": "pass"}, "ok": true}
+      ],
+      "expect": {"clock:S3": false, "state:1-1-1": "met", "check:k1": "closed", "retention_due_day:1-1-1": 19}
+    },
+    {
+      "id": "R10-02-d", "finding": "R10-02", "reproduced_by_reviewer": false,
+      "title": "تاريخ لاحق بفجوة كبيرة: الاستئناف ممنوع حتى يؤكد الوالد، ثم يُقبل، والاحتفاظ من اليوم المؤكد",
+      "base": "lesson_day10_check_day11",
+      "steps": [
+        {"ev": {"type": "session_start", "session": "S3", "kind": "follow", "day": 60}, "ok": true},
+        {"ev": {"type": "check_resumed", "session": "S3", "skill": "1-1-1", "check_id": "k1"}, "code": "date_unconfirmed"},
+        {"ev": {"type": "date_confirmed", "target": "S3"}, "ok": true},
+        {"ev": {"type": "check_resumed", "session": "S3", "skill": "1-1-1", "check_id": "k1"}, "ok": true},
+        {"ev": {"type": "independence_result", "session": "S3", "skill": "1-1-1", "check_id": "k1", "result": "pass"}, "ok": true}
+      ],
+      "expect": {"state:1-1-1": "met", "retention_due_day:1-1-1": 67}
+    },
+    {
+      "id": "R10-04-a", "finding": "R10-04", "reproduced_by_reviewer": true,
+      "title": "أول جلسة بتاريخ خاطئ 500، ثم اليوم 12 بتنبيه يؤكده الوالد: اليوم 13 يُقبل بلا تنبيه",
+      "steps": [
+        {"ev": {"type": "session_start", "session": "S1", "kind": "start", "day": 500}, "ok": true},
+        {"ev": {"type": "session_end", "session": "S1"}, "ok": true},
+        {"ev": {"type": "session_start", "session": "S2", "kind": "follow", "day": 12}, "ok": true},
+        {"ev": {"type": "date_confirmed", "target": "S2"}, "ok": true},
+        {"ev": {"type": "session_end", "session": "S2"}, "ok": true},
+        {"ev": {"type": "session_start", "session": "S3", "kind": "follow", "day": 13}, "ok": true}
+      ],
+      "expect": {"clock:S2": false, "clock:S3": false}
+    },
+    {
+      "id": "R10-04-b", "finding": "R10-04", "reproduced_by_reviewer": false,
+      "title": "تاريخ مستقبلي خاطئ لم يُؤكَّد لا يصير مرجعًا: اليوم 12 بعد اليوم 10 يُقبل بلا تنبيه",
+      "steps": [
+        {"ev": {"type": "session_start", "session": "S1", "kind": "start", "day": 10}, "ok": true},
+        {"ev": {"type": "session_end", "session": "S1"}, "ok": true},
+        {"ev": {"type": "session_start", "session": "S2", "kind": "follow", "day": 500}, "ok": true},
+        {"ev": {"type": "session_end", "session": "S2"}, "ok": true},
+        {"ev": {"type": "session_start", "session": "S3", "kind": "follow", "day": 12}, "ok": true}
+      ],
+      "expect": {"clock:S2": true, "clock:S3": false}
+    },
+    {
+      "id": "R10-04-c", "finding": "R10-04", "reproduced_by_reviewer": false,
+      "title": "بعد إصلاح المرجع: رجوع زمني جديد يُكتشف، وفجوة أكثر من 30 يومًا تُكتشف، والمرجع نفسه بعد الحفظ وإعادة التشغيل",
+      "steps": [
+        {"ev": {"type": "session_start", "session": "S1", "kind": "start", "day": 500}, "ok": true},
+        {"ev": {"type": "session_end", "session": "S1"}, "ok": true},
+        {"ev": {"type": "session_start", "session": "S2", "kind": "follow", "day": 12}, "ok": true},
+        {"ev": {"type": "date_confirmed", "target": "S2"}, "ok": true},
+        {"ev": {"type": "session_end", "session": "S2"}, "ok": true},
+        {"do": "restore"},
+        {"do": "replay"},
+        {"ev": {"type": "session_start", "session": "S3", "kind": "follow", "day": 8}, "ok": true},
+        {"ev": {"type": "session_end", "session": "S3"}, "ok": true},
+        {"ev": {"type": "session_start", "session": "S4", "kind": "follow", "day": 43}, "ok": true},
+        {"ev": {"type": "session_end", "session": "S4"}, "ok": true},
+        {"ev": {"type": "session_start", "session": "S5", "kind": "follow", "day": 42}, "ok": true}
+      ],
+      "expect": {"clock:S3": true, "clock:S4": true, "clock:S5": false}
+    },
+    {
+      "id": "R10-04-d", "finding": "R10-04", "reproduced_by_reviewer": false,
+      "title": "إبطال جلسة لا يغيّر مرجع التاريخ: الإبطال يخص الطفل لا ساعة الجهاز",
+      "steps": [
+        {"ev": {"type": "session_start", "session": "S1", "kind": "start", "day": 10}, "ok": true},
+        {"ev": {"type": "session_end", "session": "S1"}, "ok": true},
+        {"ev": {"type": "session_start", "session": "S2", "kind": "follow", "day": 11}, "ok": true},
+        {"ev": {"type": "session_end", "session": "S2"}, "ok": true},
+        {"ev": {"type": "invalidate_session", "target": "S2"}, "ok": true},
+        {"ev": {"type": "session_start", "session": "S3", "kind": "follow", "day": 41}, "ok": true}
+      ],
+      "expect": {"clock:S3": false}
+    }
+  ],
+  "items": [
+    {
+      "id": "R10-03-a", "finding": "R10-03", "reproduced_by_reviewer": true,
+      "title": "خطأ أول ثم تلميح ثم انقطاع: يبقى التلميح، والبند مدعوم غير مكتمل، ولا يدخل مقام النجاح بمساعدة",
+      "answer": 1, "assess": false,
+      "raw": [["confirm", 0], ["support", "hint"], ["interrupt"]],
+      "record": {"status": "complete", "first": false, "support_before": [], "later": [], "support_unanswered": ["hint"], "final": "incomplete"},
+      "indicators": {"assisted.den": 0, "assisted.supported_unfinished": 1, "first_answer.num": 0, "first_answer.den": 1}
+    },
+    {
+      "id": "R10-03-b", "finding": "R10-03", "reproduced_by_reviewer": false,
+      "title": "تلميح ثم انقطاع قبل أي إجابة: الدعم محفوظ قبل الإجابة الأولى كما كان",
+      "answer": 1, "assess": false,
+      "raw": [["support", "hint"], ["interrupt"]],
+      "record": {"status": "interrupted", "first": null, "support_before": ["hint"], "later": [], "final": "incomplete"},
+      "indicators": {"assisted.den": 0, "assisted.supported_unfinished": 1, "interrupted.count": 1, "interrupted.with_support": 1}
+    },
+    {
+      "id": "R10-03-c", "finding": "R10-03", "reproduced_by_reviewer": false,
+      "title": "خطأ أول ثم تلميح ثم إجابة صحيحة: الأولى خاطئة، والنهائية نجاح بمساعدة",
+      "answer": 1, "assess": false,
+      "raw": [["confirm", 0], ["support", "hint"], ["confirm", 1], ["end"]],
+      "record": {"status": "complete", "first": false, "support_before": [], "later": [{"correct": true, "support": ["hint"]}], "final": "correct"},
+      "indicators": {"assisted.num": 1, "assisted.den": 1, "assisted.supported_unfinished": 0, "first_answer.num": 0}
+    },
+    {
+      "id": "R10-03-d", "finding": "R10-03", "reproduced_by_reviewer": false,
+      "title": "دعمان بلا إجابة بعدهما ثم انقطاع: يُحفظ الاثنان، ويُعدّ البند مرة واحدة",
+      "answer": 1, "assess": false,
+      "raw": [["confirm", 0], ["support", "hint"], ["support", "extra_model"], ["interrupt"]],
+      "record": {"support_unanswered": ["hint", "extra_model"], "final": "incomplete"},
+      "indicators": {"assisted.den": 0, "assisted.supported_unfinished": 1}
+    },
+    {
+      "id": "R10-03-e", "finding": "R10-03", "reproduced_by_reviewer": false,
+      "title": "حفظ أحداث البند الخام نصًّا بين التلميح والانقطاع ثم إكمالها: لا يضيع الدعم",
+      "answer": 1, "assess": false,
+      "raw": [["confirm", 0], ["support", "hint"], ["interrupt"]], "split": 2,
+      "record": {"support_unanswered": ["hint"], "final": "incomplete"},
+      "indicators": {"assisted.supported_unfinished": 1}
+    },
+    {
+      "id": "R10-03-f", "finding": "R10-03", "reproduced_by_reviewer": false,
+      "title": "تلميح بعد آخر إجابة صحيحة ثم نهاية البند: يُحفظ، ولا يجعل البند نجاحًا بمساعدة لأن الإجابة لم تأتِ بعده",
+      "answer": 1, "assess": false,
+      "raw": [["confirm", 1], ["support", "hint"], ["end"]],
+      "record": {"status": "complete", "first": true, "support_before": [], "later": [], "support_unanswered": ["hint"], "final": "correct"},
+      "indicators": {"assisted.den": 0, "assisted.supported_unfinished": 0, "independent.num": 1}
+    }
+  ],
+  "item_sets": [
+    {
+      "id": "R10-03-g", "finding": "R10-03", "reproduced_by_reviewer": false,
+      "title": "مؤشرات لبندين معًا (a و c): بند مدعوم غير مكتمل واحد، ونجاح بمساعدة واحد من واحد",
+      "of": ["R10-03-a", "R10-03-c"],
+      "indicators": {"assisted.num": 1, "assisted.den": 1, "assisted.supported_unfinished": 1}
+    }
+  ]
+}

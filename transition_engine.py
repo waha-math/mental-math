@@ -140,13 +140,15 @@ TABLE = [
     ('session_start', 'بدء جلسة',
      'لا جلسة مفتوحة. يوم الأسرة عدد صحيح غير سالب. بحث: أقل من 4 جلسات بحث ولم تقع جلسة البدء. بدء: مرة '
      'واحدة. متابعة: بعد جلسة البدء',
-     'تُفتح الجلسة بنوعها ويومها وعدّاداتها صفر. إن جاء يومها قبل يوم آخر جلسة، أو بعده بأكثر من 30 يومًا، '
-     'عُلّمت بتنبيه تاريخ (9.1)',
+     'تُفتح الجلسة بنوعها ويومها وعدّاداتها صفر. مرجع التاريخ يوم آخر جلسة، بترتيب الجلسات، تاريخها موثوق: لم '
+     'تُعلَّم بتنبيه، أو عُلّمت ثم أكّد الوالد تاريخها. الجلسة المبطلة تبقى مرجعًا لأن الإبطال يخص الطفل لا ساعة '
+     'الجهاز. إن جاء يومها قبل المرجع، أو بعده بأكثر من 30 يومًا، عُلّمت بتنبيه تاريخ (9.1)',
      'session_open، session_order، bad_event', 'لا أثر'),
     ('session_end', 'ختم الجلسة', 'هي الجلسة المفتوحة', 'تُختم. ما لم يكتمل يبقى في حالته',
      'no_session', 'لا أثر'),
     ('date_confirmed', 'تأكيد التاريخ من الوالد', 'الجلسة معلَّمة بتنبيه تاريخ',
-     'يزول التنبيه، فتُقبل في الجلسة القرارات المعتمدة على التاريخ. الجلسة وأحداثها لا تُحذف ولا تُعدَّل',
+     'يزول التنبيه، فتُقبل في الجلسة القرارات المعتمدة على التاريخ، ويصير يومها مرجع التاريخ للجلسات بعدها إن '
+     'كانت آخر جلسة موثوقة. الجلسة وأحداثها لا تُحذف ولا تُعدَّل، والتنبيه يبقى في التاريخ',
      'not_flagged', 'لا أثر'),
     ('gate_result', 'نتيجة بوابة',
      'جلسة مفتوحة وفيها حصة بوابة. لا متطلب مباشر متعثَّر فيه أو ينتظر. المهارة غير مجتازة. '
@@ -194,10 +196,12 @@ TABLE = [
      'لا أثر'),
     ('check_resumed', 'استئناف محاولة فحص في جلسة لاحقة',
      'شروط البدء نفسها في الدرس والفهم. المحاولة موجودة، لهذه المهارة، «معلَّقة»، وليست نشطة في هذه الجلسة. '
-     'إصدار تعريفاتها متاح. في الجلسة حصة تعليمية (7.1: ما لم يكتمل يُستأنف في الجلسة التالية)',
-     'تصير المحاولة نشطة في هذه الجلسة، وتُستهلك الحصة التعليمية. إجابات خاناتها السابقة تبقى',
+     'إصدار تعريفاتها متاح. لا تنبيه تاريخ على الجلسة، ويومها يحقق شروط توقيت البدء (3.6). في الجلسة حصة '
+     'تعليمية (7.1: ما لم يكتمل يُستأنف في الجلسة التالية)',
+     'تصير المحاولة نشطة في هذه الجلسة وتُضاف إلى جلساتها المساهمة، وتُستهلك الحصة التعليمية. إجابات خاناتها '
+     'السابقة تبقى',
      'no_session، not_open، suspended، lesson_idle، understanding_first، no_check، check_state، already_active، '
-     'version_unavailable، quota_teach', 'لا أثر'),
+     'version_unavailable، date_unconfirmed، check_same_day، check_needs_practice، quota_teach', 'لا أثر'),
     ('check_held', 'تعليق محاولة فحص للمراجعة',
      'المحاولة موجودة، لهذه المهارة، «معلَّقة»، ونشطة في هذه الجلسة. السبب: انقطاعان في خانة أو 3 في الفحص، '
      'أو نفاد بدائل خانة، أو لا بنود لهذه المحاولة (3.6)',
@@ -205,11 +209,13 @@ TABLE = [
      'ولا تُبدأ للمهارة محاولة أخرى حتى يتركها المعلم',
      'no_session، unknown_skill، no_check، check_state، check_idle', 'لا أثر'),
     ('independence_result', 'نتيجة محاولة فحص الاستقلال',
-     'شروط البدء نفسها في الدرس والفهم. المحاولة موجودة، لهذه المهارة، «معلَّقة»، ونشطة في هذه الجلسة: '
-     'بدأت فيها أو استؤنفت فيها. إصدار تعريفاتها متاح',
-     'تُغلق المحاولة بنتيجتها. اجتاز: دليل استقلال، وبه مع الفهم الساري تصير المهارة مستوفاة',
-     'no_session، not_open، suspended، lesson_idle، understanding_first، no_check، check_state، check_idle، '
-     'version_unavailable', 'المستوفاة تفكّ انتظار توابعها، وتصير متطلبًا مستوفى في دالة الأهلية'),
+     'شروط البدء نفسها في الدرس والفهم. المحاولة موجودة، لهذه المهارة، «معلَّقة». لا تنبيه تاريخ على الجلسة. '
+     'المحاولة نشطة في هذه الجلسة: بدأت فيها أو استؤنفت فيها. يوم الجلسة يحقق شروط توقيت البدء (3.6). إصدار '
+     'تعريفاتها متاح',
+     'تُغلق المحاولة بنتيجتها. اجتاز: دليل استقلال، وبه مع الفهم الساري تصير المهارة مستوفاة، ويوم هذه الجلسة '
+     'مرجع أول فحص احتفاظ',
+     'no_session، not_open، suspended، lesson_idle، understanding_first، no_check، check_state، date_unconfirmed، '
+     'check_idle، check_same_day، check_needs_practice، version_unavailable', 'المستوفاة تفكّ انتظار توابعها، وتصير متطلبًا مستوفى في دالة الأهلية'),
     ('check_abandoned', 'ترك محاولة فحص',
      'المحاولة «معلَّقة» أو «معلَّقة للمراجعة» أو «تحتاج إعادة بدء». سبب مكتوب',
      'تصير «متروكة» بسبب الترك، وتبقى في السجل ومعها سبب تعليقها إن عُلّقت. بعدها يجوز بدء محاولة جديدة',
@@ -230,7 +236,11 @@ TABLE = [
      'no_session، unknown_skill، no_recheck، blocked', 'الدرس المعلَّق الذي عاد مسوّغه يُستأنف'),
     ('invalidate_session', 'إبطال جلسة', 'الجلسة موجودة ومختومة ولم تُبطل',
      'أدلة تلك الجلسة وحدها تصير غير صالحة، وبواباتها تخرج من حدّ الدورة الحالية وتبقى في التاريخ. '
-     'الدرس الذي فُتح فيها يبقى مفتوحًا ويعود إلى طور الافتتاح بلا نشاط. قرارات المعلم باقية',
+     'محاولة فحص أسهمت فيها الجلسة، أي بدأت أو استؤنفت أو أُغلقت فيها: إن لم تكتمل صارت «تحتاج إعادة بدء» فلا '
+     'تُستأنف ولا تُقبل نتيجتها؛ وإن اكتملت صارت غير صالحة، فيسقط دليل اجتيازها ولا تُعدّ في توقيت محاولة '
+     'لاحقة. البنود المعروضة تبقى في السجل. '
+     'الدرس الذي فُتح فيها يبقى مفتوحًا ويعود إلى طور الافتتاح بلا نشاط. قرارات المعلم باقية. مرجع التاريخ لا '
+     'يتغير',
      'bad_target',
      'تُشتق الحالات من الأدلة الصالحة الباقية. الدرس المفتوح الذي لم يبقَ له مسوّغ يُعلَّق، '
      'والذي بقي له دليل مستقل أو قرار سارٍ يبقى مفتوحًا'),
@@ -282,6 +292,10 @@ class Engine:
         e = cls(net, st['group'], st['regate'], content_versions)
         e.s = st
         st.setdefault('retention', [])                     # حالة حُفظت قبل إضافة فحوص الاحتفاظ
+        for c in st['checks'].values():                     # حالة حُفظت قبل تسجيل الجلسات المساهمة: أقل ما يُعرف منها
+            if 'sessions' not in c:
+                c['sessions'] = list(dict.fromkeys(x for x in (c['session'], c.get('active'), c.get('held_session'),
+                                                              c.get('closed_session')) if x))
         for cid, c in st['checks'].items():
             if c['state'] == 'pending' and not e._has_version(c['content_version']):
                 c['state'] = 'needs_restart'
@@ -529,9 +543,16 @@ class Engine:
                 or (k == 'start' and 'start' not in kinds) or (k == 'follow' and 'start' in kinds))
         return ok() if fine and ev['session'] not in self.s['sessions'] else no('session_order')
 
+    def date_reference(self):
+        """مرجع التاريخ (9.1): يوم آخر جلسة، بترتيب الجلسات، تاريخها موثوق، أي لم تُعلَّم بتنبيه أو أكّد الوالد
+        تاريخها. التاريخ المعلَّم غير المؤكد لا يصير مرجعًا. الجلسة المبطلة تبقى مرجعًا: الإبطال يخص الطفل لا الساعة."""
+        for x in reversed(self.s['order']):
+            if not self.s['sessions'][x]['clock']:
+                return self.s['sessions'][x]['day']
+        return None
+
     def do_session_start(self, ev):
-        days = [self.s['sessions'][x]['day'] for x in self.s['order']]
-        last = max(days) if days else None
+        last = self.date_reference()
         flag = last is not None and (ev['day'] < last or ev['day'] > last + 30)
         self.s['sessions'][ev['session']] = dict(kind=ev['kind'], day=ev['day'], clock=flag, gate=0, short=0,
                                                  teach=0, ended=False, invalid=False)
@@ -726,11 +747,14 @@ class Engine:
         return ok() if ses['teach'] < QUOTA[ses['kind']]['teach'] else no('quota_teach')
 
     def _check_timing(self, skill, day):
-        """3.6: في يوم بعد يوم الدرس، والإعادة في يوم لاحق، وبعد الإخفاق جلسة تدريب. الأيام أيام الأسرة."""
+        """3.6: في يوم بعد يوم الدرس، والإعادة في يوم لاحق، وبعد الإخفاق جلسة تدريب. الأيام أيام الأسرة.
+        تُطبَّق على البدء والاستئناف والنتيجة، فلا يُعتمد دليل في يوم يناقض أدلته السابقة. المحاولة المكتملة التي
+        أُبطلت جلسة أسهمت فيها لا تُعدّ."""
         und = self.valid_evidence(skill, UNDERSTOOD)
         if und and day <= self.s['sessions'][und[-1]['session']]['day']:
             return no('check_same_day')
-        closed = [c for c in self.s['checks'].values() if c['skill'] == skill and c['state'] == 'closed']
+        closed = [c for c in self.s['checks'].values() if c['skill'] == skill and c['state'] == 'closed'
+                  and not c.get('invalid')]
         if closed:
             last = max(closed, key=lambda c: c['closed_seq'])
             if day <= self.s['sessions'][last['closed_session']]['day']:
@@ -745,7 +769,7 @@ class Engine:
         self.s['sessions'][ev['session']]['teach'] += 1
         self.s['checks'][ev['check_id']] = dict(skill=ev['skill'], content_version=ev['content_version'],
                                                 session=ev['session'], active=ev['session'], state='pending',
-                                                seq=self.s['seq'])
+                                                seq=self.s['seq'], sessions=[ev['session']])
 
     def _own_check(self, ev):
         c = self.s['checks'].get(ev['check_id'])
@@ -765,11 +789,19 @@ class Engine:
         if not self._has_version(c['content_version']):
             return no('version_unavailable')
         ses = self.s['sessions'][ev['session']]
+        if ses['clock']:                                    # 9.1: لا يُعتمد عمل فحص في يوم غير مؤكد
+            return no('date_unconfirmed')
+        bad = self._check_timing(ev['skill'], ses['day'])
+        if bad:
+            return bad
         return ok() if ses['teach'] < QUOTA[ses['kind']]['teach'] else no('quota_teach')
 
     def do_check_resumed(self, ev):
         self.s['sessions'][ev['session']]['teach'] += 1
-        self.s['checks'][ev['check_id']]['active'] = ev['session']
+        c = self.s['checks'][ev['check_id']]
+        c['active'] = ev['session']
+        if ev['session'] not in c['sessions']:              # كل جلسة عُرضت فيها بنود المحاولة
+            c['sessions'].append(ev['session'])
 
     def can_check_held(self, ev):
         bad = self._need(ev)
@@ -806,8 +838,14 @@ class Engine:
             return no('no_check')
         if c['state'] != 'pending':
             return no('check_state')
+        ses = self.s['sessions'][ev['session']]
+        if ses['clock']:
+            return no('date_unconfirmed')
         if c['active'] != ev['session']:
             return no('check_idle')
+        bad = self._check_timing(ev['skill'], ses['day'])
+        if bad:
+            return bad
         return ok() if self._has_version(c['content_version']) else no('version_unavailable')
 
     def do_independence_result(self, ev):
@@ -895,6 +933,20 @@ class Engine:
                 hit.append(e['id'])
         self.s['history'].append(dict(seq=self.s['seq'], what='session_invalidated', session=ev['target'],
                                       evidence=hit))
+        for cid, c in self.s['checks'].items():            # محاولة فحص أسهمت فيها الجلسة
+            if ev['target'] not in c['sessions']:
+                continue
+            if c['state'] in ('pending', 'held'):          # لم تكتمل: لا تُستأنف ولا تُقبل نتيجتها
+                c['restart_reason'], c['state'] = 'session_invalidated', 'needs_restart'
+                self.s['history'].append(dict(seq=self.s['seq'], what='check_needs_restart', check=cid,
+                                              session=ev['target']))
+            elif c['state'] == 'closed' and not c.get('invalid'):
+                c['invalid'] = True                         # اكتملت: يسقط دليلها، وتبقى بنودها في السجل
+                for e in self.s['evidence']:
+                    if e.get('check') == cid and e['valid']:
+                        e['valid'] = False
+                self.s['history'].append(dict(seq=self.s['seq'], what='check_invalidated', check=cid,
+                                              session=ev['target']))
         for r in self.s['retention']:                       # فحص الاحتفاظ في الجلسة المبطلة لا يُعدّ، ويبقى في السجل
             if r['session'] == ev['target'] and r['valid']:
                 r['valid'] = False

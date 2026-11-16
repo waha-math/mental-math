@@ -84,6 +84,11 @@ export class Engine {
     const e = new Engine(net, { group: st.group, regate: st.regate, versions: contentVersions });
     e.s = st;
     if (!has(st, 'retention')) st.retention = [];
+    for (const c of Object.values(st.checks)) {   // حالة حُفظت قبل تسجيل الجلسات المساهمة: أقل ما يُعرف منها
+      if (!has(c, 'sessions')) {
+        c.sessions = [...new Set([c.session, c.active, c.held_session, c.closed_session].filter((x) => x))];
+      }
+    }
     for (const [cid, c] of Object.entries(st.checks)) {
       if (c.state === 'pending' && !e._hasVersion(c.content_version)) {
         c.state = 'needs_restart';
@@ -330,9 +335,18 @@ export class Engine {
     return fine && !has(this.s.sessions, ev.session) ? ok() : no('session_order');
   }
 
+  // مرجع التاريخ (9.1): يوم آخر جلسة، بترتيب الجلسات، تاريخها موثوق، أي لم تُعلَّم بتنبيه أو أكّد الوالد تاريخها.
+  // التاريخ المعلَّم غير المؤكد لا يصير مرجعًا. الجلسة المبطلة تبقى مرجعًا: الإبطال يخص الطفل لا الساعة.
+  dateReference() {
+    for (let k = this.s.order.length - 1; k >= 0; k -= 1) {
+      const ses = this.s.sessions[this.s.order[k]];
+      if (!ses.clock) return ses.day;
+    }
+    return null;
+  }
+
   do_session_start(ev) {
-    const days = this.s.order.map((x) => this.s.sessions[x].day);
-    const last = days.length ? Math.max(...days) : null;
+    const last = this.dateReference();
     const flag = last !== null && (ev.day < last || ev.day > last + 30);
     put(this.s.sessions, ev.session, {
       kind: ev.kind, day: ev.day, clock: flag, gate: 0, short: 0, teach: 0, ended: false, invalid: false,
@@ -533,11 +547,12 @@ export class Engine {
     return this._teachLeft(ses) ? ok() : no('quota_teach');
   }
 
-  // 3.6: في يوم بعد يوم الدرس، والإعادة في يوم لاحق، وبعد الإخفاق جلسة تدريب. الأيام أيام الأسرة
+  // 3.6: في يوم بعد يوم الدرس، والإعادة في يوم لاحق، وبعد الإخفاق جلسة تدريب. الأيام أيام الأسرة. تُطبَّق على البدء
+  // والاستئناف والنتيجة. المحاولة المكتملة التي أُبطلت جلسة أسهمت فيها لا تُعدّ
   _checkTiming(skill, day) {
     const und = this.validEvidence(skill, UNDERSTOOD);
     if (und.length && day <= this.s.sessions[und[und.length - 1].session].day) return no('check_same_day');
-    const closed = this._checksOf(skill).filter((c) => c.state === 'closed');
+    const closed = this._checksOf(skill).filter((c) => c.state === 'closed' && !c.invalid);
     if (closed.length) {
       let last = closed[0];
       for (const c of closed) if (c.closed_seq > last.closed_seq) last = c;
@@ -554,7 +569,7 @@ export class Engine {
     this.s.sessions[ev.session].teach += 1;
     put(this.s.checks, ev.check_id, {
       skill: ev.skill, content_version: ev.content_version, session: ev.session, active: ev.session,
-      state: 'pending', seq: this.s.seq,
+      state: 'pending', seq: this.s.seq, sessions: [ev.session],
     });
   }
 
@@ -571,12 +586,18 @@ export class Engine {
     if (c.state !== 'pending') return no('check_state');
     if (c.active === ev.session) return no('already_active');
     if (!this._hasVersion(c.content_version)) return no('version_unavailable');
-    return this._teachLeft(this.s.sessions[ev.session]) ? ok() : no('quota_teach');
+    const ses = this.s.sessions[ev.session];
+    if (ses.clock) return no('date_unconfirmed');     // 9.1: لا يُعتمد عمل فحص في يوم غير مؤكد
+    const bad2 = this._checkTiming(ev.skill, ses.day);
+    if (bad2) return bad2;
+    return this._teachLeft(ses) ? ok() : no('quota_teach');
   }
 
   do_check_resumed(ev) {
     this.s.sessions[ev.session].teach += 1;
-    this.s.checks[ev.check_id].active = ev.session;
+    const c = this.s.checks[ev.check_id];
+    c.active = ev.session;
+    if (!c.sessions.includes(ev.session)) c.sessions.push(ev.session);   // كل جلسة عُرضت فيها بنود المحاولة
   }
 
   can_check_held(ev) {
@@ -614,7 +635,11 @@ export class Engine {
     const c = this._ownCheck(ev);
     if (!c) return no('no_check');
     if (c.state !== 'pending') return no('check_state');
+    const ses = this.s.sessions[ev.session];
+    if (ses.clock) return no('date_unconfirmed');
     if (c.active !== ev.session) return no('check_idle');
+    const bad2 = this._checkTiming(ev.skill, ses.day);
+    if (bad2) return bad2;
     return this._hasVersion(c.content_version) ? ok() : no('version_unavailable');
   }
 
@@ -703,6 +728,18 @@ export class Engine {
       }
     }
     this.s.history.push({ seq: this.s.seq, what: 'session_invalidated', session: ev.target, evidence: hit });
+    for (const [cid, c] of Object.entries(this.s.checks)) {   // محاولة فحص أسهمت فيها الجلسة
+      if (!c.sessions.includes(ev.target)) continue;
+      if (c.state === 'pending' || c.state === 'held') {      // لم تكتمل: لا تُستأنف ولا تُقبل نتيجتها
+        c.restart_reason = 'session_invalidated';
+        c.state = 'needs_restart';
+        this.s.history.push({ seq: this.s.seq, what: 'check_needs_restart', check: cid, session: ev.target });
+      } else if (c.state === 'closed' && !c.invalid) {          // اكتملت: يسقط دليلها، وتبقى بنودها في السجل
+        c.invalid = true;
+        for (const e of this.s.evidence) if (e.check === cid && e.valid) e.valid = false;
+        this.s.history.push({ seq: this.s.seq, what: 'check_invalidated', check: cid, session: ev.target });
+      }
+    }
     for (const r of this.s.retention) {       // فحص الاحتفاظ في الجلسة المبطلة لا يُعدّ، ويبقى في السجل
       if (r.session === ev.target && r.valid) {
         r.valid = false;

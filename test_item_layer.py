@@ -47,7 +47,8 @@ print('=== اختبارات طبقة البنود والمجدول (%d بندً�
 r = fold_item([('confirm', 5), ('support', 'extra_model'), ('confirm', 7), ('end',)], 7, assess=False)
 check('أخطأ وحده ثم نجح بالنموذج: أول إجابة خاطئة ونتيجته النهائية صحيحة بدعم، والحقلان محفوظان معًا',
       r == dict(status='complete', first=False, support_before=[],
-                later=[dict(correct=True, support=['extra_model'])], final='correct') and classify(r) == 'wrong')
+                later=[dict(correct=True, support=['extra_model'])], final='correct',
+                support_unanswered=[]) and classify(r) == 'wrong')
 r1 = fold_item([('support', 'requested'), ('interrupt',)], 3, assess=True)
 r2 = fold_item([('interrupt',)], 3, assess=True)
 r3 = fold_item([('support', 'hint'), ('confirm', 3), ('end',)], 3, assess=False)

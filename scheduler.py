@@ -559,8 +559,8 @@ class Scheduler:
             else:
                 need = None if self.e.s['opened'][s]['active'] == self.cur else dict(type='resume_lesson', skill=s)
             v = self.e.preflight(dict(need, id='ask', session=self.cur)) if need else dict(ok=True)
-            if not v['ok'] and v['code'] == 'quota_teach':
-                return False                                # تبقى محفوظة لجلسة فيها الحصة
+            if not v['ok'] and v['code'] in ('quota_teach', 'date_unconfirmed'):
+                return False                                # تبقى محفوظة لجلسة فيها الحصة، أو حتى يؤكَّد التاريخ
             if not v['ok']:
                 self.drop_carry(v['code'])
             else:
