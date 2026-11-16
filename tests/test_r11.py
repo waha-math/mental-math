@@ -4,7 +4,8 @@
     python3 tests/test_r11.py <ملف الخريطة> [--code=مجلد]
 
 حالات المحرك ونتائجها المتوقعة في tests/r11_cases.json، والحالات المحفوظة القديمة في tests/r11_fixtures.json (صنعها
-محرك الالتزام 2509126). حالتا المجدول هنا، ونتائجهما المتوقعة مكتوبة صراحة. المجدول بلغة بايثون وحدها: لا مجدول في
+محرك الالتزام 2509126، ومعها النص نفسه بعد قراءته وحفظه بمحرك 16b124a). كل حالة تُفحص بثلاثة طرق: الاستعادة المباشرة،
+والاستعادة بعد المرور بـ 16b124a، وإعادة تشغيل السجل. والحكم واحد فيها، والحالة المصححة ثابتة إذا حُفظت واستُعيدت. حالتا المجدول هنا، ونتائجهما المتوقعة مكتوبة صراحة. المجدول بلغة بايثون وحدها: لا مجدول في
 التطبيق بعد. --code يشغّل الحالات على نسخة أخرى من الكود.
 """
 import copy
@@ -24,7 +25,8 @@ from content_source import ContentSource, load_items  # noqa: E402
 MAP = args[0]
 NET = load_network(MAP)
 CASES = json.load(open(os.path.join(HERE, 'r11_cases.json'), encoding='utf-8'))
-OLD = json.load(open(os.path.join(HERE, 'r11_fixtures.json'), encoding='utf-8'))['states']
+FIX = json.load(open(os.path.join(HERE, 'r11_fixtures.json'), encoding='utf-8'))
+OLD, VIA = FIX['states'], FIX['via_16b124a']
 results = []
 
 
@@ -74,23 +76,36 @@ def verdict(e):
             {k: c['state'] for k, c in e.s['checks'].items()})
 
 
+def stable(e, label):
+    """ثبات الترحيل (المراجعة 12): الحالة المصححة تُحفظ وتُستعاد مرتين، فلا يتغير نصها ولا حكمها ولا يُضاف حدث."""
+    t1 = e.dump()
+    t2 = Engine.restore(NET, t1).dump()
+    t3 = Engine.restore(NET, t2).dump()
+    return [] if t1 == t2 == t3 else [label + ': الحفظ ثم الاستعادة غيّر الحالة المصححة']
+
+
 def engine_case(c):
     text = OLD[c['id']]
-    paths = [('بعد الاستعادة', Engine.restore(NET, text))]
+    paths = [('بعد الاستعادة', Engine.restore(NET, text)),
+             ('بعد قراءتها وحفظها بمحرك 16b124a ثم الاستعادة', Engine.restore(NET, VIA[c['id']]))]
     if not c.get('no_log'):
         paths.append(('بعد إعادة تشغيل السجل', Engine.replay(NET, json.loads(text)['log'])))
     bad = []
     for label, e in paths:
         bad += compare(e, c['expect'], label)
-    if len(paths) == 2 and verdict(paths[0][1]) != verdict(paths[1][1]):
-        bad.append('الحكم بعد الاستعادة يخالف الحكم بعد إعادة تشغيل السجل')
+    for label, e in paths[1:]:
+        if verdict(e) != verdict(paths[0][1]):
+            bad.append('الحكم %s يخالف حكم الاستعادة المباشرة' % label)
+    for label, e in paths[:2]:
+        bad += stable(e, label)
     if bad or 'then' not in c:
         return bad
     for label, e in paths:
         b = run_steps(e, c['then'], 't')
         bad += [label + '، المتابعة: ' + x for x in b] or compare(e, c['expect_then'], label + ' ثم المتابعة')
-    if not bad and len(paths) == 2 and verdict(paths[0][1]) != verdict(paths[1][1]):
-        bad.append('بعد المتابعة: الحكم بعد الاستعادة يخالف الحكم بعد إعادة تشغيل السجل')
+    for label, e in paths[1:]:
+        if not bad and verdict(e) != verdict(paths[0][1]):
+            bad.append('بعد المتابعة: الحكم %s يخالف حكم الاستعادة المباشرة' % label)
     return bad
 
 

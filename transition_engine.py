@@ -52,6 +52,9 @@ QUOTA = {
 SEARCH_CAP = 4
 # 3.7: فواصل فحوص الاحتفاظ بالأيام. الأول من يوم اجتياز الاستقلال، وكل فاصل بعده من يوم الفحص السابق الفعلي
 RETENTION_GAPS = (7, 21, 60)
+# نسخة ترحيل الحالة المحفوظة (المراجعة 12). حالة نسختها أقل تُراجع محاولاتها عند قراءتها، ولو كانت فيها قائمة الجلسات
+# المساهمة: الالتزام 16b124a كان يضيف القائمة ولا يطبّق أثر الإبطال. 0: بلا حقل، أي كل ما حُفظ قبل هذه النسخة
+MIGRATION = 1
 RETENTION_ITEMS, RETENTION_OK = 5, 4
 
 REASONS = {
@@ -275,7 +278,7 @@ class Engine:
         self.versions = None if versions is None else set(versions)   # إصدارات التعريفات المتاحة
         self.s = dict(group=group, regate=regate, seq=0, log=[], applied={}, evidence=[], decisions=[],
                       attempts=[], sessions={}, order=[], current=None, opened={}, queue=[], gates={},
-                      checked=[], checks={}, suspended={}, history=[], retention=[])
+                      checked=[], checks={}, suspended={}, history=[], retention=[], migration=MIGRATION)
 
     def _has_version(self, v):
         return self.versions is None or v in self.versions
@@ -292,7 +295,9 @@ class Engine:
         e = cls(net, st['group'], st['regate'], content_versions)
         e.s = st
         st.setdefault('retention', [])                     # حالة حُفظت قبل إضافة فحوص الاحتفاظ
-        e._migrate_checks()
+        if st.get('migration', 0) < MIGRATION:
+            e._migrate_checks()
+            st['migration'] = MIGRATION
         for cid, c in st['checks'].items():
             if c['state'] == 'pending' and not e._has_version(c['content_version']):
                 c['state'] = 'needs_restart'
@@ -300,28 +305,28 @@ class Engine:
         return e
 
     def _migrate_checks(self):
-        """ترحيل حالة حُفظت قبل تسجيل الجلسات المساهمة (المراجعة 11، الملاحظة الثانية). الجلسات تُستكمل من أحداث
-        السجل: البدء وكل استئناف. ثم يُطبَّق على المحاولة أثر جلسة مساهمة أُبطلت كما لو وقع الإبطال بالمحرك الجديد.
-        وإن خلا السجل من بدء المحاولة لم تُعرف جلساتها الوسطى، فالإجراء التحفظي: جلسة مبطلة في مداها، من جلسة البدء
-        إلى الختم أو آخر جلسة، تُعامل كأنها مساهمة، بسبب migration_unverified."""
+        """ترحيل حالة نسختها أقل من MIGRATION (المراجعتان 11 و12). وجود قائمة الجلسات المساهمة لا يثبت شيئًا: تُستكمل
+        القائمة من أحداث السجل، البدء وكل استئناف، ومن حقول المحاولة، مرتبةً بترتيب الجلسات. ثم يُطبَّق أثر كل جلسة
+        مساهمة أُبطلت كما لو وقع الإبطال بالمحرك الجديد، والأثر لا يتكرر على محاولة طُبّق عليها. وإن خلا السجل من بدء
+        المحاولة لم تُعرف جلساتها الوسطى، فالإجراء التحفظي: جلسة مبطلة في مداها، من جلسة البدء إلى الختم أو آخر جلسة،
+        تُعامل كأنها مساهمة، بسبب migration_unverified."""
         st, hit = self.s, False
+        pos = {x: n for n, x in enumerate(st['order'])}
         for cid, c in st['checks'].items():
-            if 'sessions' in c:
-                continue
             logged = [ev['session'] for ev in st['log'] if ev['type'] in ('check_started', 'check_resumed')
                       and ev.get('check_id') == cid]
             known = any(ev['type'] == 'check_started' and ev.get('check_id') == cid for ev in st['log'])
-            c['sessions'] = list(dict.fromkeys(x for x in [c['session']] + logged + [
-                c.get('active'), c.get('held_session'), c.get('closed_session')] if x))
-            bad = [x for x in c['sessions'] if st['sessions'][x]['invalid']]
-            reason = 'session_invalidated'
+            have = set(c.get('sessions', [])) | set(logged) | {x for x in (
+                c['session'], c.get('active'), c.get('held_session'), c.get('closed_session')) if x}
+            c['sessions'] = sorted(have, key=pos.get)
+            bad, reason = [x for x in c['sessions'] if st['sessions'][x]['invalid']], 'session_invalidated'
             if not bad and not known:
-                a = st['order'].index(c['session'])
-                b = st['order'].index(c['closed_session']) if c.get('closed_session') else len(st['order']) - 1
+                a = pos[c['session']]
+                b = pos[c['closed_session']] if c.get('closed_session') else len(st['order']) - 1
                 bad, reason = [x for x in st['order'][a:b + 1] if st['sessions'][x]['invalid']], 'migration_unverified'
-            if bad:
-                self._taint_check(cid, bad[0], reason, migrated=True)
-                hit = True
+            if bad:                                         # أقدم إبطال أولًا: هو الذي يحدد أسبق الختمَ أم لا
+                first = min(bad, key=lambda x: (self._invalidated_at(x) is None, self._invalidated_at(x) or 0))
+                hit = self._taint_check(cid, first, reason, migrated=True) or hit
         if hit:
             self._reconcile()
 
@@ -342,7 +347,8 @@ class Engine:
             self._drop_check_evidence(cid)
             self.s['history'].append(dict(seq=self.s['seq'], what='check_invalidated', check=cid, session=session,
                                           **extra))
-        elif c['state'] in ('pending', 'held') or reopen:  # لم تكتمل: لا تُستأنف ولا تُقبل نتيجتها
+            return True
+        if c['state'] in ('pending', 'held') or reopen:  # لم تكتمل: لا تُستأنف ولا تُقبل نتيجتها
             if reopen:
                 c['migrated_result'] = c.pop('result')
                 c.pop('closed_session'), c.pop('closed_seq')
@@ -350,6 +356,8 @@ class Engine:
             c['restart_reason'], c['state'] = reason, 'needs_restart'
             self.s['history'].append(dict(seq=self.s['seq'], what='check_needs_restart', check=cid, session=session,
                                           **extra))
+            return True
+        return False                                        # طُبّق الأثر من قبل، أو المحاولة متروكة
 
     def _drop_check_evidence(self, cid):
         for e in self.s['evidence']:

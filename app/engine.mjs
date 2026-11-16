@@ -11,6 +11,7 @@ import { DATA } from './engine_data.mjs';
 
 const { schema: SCHEMA, reasons: REASONS, quota: QUOTA, search_cap: SEARCH_CAP } = DATA;
 const { gaps: RETENTION_GAPS, items: RETENTION_ITEMS, ok: RETENTION_OK } = DATA.retention;
+const MIGRATION = DATA.migration;              // نسخة ترحيل الحالة المحفوظة (المراجعة 12)
 
 const EXEMPT = 'exempt', STUMBLE = 'stumble', UNDERSTOOD = 'understood', INDEPENDENT = 'independent',
   SHORT_OK = 'short_ok', RECHECK = 'recheck';
@@ -62,7 +63,7 @@ export class Engine {
     this.s = {
       group, regate, seq: 0, log: [], applied: {}, evidence: [], decisions: [], attempts: [], sessions: {},
       order: [], current: null, opened: {}, queue: [], gates: {}, checked: [], checks: {}, suspended: {},
-      history: [], retention: [],
+      history: [], retention: [], migration: MIGRATION,
     };
   }
 
@@ -84,7 +85,10 @@ export class Engine {
     const e = new Engine(net, { group: st.group, regate: st.regate, versions: contentVersions });
     e.s = st;
     if (!has(st, 'retention')) st.retention = [];
-    e._migrateChecks();
+    if ((st.migration ?? 0) < MIGRATION) {
+      e._migrateChecks();
+      st.migration = MIGRATION;
+    }
     for (const [cid, c] of Object.entries(st.checks)) {
       if (c.state === 'pending' && !e._hasVersion(c.content_version)) {
         c.state = 'needs_restart';
@@ -94,29 +98,37 @@ export class Engine {
     return e;
   }
 
-  // ترحيل حالة حُفظت قبل تسجيل الجلسات المساهمة (المراجعة 11، الملاحظة الثانية). الجلسات تُستكمل من أحداث السجل:
-  // البدء وكل استئناف. ثم يُطبَّق أثر جلسة مساهمة أُبطلت. وإن خلا السجل من بدء المحاولة، فجلسة مبطلة في مداها، من
-  // جلسة البدء إلى الختم أو آخر جلسة، تُعامل كأنها مساهمة، بسبب migration_unverified
+  // ترحيل حالة نسختها أقل من MIGRATION (المراجعتان 11 و12). وجود قائمة الجلسات المساهمة لا يثبت شيئًا: تُستكمل
+  // القائمة من أحداث السجل ومن حقول المحاولة، مرتبةً بترتيب الجلسات، ثم يُطبَّق أثر كل جلسة مساهمة أُبطلت، ولا يتكرر.
+  // وإن خلا السجل من بدء المحاولة، فجلسة مبطلة في مداها، من البدء إلى الختم أو آخر جلسة، تُعامل كأنها مساهمة،
+  // بسبب migration_unverified
   _migrateChecks() {
     const st = this.s;
+    const pos = new Map(st.order.map((x, n) => [x, n]));
+    const at = (x) => this._invalidatedAt(x);
     let hit = false;
     for (const [cid, c] of Object.entries(st.checks)) {
-      if (has(c, 'sessions')) continue;
       const logged = st.log.filter((ev) => (ev.type === 'check_started' || ev.type === 'check_resumed')
         && ev.check_id === cid).map((ev) => ev.session);
       const known = st.log.some((ev) => ev.type === 'check_started' && ev.check_id === cid);
-      c.sessions = [...new Set([c.session, ...logged, c.active, c.held_session, c.closed_session].filter((x) => x))];
+      const have = new Set([...(c.sessions || []), ...logged,
+        ...[c.session, c.active, c.held_session, c.closed_session].filter((x) => x)]);
+      c.sessions = [...have].sort((x, y) => pos.get(x) - pos.get(y));
       let bad = c.sessions.filter((x) => st.sessions[x].invalid);
       let reason = 'session_invalidated';
       if (!bad.length && !known) {
-        const a = st.order.indexOf(c.session);
-        const b = c.closed_session ? st.order.indexOf(c.closed_session) : st.order.length - 1;
+        const a = pos.get(c.session);
+        const b = c.closed_session ? pos.get(c.closed_session) : st.order.length - 1;
         bad = st.order.slice(a, b + 1).filter((x) => st.sessions[x].invalid);
         reason = 'migration_unverified';
       }
-      if (bad.length) {
-        this._taintCheck(cid, bad[0], reason, true);
-        hit = true;
+      if (bad.length) {                       // أقدم إبطال أولًا: هو الذي يحدد أسبق الختمَ أم لا
+        const key = (x) => (at(x) === null ? [1, 0] : [0, at(x)]);
+        const first = bad.reduce((m, x) => {
+          const [p, q] = key(x), [r, t] = key(m);
+          return p < r || (p === r && q < t) ? x : m;
+        });
+        hit = this._taintCheck(cid, first, reason, true) || hit;
       }
     }
     if (hit) this._reconcile();
@@ -138,7 +150,9 @@ export class Engine {
       c.invalid = true;                       // اكتملت: يسقط دليلها، وتبقى بنودها في السجل
       this._dropCheckEvidence(cid);
       this.s.history.push({ seq: this.s.seq, what: 'check_invalidated', check: cid, session, ...extra });
-    } else if (c.state === 'pending' || c.state === 'held' || reopen) {   // لم تكتمل: لا تُستأنف ولا تُقبل نتيجتها
+      return true;
+    }
+    if (c.state === 'pending' || c.state === 'held' || reopen) {   // لم تكتمل: لا تُستأنف ولا تُقبل نتيجتها
       if (reopen) {
         c.migrated_result = c.result;
         delete c.result;
@@ -149,7 +163,9 @@ export class Engine {
       c.restart_reason = reason;
       c.state = 'needs_restart';
       this.s.history.push({ seq: this.s.seq, what: 'check_needs_restart', check: cid, session, ...extra });
+      return true;
     }
+    return false;                             // طُبّق الأثر من قبل، أو المحاولة متروكة
   }
 
   _dropCheckEvidence(cid) {

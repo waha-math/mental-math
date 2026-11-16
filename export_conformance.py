@@ -377,6 +377,7 @@ data = dict(
     schema={name: {f: rule(r) for f, r in spec.items()} for name, spec in te.SCHEMA.items()},
     reasons=te.REASONS, quota=te.QUOTA, search_cap=te.SEARCH_CAP,
     retention=dict(gaps=list(te.RETENTION_GAPS), items=te.RETENTION_ITEMS, ok=te.RETENTION_OK),
+    migration=te.MIGRATION,
     events=[t[0] for t in te.TABLE])
 open('app/engine_data.mjs', 'w', encoding='utf-8').write(
     '// مولَّد من transition_engine.py بالأمر: python3 export_conformance.py <الخريطة>. لا يُعدَّل باليد.\n'

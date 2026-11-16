@@ -3,8 +3,9 @@
 //     node tests/test_r11.mjs [مجلد app]
 //
 // الحالات ونتائجها المتوقعة في tests/r11_cases.json، والحالات المحفوظة القديمة في tests/r11_fixtures.json (صنعها
-// محرك الالتزام 2509126 المرجعي، وصيغة الحفظ واحدة في النسختين). حالتا المجدول في المشغّل الآخر وحده: لا مجدول في
-// التطبيق بعد. المجلد الاختياري يشغّل الحالات على نسخة أخرى من التطبيق.
+// محرك الالتزام 2509126 المرجعي، ومعها النص نفسه بعد قراءته وحفظه بمحرك 16b124a. وصيغة الحفظ واحدة في النسختين).
+// كل حالة تُفحص بالاستعادة المباشرة، وبعد المرور بـ 16b124a، وبإعادة تشغيل السجل، والحالة المصححة ثابتة.
+// حالتا المجدول في المشغّل الآخر وحده: لا مجدول في التطبيق بعد. المجلد الاختياري يشغّل الحالات على نسخة أخرى من التطبيق.
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -13,7 +14,8 @@ const here = new URL('.', import.meta.url);
 const appDir = resolve(process.argv[2] || new URL('../app', here).pathname);
 const { Engine, canonical } = await import(pathToFileURL(resolve(appDir, 'engine.mjs')).href);
 const CASES = JSON.parse(readFileSync(new URL('r11_cases.json', here), 'utf8'));
-const OLD = JSON.parse(readFileSync(new URL('r11_fixtures.json', here), 'utf8')).states;
+const FIX = JSON.parse(readFileSync(new URL('r11_fixtures.json', here), 'utf8'));
+const OLD = FIX.states, VIA = FIX.via_16b124a;
 const same = (a, b) => canonical(a) === canonical(b);
 const results = [];
 
@@ -56,20 +58,31 @@ const verdict = (e) => [e.derive(),
   e.s.evidence.filter((x) => x.valid).map((x) => [x.skill, x.kind, x.session]).sort(),
   Object.fromEntries(Object.entries(e.s.checks).map(([k, c]) => [k, c.state]))];
 
+// ثبات الترحيل (المراجعة 12): الحالة المصححة تُحفظ وتُستعاد مرتين، فلا يتغير نصها ولا حكمها ولا يُضاف حدث
+function stable(e, label) {
+  const t1 = e.dump();
+  const t2 = Engine.restore(undefined, t1).dump();
+  const t3 = Engine.restore(undefined, t2).dump();
+  return t1 === t2 && t2 === t3 ? [] : [label + ': الحفظ ثم الاستعادة غيّر الحالة المصححة'];
+}
+
 function engineCase(c) {
   const text = OLD[c.id];
-  const paths = [['بعد الاستعادة', Engine.restore(undefined, text)]];
+  const paths = [['بعد الاستعادة', Engine.restore(undefined, text)],
+    ['بعد قراءتها وحفظها بمحرك 16b124a ثم الاستعادة', Engine.restore(undefined, VIA[c.id])]];
   if (!c.no_log) paths.push(['بعد إعادة تشغيل السجل', Engine.replay(undefined, JSON.parse(text).log)]);
-  let bad = [];
+  const bad = [];
   for (const [label, e] of paths) bad.push(...compare(e, c.expect, label));
-  const agree = () => paths.length < 2 || same(verdict(paths[0][1]), verdict(paths[1][1]));
-  if (!agree()) bad.push('الحكم بعد الاستعادة يخالف الحكم بعد إعادة تشغيل السجل');
+  const disagree = (when) => paths.slice(1).filter(([, e]) => !same(verdict(e), verdict(paths[0][1])))
+    .map(([label]) => `${when}الحكم ${label} يخالف حكم الاستعادة المباشرة`);
+  bad.push(...disagree(''));
+  for (const [label, e] of paths.slice(0, 2)) bad.push(...stable(e, label));
   if (bad.length || !c.then) return bad;
   for (const [label, e] of paths) {
     const b = runSteps(e, c.then, 't');
     bad.push(...(b.length ? b.map((x) => label + '، المتابعة: ' + x) : compare(e, c.expect_then, label + ' ثم المتابعة')));
   }
-  if (!bad.length && !agree()) bad.push('بعد المتابعة: الحكم بعد الاستعادة يخالف الحكم بعد إعادة تشغيل السجل');
+  if (!bad.length) bad.push(...disagree('بعد المتابعة: '));
   return bad;
 }
 
