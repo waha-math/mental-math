@@ -8,7 +8,7 @@
 - app/engine_data.mjs: الشبكة، والمخطط، والحصص، ورموز الرفض ونصوصها، وثوابت الاحتفاظ. محرك التطبيق يقرؤها ولا
   يكرر كتابتها، فلا تنحرف نسخة عن الأخرى.
 - app/conformance_vectors.json: كل ما مرّ على المحرك المرجعي حين شُغّلت اختباراته (test_transition_engine.py
-  و test_item_layer.py): كل حدث أُرسل أو سُئل عنه، وحكم المحرك عليه، وبصمة الحالة بعده.
+  و test_item_layer.py و tests/test_r10.py و tests/test_r11.py): كل حدث أُرسل أو سُئل عنه، وحكم المحرك عليه، وبصمة الحالة بعده.
 
 البصمة: SHA-256 للنص القياسي (مفاتيح مرتبة) للحالة المحفوظة كلها مع الحالات المشتقة. محرك التطبيق يطابق إن أعاد
 الحكم نفسه والبصمة نفسها بعد كل حدث.
@@ -288,12 +288,17 @@ def drive(act, source, answer, records=None, pause=None):
 
 il.fold_item, il.indicators, il.drive, cs.ContentSource.__call__ = fold_item, indicators, drive, pick
 
-for script in ('test_transition_engine.py', 'test_item_layer.py'):
+for script in ('test_transition_engine.py', 'test_item_layer.py', 'tests/test_r10.py', 'tests/test_r11.py'):
     sys.argv = [script, MAP]
     out = io.StringIO()
     with contextlib.redirect_stdout(out):
-        runpy.run_path(script, run_name='__main__')
-    assert out.getvalue().rstrip().split('\n')[-1].startswith('نجحت الاختبارات كلها'), out.getvalue()[-300:]
+        try:
+            runpy.run_path(script, run_name='__main__')
+        except SystemExit as x:                             # tests/test_r10.py و test_r11.py ينتهيان برمز خروجهما
+            assert x.code == 0, out.getvalue()[-600:]
+    last = out.getvalue().rstrip().split('\n')[-1]
+    assert last.startswith('نجحت الاختبارات كلها') or last in ('النتيجة: نجح 20 من 20', 'النتيجة: نجح 10 من 10'), \
+        out.getvalue()[-300:]
 
 traces = [t for t in traces if t['ops']]
 
@@ -372,6 +377,7 @@ data = dict(
     schema={name: {f: rule(r) for f, r in spec.items()} for name, spec in te.SCHEMA.items()},
     reasons=te.REASONS, quota=te.QUOTA, search_cap=te.SEARCH_CAP,
     retention=dict(gaps=list(te.RETENTION_GAPS), items=te.RETENTION_ITEMS, ok=te.RETENTION_OK),
+    migration=te.MIGRATION,
     events=[t[0] for t in te.TABLE])
 open('app/engine_data.mjs', 'w', encoding='utf-8').write(
     '// مولَّد من transition_engine.py بالأمر: python3 export_conformance.py <الخريطة>. لا يُعدَّل باليد.\n'

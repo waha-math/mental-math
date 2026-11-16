@@ -1,0 +1,1228 @@
+{
+ "about": "حالات المراجعة الحادية عشرة. النتائج المتوقعة مكتوبة يدويًا. old: أحداث تُطبَّق بمحرك الالتزام 2509126 لصنع حالة محفوظة قديمة (tests/r11_fixtures.json). expect يُفحص على الحالة بعد استعادتها بالمحرك المختبَر، وعلى إعادة تشغيل سجلها به (إلا no_log). then تُطبَّق على الطريقين، و expect_then عليهما. ويُفحص أيضًا تطابق حالات المهارات كلها والأدلة الصالحة بين الطريقين.",
+ "old_commit": "2509126",
+ "engine": [
+  {
+   "id": "R11-02-a",
+   "finding": "R11-02",
+   "reproduced_by_reviewer": true,
+   "title": "حالة قديمة: محاولة معلّقة أُبطلت جلسة بدايتها قبل الحفظ. بعد الاستعادة لا تُستأنف ولا تُقبل نتيجتها، والطريق تركها ثم محاولة جديدة",
+   "old": [
+    {
+     "ev": {
+      "type": "session_start",
+      "session": "S1",
+      "kind": "start",
+      "day": 1
+     },
+     "ok": true
+    },
+    {
+     "ev": {
+      "type": "open_lesson",
+      "session": "S1",
+      "skill": "1-1-1"
+     },
+     "ok": true
+    },
+    {
+     "ev": {
+      "type": "lesson_opening_result",
+      "session": "S1",
+      "skill": "1-1-1",
+      "outcome": "full_error"
+     },
+     "ok": true
+    },
+    {
+     "ev": {
+      "type": "understanding_proved",
+      "session": "S1",
+      "skill": "1-1-1"
+     },
+     "ok": true
+    },
+    {
+     "ev": {
+      "type": "session_end",
+      "session": "S1"
+     },
+     "ok": true
+    },
+    {
+     "ev": {
+      "type": "session_start",
+      "session": "S2",
+      "kind": "follow",
+      "day": 2
+     },
+     "ok": true
+    },
+    {
+     "ev": {
+      "type": "check_started",
+      "session": "S2",
+      "skill": "1-1-1",
+      "check_id": "k1",
+      "content_version": 1
+     },
+     "ok": true
+    },
+    {
+     "ev": {
+      "type": "session_end",
+      "session": "S2"
+     },
+     "ok": true
+    },
+    {
+     "ev": {
+      "type": "invalidate_session",
+      "target": "S2"
+     },
+     "ok": true
+    }
+   ],
+   "expect": {
+    "check:k1": "needs_restart",
+    "restart_reason:k1": "session_invalidated",
+    "state:1-1-1": "stumbled",
+    "valid_independent:1-1-1": 0
+   },
+   "then": [
+    {
+     "ev": {
+      "type": "session_start",
+      "session": "S3",
+      "kind": "follow",
+      "day": 3
+     },
+     "ok": true
+    },
+    {
+     "ev": {
+      "type": "check_resumed",
+      "session": "S3",
+      "skill": "1-1-1",
+      "check_id": "k1"
+     },
+     "code": "check_state"
+    },
+    {
+     "ev": {
+      "type": "independence_result",
+      "session": "S3",
+      "skill": "1-1-1",
+      "check_id": "k1",
+      "result": "pass"
+     },
+     "refused": true
+    },
+    {
+     "ev": {
+      "type": "check_started",
+      "session": "S3",
+      "skill": "1-1-1",
+      "check_id": "k2",
+      "content_version": 1
+     },
+     "code": "check_pending"
+    },
+    {
+     "ev": {
+      "type": "check_abandoned",
+      "check_id": "k1",
+      "reason": "جلسة مساهمة مبطلة"
+     },
+     "ok": true
+    },
+    {
+     "ev": {
+      "type": "check_started",
+      "session": "S3",
+      "skill": "1-1-1",
+      "check_id": "k2",
+      "content_version": 1
+     },
+     "ok": true
+    },
+    {
+     "ev": {
+      "type": "independence_result",
+      "session": "S3",
+      "skill": "1-1-1",
+      "check_id": "k2",
+      "result": "pass"
+     },
+     "ok": true
+    }
+   ],
+   "expect_then": {
+    "state:1-1-1": "met",
+    "check:k1": "abandoned",
+    "check:k2": "closed",
+    "valid_independent:1-1-1": 1
+   }
+  },
+  {
+   "id": "R11-02-b",
+   "finding": "R11-02",
+   "reproduced_by_reviewer": true,
+   "title": "حالة قديمة: أُبطلت جلسة البداية ثم قبِل المحرك القديم الاستئناف والاجتياز. بعد الاستعادة لا يبقى دليل اجتياز، وحكم المحاولة حكم إعادة تشغيل السجل: تحتاج إعادة بدء",
+   "old": [
+    {
+     "ev": {
+      "type": "session_start",
+      "session": "S1",
+      "kind": "start",
+      "day": 1
+     },
+     "ok": true
+    },
+    {
+     "ev": {
+      "type": "open_lesson",
+      "session": "S1",
+      "skill": "1-1-1"
+     },
+     "ok": true
+    },
+    {
+     "ev": {
+      "type": "lesson_opening_result",
+      "session": "S1",
+      "skill": "1-1-1",
+      "outcome": "full_error"
+     },
+     "ok": true
+    },
+    {
+     "ev": {
+      "type": "understanding_proved",
+      "session": "S1",
+      "skill": "1-1-1"
+     },
+     "ok": true
+    },
+    {
+     "ev": {
+      "type": "session_end",
+      "session": "S1"
+     },
+     "ok": true
+    },
+    {
+     "ev": {
+      "type": "session_start",
+      "session": "S2",
+      "kind": "follow",
+      "day": 2
+     },
+     "ok": true
+    },
+    {
+     "ev": {
+      "type": "check_started",
+      "session": "S2",
+      "skill": "1-1-1",
+      "check_id": "k1",
+      "content_version": 1
+     },
+     "ok": true
+    },
+    {
+     "ev": {
+      "type": "session_end",
+      "session": "S2"
+     },
+     "ok": true
+    },
+    {
+     "ev": {
+      "type": "invalidate_session",
+      "target": "S2"
+     },
+     "ok": true
+    },
+    {
+     "ev": {
+      "type": "session_start",
+      "session": "S3",
+      "kind": "follow",
+      "day": 3
+     },
+     "ok": true
+    },
+    {
+     "ev": {
+      "type": "check_resumed",
+      "session": "S3",
+      "skill": "1-1-1",
+      "check_id": "k1"
+     },
+     "ok": true
+    },
+    {
+     "ev": {
+      "type": "independence_result",
+      "session": "S3",
+      "skill": "1-1-1",
+      "check_id": "k1",
+      "result": "pass"
+     },
+     "ok": true
+    },
+    {
+     "ev": {
+      "type": "session_end",
+      "session": "S3"
+     },
+     "ok": true
+    }
+   ],
+   "expect": {
+    "check:k1": "needs_restart",
+    "restart_reason:k1": "session_invalidated",
+    "state:1-1-1": "stumbled",
+    "valid_independent:1-1-1": 0
+   },
+   "then": [
+    {
+     "ev": {
+      "type": "session_start",
+      "session": "S4",
+      "kind": "follow",
+      "day": 4
+     },
+     "ok": true
+    },
+    {
+     "ev": {
+      "type": "check_started",
+      "session": "S4",
+      "skill": "1-1-1",
+      "check_id": "k2",
+      "content_version": 1
+     },
+     "code": "check_pending"
+    },
+    {
+     "ev": {
+      "type": "check_abandoned",
+      "check_id": "k1",
+      "reason": "جلسة مساهمة مبطلة"
+     },
+     "ok": true
+    },
+    {
+     "ev": {
+      "type": "check_started",
+      "session": "S4",
+      "skill": "1-1-1",
+      "check_id": "k2",
+      "content_version": 1
+     },
+     "ok": true
+    },
+    {
+     "ev": {
+      "type": "independence_result",
+      "session": "S4",
+      "skill": "1-1-1",
+      "check_id": "k2",
+      "result": "pass"
+     },
+     "ok": true
+    }
+   ],
+   "expect_then": {
+    "state:1-1-1": "met",
+    "check:k1": "abandoned",
+    "check:k2": "closed",
+    "valid_independent:1-1-1": 1
+   }
+  },
+  {
+   "id": "R11-02-c",
+   "finding": "R11-02",
+   "reproduced_by_reviewer": false,
+   "title": "حالة قديمة: محاولة مكتملة بالاجتياز ثم أُبطلت جلسة بدايتها. بعد الاستعادة يسقط دليلها والمهارة غير مستوفاة، وتُبدأ محاولة جديدة بلا ترك",
+   "old": [
+    {
+     "ev": {
+      "type": "session_start",
+      "session": "S1",
+      "kind": "start",
+      "day": 1
+     },
+     "ok": true
+    },
+    {
+     "ev": {
+      "type": "open_lesson",
+      "session": "S1",
+      "skill": "1-1-1"
+     },
+     "ok": true
+    },
+    {
+     "ev": {
+      "type": "lesson_opening_result",
+      "session": "S1",
+      "skill": "1-1-1",
+      "outcome": "full_error"
+     },
+     "ok": true
+    },
+    {
+     "ev": {
+      "type": "understanding_proved",
+      "session": "S1",
+      "skill": "1-1-1"
+     },
+     "ok": true
+    },
+    {
+     "ev": {
+      "type": "session_end",
+      "session": "S1"
+     },
+     "ok": true
+    },
+    {
+     "ev": {
+      "type": "session_start",
+      "session": "S2",
+      "kind": "follow",
+      "day": 2
+     },
+     "ok": true
+    },
+    {
+     "ev": {
+      "type": "check_started",
+      "session": "S2",
+      "skill": "1-1-1",
+      "check_id": "k1",
+      "content_version": 1
+     },
+     "ok": true
+    },
+    {
+     "ev": {
+      "type": "session_end",
+      "session": "S2"
+     },
+     "ok": true
+    },
+    {
+     "ev": {
+      "type": "session_start",
+      "session": "S3",
+      "kind": "follow",
+      "day": 3
+     },
+     "ok": true
+    },
+    {
+     "ev": {
+      "type": "check_resumed",
+      "session": "S3",
+      "skill": "1-1-1",
+      "check_id": "k1"
+     },
+     "ok": true
+    },
+    {
+     "ev": {
+      "type": "independence_result",
+      "session": "S3",
+      "skill": "1-1-1",
+      "check_id": "k1",
+      "result": "pass"
+     },
+     "ok": true
+    },
+    {
+     "ev": {
+      "type": "session_end",
+      "session": "S3"
+     },
+     "ok": true
+    },
+    {
+     "ev": {
+      "type": "invalidate_session",
+      "target": "S2"
+     },
+     "ok": true
+    }
+   ],
+   "expect": {
+    "check:k1": "closed",
+    "check_invalid:k1": true,
+    "state:1-1-1": "stumbled",
+    "valid_independent:1-1-1": 0
+   },
+   "then": [
+    {
+     "ev": {
+      "type": "session_start",
+      "session": "S4",
+      "kind": "follow",
+      "day": 4
+     },
+     "ok": true
+    },
+    {
+     "ev": {
+      "type": "check_started",
+      "session": "S4",
+      "skill": "1-1-1",
+      "check_id": "k2",
+      "content_version": 1
+     },
+     "ok": true
+    },
+    {
+     "ev": {
+      "type": "independence_result",
+      "session": "S4",
+      "skill": "1-1-1",
+      "check_id": "k2",
+      "result": "pass"
+     },
+     "ok": true
+    }
+   ],
+   "expect_then": {
+    "state:1-1-1": "met",
+    "check:k2": "closed",
+    "valid_independent:1-1-1": 1
+   }
+  },
+  {
+   "id": "R11-02-d",
+   "finding": "R11-02",
+   "reproduced_by_reviewer": false,
+   "title": "حالة قديمة سليمة فيها محاولة معلّقة: الترحيل لا يغيّرها، وتُستأنف ويُقبل اجتيازها",
+   "old": [
+    {
+     "ev": {
+      "type": "session_start",
+      "session": "S1",
+      "kind": "start",
+      "day": 1
+     },
+     "ok": true
+    },
+    {
+     "ev": {
+      "type": "open_lesson",
+      "session": "S1",
+      "skill": "1-1-1"
+     },
+     "ok": true
+    },
+    {
+     "ev": {
+      "type": "lesson_opening_result",
+      "session": "S1",
+      "skill": "1-1-1",
+      "outcome": "full_error"
+     },
+     "ok": true
+    },
+    {
+     "ev": {
+      "type": "understanding_proved",
+      "session": "S1",
+      "skill": "1-1-1"
+     },
+     "ok": true
+    },
+    {
+     "ev": {
+      "type": "session_end",
+      "session": "S1"
+     },
+     "ok": true
+    },
+    {
+     "ev": {
+      "type": "session_start",
+      "session": "S2",
+      "kind": "follow",
+      "day": 2
+     },
+     "ok": true
+    },
+    {
+     "ev": {
+      "type": "check_started",
+      "session": "S2",
+      "skill": "1-1-1",
+      "check_id": "k1",
+      "content_version": 1
+     },
+     "ok": true
+    },
+    {
+     "ev": {
+      "type": "session_end",
+      "session": "S2"
+     },
+     "ok": true
+    }
+   ],
+   "expect": {
+    "check:k1": "pending",
+    "check_invalid:k1": false,
+    "state:1-1-1": "stumbled",
+    "valid_independent:1-1-1": 0
+   },
+   "then": [
+    {
+     "ev": {
+      "type": "session_start",
+      "session": "S3",
+      "kind": "follow",
+      "day": 3
+     },
+     "ok": true
+    },
+    {
+     "ev": {
+      "type": "check_resumed",
+      "session": "S3",
+      "skill": "1-1-1",
+      "check_id": "k1"
+     },
+     "ok": true
+    },
+    {
+     "ev": {
+      "type": "independence_result",
+      "session": "S3",
+      "skill": "1-1-1",
+      "check_id": "k1",
+      "result": "pass"
+     },
+     "ok": true
+    }
+   ],
+   "expect_then": {
+    "state:1-1-1": "met",
+    "check:k1": "closed",
+    "valid_independent:1-1-1": 1
+   }
+  },
+  {
+   "id": "R11-02-e",
+   "finding": "R11-02",
+   "reproduced_by_reviewer": false,
+   "title": "حالة قديمة سليمة: محاولة مكتملة بالاجتياز، وجلسة لاحقة لم تسهم فيها أُبطلت. الترحيل لا يُسقط الدليل",
+   "old": [
+    {
+     "ev": {
+      "type": "session_start",
+      "session": "S1",
+      "kind": "start",
+      "day": 1
+     },
+     "ok": true
+    },
+    {
+     "ev": {
+      "type": "open_lesson",
+      "session": "S1",
+      "skill": "1-1-1"
+     },
+     "ok": true
+    },
+    {
+     "ev": {
+      "type": "lesson_opening_result",
+      "session": "S1",
+      "skill": "1-1-1",
+      "outcome": "full_error"
+     },
+     "ok": true
+    },
+    {
+     "ev": {
+      "type": "understanding_proved",
+      "session": "S1",
+      "skill": "1-1-1"
+     },
+     "ok": true
+    },
+    {
+     "ev": {
+      "type": "session_end",
+      "session": "S1"
+     },
+     "ok": true
+    },
+    {
+     "ev": {
+      "type": "session_start",
+      "session": "S2",
+      "kind": "follow",
+      "day": 2
+     },
+     "ok": true
+    },
+    {
+     "ev": {
+      "type": "check_started",
+      "session": "S2",
+      "skill": "1-1-1",
+      "check_id": "k1",
+      "content_version": 1
+     },
+     "ok": true
+    },
+    {
+     "ev": {
+      "type": "independence_result",
+      "session": "S2",
+      "skill": "1-1-1",
+      "check_id": "k1",
+      "result": "pass"
+     },
+     "ok": true
+    },
+    {
+     "ev": {
+      "type": "session_end",
+      "session": "S2"
+     },
+     "ok": true
+    },
+    {
+     "ev": {
+      "type": "session_start",
+      "session": "S3",
+      "kind": "follow",
+      "day": 3
+     },
+     "ok": true
+    },
+    {
+     "ev": {
+      "type": "session_end",
+      "session": "S3"
+     },
+     "ok": true
+    },
+    {
+     "ev": {
+      "type": "invalidate_session",
+      "target": "S3"
+     },
+     "ok": true
+    }
+   ],
+   "expect": {
+    "check:k1": "closed",
+    "check_invalid:k1": false,
+    "state:1-1-1": "met",
+    "valid_independent:1-1-1": 1
+   }
+  },
+  {
+   "id": "R11-02-f",
+   "finding": "R11-02",
+   "reproduced_by_reviewer": false,
+   "title": "حالة قديمة: جلسة وسطى استؤنفت فيها المحاولة أُبطلت، ولا تظهر إلا في السجل. تُستكمل الجلسات من السجل والمحاولة تحتاج إعادة بدء",
+   "old": [
+    {
+     "ev": {
+      "type": "session_start",
+      "session": "S1",
+      "kind": "start",
+      "day": 1
+     },
+     "ok": true
+    },
+    {
+     "ev": {
+      "type": "open_lesson",
+      "session": "S1",
+      "skill": "1-1-1"
+     },
+     "ok": true
+    },
+    {
+     "ev": {
+      "type": "lesson_opening_result",
+      "session": "S1",
+      "skill": "1-1-1",
+      "outcome": "full_error"
+     },
+     "ok": true
+    },
+    {
+     "ev": {
+      "type": "understanding_proved",
+      "session": "S1",
+      "skill": "1-1-1"
+     },
+     "ok": true
+    },
+    {
+     "ev": {
+      "type": "session_end",
+      "session": "S1"
+     },
+     "ok": true
+    },
+    {
+     "ev": {
+      "type": "session_start",
+      "session": "S2",
+      "kind": "follow",
+      "day": 2
+     },
+     "ok": true
+    },
+    {
+     "ev": {
+      "type": "check_started",
+      "session": "S2",
+      "skill": "1-1-1",
+      "check_id": "k1",
+      "content_version": 1
+     },
+     "ok": true
+    },
+    {
+     "ev": {
+      "type": "session_end",
+      "session": "S2"
+     },
+     "ok": true
+    },
+    {
+     "ev": {
+      "type": "session_start",
+      "session": "S3",
+      "kind": "follow",
+      "day": 3
+     },
+     "ok": true
+    },
+    {
+     "ev": {
+      "type": "check_resumed",
+      "session": "S3",
+      "skill": "1-1-1",
+      "check_id": "k1"
+     },
+     "ok": true
+    },
+    {
+     "ev": {
+      "type": "session_end",
+      "session": "S3"
+     },
+     "ok": true
+    },
+    {
+     "ev": {
+      "type": "session_start",
+      "session": "S4",
+      "kind": "follow",
+      "day": 4
+     },
+     "ok": true
+    },
+    {
+     "ev": {
+      "type": "check_resumed",
+      "session": "S4",
+      "skill": "1-1-1",
+      "check_id": "k1"
+     },
+     "ok": true
+    },
+    {
+     "ev": {
+      "type": "session_end",
+      "session": "S4"
+     },
+     "ok": true
+    },
+    {
+     "ev": {
+      "type": "invalidate_session",
+      "target": "S3"
+     },
+     "ok": true
+    }
+   ],
+   "expect": {
+    "check:k1": "needs_restart",
+    "restart_reason:k1": "session_invalidated",
+    "state:1-1-1": "stumbled",
+    "valid_independent:1-1-1": 0
+   },
+   "then": [
+    {
+     "ev": {
+      "type": "session_start",
+      "session": "S5",
+      "kind": "follow",
+      "day": 5
+     },
+     "ok": true
+    },
+    {
+     "ev": {
+      "type": "check_resumed",
+      "session": "S5",
+      "skill": "1-1-1",
+      "check_id": "k1"
+     },
+     "code": "check_state"
+    }
+   ],
+   "expect_then": {
+    "check:k1": "needs_restart"
+   }
+  },
+  {
+   "id": "R11-02-g",
+   "finding": "R11-02",
+   "reproduced_by_reviewer": false,
+   "no_log": true,
+   "title": "الحالة نفسها بلا سجل: الجلسة الوسطى لا تُعرف. الإجراء التحفظي: جلسة مبطلة في مدى المحاولة تُعامل كأنها مساهمة، بسبب migration_unverified",
+   "old": [
+    {
+     "ev": {
+      "type": "session_start",
+      "session": "S1",
+      "kind": "start",
+      "day": 1
+     },
+     "ok": true
+    },
+    {
+     "ev": {
+      "type": "open_lesson",
+      "session": "S1",
+      "skill": "1-1-1"
+     },
+     "ok": true
+    },
+    {
+     "ev": {
+      "type": "lesson_opening_result",
+      "session": "S1",
+      "skill": "1-1-1",
+      "outcome": "full_error"
+     },
+     "ok": true
+    },
+    {
+     "ev": {
+      "type": "understanding_proved",
+      "session": "S1",
+      "skill": "1-1-1"
+     },
+     "ok": true
+    },
+    {
+     "ev": {
+      "type": "session_end",
+      "session": "S1"
+     },
+     "ok": true
+    },
+    {
+     "ev": {
+      "type": "session_start",
+      "session": "S2",
+      "kind": "follow",
+      "day": 2
+     },
+     "ok": true
+    },
+    {
+     "ev": {
+      "type": "check_started",
+      "session": "S2",
+      "skill": "1-1-1",
+      "check_id": "k1",
+      "content_version": 1
+     },
+     "ok": true
+    },
+    {
+     "ev": {
+      "type": "session_end",
+      "session": "S2"
+     },
+     "ok": true
+    },
+    {
+     "ev": {
+      "type": "session_start",
+      "session": "S3",
+      "kind": "follow",
+      "day": 3
+     },
+     "ok": true
+    },
+    {
+     "ev": {
+      "type": "check_resumed",
+      "session": "S3",
+      "skill": "1-1-1",
+      "check_id": "k1"
+     },
+     "ok": true
+    },
+    {
+     "ev": {
+      "type": "session_end",
+      "session": "S3"
+     },
+     "ok": true
+    },
+    {
+     "ev": {
+      "type": "session_start",
+      "session": "S4",
+      "kind": "follow",
+      "day": 4
+     },
+     "ok": true
+    },
+    {
+     "ev": {
+      "type": "check_resumed",
+      "session": "S4",
+      "skill": "1-1-1",
+      "check_id": "k1"
+     },
+     "ok": true
+    },
+    {
+     "ev": {
+      "type": "session_end",
+      "session": "S4"
+     },
+     "ok": true
+    },
+    {
+     "ev": {
+      "type": "invalidate_session",
+      "target": "S3"
+     },
+     "ok": true
+    }
+   ],
+   "expect": {
+    "check:k1": "needs_restart",
+    "restart_reason:k1": "migration_unverified",
+    "state:1-1-1": "stumbled",
+    "valid_independent:1-1-1": 0
+   },
+   "then": [
+    {
+     "ev": {
+      "type": "session_start",
+      "session": "S5",
+      "kind": "follow",
+      "day": 5
+     },
+     "ok": true
+    },
+    {
+     "ev": {
+      "type": "check_resumed",
+      "session": "S5",
+      "skill": "1-1-1",
+      "check_id": "k1"
+     },
+     "code": "check_state"
+    },
+    {
+     "ev": {
+      "type": "check_abandoned",
+      "check_id": "k1",
+      "reason": "جلسة مساهمة مبطلة"
+     },
+     "ok": true
+    },
+    {
+     "ev": {
+      "type": "check_started",
+      "session": "S5",
+      "skill": "1-1-1",
+      "check_id": "k2",
+      "content_version": 1
+     },
+     "ok": true
+    },
+    {
+     "ev": {
+      "type": "independence_result",
+      "session": "S5",
+      "skill": "1-1-1",
+      "check_id": "k2",
+      "result": "pass"
+     },
+     "ok": true
+    }
+   ],
+   "expect_then": {
+    "state:1-1-1": "met",
+    "check:k2": "closed",
+    "valid_independent:1-1-1": 1
+   }
+  },
+  {
+   "id": "R11-02-h",
+   "finding": "R11-02",
+   "reproduced_by_reviewer": false,
+   "no_log": true,
+   "title": "بلا سجل، والجلسة المبطلة بعد ختم المحاولة خارج مداها: لا يُسقط الإجراء التحفظي دليلًا لم يُمسّ",
+   "old": [
+    {
+     "ev": {
+      "type": "session_start",
+      "session": "S1",
+      "kind": "start",
+      "day": 1
+     },
+     "ok": true
+    },
+    {
+     "ev": {
+      "type": "open_lesson",
+      "session": "S1",
+      "skill": "1-1-1"
+     },
+     "ok": true
+    },
+    {
+     "ev": {
+      "type": "lesson_opening_result",
+      "session": "S1",
+      "skill": "1-1-1",
+      "outcome": "full_error"
+     },
+     "ok": true
+    },
+    {
+     "ev": {
+      "type": "understanding_proved",
+      "session": "S1",
+      "skill": "1-1-1"
+     },
+     "ok": true
+    },
+    {
+     "ev": {
+      "type": "session_end",
+      "session": "S1"
+     },
+     "ok": true
+    },
+    {
+     "ev": {
+      "type": "session_start",
+      "session": "S2",
+      "kind": "follow",
+      "day": 2
+     },
+     "ok": true
+    },
+    {
+     "ev": {
+      "type": "check_started",
+      "session": "S2",
+      "skill": "1-1-1",
+      "check_id": "k1",
+      "content_version": 1
+     },
+     "ok": true
+    },
+    {
+     "ev": {
+      "type": "session_end",
+      "session": "S2"
+     },
+     "ok": true
+    },
+    {
+     "ev": {
+      "type": "session_start",
+      "session": "S3",
+      "kind": "follow",
+      "day": 3
+     },
+     "ok": true
+    },
+    {
+     "ev": {
+      "type": "check_resumed",
+      "session": "S3",
+      "skill": "1-1-1",
+      "check_id": "k1"
+     },
+     "ok": true
+    },
+    {
+     "ev": {
+      "type": "independence_result",
+      "session": "S3",
+      "skill": "1-1-1",
+      "check_id": "k1",
+      "result": "pass"
+     },
+     "ok": true
+    },
+    {
+     "ev": {
+      "type": "session_end",
+      "session": "S3"
+     },
+     "ok": true
+    },
+    {
+     "ev": {
+      "type": "session_start",
+      "session": "S4",
+      "kind": "follow",
+      "day": 4
+     },
+     "ok": true
+    },
+    {
+     "ev": {
+      "type": "session_end",
+      "session": "S4"
+     },
+     "ok": true
+    },
+    {
+     "ev": {
+      "type": "invalidate_session",
+      "target": "S4"
+     },
+     "ok": true
+    }
+   ],
+   "expect": {
+    "check:k1": "closed",
+    "check_invalid:k1": false,
+    "state:1-1-1": "met",
+    "valid_independent:1-1-1": 1
+   }
+  }
+ ]
+}

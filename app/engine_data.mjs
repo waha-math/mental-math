@@ -22,6 +22,7 @@ export const DATA = {
   "invalidate_session",
   "retention_result"
  ],
+ "migration": 1,
  "network": {
   "ids": [
    "1-1-1",

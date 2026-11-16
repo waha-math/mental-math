@@ -29,7 +29,8 @@ SUPPORT = ('hint', 'extra_model', 'someone', 'requested')
 def fold_item(raw, answer, assess):
     """raw: قائمة أحداث البند بترتيبها: ('confirm', قيمة)، ('support', نوع)، ('interrupt',)، ('end',).
     assess: بند بوابة أو فحص أو تحقق، ينتهي بأول تأكيد ولا محاولات بعده.
-    يعيد الحقول الخمسة: status، first، support_before، later، final."""
+    يعيد الحقول الخمسة: status، first، support_before، later، final، ومعها support_unanswered: الدعم الذي جاء بعد
+    آخر إجابة مؤكَّدة ولم تتبعه إجابة. يُحفظ كل دعم فور حدوثه، ولو انقطع البند قبل الإجابة التالية (3.1)."""
     first, before, later, pending, last = None, [], [], [], None
     interrupted = ended = False
     for ev in raw:
@@ -59,14 +60,18 @@ def fold_item(raw, answer, assess):
             raise ValueError('حدث بند غير معروف: %r' % (ev,))
     if not (ended or interrupted):
         raise ValueError('البند لم ينتهِ بعد')
+    unanswered = []
     if first is None:
         before = pending                            # «بند طُلب فيه دعم ثم انقطع يُسجَّل منقطعًا ومعه الدعم»
+    else:
+        unanswered = pending                        # دعم بعد آخر إجابة، لم تتبعه إجابة: لا يُنقل إلى ما قبل الأولى
     status = 'complete' if first is not None else 'interrupted'
     if first is None or interrupted:
         final = 'incomplete'
     else:
         final = 'correct' if last else 'wrong'
-    return dict(status=status, first=first, support_before=before, later=later, final=final)
+    return dict(status=status, first=first, support_before=before, later=later, final=final,
+                support_unanswered=unanswered)
 
 
 def correct_independent(rec):
@@ -85,9 +90,14 @@ def classify(rec):
 
 # ---------------------------------------------------------------- 3.2 المؤشرات
 def indicators(records):
+    """النجاح بمساعدة: البنود التي سبق دعمٌ إحدى إجاباتها وبلغت نتيجة نهائية. والمدعومة غير المكتملة: كل بند فيه
+    دعم، في أي موضع، ونتيجته النهائية غير مكتملة، ويُعدّ مرة واحدة. الدعم بعد آخر إجابة في بند انتهى بنتيجة
+    يُحفظ ولا يدخل المؤشرين، لأن الإجابة لم تأتِ بعده."""
     complete = [r for r in records if r['status'] == 'complete']
     used = [r for r in records if r['support_before'] or any(a['support'] for a in r['later'])]
     reached = [r for r in used if r['final'] in ('correct', 'wrong')]
+    unfinished = [r for r in records if r['final'] == 'incomplete' and (
+        r['support_before'] or r.get('support_unanswered') or any(a['support'] for a in r['later']))]
     cut = [r for r in records if r['status'] == 'interrupted']
 
     def rate(a, b):
@@ -97,7 +107,7 @@ def indicators(records):
                           after_support=sum(1 for r in complete if r['support_before'])),
         independent=rate(sum(1 for r in complete if correct_independent(r)), len(complete)),
         assisted=dict(rate(sum(1 for r in reached if r['final'] == 'correct'), len(reached)),
-                      supported_unfinished=len(used) - len(reached)),
+                      supported_unfinished=len(unfinished)),
         interrupted=dict(count=len(cut), with_support=sum(1 for r in cut if r['support_before'])))
 
 

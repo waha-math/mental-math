@@ -25,6 +25,8 @@ const get = (o, k, d) => (Object.prototype.hasOwnProperty.call(o, k) ? o[k] : d)
 // ---------------------------------------------------------------- 3.1 الحقول الخمسة
 // raw: أحداث البند بترتيبها: ['confirm', قيمة]، ['support', نوع]، ['interrupt']، ['end'].
 // assess: بند بوابة أو فحص أو تحقق، ينتهي بأول تأكيد ولا محاولات بعده.
+// يعيد الحقول الخمسة ومعها support_unanswered: الدعم الذي جاء بعد آخر إجابة مؤكَّدة ولم تتبعه إجابة. يُحفظ كل دعم
+// فور حدوثه، ولو انقطع البند قبل الإجابة التالية (3.1).
 export function foldItem(raw, answer, assess) {
   let first = null, before = [], pending = [], last = null, interrupted = false, ended = false;
   const later = [];
@@ -55,10 +57,12 @@ export function foldItem(raw, answer, assess) {
     }
   }
   if (!(ended || interrupted)) throw new Error('البند لم ينتهِ بعد');
+  let unanswered = [];
   if (first === null) before = pending;           // «بند طُلب فيه دعم ثم انقطع يُسجَّل منقطعًا ومعه الدعم»
+  else unanswered = pending;                      // دعم بعد آخر إجابة، لم تتبعه إجابة: لا يُنقل إلى ما قبل الأولى
   const status = first !== null ? 'complete' : 'interrupted';
   const final = first === null || interrupted ? 'incomplete' : (last ? 'correct' : 'wrong');
-  return { status, first, support_before: before, later, final };
+  return { status, first, support_before: before, later, final, support_unanswered: unanswered };
 }
 
 // «صحيحة مستقلة»: مكتمل، أول إجابة مؤكَّدة صحيحة، ولا دعم قبلها (3.1)
@@ -74,10 +78,15 @@ export function classify(rec) {
 }
 
 // ---------------------------------------------------------------- 3.2 المؤشرات
+// النجاح بمساعدة: البنود التي سبق دعمٌ إحدى إجاباتها وبلغت نتيجة نهائية. والمدعومة غير المكتملة: كل بند فيه دعم،
+// في أي موضع، ونتيجته النهائية غير مكتملة، ويُعدّ مرة واحدة. الدعم بعد آخر إجابة في بند انتهى بنتيجة يُحفظ ولا
+// يدخل المؤشرين، لأن الإجابة لم تأتِ بعده
 export function indicators(records) {
   const complete = records.filter((r) => r.status === 'complete');
   const used = records.filter((r) => r.support_before.length || r.later.some((a) => a.support.length));
   const reached = used.filter((r) => r.final === 'correct' || r.final === 'wrong');
+  const unfinished = records.filter((r) => r.final === 'incomplete' && (r.support_before.length
+    || (r.support_unanswered || []).length || r.later.some((a) => a.support.length)));
   const cut = records.filter((r) => r.status === 'interrupted');
   const rate = (a, b) => ({ num: a, den: b, value: b === 0 ? null : a / b });
   const count = (list, f) => list.filter(f).length;
@@ -86,7 +95,7 @@ export function indicators(records) {
       after_support: count(complete, (r) => r.support_before.length) },
     independent: rate(count(complete, correctIndependent), complete.length),
     assisted: { ...rate(count(reached, (r) => r.final === 'correct'), reached.length),
-      supported_unfinished: used.length - reached.length },
+      supported_unfinished: unfinished.length },
     interrupted: { count: cut.length, with_support: count(cut, (r) => r.support_before.length) },
   };
 }

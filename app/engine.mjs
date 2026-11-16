@@ -11,6 +11,7 @@ import { DATA } from './engine_data.mjs';
 
 const { schema: SCHEMA, reasons: REASONS, quota: QUOTA, search_cap: SEARCH_CAP } = DATA;
 const { gaps: RETENTION_GAPS, items: RETENTION_ITEMS, ok: RETENTION_OK } = DATA.retention;
+const MIGRATION = DATA.migration;              // نسخة ترحيل الحالة المحفوظة (المراجعة 12)
 
 const EXEMPT = 'exempt', STUMBLE = 'stumble', UNDERSTOOD = 'understood', INDEPENDENT = 'independent',
   SHORT_OK = 'short_ok', RECHECK = 'recheck';
@@ -62,7 +63,7 @@ export class Engine {
     this.s = {
       group, regate, seq: 0, log: [], applied: {}, evidence: [], decisions: [], attempts: [], sessions: {},
       order: [], current: null, opened: {}, queue: [], gates: {}, checked: [], checks: {}, suspended: {},
-      history: [], retention: [],
+      history: [], retention: [], migration: MIGRATION,
     };
   }
 
@@ -84,6 +85,10 @@ export class Engine {
     const e = new Engine(net, { group: st.group, regate: st.regate, versions: contentVersions });
     e.s = st;
     if (!has(st, 'retention')) st.retention = [];
+    if ((st.migration ?? 0) < MIGRATION) {
+      e._migrateChecks();
+      st.migration = MIGRATION;
+    }
     for (const [cid, c] of Object.entries(st.checks)) {
       if (c.state === 'pending' && !e._hasVersion(c.content_version)) {
         c.state = 'needs_restart';
@@ -91,6 +96,80 @@ export class Engine {
       }
     }
     return e;
+  }
+
+  // ترحيل حالة نسختها أقل من MIGRATION (المراجعتان 11 و12). وجود قائمة الجلسات المساهمة لا يثبت شيئًا: تُستكمل
+  // القائمة من أحداث السجل ومن حقول المحاولة، مرتبةً بترتيب الجلسات، ثم يُطبَّق أثر كل جلسة مساهمة أُبطلت، ولا يتكرر.
+  // وإن خلا السجل من بدء المحاولة، فجلسة مبطلة في مداها، من البدء إلى الختم أو آخر جلسة، تُعامل كأنها مساهمة،
+  // بسبب migration_unverified
+  _migrateChecks() {
+    const st = this.s;
+    const pos = new Map(st.order.map((x, n) => [x, n]));
+    const at = (x) => this._invalidatedAt(x);
+    let hit = false;
+    for (const [cid, c] of Object.entries(st.checks)) {
+      const logged = st.log.filter((ev) => (ev.type === 'check_started' || ev.type === 'check_resumed')
+        && ev.check_id === cid).map((ev) => ev.session);
+      const known = st.log.some((ev) => ev.type === 'check_started' && ev.check_id === cid);
+      const have = new Set([...(c.sessions || []), ...logged,
+        ...[c.session, c.active, c.held_session, c.closed_session].filter((x) => x)]);
+      c.sessions = [...have].sort((x, y) => pos.get(x) - pos.get(y));
+      let bad = c.sessions.filter((x) => st.sessions[x].invalid);
+      let reason = 'session_invalidated';
+      if (!bad.length && !known) {
+        const a = pos.get(c.session);
+        const b = c.closed_session ? pos.get(c.closed_session) : st.order.length - 1;
+        bad = st.order.slice(a, b + 1).filter((x) => st.sessions[x].invalid);
+        reason = 'migration_unverified';
+      }
+      if (bad.length) {                       // أقدم إبطال أولًا: هو الذي يحدد أسبق الختمَ أم لا
+        const key = (x) => (at(x) === null ? [1, 0] : [0, at(x)]);
+        const first = bad.reduce((m, x) => {
+          const [p, q] = key(x), [r, t] = key(m);
+          return p < r || (p === r && q < t) ? x : m;
+        });
+        hit = this._taintCheck(cid, first, reason, true) || hit;
+      }
+    }
+    if (hit) this._reconcile();
+  }
+
+  _invalidatedAt(session) {
+    const h = this.s.history.find((x) => x.what === 'session_invalidated' && x.session === session);
+    return h ? h.seq : null;
+  }
+
+  // أثر إبطال جلسة أسهمت في محاولة فحص. غير المكتملة تحتاج إعادة بدء. والمكتملة يسقط دليلها، وإن كان الإبطال قبل
+  // ختمها (حالة قديمة قبِل محركها النتيجة بعده) فحكمها حكم غير المكتملة، كما في إعادة تشغيل سجلها
+  _taintCheck(cid, session, reason, migrated = false) {
+    const c = this.s.checks[cid];
+    const extra = migrated ? { reason, migrated: true } : {};
+    const when = this._invalidatedAt(session);
+    const reopen = migrated && c.state === 'closed' && !c.invalid && when !== null && when < c.closed_seq;
+    if (c.state === 'closed' && !c.invalid && !reopen) {
+      c.invalid = true;                       // اكتملت: يسقط دليلها، وتبقى بنودها في السجل
+      this._dropCheckEvidence(cid);
+      this.s.history.push({ seq: this.s.seq, what: 'check_invalidated', check: cid, session, ...extra });
+      return true;
+    }
+    if (c.state === 'pending' || c.state === 'held' || reopen) {   // لم تكتمل: لا تُستأنف ولا تُقبل نتيجتها
+      if (reopen) {
+        c.migrated_result = c.result;
+        delete c.result;
+        delete c.closed_session;
+        delete c.closed_seq;
+        this._dropCheckEvidence(cid);
+      }
+      c.restart_reason = reason;
+      c.state = 'needs_restart';
+      this.s.history.push({ seq: this.s.seq, what: 'check_needs_restart', check: cid, session, ...extra });
+      return true;
+    }
+    return false;                             // طُبّق الأثر من قبل، أو المحاولة متروكة
+  }
+
+  _dropCheckEvidence(cid) {
+    for (const e of this.s.evidence) if (e.check === cid && e.valid) e.valid = false;
   }
 
   static replay(net, log, opts = {}) {
@@ -330,9 +409,18 @@ export class Engine {
     return fine && !has(this.s.sessions, ev.session) ? ok() : no('session_order');
   }
 
+  // مرجع التاريخ (9.1): يوم آخر جلسة، بترتيب الجلسات، تاريخها موثوق، أي لم تُعلَّم بتنبيه أو أكّد الوالد تاريخها.
+  // التاريخ المعلَّم غير المؤكد لا يصير مرجعًا. الجلسة المبطلة تبقى مرجعًا: الإبطال يخص الطفل لا الساعة.
+  dateReference() {
+    for (let k = this.s.order.length - 1; k >= 0; k -= 1) {
+      const ses = this.s.sessions[this.s.order[k]];
+      if (!ses.clock) return ses.day;
+    }
+    return null;
+  }
+
   do_session_start(ev) {
-    const days = this.s.order.map((x) => this.s.sessions[x].day);
-    const last = days.length ? Math.max(...days) : null;
+    const last = this.dateReference();
     const flag = last !== null && (ev.day < last || ev.day > last + 30);
     put(this.s.sessions, ev.session, {
       kind: ev.kind, day: ev.day, clock: flag, gate: 0, short: 0, teach: 0, ended: false, invalid: false,
@@ -533,11 +621,12 @@ export class Engine {
     return this._teachLeft(ses) ? ok() : no('quota_teach');
   }
 
-  // 3.6: في يوم بعد يوم الدرس، والإعادة في يوم لاحق، وبعد الإخفاق جلسة تدريب. الأيام أيام الأسرة
+  // 3.6: في يوم بعد يوم الدرس، والإعادة في يوم لاحق، وبعد الإخفاق جلسة تدريب. الأيام أيام الأسرة. تُطبَّق على البدء
+  // والاستئناف والنتيجة. المحاولة المكتملة التي أُبطلت جلسة أسهمت فيها لا تُعدّ
   _checkTiming(skill, day) {
     const und = this.validEvidence(skill, UNDERSTOOD);
     if (und.length && day <= this.s.sessions[und[und.length - 1].session].day) return no('check_same_day');
-    const closed = this._checksOf(skill).filter((c) => c.state === 'closed');
+    const closed = this._checksOf(skill).filter((c) => c.state === 'closed' && !c.invalid);
     if (closed.length) {
       let last = closed[0];
       for (const c of closed) if (c.closed_seq > last.closed_seq) last = c;
@@ -554,7 +643,7 @@ export class Engine {
     this.s.sessions[ev.session].teach += 1;
     put(this.s.checks, ev.check_id, {
       skill: ev.skill, content_version: ev.content_version, session: ev.session, active: ev.session,
-      state: 'pending', seq: this.s.seq,
+      state: 'pending', seq: this.s.seq, sessions: [ev.session],
     });
   }
 
@@ -571,12 +660,18 @@ export class Engine {
     if (c.state !== 'pending') return no('check_state');
     if (c.active === ev.session) return no('already_active');
     if (!this._hasVersion(c.content_version)) return no('version_unavailable');
-    return this._teachLeft(this.s.sessions[ev.session]) ? ok() : no('quota_teach');
+    const ses = this.s.sessions[ev.session];
+    if (ses.clock) return no('date_unconfirmed');     // 9.1: لا يُعتمد عمل فحص في يوم غير مؤكد
+    const bad2 = this._checkTiming(ev.skill, ses.day);
+    if (bad2) return bad2;
+    return this._teachLeft(ses) ? ok() : no('quota_teach');
   }
 
   do_check_resumed(ev) {
     this.s.sessions[ev.session].teach += 1;
-    this.s.checks[ev.check_id].active = ev.session;
+    const c = this.s.checks[ev.check_id];
+    c.active = ev.session;
+    if (!c.sessions.includes(ev.session)) c.sessions.push(ev.session);   // كل جلسة عُرضت فيها بنود المحاولة
   }
 
   can_check_held(ev) {
@@ -614,7 +709,11 @@ export class Engine {
     const c = this._ownCheck(ev);
     if (!c) return no('no_check');
     if (c.state !== 'pending') return no('check_state');
+    const ses = this.s.sessions[ev.session];
+    if (ses.clock) return no('date_unconfirmed');
     if (c.active !== ev.session) return no('check_idle');
+    const bad2 = this._checkTiming(ev.skill, ses.day);
+    if (bad2) return bad2;
     return this._hasVersion(c.content_version) ? ok() : no('version_unavailable');
   }
 
@@ -703,6 +802,9 @@ export class Engine {
       }
     }
     this.s.history.push({ seq: this.s.seq, what: 'session_invalidated', session: ev.target, evidence: hit });
+    for (const [cid, c] of Object.entries(this.s.checks)) {   // محاولة فحص أسهمت فيها الجلسة
+      if (c.sessions.includes(ev.target)) this._taintCheck(cid, ev.target, 'session_invalidated');
+    }
     for (const r of this.s.retention) {       // فحص الاحتفاظ في الجلسة المبطلة لا يُعدّ، ويبقى في السجل
       if (r.session === ev.target && r.valid) {
         r.valid = false;
