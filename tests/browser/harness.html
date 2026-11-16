@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head><meta charset="utf-8"><title>اختبار الحفظ الذرّي</title></head>
+<body>
+<p id="status">جارٍ التحميل</p>
+<script type="module">
+// صفحة الاختبار: تحمّل وحدات التطبيق كما يحمّلها المتصفح، وتبني حالة طفل حقيقية من محتوى الشريحة، وتعرض الدوال
+// لمشغّل الاختبار (tests/browser/test_store_browser.mjs). لا منطق حفظ هنا: كله في app/store.mjs و app/persist.mjs.
+import * as store from '../../app/store.mjs';
+import * as persist from '../../app/persist.mjs';
+import { Engine } from '../../app/engine.mjs';
+import { Scheduler } from '../../app/scheduler.mjs';
+import { ContentSource, foldItem, classify } from '../../app/items.mjs';
+
+const ITEMS = (await (await fetch('../../slice-content.json')).json()).items;
+const TYPES = { '1-4-1': ['ف1', 'ف3'] };      // من صف المهارة في الخريطة
+const secs = (w) => (w.activity === 'check' ? 60 : 0);
+
+class Child {
+  constructor() { this.known = new Set(); }
+  call(item, want) {
+    const a = want.activity;
+    if (a === 'lesson' || a === 'practice') {
+      if (a === 'lesson') this.known.add(item.skill);
+      return 'correct';
+    }
+    const assess = ['gate', 'short', 'check', 'retention'].includes(a);
+    const ans = this.known.has(item.skill) ? item.answer : item.answer + 1;
+    return [[['confirm', ans], ...(assess ? [] : [['end']])], item.answer, assess];
+  }
+}
+
+// حتى نهاية S3: 1-4-1 للصغير، الفهم في S2، والفحص محفوظ بأربع خانات
+function setup() {
+  const e = new Engine(undefined, { group: 'young' });
+  e.apply({ id: 'd0', type: 'teacher_open', skill: '1-4-1', bypass: ['1-3-3'], reason: 'قرار الشريحة' });
+  const src = new ContentSource(ITEMS), child = new Child();
+  const sc = new Scheduler(e, TYPES, (s, w) => src.pick(s, w), (i, w) => child.call(i, w), {
+    group: 'young', scope: ['1-4-1'], learning: true, cap: 240, item_seconds: secs, records: [] });
+  sc.search();
+  sc.start_session();
+  sc.follow_learning();
+  return { e, sc, src, child };
+}
+
+// S4 كما ستفعله الواجهة: استئناف الفحص، الخانة الخامسة صحيحة، ثم عرض السادسة وأحداثها الخام حتى الآن
+function midCheck(raw) {
+  const { e, sc, src, child } = setup();
+  sc.begin('follow');
+  sc.send({ type: 'check_resumed', skill: '1-4-1', check_id: '1-4-1/check/1' });
+  const act = sc.take('check', '1-4-1');
+  const items = [...sc.carried_items];
+  let w = act.want();
+  let it = src.pick('1-4-1', w);
+  const [r, ans, assess] = child.call(it, w);
+  act.feed(classify(foldItem(r, ans, assess)));
+  items.push(it.id);
+  w = act.want();
+  it = src.pick('1-4-1', w);
+  const current = { kind: 'check', skill: '1-4-1', act: act.toDict(), items,
+    journal: { item: it.id, want: w, answer: it.answer, assess: true, raw } };
+  return { e, sc, current };
+}
+
+function reopen(record) {
+  const src = new ContentSource(ITEMS), child = new Child();
+  child.known.add('1-4-1');
+  return persist.restore(record, { types: TYPES, source: (s, w) => src.pick(s, w), answer: (i, w) => child.call(i, w),
+    item_seconds: secs, records: [] });
+}
+
+window.H = { store, persist, setup, midCheck, reopen, ITEMS };
+document.getElementById('status').textContent = 'جاهز';
+window.ready = true;
+</script>
+</body>
+</html>

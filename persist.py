@@ -1,0 +1,157 @@
+#!/usr/bin/env python3
+"""سياسة الحفظ والاستعادة (9.2): ما يُحفظ، وكيف تُستعاد منه حالة كاملة متسقة. المرجع لـ app/persist.mjs.
+
+الحفظ في التطبيق سجل واحد لكل طفل يُكتب في معاملة واحدة (app/store.mjs). هذا الملف يحدد محتواه وقواعد قراءته،
+ولا يكتب شيئًا: الكتابة الذرّية آلية المتصفح، وتُختبر فيه.
+
+السجل:
+- engine: نص المحرك المحفوظ (dump)، بنسخة ترحيله.
+- scheduler: خيارات المجدول وحالته كلها: الأنشطة المحفوظة (saved)، والمركونة (parked)، والنوايا، والعدّادات، والسجل.
+- current: النشاط الجاري إن كان: نوعه ومهارته وحالته (to_dict)، والبنود التي عُرضت منه، و journal: البند الجاري.
+- journal: البند المعروض الآن ببنده وما طلبه النشاط (want) وأحداثه الخام حتى الآن: الدعم، والإجابات المؤكدة التي لم
+  تُنهِ البند. يُحفظ كل حدث منها فور وقوعه. والحدث الذي يُنهي البند لا يُحفظ في journal: يُطوى البند ويُعطى للنشاط
+  ويُفرَّغ journal في الحفظ نفسه، فلا يُحسب البند مرتين.
+
+الاستعادة:
+1. المحرك من نصه، والمجدول بخياراته وحالته.
+2. البند الجاري، إن كان، لم يكتمل بالضرورة: يُختم بانقطاع ويُعلَّم «غير محسوم» (9.2)، ويُعطى للنشاط بقواعد البند
+   المنقطع نفسها (3.1). الدعم الذي طُلب فيه يبقى معه، والإجابات المؤكدة قبله تبقى.
+3. النشاط الجاري يُحفظ في saved كما لو قطعه السقف، فيُستأنف بأولوية 7.1 في جلسة تالية.
+4. جلسة لم تُختم في المحرك تُختم بحدث session_end: التطبيق أُغلق فيها.
+5. فحص اتساق قبل القبول: لا يُقبل سجل يخالف فيه المجدولُ المحرك.
+"""
+import copy
+import json
+
+from item_layer import Activity, fold_item, classify
+from scheduler import Scheduler
+
+SCHEMA = 1
+OPTS = ('group', 'start', 'scope', 'learning', 'tolerant', 'compat', 'content_version', 'no_short', 'try_from_gate',
+        'cap', 'retention')
+STATE = ('saved', 'parked', 'carried_items', 'intent', 'pending', 'proven', 'attempt', 'ev_round', 'last_items', 'n',
+         'gates_run', 'searches', 'sessions', 'day', 'cur', 'log', 'refused', 'stalled', 'elapsed', 'start_at',
+         'items_before', 'start_w', 'start_what')
+TERMINAL = ('end', 'interrupt')
+
+
+class Inconsistent(Exception):
+    """سجل يخالف فيه المجدولُ المحرك: لا يُستعاد، ويُعرض للوالد."""
+
+
+def plain(x):
+    return json.loads(json.dumps(x, ensure_ascii=False, default=lambda o: o.to_dict() if isinstance(o, Activity)
+                                 else sorted(o) if isinstance(o, (set, frozenset)) else dict(o)))
+
+
+def options(sc):
+    o = dict(group=sc.group, start=sc.start, scope=None if len(sc.ids) == len(sc.e.ids) else list(sc.ids),
+             learning=sc.learning, tolerant=sc.tolerant, compat=sc.compat, content_version=sc.content_version,
+             no_short=sorted(sc.no_short), try_from_gate=sc.try_from_gate, cap=sc.cap, retention=sc.retention)
+    return o
+
+
+def state_of(sc):
+    d = {k: plain(getattr(sc, k)) for k in STATE}
+    d['n'] = {k: v for k, v in d['n'].items() if v}
+    d['next_id'] = next_id(sc)
+    return d
+
+
+def next_id(sc):
+    """رقم معرّف الحدث التالي، دون أن يتقدم العدّاد."""
+    ids = sc._ids
+    if hasattr(ids, 'n'):
+        return ids.n
+    import itertools
+    v = next(ids)
+    sc._ids = itertools.count(v)
+    return v
+
+
+def item_ends(raw, assess):
+    """هل تُنهي هذه الأحداث البند؟ بند التقييم ينتهي بأول تأكيد."""
+    if not raw:
+        return False
+    if raw[-1][0] in TERMINAL:
+        return True
+    return assess and any(ev[0] == 'confirm' for ev in raw)
+
+
+def snapshot(engine, sc, current=None, child=''):
+    """السجل الذي يُكتب في معاملة واحدة. current: dict(kind, skill, act, items, journal) أو None."""
+    if current is not None and current.get('journal'):
+        j = current['journal']
+        if item_ends(j['raw'], j['assess']):
+            raise ValueError('البند المنتهي يُطوى ويُعطى للنشاط قبل الحفظ، ولا يُحفظ في journal')
+    return dict(schema=SCHEMA, child=child, engine=engine.dump(), scheduler=dict(opts=options(sc), state=state_of(sc)),
+                current=plain(current))
+
+
+def check_consistent(engine, st):
+    """ما يجب أن يتفق فيه المجدول والمحرك."""
+    bad = []
+    if st['sessions'] != len(engine.s['order']):
+        bad.append('عدد الجلسات في المجدول %d وفي المحرك %d' % (st['sessions'], len(engine.s['order'])))
+    for c in st['saved'] + list(st['parked'].values()):
+        if c['kind'] == 'check':
+            cid = c['act']['check_id']
+            ch = engine.s['checks'].get(cid)
+            if ch is None or ch['state'] not in ('pending', 'needs_restart'):
+                bad.append('فحص محفوظ %s ليس معلّقًا في المحرك' % cid)
+    keys = [(c['kind'], c['skill']) for c in st['saved']]
+    if len(keys) != len(set(keys)):
+        bad.append('مفتاح محفوظ مرتين')
+    if st['cur'] is not None and engine.s['current'] != st['cur']:
+        bad.append('الجلسة الجارية في المجدول %s وفي المحرك %s' % (st['cur'], engine.s['current']))
+    return bad
+
+
+def restore(record, net, types, source, answer, item_seconds=None, records=None, content_versions=None):
+    """يعيد (المحرك، المجدول، ملاحظات). يرفع Inconsistent إن خالف المجدولُ المحرك."""
+    from transition_engine import Engine
+    if record.get('schema') != SCHEMA:
+        raise Inconsistent('نسخة سجل غير معروفة: %r' % record.get('schema'))
+    e = Engine.restore(net, record['engine'], content_versions)
+    o = dict(record['scheduler']['opts'])
+    o['scope'] = None if o['scope'] is None else set(o['scope'])
+    sc = Scheduler(e, types, source, answer, records=records, item_seconds=item_seconds, **o)
+    st = copy.deepcopy(record['scheduler']['state'])
+    bad = check_consistent(e, st)
+    if bad:
+        raise Inconsistent('؛ '.join(bad))
+    for k in STATE:
+        setattr(sc, k, st[k])
+    from collections import Counter
+    sc.n = Counter(st['n'])
+    import itertools
+    sc._ids = itertools.count(st['next_id'])
+    notes = []
+    cur = copy.deepcopy(record.get('current'))
+    if cur:
+        if cur['kind'] == 'show':
+            entry = dict(kind='show', skill=cur['skill'], activity=cur['activity'], pos=cur['pos'], items=[])
+        else:
+            act = Activity.from_dict(cur['act'])
+            items = list(cur['items'])
+            j = cur.get('journal')
+            if j:                                           # البند الجاري: يُختم بانقطاع، «غير محسوم»
+                rec = fold_item([tuple(ev) for ev in j['raw']] + [('interrupt',)], j['answer'], j['assess'])
+                act.feed(classify(rec))
+                if j.get('item'):
+                    items.append(j['item'])
+                if sc.records is not None:
+                    sc.records.append(dict(rec, skill=act.skill, activity=act.name, role=j['want'].get('role'),
+                                           item=j.get('item'), unsettled=True))
+                notes.append(('unsettled_item', act.skill, j.get('item'), classify(rec)))
+            entry = dict(kind=cur['kind'], skill=act.skill, act=act.to_dict(), items=items)
+        sc.save(entry)
+        notes.append(('current_saved', cur['kind'], cur['skill']))
+    if e.s['current'] is not None:                          # التطبيق أُغلق في جلسة لم تُختم
+        ses = e.s['current']
+        r = e.apply(dict(id='restore-end-%s' % ses, type='session_end', session=ses))
+        if not r['ok']:
+            raise Inconsistent('تعذر ختم الجلسة %s: %s' % (ses, r.get('code')))
+        sc.cur = None
+        notes.append(('session_closed', ses))
+    return e, sc, notes

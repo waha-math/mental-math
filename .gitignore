@@ -5,3 +5,5 @@ __pycache__/
 app/conformance_vectors.json
 app/item_vectors.json
 app/scheduler_vectors.json
+node_modules/
+app/persist_vectors.json
