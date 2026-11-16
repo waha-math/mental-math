@@ -1,0 +1,34 @@
+{
+ "about": "حالة المراجعة الثالثة عشرة (R13-01): فحص الاحتفاظ يبلغ السقف وفي المجدول فحص استقلال محفوظ. النتائج المتوقعة مكتوبة يدويًا من نص القاعدة ومن محتوى الشريحة، لا من تشغيل أي نسخة. البنود المتوقعة: بنود الاحتفاظ لجولة 1-4-1 الأولى (group deferred، slot 1) بترتيب المحتوى، وخانات محاولة الاستقلال الأولى لـ 1-4-2 (group checkA، role check) بترتيب الخانة. أنواع الدليل من صفوف المهارتين في الخريطة.",
+ "scenario": {
+  "group": "young",
+  "scope": ["1-4-1", "1-4-2"],
+  "decisions": [["1-4-1", ["1-3-3"]]],
+  "types": {"1-4-1": ["ف1", "ف3"], "1-4-2": ["ف2", "ف3", "ف4"]},
+  "cap": 240,
+  "seconds": {"check": 60, "retention": 60},
+  "follow_before": 5,
+  "absent_to_day": 11,
+  "follow_after_max": 6
+ },
+ "retention_items": ["1-4-1/deferred/01", "1-4-1/deferred/02", "1-4-1/deferred/03", "1-4-1/deferred/04", "1-4-1/deferred/05"],
+ "check_items": ["1-4-2/checkA/01", "1-4-2/checkA/03", "1-4-2/checkA/05", "1-4-2/checkA/07", "1-4-2/checkA/09",
+                 "1-4-2/checkA/11", "1-4-2/checkA/13", "1-4-2/checkA/15", "1-4-2/checkA/17", "1-4-2/checkA/19"],
+ "expect_before_absence": {
+  "day": 6,
+  "met": "1-4-1",
+  "met_day": 4,
+  "retention_due_day": 11,
+  "check_id": "1-4-2/check/1",
+  "check_state": "pending",
+  "saved": [["check", "1-4-2", 4]]
+ },
+ "expect_absence_session": {
+  "day": 11,
+  "saved": [["check", "1-4-2", 4], ["retention", "1-4-1", 4]],
+  "teach": 0,
+  "check_state": "pending"
+ },
+ "per_session_max_timed_items": 4,
+ "per_session_max_teach": 1
+}

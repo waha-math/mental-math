@@ -466,7 +466,7 @@ kinds = [e.s['sessions'][x]['kind'] for x in e.s['order']]
 a = (gates(e)[0] == ('S3', '3-5-1', 'pass', nine) and gates(e)[1][:3] == ('S3', '3-5-2', 'fail')
      and [e.s['sessions'][x]['gate'] for x in ('S1', 'S2', 'S3')] == [0, 0, 2] and kinds[:4] == ['search'] * 3 + ['start']
      and sc.searches == 3 and [x for x in sc.log if x[1] == 'capped'] == [(1, 'capped', '3-5-1'), (2, 'capped', '3-5-1')]
-     and len(src.served) == len(set(src.served)) and sc.refused == [] and sc.carry is None
+     and len(src.served) == len(set(src.served)) and sc.refused == [] and not sc.saved
      and all(e.derive()[x] in ('exempt', 'met') for x in ('3-5-1', '3-5-2', '3-5-3')))
 e, sc, child, src, recs = scenario(['3-5-1', '3-5-2', '3-5-3'], 'older', '3-5-1', D35, knows=['3-5-1'], cap=240,
                                    item_seconds=gate_minute, sessions=14, before=set_searches)
@@ -495,7 +495,7 @@ check('السقف يسع 5 بنود: الدرس يُقطع بعد خامس بن�
       and len([i for i in ind['items'] if '/checkA/' in i]) == 10 and len(ind['items']) == 10
       and [e.s['sessions'][x]['teach'] for x in ('S2', 'S3', 'S4', 'S5')] == [1, 1, 1, 1]
       and [x for x in sc.log if x[1] == 'capped'] == [(2, 'capped', '1-4-1'), (4, 'capped', '1-4-1')]
-      and e.derive()['1-4-1'] == 'met' and sc.refused == [] and sc.carry is None)
+      and e.derive()['1-4-1'] == 'met' and sc.refused == [] and not sc.saved)
 
 # ك) فحوص الاحتفاظ في المسار (3.7، بقرار الأب في ك8)، بجلسة كل يوم
 def deferred(rnd):

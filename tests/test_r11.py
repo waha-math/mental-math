@@ -5,8 +5,9 @@
 
 حالات المحرك ونتائجها المتوقعة في tests/r11_cases.json، والحالات المحفوظة القديمة في tests/r11_fixtures.json (صنعها
 محرك الالتزام 2509126، ومعها النص نفسه بعد قراءته وحفظه بمحرك 16b124a). كل حالة تُفحص بثلاثة طرق: الاستعادة المباشرة،
-والاستعادة بعد المرور بـ 16b124a، وإعادة تشغيل السجل. والحكم واحد فيها، والحالة المصححة ثابتة إذا حُفظت واستُعيدت. حالتا المجدول هنا، ونتائجهما المتوقعة مكتوبة صراحة. المجدول بلغة بايثون وحدها: لا مجدول في
-التطبيق بعد. --code يشغّل الحالات على نسخة أخرى من الكود.
+والاستعادة بعد المرور بـ 16b124a، وإعادة تشغيل السجل. والحكم واحد فيها، والحالة المصححة ثابتة إذا حُفظت واستُعيدت.
+حالتا المجدول هنا، ونتائجهما المتوقعة مكتوبة صراحة، على المجدول المرجعي. ومجدول التطبيق يطابقه فيهما في متجهات
+المجدول (app/test_scheduler_conformance.mjs). --code يشغّل الحالات على نسخة أخرى من الكود.
 """
 import copy
 import json
@@ -146,7 +147,8 @@ def cut_check():
 
 
 def saved(sc, s):
-    c = sc.carry if sc.carry and sc.carry['skill'] == s else getattr(sc, 'parked', {}).get(s)
+    held = [x for x in getattr(sc, 'saved', None) or [getattr(sc, 'carry', None)] if x and x['skill'] == s]   # قبل 13: carry
+    c = held[0] if held else getattr(sc, 'parked', {}).get(s)
     return copy.deepcopy(c)
 
 
@@ -194,7 +196,7 @@ def sched_a():
         bad.append('دليل الاستقلال لا يبدأ بالخانات الخمس المحفوظة، أو ليس فيه عشر خانات مختلفة')
     if len(served_checks) != 10 or len(src.served) != len(set(src.served)):
         bad.append('عُرض بند فحص مرتين أو نقص منه: %d بند فحص' % len(served_checks))
-    if e.derive()['1-4-1'] != 'met' or sc.carry is not None or getattr(sc, 'parked', {}) or sc.refused:
+    if e.derive()['1-4-1'] != 'met' or (getattr(sc, 'saved', None) or getattr(sc, 'carry', None)) or getattr(sc, 'parked', {}) or sc.refused:
         bad.append('الحالة بعد الاستكمال: %s، وما زال نشاط محفوظ أو اقتراح مرفوض' % e.derive()['1-4-1'])
     return bad
 

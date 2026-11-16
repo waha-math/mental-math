@@ -1,5 +1,7 @@
 __pycache__/
 *.pyc
-# متجهات المطابقة مولَّدة (نحو 22 ميغابايت): python3 export_conformance.py mental-math-map-v2.10-single-file.md
+# متجهات المطابقة مولَّدة (نحو 65 ميغابايت): export_conformance.py و export_scheduler.py
+.coverage
 app/conformance_vectors.json
 app/item_vectors.json
+app/scheduler_vectors.json
