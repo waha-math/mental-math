@@ -1,0 +1,20 @@
+# حزمة الحساب الذهني: الخريطة 2.10 والمواصفة والمحرك وطبقة البنود والمحتوى، وبداية التطبيق (13 نوفمبر 2026)
+
+للمراجع: ابدأ بـ `REVIEW-REQUEST.md`، ثم `state-transition-spec.md`. الخريطة في `mental-math-map-v2.10-single-file.md`. الأوامر من هذا المجلد، بـ Python 3 وحده، وبـ Node لجزأي التطبيق:
+
+```
+python3 test_transition_engine.py mental-math-map-v2.10-single-file.md      # 30 اختبارًا للمحرك المرجعي
+python3 test_item_layer.py mental-math-map-v2.10-single-file.md             # 23 اختبارًا لطبقة البنود والمجدول والمسارات
+python3 engine_sim.py mental-math-map-v2.10-single-file.md 400              # مطابقة المحاكاة على المحرك بالقديمة
+python3 policy_sim.py mental-math-map-v2.10-single-file.md                  # تجارب المحاكاة كلها على المحرك: أرقام الخريطة
+python3 policy_sim.py mental-math-map-v2.10-single-file.md 2000 --alt       # القاعدة السابقة لقرار ك4، للمقارنة
+python3 placement_sim.py mental-math-map-v2.10-single-file.md --selftest    # اختبارات المحاكاة القديمة
+python3 slice_content.py mental-math-map-v2.10-single-file.md               # يولّد المحتوى ويفحصه
+python3 transition_engine.py mental-math-map-v2.10-single-file.md --table   # يطبع جدول الانتقالات
+
+python3 export_conformance.py mental-math-map-v2.10-single-file.md          # يولّد بيانات محرك التطبيق ومتجهات المطابقة
+node app/test_conformance.mjs                                               # يطابق محرك التطبيق بالمحرك المرجعي
+node app/test_items_conformance.mjs                                         # يطابق طبقة البنود في التطبيق بالمرجعية
+```
+
+المتجهات (`app/conformance_vectors.json` و`app/item_vectors.json`، نحو 22 ميغابايت) لا تُحفظ في المستودع لأنها مولَّدة: يولّدها `export_conformance.py` في نحو دقيقة، قبل تشغيل أمري Node. ومخرجات كل أمر مرفقة باسم ينتهي بـ `_output.txt`، لمن لا يستطيع تشغيله.
