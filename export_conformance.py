@@ -8,7 +8,7 @@
 - app/engine_data.mjs: الشبكة، والمخطط، والحصص، ورموز الرفض ونصوصها، وثوابت الاحتفاظ. محرك التطبيق يقرؤها ولا
   يكرر كتابتها، فلا تنحرف نسخة عن الأخرى.
 - app/conformance_vectors.json: كل ما مرّ على المحرك المرجعي حين شُغّلت اختباراته (test_transition_engine.py
-  و test_item_layer.py و tests/test_r10.py): كل حدث أُرسل أو سُئل عنه، وحكم المحرك عليه، وبصمة الحالة بعده.
+  و test_item_layer.py و tests/test_r10.py و tests/test_r11.py): كل حدث أُرسل أو سُئل عنه، وحكم المحرك عليه، وبصمة الحالة بعده.
 
 البصمة: SHA-256 للنص القياسي (مفاتيح مرتبة) للحالة المحفوظة كلها مع الحالات المشتقة. محرك التطبيق يطابق إن أعاد
 الحكم نفسه والبصمة نفسها بعد كل حدث.
@@ -288,16 +288,17 @@ def drive(act, source, answer, records=None, pause=None):
 
 il.fold_item, il.indicators, il.drive, cs.ContentSource.__call__ = fold_item, indicators, drive, pick
 
-for script in ('test_transition_engine.py', 'test_item_layer.py', 'tests/test_r10.py'):
+for script in ('test_transition_engine.py', 'test_item_layer.py', 'tests/test_r10.py', 'tests/test_r11.py'):
     sys.argv = [script, MAP]
     out = io.StringIO()
     with contextlib.redirect_stdout(out):
         try:
             runpy.run_path(script, run_name='__main__')
-        except SystemExit as x:                             # tests/test_r10.py ينتهي برمز خروجه
+        except SystemExit as x:                             # tests/test_r10.py و test_r11.py ينتهيان برمز خروجهما
             assert x.code == 0, out.getvalue()[-600:]
     last = out.getvalue().rstrip().split('\n')[-1]
-    assert last.startswith('نجحت الاختبارات كلها') or last.startswith('النتيجة: نجح 20 من 20'), out.getvalue()[-300:]
+    assert last.startswith('نجحت الاختبارات كلها') or last in ('النتيجة: نجح 20 من 20', 'النتيجة: نجح 10 من 10'), \
+        out.getvalue()[-300:]
 
 traces = [t for t in traces if t['ops']]
 

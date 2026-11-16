@@ -292,15 +292,69 @@ class Engine:
         e = cls(net, st['group'], st['regate'], content_versions)
         e.s = st
         st.setdefault('retention', [])                     # حالة حُفظت قبل إضافة فحوص الاحتفاظ
-        for c in st['checks'].values():                     # حالة حُفظت قبل تسجيل الجلسات المساهمة: أقل ما يُعرف منها
-            if 'sessions' not in c:
-                c['sessions'] = list(dict.fromkeys(x for x in (c['session'], c.get('active'), c.get('held_session'),
-                                                              c.get('closed_session')) if x))
+        e._migrate_checks()
         for cid, c in st['checks'].items():
             if c['state'] == 'pending' and not e._has_version(c['content_version']):
                 c['state'] = 'needs_restart'
                 st['history'].append(dict(seq=st['seq'], what='check_needs_restart', check=cid))
         return e
+
+    def _migrate_checks(self):
+        """ترحيل حالة حُفظت قبل تسجيل الجلسات المساهمة (المراجعة 11، الملاحظة الثانية). الجلسات تُستكمل من أحداث
+        السجل: البدء وكل استئناف. ثم يُطبَّق على المحاولة أثر جلسة مساهمة أُبطلت كما لو وقع الإبطال بالمحرك الجديد.
+        وإن خلا السجل من بدء المحاولة لم تُعرف جلساتها الوسطى، فالإجراء التحفظي: جلسة مبطلة في مداها، من جلسة البدء
+        إلى الختم أو آخر جلسة، تُعامل كأنها مساهمة، بسبب migration_unverified."""
+        st, hit = self.s, False
+        for cid, c in st['checks'].items():
+            if 'sessions' in c:
+                continue
+            logged = [ev['session'] for ev in st['log'] if ev['type'] in ('check_started', 'check_resumed')
+                      and ev.get('check_id') == cid]
+            known = any(ev['type'] == 'check_started' and ev.get('check_id') == cid for ev in st['log'])
+            c['sessions'] = list(dict.fromkeys(x for x in [c['session']] + logged + [
+                c.get('active'), c.get('held_session'), c.get('closed_session')] if x))
+            bad = [x for x in c['sessions'] if st['sessions'][x]['invalid']]
+            reason = 'session_invalidated'
+            if not bad and not known:
+                a = st['order'].index(c['session'])
+                b = st['order'].index(c['closed_session']) if c.get('closed_session') else len(st['order']) - 1
+                bad, reason = [x for x in st['order'][a:b + 1] if st['sessions'][x]['invalid']], 'migration_unverified'
+            if bad:
+                self._taint_check(cid, bad[0], reason, migrated=True)
+                hit = True
+        if hit:
+            self._reconcile()
+
+    def _invalidated_at(self, session):
+        return next((h['seq'] for h in self.s['history'] if h['what'] == 'session_invalidated'
+                     and h['session'] == session), None)
+
+    def _taint_check(self, cid, session, reason, migrated=False):
+        """أثر إبطال جلسة أسهمت في محاولة فحص. غير المكتملة تحتاج إعادة بدء. والمكتملة يسقط دليلها، وإن كان
+        الإبطال قبل ختمها (حالة قديمة قبِل محركها النتيجة بعده) فحكمها حكم غير المكتملة، كما في إعادة تشغيل سجلها."""
+        c = self.s['checks'][cid]
+        extra = dict(reason=reason, migrated=True) if migrated else {}
+        when = self._invalidated_at(session)
+        reopen = (migrated and c['state'] == 'closed' and not c.get('invalid') and when is not None
+                  and when < c['closed_seq'])
+        if c['state'] == 'closed' and not c.get('invalid') and not reopen:
+            c['invalid'] = True                             # اكتملت: يسقط دليلها، وتبقى بنودها في السجل
+            self._drop_check_evidence(cid)
+            self.s['history'].append(dict(seq=self.s['seq'], what='check_invalidated', check=cid, session=session,
+                                          **extra))
+        elif c['state'] in ('pending', 'held') or reopen:  # لم تكتمل: لا تُستأنف ولا تُقبل نتيجتها
+            if reopen:
+                c['migrated_result'] = c.pop('result')
+                c.pop('closed_session'), c.pop('closed_seq')
+                self._drop_check_evidence(cid)
+            c['restart_reason'], c['state'] = reason, 'needs_restart'
+            self.s['history'].append(dict(seq=self.s['seq'], what='check_needs_restart', check=cid, session=session,
+                                          **extra))
+
+    def _drop_check_evidence(self, cid):
+        for e in self.s['evidence']:
+            if e.get('check') == cid and e['valid']:
+                e['valid'] = False
 
     @classmethod
     def replay(cls, net, log, group='older', regate=True, versions=None):
@@ -934,19 +988,8 @@ class Engine:
         self.s['history'].append(dict(seq=self.s['seq'], what='session_invalidated', session=ev['target'],
                                       evidence=hit))
         for cid, c in self.s['checks'].items():            # محاولة فحص أسهمت فيها الجلسة
-            if ev['target'] not in c['sessions']:
-                continue
-            if c['state'] in ('pending', 'held'):          # لم تكتمل: لا تُستأنف ولا تُقبل نتيجتها
-                c['restart_reason'], c['state'] = 'session_invalidated', 'needs_restart'
-                self.s['history'].append(dict(seq=self.s['seq'], what='check_needs_restart', check=cid,
-                                              session=ev['target']))
-            elif c['state'] == 'closed' and not c.get('invalid'):
-                c['invalid'] = True                         # اكتملت: يسقط دليلها، وتبقى بنودها في السجل
-                for e in self.s['evidence']:
-                    if e.get('check') == cid and e['valid']:
-                        e['valid'] = False
-                self.s['history'].append(dict(seq=self.s['seq'], what='check_invalidated', check=cid,
-                                              session=ev['target']))
+            if ev['target'] in c['sessions']:
+                self._taint_check(cid, ev['target'], 'session_invalidated')
         for r in self.s['retention']:                       # فحص الاحتفاظ في الجلسة المبطلة لا يُعدّ، ويبقى في السجل
             if r['session'] == ev['target'] and r['valid']:
                 r['valid'] = False

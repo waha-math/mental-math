@@ -37,6 +37,19 @@ SEARCH_CAP = 4
 DONE = ('exempt', 'met')
 DIAG = ('gate', 'comp', 'try', 'short')      # البنود التشخيصية
 RETENTION_PER_SESSION = 1
+# أسباب رفض استئناف نشاط محفوظ (المراجعة 11، الملاحظة الأولى). النهائية وحدها تُسقطه: لم يعد في المحرك ما يُستأنف.
+# الخاصة بالجلسة تُبقيه في carry حتى جلسة فيها الحصة وتاريخها مؤكد، ولا يُعلَّم فيها غيره. وما سواها مؤقت يخص
+# المهارة (توقيت الفحص، تعليق الدرس): يُركن النشاط بتقدّمه في parked، وتمضي الجلسة، ويُستأنف أول جلسة يُقبل فيها
+FINAL_REFUSALS = ('check_state', 'no_check', 'version_unavailable', 'already_satisfied', 'unknown_skill', 'bad_event')
+SESSION_REFUSALS = ('date_unconfirmed', 'no_session')
+
+
+def refusal_kind(code):
+    if code in FINAL_REFUSALS:
+        return 'final'
+    if code in SESSION_REFUSALS or code.startswith('quota_'):
+        return 'session'
+    return 'later'
 
 
 class Capped(Exception):
@@ -66,6 +79,7 @@ class Scheduler:
         self.try_from_gate = try_from_gate
         self.cap, self.item_seconds = cap, item_seconds or (lambda w: 0)
         self.elapsed, self.carry, self.carried_items = 0, None, []
+        self.parked = {}                    # مهارة ← نشاط تعليمي محفوظ رُفض استئنافه رفضًا مؤقتًا يخص المهارة
         self.retention = retention
         self.intent, self.pending, self.proven, self.attempt = [], [], {}, {}
         self.ev_round = {}                  # جولات دليل الفهم التي عُرضت بنودها لكل مهارة
@@ -161,6 +175,13 @@ class Scheduler:
         self.log.append((self.sessions, 'carry_dropped:' + why, self.carry['skill']))
         self.carry, self.carried_items = None, []
 
+    def resume_need(self, c):
+        """حدث استئناف نشاط تعليمي محفوظ: check_resumed للفحص، و resume_lesson لأنشطة الدرس إن لم يكن نشطًا."""
+        s = c['skill']
+        if c['kind'] == 'check':
+            return dict(type='check_resumed', skill=s, check_id=c['act']['check_id'])
+        return None if self.e.s['opened'][s]['active'] == self.cur else dict(type='resume_lesson', skill=s)
+
     def cut(self, act, kind, items):
         """السقف: يُحفظ النشاط الذي بدأ. الذي لم يُعرض منه بند لا يُحفظ، إلا الفحص لأن محاولته بدأت في المحرك."""
         if sum(act.shown.values()) or kind == 'check':
@@ -192,8 +213,8 @@ class Scheduler:
     def still_ok(self, payload, kind):
         """قبل استئناف نشاط محفوظ: إن لم يعد يحق، يُترك ولا يُعدّ اقتراحًا مرفوضًا."""
         v = self.e.preflight(dict(payload, id='ask', session=self.cur))
-        if not v['ok']:
-            self.drop_carry(v['code'])
+        if not v['ok'] and refusal_kind(v['code']) != 'session':
+            self.drop_carry(v['code'])                      # رفض الجلسة (حصتها، تاريخها) لا يُسقطه
         return v['ok']
 
     def gate(self, s):
@@ -553,36 +574,24 @@ class Scheduler:
         c = self.carry
         if c and c['kind'] in ('opening', 'evidence', 'show', 'check'):
             # نشاط قطعه السقف: يُستأنف أولًا. الفحص بحدث check_resumed، وأنشطة الدرس بعد resume_lesson
-            s = c['skill']
-            if c['kind'] == 'check':
-                need = dict(type='check_resumed', skill=s, check_id=c['act']['check_id'])
-            else:
-                need = None if self.e.s['opened'][s]['active'] == self.cur else dict(type='resume_lesson', skill=s)
+            r = self.resume(c)
+            if r is not None:
+                return r
+        for s in list(self.parked) if self.carry is None else ():   # نشاط رُكن: يُستأنف أول جلسة يُقبل فيها
+            c = self.parked[s]
+            need = self.resume_need(c)
             v = self.e.preflight(dict(need, id='ask', session=self.cur)) if need else dict(ok=True)
-            if not v['ok'] and v['code'] in ('quota_teach', 'date_unconfirmed'):
-                return False                                # تبقى محفوظة لجلسة فيها الحصة، أو حتى يؤكَّد التاريخ
-            if not v['ok']:
-                self.drop_carry(v['code'])
-            else:
-                if need:
-                    self.send(need)
-                if c['kind'] == 'check':
-                    self.check(s)
-                elif c['kind'] == 'opening':
-                    self.opening(s)
-                elif c['kind'] == 'evidence':
-                    self.evidence(s)
-                else:
-                    self.carry = None
-                    if c['activity'] == 'lesson':
-                        self.lesson_body(s, c['pos'])
-                    else:
-                        self.show(s, 'practice', c['pos'])
-                return True
+            if v['ok'] or refusal_kind(v['code']) != 'later':
+                self.carry = self.parked.pop(s)
+                if v['ok']:
+                    self.log.append((self.sessions, 'carry_resumed', s))
+                r = self.resume(self.carry)
+                if r is not None:
+                    return r
         st = self.e.derive()
         for s in self.ids:
             o = self.e.s['opened'].get(s)
-            if not o or s in self.e.s['suspended'] or st[s] in DONE or o['phase'] == 'skipped':
+            if not o or s in self.parked or s in self.e.s['suspended'] or st[s] in DONE or o['phase'] == 'skipped':
                 continue
             if o['phase'] == 'due' or not self.e.progress(s)[1]:
                 if o['active'] != self.cur and not self.send(dict(type='resume_lesson', skill=s))['ok']:
@@ -594,7 +603,7 @@ class Scheduler:
                 return True
         for s in self.ids:
             o = self.e.s['opened'].get(s)
-            if not o or s in self.e.s['suspended'] or st[s] in DONE or not self.e.progress(s)[1]:
+            if not o or s in self.parked or s in self.e.s['suspended'] or st[s] in DONE or not self.e.progress(s)[1]:
                 continue
             pend = [c for c in self.e.s['checks'].values() if c['skill'] == s and c['state'] in OPEN_CHECK]
             if pend:
@@ -617,6 +626,37 @@ class Scheduler:
             return True
         return False
 
+    def resume(self, c):
+        """استئناف النشاط التعليمي المحفوظ في carry. True إن استؤنف، و False إن بقي محفوظًا ولا تعليم في الجلسة،
+        و None إن أُسقط أو رُكن فتمضي الحصة إلى غيره."""
+        s, need = c['skill'], self.resume_need(c)
+        v = self.e.preflight(dict(need, id='ask', session=self.cur)) if need else dict(ok=True)
+        if not v['ok']:
+            kind = refusal_kind(v['code'])
+            if kind == 'session':
+                return False                                # تبقى محفوظة لجلسة فيها الحصة، أو حتى يؤكَّد التاريخ
+            if kind == 'final':
+                self.drop_carry(v['code'])
+            else:                                           # مؤقت يخص المهارة: يُركن بتقدّمه، وتمضي الجلسة
+                self.parked[s], self.carry, self.carried_items = c, None, []
+                self.log.append((self.sessions, 'carry_parked:' + v['code'], s))
+            return None
+        if need:
+            self.send(need)
+        if c['kind'] == 'check':
+            self.check(s)
+        elif c['kind'] == 'opening':
+            self.opening(s)
+        elif c['kind'] == 'evidence':
+            self.evidence(s)
+        else:
+            self.carry = None
+            if c['activity'] == 'lesson':
+                self.lesson_body(s, c['pos'])
+            else:
+                self.show(s, 'practice', c['pos'])
+        return True
+
     def satisfied(self):
         st = self.e.derive()
         return all(st[s] in DONE for s in self.ids)
@@ -626,7 +666,7 @@ class Scheduler:
         self.search()
         self.start_session()
         if self.learning:
-            while self.sessions < max_sessions and not (self.satisfied() and self.carry is None and not (
+            while self.sessions < max_sessions and not (self.satisfied() and self.carry is None and not self.parked and not (
                     self.retention and self.e.retention_pending())):
                 self.follow_learning()
         else:
