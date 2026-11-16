@@ -15,6 +15,8 @@ python3 transition_engine.py mental-math-map-v2.13-single-file.md --table   # ي
 python3 export_conformance.py mental-math-map-v2.13-single-file.md          # يولّد بيانات محرك التطبيق ومتجهات المطابقة
 node app/test_conformance.mjs                                               # يطابق محرك التطبيق بالمحرك المرجعي
 node app/test_items_conformance.mjs                                         # يطابق طبقة البنود في التطبيق بالمرجعية
+python3 export_scheduler.py mental-math-map-v2.13-single-file.md           # يولّد متجهات المجدول
+node app/test_scheduler_conformance.mjs                                     # يطابق المجدول في التطبيق بالمرجعي
 
 python3 tests/test_r10.py mental-math-map-v2.13-single-file.md              # حالات المراجعة العاشرة على بايثون
 node tests/test_r10.mjs                                                     # الحالات نفسها على JavaScript
@@ -27,4 +29,4 @@ sh tests/run_r11_against.sh 9aa40d5                                         # و
 sh tests/make_r11_fixtures.sh                                               # يعيد صنع الحالات القديمة بمحركي 2509126 و16b124a
 ```
 
-المتجهات (`app/conformance_vectors.json` و`app/item_vectors.json`، نحو 22 ميغابايت) لا تُحفظ في المستودع لأنها مولَّدة: يولّدها `export_conformance.py` في نحو دقيقة، قبل تشغيل أمري Node. ومخرجات كل أمر مرفقة باسم ينتهي بـ `_output.txt`، لمن لا يستطيع تشغيله.
+المتجهات (`app/conformance_vectors.json` و`app/item_vectors.json` و`app/scheduler_vectors.json`، نحو 65 ميغابايت) لا تُحفظ في المستودع لأنها مولَّدة: يولّدها `export_conformance.py` في نحو دقيقة ونصف و`export_scheduler.py` في أقل من دقيقة، قبل تشغيل أوامر Node. ومخرجات كل أمر مرفقة باسم ينتهي بـ `_output.txt`، لمن لا يستطيع تشغيله.
