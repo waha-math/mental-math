@@ -147,7 +147,8 @@ def cut_check():
 
 
 def saved(sc, s):
-    c = sc.carry if sc.carry and sc.carry['skill'] == s else getattr(sc, 'parked', {}).get(s)
+    held = [x for x in getattr(sc, 'saved', None) or [getattr(sc, 'carry', None)] if x and x['skill'] == s]   # قبل 13: carry
+    c = held[0] if held else getattr(sc, 'parked', {}).get(s)
     return copy.deepcopy(c)
 
 
@@ -195,7 +196,7 @@ def sched_a():
         bad.append('دليل الاستقلال لا يبدأ بالخانات الخمس المحفوظة، أو ليس فيه عشر خانات مختلفة')
     if len(served_checks) != 10 or len(src.served) != len(set(src.served)):
         bad.append('عُرض بند فحص مرتين أو نقص منه: %d بند فحص' % len(served_checks))
-    if e.derive()['1-4-1'] != 'met' or sc.carry is not None or getattr(sc, 'parked', {}) or sc.refused:
+    if e.derive()['1-4-1'] != 'met' or (getattr(sc, 'saved', None) or getattr(sc, 'carry', None)) or getattr(sc, 'parked', {}) or sc.refused:
         bad.append('الحالة بعد الاستكمال: %s، وما زال نشاط محفوظ أو اقتراح مرفوض' % e.derive()['1-4-1'])
     return bad
 

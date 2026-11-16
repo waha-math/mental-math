@@ -10,12 +10,12 @@ import { readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { Engine, canonical } from './engine.mjs';
 import { Scheduler, Capped } from './scheduler.mjs';
-import { CLASSES } from './items.mjs';
+import { CLASSES, Activity } from './items.mjs';
 
 const V = JSON.parse(readFileSync(new URL('scheduler_vectors.json', import.meta.url), 'utf8'));
 const digest = (e) => createHash('sha256').update(canonical({ s: e.s, d: e.derive() }), 'utf8').digest('hex');
 const same = (a, b) => canonical(a) === canonical(b);
-const STATE = ['carry', 'parked', 'carried_items', 'intent', 'pending', 'proven', 'attempt', 'ev_round', 'last_items',
+const STATE = ['saved', 'parked', 'carried_items', 'intent', 'pending', 'proven', 'attempt', 'ev_round', 'last_items',
   'n', 'gates_run', 'searches', 'sessions', 'day', 'cur', 'log', 'refused', 'stalled', 'elapsed', 'start_at',
   'items_before', 'start_w', 'start_what'];
 const results = [];
@@ -91,11 +91,12 @@ function runTrace(tr, stats) {
     if (op.pre_engine) eng.s = Engine.restore(undefined, op.pre_engine, tr.engine.versions).s;
     let ret, raised = null;
     try {
-      ret = op.op === 'engine_apply' ? sc.e.apply(op.args[0]) : sc[op.op](...op.args);
+      const args = op.args.map((x) => (x && typeof x === 'object' && x._class ? Activity.fromDict(x) : x));
+      ret = op.op === 'engine_apply' ? sc.e.apply(args[0]) : sc[op.op](...args);
     } catch (err) {
       if (err instanceof TapeError) throw new TapeError(`${where}: ${err.message}`);
-      if (!(err instanceof Capped)) throw new Error(`${where}: ${err.stack}`);
-      raised = 'Capped';
+      raised = err instanceof Capped ? 'Capped' : 'error';   // خطأ صريح، مثل حفظ مفتاح محفوظ
+      if (raised === 'error' && op.raise !== 'error') throw new Error(`${where}: ${err.stack}`);
     }
     stats.ops[op.op] = (stats.ops[op.op] || 0) + 1;
     if ((op.raise || null) !== raised) return `${where}: الاستثناء ${raised}، والمرجع ${op.raise || 'لا شيء'}`;

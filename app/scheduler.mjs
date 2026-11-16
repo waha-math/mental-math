@@ -3,7 +3,12 @@
 //
 // لا يحمل المجدول حالة تقدّم. كل ما يقرّر به يقرؤه من المحرك، ويسأله (preflight) قبل عرض أول بند من أي نشاط.
 // حالته الخاصة تخطيطية: بوابات نواها في جلسة البدء، وأنواع دليل الفهم التي ثبتت، وعدد محاولات الفحص، والنشاط
-// المحفوظ الذي قطعه سقف الوقت (carry)، والنشاط المركون بعد رفض مؤقت (parked).
+// المحفوظ الذي قطعه سقف الوقت (saved)، والنشاط المركون بعد رفض مؤقت (parked).
+//
+// الأنشطة المحفوظة (المراجعة 13): saved قائمة، لكل نشاط مدخل بمفتاحه (نوعه ومهارته). بدء نشاط آخر أو بلوغه السقف لا
+// يستبدل نشاطًا محفوظًا: cut يضيف ولا يكتب فوق شيء، وحفظ مفتاح محفوظ من قبل خطأ صريح. وأولوية الاستئناف في جلسة
+// المتابعة بترتيب أجزائها: فحص الاحتفاظ المحفوظ ثم المستحق، ثم البوابة المحفوظة، ثم التحقق القصير المحفوظ، ثم الحصة
+// التعليمية: نشاطها المحفوظ، ثم المركون، ثم الجديد. كل نشاط يُستأنف من موضعه.
 //
 // المرجع هو scheduler.py: كل قرار هنا يطابقه في متجهات app/scheduler_vectors.json (app/test_scheduler_conformance.mjs).
 import { OPEN_CHECK } from './engine.mjs';
@@ -18,7 +23,8 @@ export const SEARCH_CAP = 4;
 export const DONE = ['exempt', 'met'];
 export const DIAG = ['gate', 'comp', 'try', 'short'];      // البنود التشخيصية
 export const RETENTION_PER_SESSION = 1;
-// أسباب رفض استئناف نشاط محفوظ (المراجعة 11): النهائية وحدها تُسقطه، والخاصة بالجلسة تُبقيه في carry، وما سواها
+export const TEACH_KINDS = ['opening', 'evidence', 'show', 'check'];   // أنشطة الحصة التعليمية
+// أسباب رفض استئناف نشاط محفوظ (المراجعة 11): النهائية وحدها تُسقطه، والخاصة بالجلسة تُبقيه في saved، وما سواها
 // مؤقت يخص المهارة فيُركن بتقدّمه في parked
 export const FINAL_REFUSALS = ['check_state', 'no_check', 'version_unavailable', 'already_satisfied', 'unknown_skill',
   'bad_event'];
@@ -30,7 +36,7 @@ export function refusalKind(code) {
   return 'later';
 }
 
-// بلغت الجلسة سقف وقتها: تُختم، وما لم يكتمل محفوظ في carry
+// بلغت الجلسة سقف وقتها: تُختم، وما لم يكتمل محفوظ في saved
 export class Capped extends Error {
   constructor() {
     super('Capped');
@@ -79,7 +85,7 @@ export class Scheduler {
     this.cap = cap;
     this.item_seconds = item_seconds || (() => 0);
     this.elapsed = 0;
-    this.carry = null;
+    this.saved = [];
     this.carried_items = [];
     this.parked = {};                   // مهارة ← نشاط تعليمي محفوظ رُفض استئنافه رفضًا مؤقتًا يخص المهارة
     this.retention = retention;
@@ -181,24 +187,39 @@ export class Scheduler {
     return this.over();
   }
 
+  // النشاط المحفوظ من هذا النوع، ولهذه المهارة إن ذُكرت، أو null
+  entry(kind, skill = null) {
+    return this.saved.find((c) => c.kind === kind && (skill === null || skill === c.skill)) ?? null;
+  }
+
   // المهارة التي حُفظ لها نشاط من هذا النوع لم يكتمل، أو null
   carried(kind, skill = null) {
-    const c = this.carry;
-    return c && c.kind === kind && (skill === null || skill === c.skill) ? c.skill : null;
+    const c = this.entry(kind, skill);
+    return c ? c.skill : null;
+  }
+
+  // حفظ نشاط لم يكتمل. لا يُستبدل به نشاط محفوظ: المفتاح نوعه ومهارته، ولا يُحفظ مرتين
+  save(c) {
+    if (this.entry(c.kind, c.skill) !== null) throw new Error(`نشاط محفوظ بالمفتاح نفسه: ${c.kind} ${c.skill}`);
+    this.saved.push(c);
+  }
+
+  unsave(c) {
+    this.saved = this.saved.filter((x) => x !== c);
   }
 
   // النشاط المحفوظ لهذه المهارة إن كان، ليُستأنف من حيث توقف
   take(kind, skill) {
-    if (!this.carried(kind, skill)) return null;
-    const c = this.carry;
-    this.carry = null;
+    const c = this.entry(kind, skill);
+    if (c === null) return null;
+    this.unsave(c);
     this.carried_items = c.items;
     return Activity.fromDict(c.act);
   }
 
-  drop_carry(why) {
-    this.log.push([this.sessions, 'carry_dropped:' + why, this.carry.skill]);
-    this.carry = null;
+  drop_carry(why, c) {
+    this.log.push([this.sessions, 'carry_dropped:' + why, c.skill]);
+    this.unsave(c);
     this.carried_items = [];
   }
 
@@ -212,7 +233,7 @@ export class Scheduler {
   // السقف: يُحفظ النشاط الذي بدأ. الذي لم يُعرض منه بند لا يُحفظ، إلا الفحص لأن محاولته بدأت في المحرك
   cut(act, kind, items) {
     if (sum(act.shown) || kind === 'check') {
-      this.carry = { kind, skill: act.skill, act: act.toDict(), items };
+      this.save({ kind, skill: act.skill, act: act.toDict(), items });
     }
     this.carried_items = [];
     this.log.push([this.sessions, 'capped', act.skill]);
@@ -244,7 +265,7 @@ export class Scheduler {
   // قبل استئناف نشاط محفوظ: إن لم يعد يحق، يُترك ولا يُعدّ اقتراحًا مرفوضًا. رفض الجلسة لا يُسقطه
   still_ok(payload, kind) {
     const v = this.e.preflight({ ...payload, id: 'ask', session: this.cur });
-    if (!v.ok && refusalKind(v.code) !== 'session') this.drop_carry(v.code);
+    if (!v.ok && refusalKind(v.code) !== 'session') this.drop_carry(v.code, this.entry(kind, payload.skill));
     return v.ok;
   }
 
@@ -324,7 +345,7 @@ export class Scheduler {
   show(s, activity, k = 0) {
     for (;;) {
       if (this.over()) {                         // السقف: يُستأنف العرض من موضعه في جلسة لاحقة
-        this.carry = { kind: 'show', skill: s, activity, pos: k, items: [] };
+        this.save({ kind: 'show', skill: s, activity, pos: k, items: [] });
         this.log.push([this.sessions, 'capped', s]);
         throw new Capped();
       }
@@ -440,7 +461,7 @@ export class Scheduler {
   // بنود البوابة المخططة، أو ما بقي منها إن قطعها السقف (ك9)
   gate_size(x) {
     if (this.carried('gate', x)) {
-      const a = this.carry.act;
+      const a = this.entry('gate', x).act;
       return a.stage === 'main' ? a.plan.length - a.pos : 2 - a.pos;
     }
     return gatePlan(this.types[x]).length;
@@ -517,7 +538,7 @@ export class Scheduler {
       }
     } catch (err) {
       if (!(err instanceof Capped)) throw err;
-      what = 'capped';                          // السقف قطع جلسة البدء: ما لم يكتمل في carry
+      what = 'capped';                          // السقف قطع جلسة البدء: ما لم يكتمل في saved
       if (this.items_before === null) this.items_before = diag();
     }
     if (what === 'none' || what === 'use') this.log.push([this.sessions, what, w]);
@@ -592,7 +613,7 @@ export class Scheduler {
   // جلسة متابعة في وضع التشخيص: بوابة، ثم تحققان قصيران، ثم الحصة التعليمية إن لم تُستهلك
   follow() {
     const g = this.carried('gate') || this.pick_gate();
-    if (g === null && this.carry === null && this.pick_short() === null && this.pick_lesson() === null) return false;
+    if (g === null && !this.saved.length && this.pick_short() === null && this.pick_lesson() === null) return false;
     this.begin('follow');
     const shown = sum(this.n);
     let taught = false, capped = false;
@@ -640,20 +661,20 @@ export class Scheduler {
   // ---------------------------------------------------------------- مسار التعلّم
   // الحصة التعليمية: درس جارٍ، ثم فحص مستحق أو جلسة تدريب قبله، ثم درس جديد
   teach() {
-    let c = this.carry;
-    if (c && ['opening', 'evidence', 'show', 'check'].includes(c.kind)) {
+    for (const c of this.saved.filter((x) => TEACH_KINDS.includes(x.kind))) {
       const r = this.resume(c);                 // نشاط قطعه السقف: يُستأنف أولًا
       if (r !== null) return r;
     }
-    for (const s of this.carry === null ? Object.keys(this.parked) : []) {   // نشاط رُكن: أول جلسة يُقبل فيها
-      c = this.parked[s];
+    const teaching = this.saved.some((x) => TEACH_KINDS.includes(x.kind));
+    for (const s of teaching ? [] : Object.keys(this.parked)) {   // نشاط رُكن: أول جلسة يُقبل فيها
+      const c = this.parked[s];
       const need = this.resume_need(c);
       const v = need ? this.e.preflight({ ...need, id: 'ask', session: this.cur }) : { ok: true };
       if (v.ok || refusalKind(v.code) !== 'later') {
-        this.carry = this.parked[s];
         delete this.parked[s];
+        this.save(c);
         if (v.ok) this.log.push([this.sessions, 'carry_resumed', s]);
-        const r = this.resume(this.carry);
+        const r = this.resume(c);
         if (r !== null) return r;
       }
     }
@@ -694,7 +715,7 @@ export class Scheduler {
     return false;
   }
 
-  // استئناف النشاط التعليمي المحفوظ في carry. true إن استؤنف، و false إن بقي محفوظًا ولا تعليم في الجلسة،
+  // استئناف النشاط التعليمي المحفوظ في saved. true إن استؤنف، و false إن بقي محفوظًا ولا تعليم في الجلسة،
   // و null إن أُسقط أو رُكن فتمضي الحصة إلى غيره
   resume(c) {
     const s = c.skill, need = this.resume_need(c);
@@ -703,10 +724,10 @@ export class Scheduler {
       const kind = refusalKind(v.code);
       if (kind === 'session') return false;     // تبقى محفوظة لجلسة فيها الحصة، أو حتى يؤكَّد التاريخ
       if (kind === 'final') {
-        this.drop_carry(v.code);
+        this.drop_carry(v.code, c);
       } else {                                  // مؤقت يخص المهارة: يُركن بتقدّمه، وتمضي الجلسة
+        this.unsave(c);
         this.parked[s] = c;
-        this.carry = null;
         this.carried_items = [];
         this.log.push([this.sessions, 'carry_parked:' + v.code, s]);
       }
@@ -720,7 +741,7 @@ export class Scheduler {
     } else if (c.kind === 'evidence') {
       this.evidence(s);
     } else {
-      this.carry = null;
+      this.unsave(c);
       if (c.activity === 'lesson') this.lesson_body(s, c.pos);
       else this.show(s, 'practice', c.pos);
     }
@@ -737,7 +758,7 @@ export class Scheduler {
     this.search();
     this.start_session();
     if (this.learning) {
-      while (this.sessions < max_sessions && !(this.satisfied() && this.carry === null
+      while (this.sessions < max_sessions && !(this.satisfied() && !this.saved.length
         && !Object.keys(this.parked).length && !(this.retention && this.e.retentionPending().length))) {
         this.follow_learning();
       }

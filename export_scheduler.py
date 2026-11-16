@@ -5,7 +5,8 @@
     node app/test_scheduler_conformance.mjs
 
 يسجّل كل مجدول يُنشأ في ثلاثة مصادر:
-1. اختبارات طبقة البنود والمجدول (test_item_layer.py) واختبارا المجدول في tests/test_r11.py، كما هي.
+1. اختبارات طبقة البنود والمجدول (test_item_layer.py)، واختبارا المجدول في tests/test_r11.py، وحالتا
+   tests/test_r13.py، كما هي.
 2. عينة من تشغيلات المحاكاة فوق المحرك بأطفالها العشوائيين: engine_sim (بوضع المطابقة وبدونه) و policy_sim بتجاربها.
 3. مسارات تعلّم عشوائية ببذرة ثابتة على محتوى الشريحة: مهارات الوحدتين، وطفل يجيب ويخطئ ويطلب الدعم وينقطع، وسقف
    وقت، وفحوص احتفاظ، وإبطال جلسات وقرارات للمعلم بين الجلسات، وأيام جلسات أسبق يؤكدها الوالد أحيانًا.
@@ -36,7 +37,7 @@ from content_source import ContentSource, load_items  # noqa: E402
 
 NET = te.load_network(MAP)
 OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'app', 'scheduler_vectors.json')
-STATE = ('carry', 'parked', 'carried_items', 'intent', 'pending', 'proven', 'attempt', 'ev_round', 'last_items', 'n',
+STATE = ('saved', 'parked', 'carried_items', 'intent', 'pending', 'proven', 'attempt', 'ev_round', 'last_items', 'n',
          'gates_run', 'searches', 'sessions', 'day', 'cur', 'log', 'refused', 'stalled', 'elapsed', 'start_at',
          'items_before', 'start_w', 'start_what')
 traces, tables = [], dict(types=[], items=[])
@@ -187,6 +188,9 @@ def wrap(name, fn):
         except sch.Capped:
             op['raise'] = 'Capped'
             raise
+        except Exception:                                   # noqa: BLE001  خطأ صريح، مثل حفظ مفتاح محفوظ
+            op['raise'] = 'error'
+            raise
         finally:
             self._depth = 0
             after(self, op)
@@ -217,7 +221,7 @@ te.Engine.apply = apply
 
 # ---------------------------------------------------------------- 1. الاختبارات
 counts = {}
-for script in ('test_item_layer.py', 'tests/test_r11.py'):
+for script in ('test_item_layer.py', 'tests/test_r11.py', 'tests/test_r13.py'):
     n0 = len(traces)
     sys.argv = [script, MAP]
     out = io.StringIO()
@@ -227,7 +231,8 @@ for script in ('test_item_layer.py', 'tests/test_r11.py'):
         except SystemExit as x:
             assert x.code == 0, out.getvalue()[-600:]
     last = out.getvalue().rstrip().split('\n')[-1]
-    assert last.startswith('نجحت الاختبارات كلها') or last == 'النتيجة: نجح 10 من 10', out.getvalue()[-300:]
+    assert last.startswith('نجحت الاختبارات كلها') or last in ('النتيجة: نجح 10 من 10', 'النتيجة: نجح 2 من 2'), \
+        out.getvalue()[-300:]
     counts[script] = len(traces) - n0
 
 # ---------------------------------------------------------------- 2. المحاكاة
@@ -315,7 +320,7 @@ for seed in range(240):
     sc.search()
     sc.start_session()
     for _ in range(rng.randint(8, 70)):
-        if sc.satisfied() and sc.carry is None and not sc.parked:
+        if sc.satisfied() and not sc.saved and not sc.parked:
             break
         teacher.act()
         if rng.random() < 0.06:                             # يوم جلسة أسبق: تنبيه، ثم تأكيد الوالد أحيانًا
