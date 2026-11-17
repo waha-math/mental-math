@@ -254,19 +254,32 @@ export class Scheduler {
   }
 
   *g_run_act(act, kind = null) {
-    const recs = [], before = { ...act.shown };
+    const recs = [];
+    let seen = { ...act.shown }, done = 0;
     const prior = this.carried_items;
     this.carried_items = [];
     if (this.over()) this.cut(act, kind, prior);   // الجلسة بلغت سقفها: لا يُعرض بند جديد
     this.live = { kind, act, prior, recs };
-    yield* driveSteps(act, this.source, recs, this.cap !== null ? (w) => this.tick(w) : null);
-    this.live = null;
-    if (this.records !== null) this.records.push(...recs);
-    const items = [...prior, ...recs.filter((r) => r.item).map((r) => r.item)];
-    for (const [k, v] of Object.entries(act.shown)) {
-      const d = v - get(before, k);
-      if (d > 0) this.n[k] = get(this.n, k) + d;
+    // كل بند خُتم يدخل عدّاداته وسجلّه مرة واحدة، في الانتقال نفسه الذي يتقدم فيه النشاط (R16-03). فاللقطة عند أي
+    // طلب بند تحمل عدّادات وسجلات متوافقة مع تقدّم النشاط، والاستعادة لا تُسقط احتسابًا ولا تكرره
+    const settle = () => {
+      for (const [k, v] of Object.entries(act.shown)) {
+        const d = v - get(seen, k);
+        if (d > 0) this.n[k] = get(this.n, k) + d;
+      }
+      seen = { ...act.shown };
+      if (this.records !== null) this.records.push(...recs.slice(done));
+      done = recs.length;
+    };
+    const gen = driveSteps(act, this.source, recs, this.cap !== null ? (w) => this.tick(w) : null);
+    for (let r = gen.next(); !r.done;) {
+      const got = yield r.value;
+      r = gen.next(got);
+      settle();
     }
+    settle();
+    this.live = null;
+    const items = [...prior, ...recs.filter((r) => r.item).map((r) => r.item)];
     if (!act.done) this.cut(act, kind, items);
     this.last_items = items;
     return act;

@@ -1,14 +1,20 @@
 // المرحلة 0 على التطبيق بلغة JavaScript: التوقف عند انتظار الطفل، والإغلاق، والاستعادة، وتكملة الجلسة نفسها.
 //
-//     node tests/test_phase0.mjs
+//     node tests/test_phase0.mjs [مجلد app]
 //
+// المجلد الاختياري يشغّلها على نسخة أخرى من التطبيق (مثلًا الالتزام 0189879).
 // الحالات والنتائج المتوقعة نفسها في tests/test_phase0.py. أنواع دليل الفهم للمهارات الخمس من صفوفها في الخريطة.
 import { readFileSync } from 'node:fs';
-import { Engine, canonical } from '../app/engine.mjs';
-import { Scheduler } from '../app/scheduler.mjs';
-import { ContentSource } from '../app/items.mjs';
-import { Stepper } from '../app/stepper.mjs';
-import * as persist from '../app/persist.mjs';
+import { resolve } from 'node:path';
+import { pathToFileURL } from 'node:url';
+
+const appDir = resolve(process.argv[2] || new URL('../app', import.meta.url).pathname);
+const load = (f) => import(pathToFileURL(resolve(appDir, f)).href);
+const { Engine, canonical } = await load('engine.mjs');
+const { Scheduler } = await load('scheduler.mjs');
+const { ContentSource } = await load('items.mjs');
+const { Stepper } = await load('stepper.mjs');
+const persist = await load('persist.mjs');
 
 const ITEMS = JSON.parse(readFileSync(new URL('../slice-content.json', import.meta.url), 'utf8')).items;
 const TYPES = { '1-4-1': ['ف1', 'ف3'], '1-4-2': ['ف2', 'ف3', 'ف4'], '3-5-1': ['ف1', 'ف2', 'ف3'],
@@ -84,8 +90,9 @@ function play(st, kid, stopAt = null, n = 0) {
   return n;
 }
 
-const final = (e, sc) => ({ engine: e.dump(), records: sc.records, log: sc.log, saved: sc.saved, parked: sc.parked,
-  sessions: sc.sessions, refused: sc.refused.length });
+// الحالة الدائمة كاملة: كل ما يحفظه persist من المجدول (stateOf، ومنه العدّادات n وموضع الجلسة stage والوقت elapsed
+// وعدّادات البحث وسجل المجدول والمخزنان)، والمحرك، وسجلات البنود. لا حقل مستثنى
+const final = (e, sc) => ({ ...persist.stateOf(sc), engine: e.dump(), records: sc.records });
 
 function sweep(name, wrong = [], help = []) {
   const c = SCEN[name];
@@ -103,7 +110,7 @@ function sweep(name, wrong = [], help = []) {
   };
   b0.sc.run(c.sessions);
   if (dump(final(b0.e, b0.sc)) !== dump(base)) bad.push('التشغيل خطوة خطوة يخالف الغلاف المتزامن');
-  if (base.refused) bad.push(`المحرك رفض ${base.refused} اقتراحًا في التشغيل المتصل`);
+  if (base.refused.length) bad.push(`المحرك رفض ${base.refused.length} اقتراحًا في التشغيل المتصل`);
   const diff = [];
   for (let k = 0; k < total; k++) {
     const b1 = build(name), kid = new Kid(wrong, help);
@@ -126,7 +133,7 @@ function sweep(name, wrong = [], help = []) {
   return { bad, total, base };
 }
 
-console.log('=== المرحلة 0، بلغة JavaScript');
+console.log(`=== المرحلة 0، بلغة JavaScript، على التطبيق في ${appDir}`);
 console.log('أ) إغلاق عند كل طلب بند قبل عرضه، ثم استعادة وتكملة: النتيجة كما في التشغيل المتصل');
 for (const [name, wrong, help, label] of [
   ['young', [], [], 'الصغير في 1-4، بسقف 240 ثانية'],
@@ -216,7 +223,7 @@ function caseFinal() {
   const { e, sc, st, kid } = at(25);
   st.show(st.seq);
   const before = st.snapshot(), old = st.seq;
-  const nRec = sc.records.length + sc.live.recs.length;
+  const nRec = before.records.length;                     // سجلات البنود في اللقطة قبل الإجابة
   const r1 = st.event(old, ['confirm', 4]);
   const r2 = st.event(old, ['confirm', 4]);
   const bad = [];
@@ -337,6 +344,32 @@ function caseNewday() {
   return bad;
 }
 
+// القاعدة: كل بند خُتم يدخل العدّاد مرة واحدة. المسار المتصل يعرض 20 بند فحص (10 لكل مهارة) و40 بندًا مسجَّلًا
+function caseCounters() {
+  const bad = [];
+  const b0 = build('young');
+  const s0 = new Stepper(b0.e, b0.sc);
+  s0.open(b0.sc.g_run(14));
+  play(s0, new Kid());
+  expect(bad, 'بلا إغلاق: عدّاد بنود الفحص وعدد السجلات', [b0.sc.n.check, b0.sc.records.length], [20, 40]);
+  let { st, kid } = at(17);
+  expect(bad, 'عدّاد الفحص في اللقطة بعد خانة واحدة', st.snapshot().scheduler.state.n.check ?? null, 1);
+  const r2 = reopen('young', st.snapshot());
+  const s2 = new Stepper(r2.e, r2.sc);
+  s2.open(r2.sc.g_run(14));
+  play(s2, kid);
+  expect(bad, 'بعد إغلاق قبل العرض واستعادة: العدّاد والسجلات', [r2.sc.n.check, r2.sc.records.length], [20, 40]);
+  ({ st, kid } = at(17));
+  st.show(st.seq);
+  const r3 = reopen('young', st.snapshot());
+  expect(bad, 'بعد الاستعادة مباشرة: الخانة 1 والخانة 2 المنقطعة', [r3.sc.n.check, r3.sc.records.length], [2, 11]);   // بوابة 2، افتتاح 3، دليل فهم 4، فحص 2. بنود الدرس بلا سجل
+  const s3 = new Stepper(r3.e, r3.sc);
+  s3.open(r3.sc.g_run(14));
+  play(s3, kid);
+  expect(bad, 'بعد إكمال المسار: البند المنقطع وبديله محتسبان مرة واحدة', [r3.sc.n.check, r3.sc.records.length], [21, 41]);
+  return bad;
+}
+
 console.log('ب) حالات بنتائج مكتوبة يدويًا');
 for (const [title, fn] of [
   ['1. إغلاق عند عرض البند (الخانة 2 من الفحص): يُختم «غير محسوم» منقطعًا، والجلسة S4 نفسها تُكمَل بوقتها (60 ثانية) '
@@ -352,7 +385,9 @@ for (const [title, fn] of [
   ['7. ثلاثة إغلاقات في جلسة واحدة: لا جلسة جديدة ولا جلسة بحث، والوقت 60 ثم 120 ثم 180 لا يبدأ من الصفر، ولا حدث '
     + 'استئناف يستهلك حصة، والسقف يحلّ بعد الخانة الرابعة كما في التشغيل المتصل', caseSession],
   ['8. انتقال يوم الأسرة: الاستعادة في يوم جديد تختم S4، والجلسة التالية S5 تستأنف الفحص بحدثه. وفي اليوم نفسه تبقى '
-    + 'S4 مفتوحة', caseNewday]]) {
+    + 'S4 مفتوحة', caseNewday],
+  ['9. العدّادات (R16-03): كل بند خُتم يُحتسب مرة واحدة. 20 بند فحص و40 سجلًا بلا إغلاق وبعد إغلاق واستعادة. والبند '
+    + 'الذي يُختم منقطعًا أثناء الاستعادة يدخل العدّاد عندها، فيصير المجموع 21 و41 مع بديله', caseCounters]]) {
   let bad;
   try { bad = fn(); } catch (x) { bad = ['استثناء: ' + (x.stack || x).toString().split('\n').slice(0, 2).join(' ')]; }
   check(title, bad);

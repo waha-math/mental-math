@@ -222,17 +222,32 @@ class Scheduler:
         raise Capped()
 
     def g_run_act(self, act, kind=None):
-        recs, before = [], Counter(act.shown)
+        recs, mark = [], [Counter(act.shown), 0]
         prior, self.carried_items = self.carried_items, []
         if self.over():                                     # الجلسة بلغت سقفها: لا يُعرض بند جديد
             self.cut(act, kind, prior)
         self.live = dict(kind=kind, act=act, prior=prior, recs=recs)
-        yield from drive_steps(act, self.source, recs, pause=self.tick if self.cap is not None else None)
+
+        def settle():
+            # كل بند خُتم يدخل عدّاداته وسجلّه مرة واحدة، في الانتقال نفسه الذي يتقدم فيه النشاط (R16-03). فاللقطة
+            # عند أي طلب بند تحمل عدّادات وسجلات متوافقة مع تقدّم النشاط، والاستعادة لا تُسقط احتسابًا ولا تكرره
+            self.n.update(act.shown - mark[0])
+            mark[0] = Counter(act.shown)
+            if self.records is not None:
+                self.records.extend(recs[mark[1]:])
+            mark[1] = len(recs)
+        gen = drive_steps(act, self.source, recs, pause=self.tick if self.cap is not None else None)
+        try:
+            req = next(gen)
+            while True:
+                got = yield req
+                req = gen.send(got)
+                settle()
+        except StopIteration:
+            pass
+        settle()
         self.live = None
-        if self.records is not None:
-            self.records.extend(recs)
         items = prior + [r['item'] for r in recs if r.get('item')]
-        self.n.update(act.shown - before)
         if not act.done:
             self.cut(act, kind, items)
         self.last_items = items

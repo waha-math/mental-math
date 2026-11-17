@@ -83,15 +83,14 @@ def item_ends(raw, assess):
     return assess and any(ev[0] == 'confirm' for ev in raw)
 
 
-def snapshot(engine, sc, current=None, child='', extra=()):
-    """السجل الذي يُكتب في معاملة واحدة. current: dict(kind, skill, act, items, journal) أو None.
-    extra: سجلات بنود النشاط الجاري التي لم تُضف بعد إلى سجلات المجدول (تُضاف إليها عند اكتماله)."""
+def snapshot(engine, sc, current=None, child=''):
+    """السجل الذي يُكتب في معاملة واحدة. current: dict(kind, skill, act, items, journal) أو None."""
     if current is not None and current.get('journal'):
         j = current['journal']
         if item_ends(j['raw'], j['assess']):
             raise ValueError('البند المنتهي يُطوى ويُعطى للنشاط قبل الحفظ، ولا يُحفظ في journal')
     return dict(schema=SCHEMA, child=child, engine=engine.dump(), scheduler=dict(opts=options(sc), state=state_of(sc)),
-                records=None if sc.records is None else plain(list(sc.records) + list(extra)), current=plain(current))
+                records=None if sc.records is None else plain(sc.records), current=plain(current))
 
 
 def reconcile(engine, st):
@@ -161,7 +160,11 @@ def restore(record, net, types, source, answer, item_seconds=None, records=None,
             j = cur.get('journal')
             if j:                                           # البند الجاري: يُختم بانقطاع، «غير محسوم»
                 rec = fold_item([tuple(ev) for ev in j['raw']] + [('interrupt',)], j['answer'], j['assess'])
+                shown = dict(act.shown)
                 act.feed(classify(rec))
+                for k, v in act.shown.items():              # البند المختوم هنا يدخل العدّاد كما لو خُتم في الجلسة (R16-03)
+                    if v > shown.get(k, 0):
+                        st['n'][k] = st['n'].get(k, 0) + v - shown.get(k, 0)
                 if j.get('item'):
                     items.append(j['item'])
                 if sc.records is not None:

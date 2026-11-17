@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 """المرحلة 0 بلغة بايثون: التوقف عند انتظار الطفل، والإغلاق، والاستعادة، وتكملة الجلسة نفسها.
 
-    python3 tests/test_phase0.py <ملف الخريطة>
+    python3 tests/test_phase0.py <ملف الخريطة> [--code=مجلد]
+
+--code يشغّل الحالات على نسخة أخرى من الكود (مثلًا الالتزام 0189879).
 
 قسمان:
 أ) مسح شامل: في كل مسار كامل بمحتوى الشريحة يُغلق التطبيق عند كل طلب بند قبل عرضه، واحدًا واحدًا. تؤخذ اللقطة، وتُستعاد
@@ -17,14 +19,16 @@ import re
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-sys.path.insert(0, os.path.dirname(HERE))
+args = [a for a in sys.argv[1:] if not a.startswith('--code')]
+code = next((a.split('=', 1)[1] for a in sys.argv[1:] if a.startswith('--code=')), os.path.dirname(HERE))
+sys.path.insert(0, os.path.abspath(code))
 from transition_engine import Engine, load_network, ROW  # noqa: E402
 from scheduler import Scheduler  # noqa: E402
 from content_source import ContentSource  # noqa: E402
 from stepper import Stepper  # noqa: E402
 import persist  # noqa: E402
 
-MAP = sys.argv[1]
+MAP = args[0]
 NET = load_network(MAP)
 TYPES = {}
 for sid, _t, _m, _r, ev, _a in ROW.findall(open(MAP, encoding='utf-8').read()):
@@ -101,9 +105,11 @@ def play(st, kid, stop_at=None, n=0):
 
 
 def final(e, sc):
-    return dict(engine=e.dump(), records=persist.plain(sc.records), log=persist.plain(sc.log),
-                saved=persist.plain(sc.saved), parked=persist.plain(sc.parked), sessions=sc.sessions,
-                refused=len(sc.refused))
+    """الحالة الدائمة كاملة: كل ما يحفظه persist من المجدول (state_of، ومنه العدّادات n وموضع الجلسة stage والوقت
+    elapsed وعدّادات البحث وسجل المجدول والمخزنان)، والمحرك، وسجلات البنود. لا حقل مستثنى."""
+    d = persist.state_of(sc)
+    d['engine'], d['records'] = e.dump(), persist.plain(sc.records)
+    return d
 
 
 def dump(x):
@@ -132,7 +138,7 @@ def sweep(name, wrong=(), help=()):
     if dump(final(e0, sc0)) != dump(base):
         bad.append('التشغيل خطوة خطوة يخالف الغلاف المتزامن')
     if base['refused']:
-        bad.append('المحرك رفض %d اقتراحًا في التشغيل المتصل' % base['refused'])
+        bad.append('المحرك رفض %d اقتراحًا في التشغيل المتصل' % len(base['refused']))
     diff = []
     for k in range(total):
         e1, sc1 = build(name)
@@ -157,7 +163,7 @@ def sweep(name, wrong=(), help=()):
     return bad, total, base
 
 
-print('=== المرحلة 0، بلغة بايثون')
+print('=== المرحلة 0، بلغة بايثون، على الكود في %s' % os.path.relpath(os.path.abspath(code)))
 print('أ) إغلاق عند كل طلب بند قبل عرضه، ثم استعادة وتكملة: النتيجة كما في التشغيل المتصل')
 for name, wrong, help, label in (
         ('young', (), (), 'الصغير في 1-4، بسقف 240 ثانية'),
@@ -256,7 +262,7 @@ def case_final():
     e, sc, st, kid = at(25)                                 # الخانة العاشرة: إجابتها تنهي الفحص وتصدر نتيجته
     st.show(st.seq)
     before, old = st.snapshot(), st.seq
-    n_rec = len(sc.records) + len(sc.live['recs'])
+    n_rec = len(before['records'])                         # سجلات البنود في اللقطة قبل الإجابة
     r1 = st.event(old, ('confirm', 4))
     r2 = st.event(old, ('confirm', 4))                      # نقرة ثانية على التأكيد نفسه
     bad = []
@@ -379,6 +385,32 @@ def case_newday():
     return bad
 
 
+def case_counters():
+    # القاعدة: كل بند خُتم يدخل العدّاد مرة واحدة. المسار المتصل يعرض 20 بند فحص (10 لكل مهارة) و40 بندًا مسجَّلًا
+    bad = []
+    e0, sc0 = build('young')
+    s0 = Stepper(e0, sc0)
+    s0.open(sc0.g_run(14))
+    play(s0, Kid())
+    expect(bad, 'بلا إغلاق: عدّاد بنود الفحص وعدد السجلات', [sc0.n['check'], len(sc0.records)], [20, 40])
+    e, sc, st, kid = at(17)                                 # بعد ختم الخانة 1، والخانة 2 لم تُعرض
+    expect(bad, 'عدّاد الفحص في اللقطة بعد خانة واحدة', st.snapshot()['scheduler']['state']['n'].get('check'), 1)
+    e2, sc2, _ = reopen('young', st.snapshot())
+    s2 = Stepper(e2, sc2)
+    s2.open(sc2.g_run(14))
+    play(s2, kid)
+    expect(bad, 'بعد إغلاق قبل العرض واستعادة: العدّاد والسجلات', [sc2.n['check'], len(sc2.records)], [20, 40])
+    e, sc, st, kid = at(17)
+    st.show(st.seq)                                         # الخانة 2 معروضة: تُختم منقطعة عند الاستعادة
+    e3, sc3, _ = reopen('young', st.snapshot())
+    expect(bad, 'بعد الاستعادة مباشرة: الخانة 1 والخانة 2 المنقطعة', [sc3.n['check'], len(sc3.records)], [2, 11])   # بوابة 2، افتتاح 3، دليل فهم 4، فحص 2. بنود الدرس بلا سجل
+    s3 = Stepper(e3, sc3)
+    s3.open(sc3.g_run(14))
+    play(s3, kid)
+    expect(bad, 'بعد إكمال المسار: البند المنقطع وبديله محتسبان مرة واحدة', [sc3.n['check'], len(sc3.records)], [21, 41])
+    return bad
+
+
 print('ب) حالات بنتائج مكتوبة يدويًا')
 for title, fn in (
         ('1. إغلاق عند عرض البند (الخانة 2 من الفحص): يُختم «غير محسوم» منقطعًا، والجلسة S4 نفسها تُكمَل بوقتها (60 ثانية) '
@@ -394,7 +426,9 @@ for title, fn in (
         ('7. ثلاثة إغلاقات في جلسة واحدة: لا جلسة جديدة ولا جلسة بحث، والوقت 60 ثم 120 ثم 180 لا يبدأ من الصفر، ولا حدث '
          'استئناف يستهلك حصة، والسقف يحلّ بعد الخانة الرابعة كما في التشغيل المتصل', case_session),
         ('8. انتقال يوم الأسرة: الاستعادة في يوم جديد تختم S4، والجلسة التالية S5 تستأنف الفحص بحدثه. وفي اليوم نفسه تبقى '
-         'S4 مفتوحة', case_newday)):
+         'S4 مفتوحة', case_newday),
+        ('9. العدّادات (R16-03): كل بند خُتم يُحتسب مرة واحدة. 20 بند فحص و40 سجلًا بلا إغلاق وبعد إغلاق واستعادة. والبند '
+         'الذي يُختم منقطعًا أثناء الاستعادة يدخل العدّاد عندها، فيصير المجموع 21 و41 مع بديله', case_counters)):
     try:
         bad = fn()
     except Exception as x:                                   # noqa: BLE001

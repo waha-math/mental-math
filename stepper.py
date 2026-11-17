@@ -86,19 +86,17 @@ class Stepper:
         if self.broken:
             raise RuntimeError('الطبقة معطّلة: لا لقطة')
         if self.pending is None:
-            return None, []
+            return None
         live = self.sc.live
         if live['kind'] == 'show':
-            return dict(live, items=[]), []
+            return dict(live, items=[])
         item, w = self.pending
         items = live['prior'] + [r['item'] for r in live['recs'] if r.get('item')]
         j = None
         if self.shown:
             j = dict(item=item.get('id'), want=w, answer=item['answer'], assess=self.assess(),
                      raw=[list(x) for x in self.raw])
-        return dict(kind=live['kind'], skill=live['act'].skill, act=live['act'].to_dict(), items=items,
-                    journal=j), live['recs']
+        return dict(kind=live['kind'], skill=live['act'].skill, act=live['act'].to_dict(), items=items, journal=j)
 
     def snapshot(self, child=''):
-        cur, recs = self.current()
-        return persist.snapshot(self.e, self.sc, cur, child, extra=recs)
+        return persist.snapshot(self.e, self.sc, self.current(), child)

@@ -93,19 +93,18 @@ export class Stepper {
 
   current() {
     if (this.broken) throw new Error('الطبقة معطّلة: لا لقطة');
-    if (this.pending === null) return [null, []];
+    if (this.pending === null) return null;
     const live = this.sc.live;
-    if (live.kind === 'show') return [{ ...live, items: [] }, []];
+    if (live.kind === 'show') return { ...live, items: [] };
     const [item, w] = this.pending;
     const items = [...live.prior, ...live.recs.filter((r) => r.item).map((r) => r.item)];
     const journal = this.shown
       ? { item: item.id ?? null, want: w, answer: item.answer, assess: this.assess(), raw: this.raw.map((x) => [...x]) }
       : null;
-    return [{ kind: live.kind, skill: live.act.skill, act: live.act.toDict(), items, journal }, live.recs];
+    return { kind: live.kind, skill: live.act.skill, act: live.act.toDict(), items, journal };
   }
 
   snapshot(child = '') {
-    const [cur, recs] = this.current();
-    return snapshot(this.e, this.sc, cur, child, recs);
+    return snapshot(this.e, this.sc, this.current(), child);
   }
 }

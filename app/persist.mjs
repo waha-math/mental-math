@@ -49,13 +49,12 @@ export function itemEnds(raw, assess) {
   return assess && raw.some((ev) => ev[0] === 'confirm');
 }
 
-// extra: سجلات بنود النشاط الجاري التي لم تُضف بعد إلى سجلات المجدول (تُضاف إليها عند اكتماله)
-export function snapshot(engine, sc, current = null, child = '', extra = []) {
+export function snapshot(engine, sc, current = null, child = '') {
   if (current && current.journal && itemEnds(current.journal.raw, current.journal.assess)) {
     throw new Error('البند المنتهي يُطوى ويُعطى للنشاط قبل الحفظ، ولا يُحفظ في journal');
   }
   return { schema: SCHEMA, child, engine: engine.dump(), scheduler: { opts: options(sc), state: stateOf(sc) },
-    records: sc.records === null ? null : clone([...sc.records, ...extra]), current: current === null ? null : clone(current) };
+    records: sc.records === null ? null : clone(sc.records), current: current === null ? null : clone(current) };
 }
 
 // تسوية النشاط المحفوظ الذي أنهى صلاحيتَه حدثٌ مشروع في سجل المحرك: ترك المعلم لمحاولة الفحص
@@ -119,7 +118,12 @@ export function restore(record, { types, source, answer, item_seconds = null, re
       const j = cur.journal;
       if (j) {                                  // البند الجاري: يُختم بانقطاع، «غير محسوم»
         const rec = foldItem([...j.raw, ['interrupt']], j.answer, j.assess);
+        const shown = { ...act.shown };
         act.feed(classify(rec));
+        for (const [k, v] of Object.entries(act.shown)) {   // البند المختوم هنا يدخل العدّاد كما لو خُتم في الجلسة (R16-03)
+          const d = v - (shown[k] ?? 0);
+          if (d > 0) st.n[k] = (st.n[k] ?? 0) + d;
+        }
         if (j.item) items.push(j.item);
         if (sc.records !== null) {
           sc.records.push({ ...rec, skill: act.skill, activity: act.name, role: j.want.role ?? null, item: j.item ?? null,
