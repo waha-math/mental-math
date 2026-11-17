@@ -81,7 +81,9 @@ export function classify(rec) {
 // النجاح بمساعدة: البنود التي سبق دعمٌ إحدى إجاباتها وبلغت نتيجة نهائية. والمدعومة غير المكتملة: كل بند فيه دعم،
 // في أي موضع، ونتيجته النهائية غير مكتملة، ويُعدّ مرة واحدة. الدعم بعد آخر إجابة في بند انتهى بنتيجة يُحفظ ولا
 // يدخل المؤشرين، لأن الإجابة لم تأتِ بعده
-export function indicators(records) {
+// والسجل المستبعد (void: بند توقف نشاطه لتغيّر صلاحيته، R17-01) تاريخ محفوظ لا يدخل أي مؤشر
+export function indicators(all) {
+  const records = all.filter((r) => !r.void);
   const complete = records.filter((r) => r.status === 'complete');
   const used = records.filter((r) => r.support_before.length || r.later.some((a) => a.support.length));
   const reached = used.filter((r) => r.final === 'correct' || r.final === 'wrong');

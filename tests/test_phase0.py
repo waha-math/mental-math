@@ -26,6 +26,7 @@ from transition_engine import Engine, load_network, ROW  # noqa: E402
 from scheduler import Scheduler  # noqa: E402
 from content_source import ContentSource  # noqa: E402
 from stepper import Stepper  # noqa: E402
+from item_layer import indicators  # noqa: E402
 import persist  # noqa: E402
 
 MAP = args[0]
@@ -411,6 +412,11 @@ def case_counters():
     return bad
 
 
+def void_of(records, item):
+    return [(r['status'], r['first'], r['final'], r['support_before'], r.get('support_unanswered') or [], r.get('void'))
+            for r in records if r['item'] == item]
+
+
 def base_counts(sc):
     return [len(sc.records), dict(sc.n)]
 
@@ -457,7 +463,12 @@ def case_valid_live():
     expect(bad, 'بعد العرض: نتيجة الإجابة ثم تكرارها', [r1, r2], ['void', 'ignored'])
     expect(bad, 'بعد العرض: سجل المجدول', [list(x) for x in sc.log if x[0] == 5],
            [[5, 'carry_dropped:check_state', '1-4-1'], [5, 'answer_void:check_state', '1-4-1']])
-    expect(bad, 'بعد العرض: لا سجل بند ولا عدّاد ولا نتيجة', [base_counts(sc), count(e, 'independence_result')], [before, 0])
+    # البند عُرض قبل الإبطال: عرضه يُحفظ سجلًا مستبعدًا بلا إجابة (R17-01، و9.1: عرض البند حدث في السجل). والإجابة التي
+    # جاءت بعد الإبطال ليست فيه، ولا عدّاد ولا نتيجة
+    expect(bad, 'بعد العرض: سجل واحد مستبعد بلا إجابة، والعدّادات كما هي، ولا نتيجة',
+           [len(sc.records) - before[0], dict(sc.n) == before[1], void_of(sc.records, '1-4-1/checkA/11'),
+            count(e, 'independence_result')],
+           [1, True, [('interrupted', None, 'incomplete', [], [], 'check_state')], 0])
     expect(bad, 'بعد العرض: الجلسة خُتمت والمحاولة كما هي', [e.s['sessions']['S5']['ended'],
                                                            e.s['checks']['1-4-1/check/1']['state']], [True, 'needs_restart'])
     return bad
@@ -478,7 +489,9 @@ def case_valid_temporary():
            ['evidence', {'evidence': 1}, ['1-4-2/evidence/01']])
     expect(bad, 'سجل المجدول في S8', [list(x) for x in sc.log if x[0] == 8],
            [[8, 'carry_parked:suspended', '1-4-2'], [8, 'answer_void:suspended', '1-4-2']])
-    expect(bad, 'السجلات والعدّادات لم تتغير', base_counts(sc), before)
+    expect(bad, 'سجل واحد مستبعد للبند المعروض بلا إجابة (R17-01)، والعدّادات كما هي',
+           [len(sc.records) - before[0], dict(sc.n) == before[1], void_of(sc.records, '1-4-2/evidence/02')],
+           [1, True, [('interrupted', None, 'incomplete', [], [], 'suspended')]])
     expect(bad, 'S8 خُتمت', e.s['sessions']['S8']['ended'], True)
     return bad
 
@@ -649,6 +662,71 @@ def case_help_retention():
     return bad
 
 
+def case_void_history():
+    # القاعدة (R17-01): ما سُجّل في البند قبل تغيّر الصلاحية يبقى محفوظًا مع سبب استبعاده، مرة واحدة. لا يتقدم النشاط
+    # به، ولا يدخل المؤشرات، والحدث الذي جاء بعد التغيّر لا يُحتسب
+    bad = []
+    ITEM = '1-4-2/evidence/02'                              # S8، دليل فهم 1-4-2، جوابه 4. قبله بند واحد منجز
+    # أ) إجابة مؤكدة خاطئة ثم طلب تلميح، ثم التعليق، ثم إنهاء
+    e, sc, st, kid = at(39)
+    n0, ind0 = dict(sc.n), dump(indicators(sc.records))
+    r = [st.event(st.seq, ('confirm', 999)), st.event(st.seq, ('support', 'hint'))]
+    held = st.snapshot()['current']['journal']['raw']
+    e.apply(dict(id='t1', type='invalidate_session', target='S6'))
+    r.append(st.event(st.seq, ('end',)))
+    expect(bad, 'أ: نتائج الأحداث الثلاثة', r, ['open', 'open', 'void'])
+    expect(bad, 'أ: اللقطة قبل التعليق تحمل الحدثين', held, [['confirm', 999], ['support', 'hint']])
+    want = [('complete', False, 'incomplete', [], ['hint'], 'suspended')]
+    expect(bad, 'أ: سجل البند بعد التوقف: مرة واحدة، بالإجابة الأولى والتلميح وسبب الاستبعاد', void_of(sc.records, ITEM), want)
+    p = sc.parked.get('1-4-2') or {}
+    expect(bad, 'أ: النشاط مركون عند بنده المنجز الواحد، بلا البند المستبعد',
+           [(p.get('act') or {}).get('shown'), p.get('items')], [{'evidence': 1}, ['1-4-2/evidence/01']])
+    expect(bad, 'أ: العدّادات والمؤشرات لا يدخلها البند المستبعد', [dict(sc.n) == n0, dump(indicators(sc.records)) == ind0],
+           [True, True])
+    snap = st.snapshot()
+    j = (snap['current'] or {}).get('journal') or {}
+    expect(bad, 'أ: اللقطة بعد التوقف: السجل فيها مرة، وليس في بند جارٍ', [void_of(snap['records'], ITEM), j.get('item') == ITEM],
+           [want, False])
+    e2, sc2, _ = reopen('young', snap)
+    e3, sc3, _ = reopen('young', persist.snapshot(e2, sc2))
+    expect(bad, 'أ: بعد استعادتين', [void_of(sc2.records, ITEM), void_of(sc3.records, ITEM)], [want, want])
+    expect(bad, 'أ: النشاط باقٍ مركونًا ولا دليل فهم جديد', ['1-4-2' in sc3.parked, count(e3, 'understanding_proved', skill='1-4-2')],
+           [True, 0])
+    # ب) طلب دعم بلا إجابة قبل التعليق، ثم إجابة بعده
+    e, sc, st, kid = at(39)
+    r = [st.event(st.seq, ('support', 'hint'))]
+    e.apply(dict(id='t1', type='invalidate_session', target='S6'))
+    r.append(st.event(st.seq, ('confirm', 4)))
+    expect(bad, 'ب: نتائج الحدثين', r, ['open', 'void'])
+    expect(bad, 'ب: سجل البند: منقطع ومعه التلميح، والإجابة اللاحقة ليست فيه', void_of(sc.records, ITEM),
+           [('interrupted', None, 'incomplete', ['hint'], [], 'suspended')])
+    # ج) بند عُرض بلا حدث، ثم إجابة بعد التعليق: عرضه محفوظ (9.1: عرض البند حدث في السجل)، والإجابة لا تُحتسب
+    e, sc, st, kid = at(39)
+    st.show(st.seq)
+    e.apply(dict(id='t1', type='invalidate_session', target='S6'))
+    r = st.event(st.seq, ('confirm', 4))
+    expect(bad, 'ج: نتيجة الإجابة وسجل البند المعروض', [r, void_of(sc.records, ITEM)],
+           ['void', [('interrupted', None, 'incomplete', [], [], 'suspended')]])
+    # د) الحدثان في اللقطة، والتعليق قبل الاستعادة: الاستعادة تحفظهما مستبعدَين ولا تعطيهما للنشاط
+    e, sc, st, kid = at(39)
+    n0 = dict(sc.n)
+    st.event(st.seq, ('confirm', 999))
+    st.event(st.seq, ('support', 'hint'))
+    e.apply(dict(id='t1', type='invalidate_session', target='S6'))
+    e2, sc2, notes = reopen('young', st.snapshot())
+    expect(bad, 'د: ملاحظات الاستعادة', [list(n) for n in notes],
+           [['void_item', '1-4-2', ITEM, 'suspended'], ['current_saved', 'evidence', '1-4-2']])
+    expect(bad, 'د: السجل والعدّاد والنشاط المحفوظ', [void_of(sc2.records, ITEM), dict(sc2.n) == n0,
+                                                      [c['act']['shown'] for c in sc2.saved if c['kind'] == 'evidence']],
+           [want, True, [{'evidence': 1}]])
+    s2 = Stepper(e2, sc2)
+    s2.open(sc2.g_continue())
+    e3, sc3, _ = reopen('young', s2.snapshot())
+    expect(bad, 'د: بعد التكملة واستعادة ثانية: مركون، والسجل مرة واحدة', ['1-4-2' in sc3.parked, void_of(sc3.records, ITEM)],
+           [True, want])
+    return bad
+
+
 print('ب) حالات بنتائج مكتوبة يدويًا')
 for title, fn in (
         ('1. إغلاق عند عرض البند (الخانة 2 من الفحص): يُختم «غير محسوم» منقطعًا، والجلسة S4 نفسها تُكمَل بوقتها (60 ثانية) '
@@ -681,7 +759,11 @@ for title, fn in (
         ('16. عقد الأحداث (R16-02): نوع غير مسموح للبند يُرفض بسبب قبل أي تغيير، في بند تعليم وبند تقييم وبند عرض',
          case_contract),
         ('17. «أحتاج مساعدة» في فحص الاحتفاظ، مستوى البند وحده: ينتهي البند منقطعًا ومعه الطلب، وتكراره يُهمل',
-         case_help_retention)):
+         case_help_retention),
+        ('18. تاريخ البند عند توقف نشاطه (R17-01): الإجابة المؤكدة وطلب التلميح قبل تغيّر الصلاحية يبقيان في سجل البند مرة '
+         'واحدة مع سبب الاستبعاد، عبر الحفظ والاستعادة المتكررين. لا يتقدم النشاط بهما ولا يدخلان العدّاد ولا المؤشرات، '
+         'والحدث اللاحق للتغيّر لا يُحتسب. وكذلك طلب دعم بلا إجابة، وبند عُرض بلا حدث، والتعليق قبل الاستعادة',
+         case_void_history)):
     try:
         bad = fn()
     except Exception as x:                                   # noqa: BLE001

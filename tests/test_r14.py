@@ -216,7 +216,9 @@ def case_02e():
     except persist.Inconsistent as x:
         return ['رُفض السجل: %s' % x]
     bad = []
-    if [n[0] for n in notes] != ['unsettled_item', 'current_saved', 'reconciled', 'session_closed'] or sc2.saved:
+    # R17-01: المحاولة تُركت قبل الاستعادة، فبندها الجاري تاريخ مستبعد (void_item) لا يُعطى للنشاط ولا يدخل العدّاد.
+    # قبل R17-01 كان يُختم «غير محسوم» ويُعطى للنشاط المتروك ثم يُسوّى
+    if [n[0] for n in notes] != ['void_item', 'current_saved', 'reconciled', 'session_closed'] or sc2.saved:
         bad.append('الاستعادة الأولى: %r، والمخزن %r' % (notes, sc2.saved))
     if notes3 or persist.snapshot(e3, sc3) != persist.snapshot(e2, sc2):
         bad.append('الاستعادة الثانية غيّرت اللقطة: %r' % notes3)

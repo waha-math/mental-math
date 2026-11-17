@@ -73,7 +73,11 @@ export class Stepper {
   // يُسقطه بقاعدة السبب ويختم الجلسة، والسبب في this.halt للبالغ
   _void(answered) {
     if (this.sc.live_invalid() === null) return false;
-    this._advance(new Void(answered));
+    const [item, w] = this.pending;
+    // ما سُجّل قبل تغيّر الصلاحية يذهب مع التوقف، فلا يضيع (R17-01)
+    const void_ = SHOWN.includes(w.activity) ? new Void(answered)
+      : new Void(answered, { shown: this.shown, raw: this.raw, answer: item.answer, assess: this.assess() });
+    this._advance(void_);
     this.halt = this.sc.halts[this.sc.halts.length - 1];
     return true;
   }

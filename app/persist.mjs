@@ -118,18 +118,26 @@ export function restore(record, { types, source, answer, item_seconds = null, re
       const j = cur.journal;
       if (j) {                                  // البند الجاري: يُختم بانقطاع، «غير محسوم»
         const rec = foldItem([...j.raw, ['interrupt']], j.answer, j.assess);
-        const shown = { ...act.shown };
-        act.feed(classify(rec));
-        for (const [k, v] of Object.entries(act.shown)) {   // البند المختوم هنا يدخل العدّاد كما لو خُتم في الجلسة (R16-03)
-          const d = v - (shown[k] ?? 0);
-          if (d > 0) st.n[k] = (st.n[k] ?? 0) + d;
+        // إن تغيّرت صلاحية النشاط قبل الاستعادة فالبند تاريخ يُحفظ مع سبب استبعاده، ولا يُعطى للنشاط ولا يدخل عدّادًا
+        // (R17-01). الحكم حكم المحرك في الجلسة المفتوحة، كما في الجلسة الحية
+        const v = e.s.current !== null ? e.may_continue(cur.kind, e.s.current, act.skill, act.check_id ?? null)
+          : { ok: true };
+        const more = { skill: act.skill, activity: act.name, role: j.want.role ?? null, item: j.item ?? null,
+          unsettled: true };
+        if (v.ok) {
+          const shown = { ...act.shown };
+          act.feed(classify(rec));
+          for (const [k, n] of Object.entries(act.shown)) {   // البند المختوم هنا يدخل العدّاد كما لو خُتم في الجلسة (R16-03)
+            const d = n - (shown[k] ?? 0);
+            if (d > 0) st.n[k] = (st.n[k] ?? 0) + d;
+          }
+          if (j.item) items.push(j.item);
+          notes.push(['unsettled_item', act.skill, j.item ?? null, classify(rec)]);
+        } else {
+          more.void = v.code;
+          notes.push(['void_item', act.skill, j.item ?? null, v.code]);
         }
-        if (j.item) items.push(j.item);
-        if (sc.records !== null) {
-          sc.records.push({ ...rec, skill: act.skill, activity: act.name, role: j.want.role ?? null, item: j.item ?? null,
-            unsettled: true });
-        }
-        notes.push(['unsettled_item', act.skill, j.item ?? null, classify(rec)]);
+        if (sc.records !== null) sc.records.push({ ...rec, ...more });
       }
       entry = { kind: cur.kind, skill: act.skill, act: act.toDict(), items };
     }

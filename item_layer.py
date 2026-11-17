@@ -92,7 +92,9 @@ def classify(rec):
 def indicators(records):
     """النجاح بمساعدة: البنود التي سبق دعمٌ إحدى إجاباتها وبلغت نتيجة نهائية. والمدعومة غير المكتملة: كل بند فيه
     دعم، في أي موضع، ونتيجته النهائية غير مكتملة، ويُعدّ مرة واحدة. الدعم بعد آخر إجابة في بند انتهى بنتيجة
-    يُحفظ ولا يدخل المؤشرين، لأن الإجابة لم تأتِ بعده."""
+    يُحفظ ولا يدخل المؤشرين، لأن الإجابة لم تأتِ بعده.
+    والسجل المستبعد (void: بند توقف نشاطه لتغيّر صلاحيته، R17-01) تاريخ محفوظ لا يدخل أي مؤشر."""
+    records = [r for r in records if not r.get('void')]
     complete = [r for r in records if r['status'] == 'complete']
     used = [r for r in records if r['support_before'] or any(a['support'] for a in r['later'])]
     reached = [r for r in used if r['final'] in ('correct', 'wrong')]

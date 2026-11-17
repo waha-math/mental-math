@@ -12,7 +12,8 @@
 //
 // المرجع هو scheduler.py: كل قرار هنا يطابقه في متجهات app/scheduler_vectors.json (app/test_scheduler_conformance.mjs).
 import { OPEN_CHECK } from './engine.mjs';
-import { CALC, Activity, GateRun, ShortCheckRun, OpeningRun, EvidenceRun, CheckRun, RetentionRun, driveSteps, runSync, gatePlan }
+import { CALC, Activity, GateRun, ShortCheckRun, OpeningRun, EvidenceRun, CheckRun, RetentionRun, driveSteps, runSync, gatePlan,
+  foldItem }
   from './items.mjs';
 
 export const GATES_PER_SEARCH = { older: 2, young: 1 };
@@ -54,10 +55,16 @@ export class Halted extends Capped {
   }
 }
 
-// ما ترسله طبقة الخطوات بدل الإجابة حين تجد النشاط الجاري غير صالح. answered: هل حاول الطفل الإجابة؟
+// ما ترسله طبقة الخطوات بدل الإجابة حين تجد النشاط الجاري غير صالح. answered: هل حاول الطفل الإجابة الآن؟
+// ومعه ما سُجّل في البند قبل تغيّر الصلاحية (R17-01): هل عُرض، وأحداثه الخام، وجوابه الصحيح ونوعه. الحدث الذي كشف
+// التغيّر ليس منها
 export class Void {
-  constructor(answered) {
+  constructor(answered, { shown = false, raw = [], answer = null, assess = false } = {}) {
     this.answered = answered;
+    this.shown = shown;
+    this.raw = raw.map((x) => [...x]);
+    this.answer = answer;
+    this.assess = assess;
   }
 }
 
@@ -268,7 +275,14 @@ export class Scheduler {
   // النشاط الجاري لم يعد صالحًا: لا يتقدم. مصيره بقاعدة سبب الرفض كما عند استئناف نشاط محفوظ: الرفض الخاص بالجلسة
   // يُبقيه محفوظًا، والمؤقت الخاص بالمهارة يركن النشاط التعليمي بتقدّمه، وما عداهما يُسقطه. ما أُنجز منه باقٍ في
   // السجلات. وإجابة جاءت بعد تغيّر الصلاحية لا تُحتسب دليلًا ولا خطأً
-  halt(code, entry, started, answered) {
+  // void و about: البند المعروض عند التوقف وما سُجّل فيه قبل تغيّر الصلاحية (R17-01). تاريخه يُحفظ في سجلات البنود مع
+  // سبب استبعاده (void)، ولا يُعطى للنشاط ولا يدخل عدّادًا ولا مؤشرًا: الحفظ غير الاستعمال في التقييم
+  halt(code, entry, started, answered, void_ = null, about = null) {
+    if (void_ !== null && void_.shown && about !== null && this.records !== null) {
+      const rec = foldItem([...void_.raw, ['interrupt']], void_.answer, void_.assess);
+      this.records.push({ ...rec, skill: entry.skill, activity: about.activity, role: about.role, item: about.item,
+        void: code });
+    }
     this.live = null;
     this.carried_items = [];
     const k = refusalKind(code), skill = entry.skill;
@@ -333,7 +347,7 @@ export class Scheduler {
     };
     const gen = driveSteps(act, this.source, recs, this.cap !== null ? (w) => this.tick(w) : null);
     // الصلاحية تُفحص قبل عرض البند، ومرة أخرى قبل تطبيق الإجابة (R16-01). قرار يقع بينهما يوقف النشاط
-    const guard = (got = undefined) => {
+    const guard = (req, got = undefined) => {
       const code = this.invalid(kind, act.skill, act.check_id ?? null);
       if (code === null) {
         if (got instanceof Void) throw new Error('طبقة الخطوات أبطلت بندًا والمحرك يراه صالحًا');
@@ -341,13 +355,16 @@ export class Scheduler {
       }
       const entry = { kind, skill: act.skill, act: act.toDict(),
         items: [...prior, ...recs.filter((r) => r.item).map((r) => r.item)] };
+      const [item, w] = req;
+      const isObj = item !== null && typeof item === 'object' && !Array.isArray(item);
       this.halt(code, entry, sum(act.shown) > 0 || kind === 'check',
-        got !== undefined && !(got instanceof Void && !got.answered));
+        got !== undefined && !(got instanceof Void && !got.answered), got instanceof Void ? got : null,
+        { activity: act.name, role: w.role, item: isObj ? (item.id ?? null) : null });
     };
     for (let r = gen.next(); !r.done;) {
-      guard();
+      guard(r.value);
       const got = yield r.value;
-      guard(got);
+      guard(r.value, got);
       r = gen.next(got);
       settle();
     }

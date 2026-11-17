@@ -12,7 +12,7 @@ const appDir = resolve(process.argv[2] || new URL('../app', import.meta.url).pat
 const load = (f) => import(pathToFileURL(resolve(appDir, f)).href);
 const { Engine, canonical } = await load('engine.mjs');
 const { Scheduler } = await load('scheduler.mjs');
-const { ContentSource } = await load('items.mjs');
+const { ContentSource, indicators } = await load('items.mjs');
 const { Stepper } = await load('stepper.mjs');
 const persist = await load('persist.mjs');
 
@@ -371,6 +371,8 @@ function caseCounters() {
 }
 
 const baseCounts = (sc) => [sc.records.length, { ...sc.n }];
+const voidOf = (records, item) => records.filter((r) => r.item === item)
+  .map((r) => [r.status, r.first, r.final, r.support_before, r.support_unanswered || [], r.void ?? null]);
 
 // القاعدة (8.3): إبطال جلسة أسهمت في محاولة غير مكتملة يجعلها «تحتاج إعادة بدء»، فلا تُستأنف. والاستئناف في الجلسة
 // نفسها لا يستهلك حصة، لكنه يتحقق من الصلاحية لحظة التنفيذ
@@ -412,7 +414,12 @@ function caseValidLive() {
   expect(bad, 'بعد العرض: نتيجة الإجابة ثم تكرارها', [r1, r2], ['void', 'ignored']);
   expect(bad, 'بعد العرض: سجل المجدول', sc.log.filter((x) => x[0] === 5),
     [[5, 'carry_dropped:check_state', '1-4-1'], [5, 'answer_void:check_state', '1-4-1']]);
-  expect(bad, 'بعد العرض: لا سجل بند ولا عدّاد ولا نتيجة', [baseCounts(sc), count(e, 'independence_result')], [before, 0]);
+  // البند عُرض قبل الإبطال: عرضه يُحفظ سجلًا مستبعدًا بلا إجابة (R17-01، و9.1: عرض البند حدث في السجل). والإجابة التي
+  // جاءت بعد الإبطال ليست فيه، ولا عدّاد ولا نتيجة
+  expect(bad, 'بعد العرض: سجل واحد مستبعد بلا إجابة، والعدّادات كما هي، ولا نتيجة',
+    [sc.records.length - before[0], dump(sc.n) === dump(before[1]), voidOf(sc.records, '1-4-1/checkA/11'),
+      count(e, 'independence_result')],
+    [1, true, [['interrupted', null, 'incomplete', [], [], 'check_state']], 0]);
   expect(bad, 'بعد العرض: الجلسة خُتمت والمحاولة كما هي', [e.s.sessions.S5.ended, e.s.checks['1-4-1/check/1'].state],
     [true, 'needs_restart']);
   return bad;
@@ -433,8 +440,76 @@ function caseValidTemporary() {
     ['evidence', { evidence: 1 }, ['1-4-2/evidence/01']]);
   expect(bad, 'سجل المجدول في S8', sc.log.filter((x) => x[0] === 8),
     [[8, 'carry_parked:suspended', '1-4-2'], [8, 'answer_void:suspended', '1-4-2']]);
-  expect(bad, 'السجلات والعدّادات لم تتغير', baseCounts(sc), before);
+  expect(bad, 'سجل واحد مستبعد للبند المعروض بلا إجابة (R17-01)، والعدّادات كما هي',
+    [sc.records.length - before[0], dump(sc.n) === dump(before[1]), voidOf(sc.records, '1-4-2/evidence/02')],
+    [1, true, [['interrupted', null, 'incomplete', [], [], 'suspended']]]);
   expect(bad, 'S8 خُتمت', e.s.sessions.S8.ended, true);
+  return bad;
+}
+
+// القاعدة (R17-01): ما سُجّل في البند قبل تغيّر الصلاحية يبقى محفوظًا مع سبب استبعاده، مرة واحدة. لا يتقدم النشاط به،
+// ولا يدخل المؤشرات، والحدث الذي جاء بعد التغيّر لا يُحتسب
+function caseVoidHistory() {
+  const bad = [];
+  const ITEM = '1-4-2/evidence/02';                         // S8، دليل فهم 1-4-2، جوابه 4. قبله بند واحد منجز
+  const inval = (e) => e.apply({ id: 't1', type: 'invalidate_session', target: 'S6' });
+  // أ) إجابة مؤكدة خاطئة ثم طلب تلميح، ثم التعليق، ثم إنهاء
+  let { e, sc, st } = at(39);
+  let n0 = dump(sc.n);
+  const ind0 = dump(indicators(sc.records));
+  let r = [st.event(st.seq, ['confirm', 999]), st.event(st.seq, ['support', 'hint'])];
+  const held = st.snapshot().current.journal.raw;
+  inval(e);
+  r.push(st.event(st.seq, ['end']));
+  expect(bad, 'أ: نتائج الأحداث الثلاثة', r, ['open', 'open', 'void']);
+  expect(bad, 'أ: اللقطة قبل التعليق تحمل الحدثين', held, [['confirm', 999], ['support', 'hint']]);
+  const want = [['complete', false, 'incomplete', [], ['hint'], 'suspended']];
+  expect(bad, 'أ: سجل البند بعد التوقف: مرة واحدة، بالإجابة الأولى والتلميح وسبب الاستبعاد', voidOf(sc.records, ITEM), want);
+  const p = sc.parked['1-4-2'] || {};
+  expect(bad, 'أ: النشاط مركون عند بنده المنجز الواحد، بلا البند المستبعد', [(p.act || {}).shown ?? null, p.items ?? null],
+    [{ evidence: 1 }, ['1-4-2/evidence/01']]);
+  expect(bad, 'أ: العدّادات والمؤشرات لا يدخلها البند المستبعد', [dump(sc.n) === n0, dump(indicators(sc.records)) === ind0],
+    [true, true]);
+  const snap = st.snapshot();
+  const j = (snap.current || {}).journal || {};
+  expect(bad, 'أ: اللقطة بعد التوقف: السجل فيها مرة، وليس في بند جارٍ', [voidOf(snap.records, ITEM), j.item === ITEM],
+    [want, false]);
+  let r2 = reopen('young', snap);
+  let r3 = reopen('young', persist.snapshot(r2.e, r2.sc));
+  expect(bad, 'أ: بعد استعادتين', [voidOf(r2.sc.records, ITEM), voidOf(r3.sc.records, ITEM)], [want, want]);
+  expect(bad, 'أ: النشاط باقٍ مركونًا ولا دليل فهم جديد',
+    ['1-4-2' in r3.sc.parked, count(r3.e, 'understanding_proved', null, { skill: '1-4-2' })], [true, 0]);
+  // ب) طلب دعم بلا إجابة قبل التعليق، ثم إجابة بعده
+  ({ e, sc, st } = at(39));
+  r = [st.event(st.seq, ['support', 'hint'])];
+  inval(e);
+  r.push(st.event(st.seq, ['confirm', 4]));
+  expect(bad, 'ب: نتائج الحدثين', r, ['open', 'void']);
+  expect(bad, 'ب: سجل البند: منقطع ومعه التلميح، والإجابة اللاحقة ليست فيه', voidOf(sc.records, ITEM),
+    [['interrupted', null, 'incomplete', ['hint'], [], 'suspended']]);
+  // ج) بند عُرض بلا حدث، ثم إجابة بعد التعليق: عرضه محفوظ (9.1: عرض البند حدث في السجل)، والإجابة لا تُحتسب
+  ({ e, sc, st } = at(39));
+  st.show(st.seq);
+  inval(e);
+  const rc = st.event(st.seq, ['confirm', 4]);
+  expect(bad, 'ج: نتيجة الإجابة وسجل البند المعروض', [rc, voidOf(sc.records, ITEM)],
+    ['void', [['interrupted', null, 'incomplete', [], [], 'suspended']]]);
+  // د) الحدثان في اللقطة، والتعليق قبل الاستعادة: الاستعادة تحفظهما مستبعدَين ولا تعطيهما للنشاط
+  ({ e, sc, st } = at(39));
+  n0 = dump(sc.n);
+  st.event(st.seq, ['confirm', 999]);
+  st.event(st.seq, ['support', 'hint']);
+  inval(e);
+  r2 = reopen('young', st.snapshot());
+  expect(bad, 'د: ملاحظات الاستعادة', r2.notes,
+    [['void_item', '1-4-2', ITEM, 'suspended'], ['current_saved', 'evidence', '1-4-2']]);
+  expect(bad, 'د: السجل والعدّاد والنشاط المحفوظ', [voidOf(r2.sc.records, ITEM), dump(r2.sc.n) === n0,
+    r2.sc.saved.filter((c) => c.kind === 'evidence').map((c) => c.act.shown)], [want, true, [{ evidence: 1 }]]);
+  const s2 = new Stepper(r2.e, r2.sc);
+  s2.open(r2.sc.g_continue());
+  r3 = reopen('young', s2.snapshot());
+  expect(bad, 'د: بعد التكملة واستعادة ثانية: مركون، والسجل مرة واحدة', ['1-4-2' in r3.sc.parked, voidOf(r3.sc.records, ITEM)],
+    [true, want]);
   return bad;
 }
 
@@ -627,7 +702,11 @@ for (const [title, fn] of [
   ['16. عقد الأحداث (R16-02): نوع غير مسموح للبند يُرفض بسبب قبل أي تغيير، في بند تعليم وبند تقييم وبند عرض',
     caseContract],
   ['17. «أحتاج مساعدة» في فحص الاحتفاظ، مستوى البند وحده: ينتهي البند منقطعًا ومعه الطلب، وتكراره يُهمل',
-    caseHelpRetention]]) {
+    caseHelpRetention],
+  ['18. تاريخ البند عند توقف نشاطه (R17-01): الإجابة المؤكدة وطلب التلميح قبل تغيّر الصلاحية يبقيان في سجل البند مرة '
+    + 'واحدة مع سبب الاستبعاد، عبر الحفظ والاستعادة المتكررين. لا يتقدم النشاط بهما ولا يدخلان العدّاد ولا المؤشرات، '
+    + 'والحدث اللاحق للتغيّر لا يُحتسب. وكذلك طلب دعم بلا إجابة، وبند عُرض بلا حدث، والتعليق قبل الاستعادة',
+    caseVoidHistory]]) {
   let bad;
   try { bad = fn(); } catch (x) { bad = ['استثناء: ' + (x.stack || x).toString().split('\n').slice(0, 2).join(' ')]; }
   check(title, bad);

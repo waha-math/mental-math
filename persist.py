@@ -160,17 +160,26 @@ def restore(record, net, types, source, answer, item_seconds=None, records=None,
             j = cur.get('journal')
             if j:                                           # البند الجاري: يُختم بانقطاع، «غير محسوم»
                 rec = fold_item([tuple(ev) for ev in j['raw']] + [('interrupt',)], j['answer'], j['assess'])
-                shown = dict(act.shown)
-                act.feed(classify(rec))
-                for k, v in act.shown.items():              # البند المختوم هنا يدخل العدّاد كما لو خُتم في الجلسة (R16-03)
-                    if v > shown.get(k, 0):
-                        st['n'][k] = st['n'].get(k, 0) + v - shown.get(k, 0)
-                if j.get('item'):
-                    items.append(j['item'])
+                # إن تغيّرت صلاحية النشاط قبل الاستعادة فالبند تاريخ يُحفظ مع سبب استبعاده، ولا يُعطى للنشاط ولا يدخل
+                # عدّادًا (R17-01). الحكم حكم المحرك في الجلسة المفتوحة، كما في الجلسة الحية
+                v = e.may_continue(cur['kind'], e.s['current'], act.skill, getattr(act, 'check_id', None)) \
+                    if hasattr(e, 'may_continue') and e.s['current'] is not None else dict(ok=True)
+                more = dict(skill=act.skill, activity=act.name, role=j['want'].get('role'), item=j.get('item'),
+                            unsettled=True)
+                if v['ok']:
+                    shown = dict(act.shown)
+                    act.feed(classify(rec))
+                    for k, n in act.shown.items():          # البند المختوم هنا يدخل العدّاد كما لو خُتم في الجلسة (R16-03)
+                        if n > shown.get(k, 0):
+                            st['n'][k] = st['n'].get(k, 0) + n - shown.get(k, 0)
+                    if j.get('item'):
+                        items.append(j['item'])
+                    notes.append(('unsettled_item', act.skill, j.get('item'), classify(rec)))
+                else:
+                    more['void'] = v['code']
+                    notes.append(('void_item', act.skill, j.get('item'), v['code']))
                 if sc.records is not None:
-                    sc.records.append(dict(rec, skill=act.skill, activity=act.name, role=j['want'].get('role'),
-                                           item=j.get('item'), unsettled=True))
-                notes.append(('unsettled_item', act.skill, j.get('item'), classify(rec)))
+                    sc.records.append(dict(rec, **more))
             entry = dict(kind=cur['kind'], skill=act.skill, act=act.to_dict(), items=items)
         st['saved'].append(entry)
         notes.append(('current_saved', cur['kind'], cur['skill']))

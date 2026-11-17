@@ -65,7 +65,12 @@ class Stepper:
         يركنه أو يُسقطه بقاعدة السبب ويختم الجلسة، والسبب في self.halt للبالغ."""
         if self.sc.live_invalid() is None:
             return False
-        self._advance(Void(answered))
+        item, w = self.pending
+        if w['activity'] in SHOWN:
+            void = Void(answered)
+        else:                                               # ما سُجّل قبل تغيّر الصلاحية يذهب مع التوقف، فلا يضيع (R17-01)
+            void = Void(answered, shown=self.shown, raw=self.raw, answer=item['answer'], assess=self.assess())
+        self._advance(void)
         self.halt = self.sc.halts[-1]
         return True
 

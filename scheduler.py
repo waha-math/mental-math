@@ -32,7 +32,7 @@ import itertools
 from collections import Counter
 
 from item_layer import (CALC, Activity, GateRun, ShortCheckRun, OpeningRun, EvidenceRun, CheckRun, RetentionRun,
-                        drive_steps, run_sync, gate_plan)
+                        drive_steps, run_sync, gate_plan, fold_item)
 from transition_engine import OPEN_CHECK
 
 GATES_PER_SEARCH = {'older': 2, 'young': 1}
@@ -69,10 +69,13 @@ class Halted(Capped):
 
 
 class Void:
-    """ما ترسله طبقة الخطوات بدل الإجابة حين تجد النشاط الجاري غير صالح. answered: هل حاول الطفل الإجابة؟"""
+    """ما ترسله طبقة الخطوات بدل الإجابة حين تجد النشاط الجاري غير صالح. answered: هل حاول الطفل الإجابة الآن؟
+    ومعه ما سُجّل في البند قبل تغيّر الصلاحية (R17-01): هل عُرض، وأحداثه الخام، وجوابه الصحيح ونوعه. الحدث الذي
+    كشف التغيّر ليس منها."""
 
-    def __init__(self, answered):
-        self.answered = answered
+    def __init__(self, answered, shown=False, raw=(), answer=None, assess=False):
+        self.answered, self.shown = answered, shown
+        self.raw, self.answer, self.assess = [tuple(x) for x in raw], answer, assess
 
 
 def old_types(types):
@@ -230,10 +233,16 @@ class Scheduler:
             return self.invalid('show', v['skill'])
         return self.invalid(v['kind'], v['act'].skill, getattr(v['act'], 'check_id', None))
 
-    def halt(self, code, entry, started, answered):
+    def halt(self, code, entry, started, answered, void=None, about=None):
         """النشاط الجاري لم يعد صالحًا: لا يتقدم. مصيره بقاعدة سبب الرفض كما عند استئناف نشاط محفوظ: الرفض الخاص
         بالجلسة يُبقيه محفوظًا، والمؤقت الخاص بالمهارة يركن النشاط التعليمي بتقدّمه، وما عداهما يُسقطه. ما أُنجز منه
-        باقٍ في السجلات. وإجابة جاءت بعد تغيّر الصلاحية لا تُحتسب دليلًا ولا خطأً."""
+        باقٍ في السجلات. وإجابة جاءت بعد تغيّر الصلاحية لا تُحتسب دليلًا ولا خطأً.
+        void و about: البند المعروض عند التوقف وما سُجّل فيه قبل تغيّر الصلاحية (R17-01). تاريخه يُحفظ في سجلات
+        البنود مع سبب استبعاده (void)، ولا يُعطى للنشاط ولا يدخل عدّادًا ولا مؤشرًا: الحفظ غير الاستعمال في التقييم."""
+        if void is not None and void.shown and about is not None and self.records is not None:
+            rec = fold_item(void.raw + [('interrupt',)], void.answer, void.assess)
+            self.records.append(dict(rec, skill=entry['skill'], activity=about['activity'], role=about['role'],
+                                     item=about['item'], void=code))
         self.live, self.carried_items = None, []
         k, skill = refusal_kind(code), entry['skill']
         if k == 'session' and started:
@@ -300,8 +309,12 @@ class Scheduler:
                 return
             entry = dict(kind=kind, skill=act.skill, act=act.to_dict(),
                          items=prior + [r['item'] for r in recs if r.get('item')])
+            item, w = req
             self.halt(code, entry, bool(sum(act.shown.values())) or kind == 'check',
-                      got is not None and not (isinstance(got, Void) and not got.answered))
+                      got is not None and not (isinstance(got, Void) and not got.answered),
+                      void=got if isinstance(got, Void) else None,
+                      about=dict(activity=act.name, role=w['role'], item=item.get('id') if isinstance(item, dict) else None))
+        req = None
         gen = drive_steps(act, self.source, recs, pause=self.tick if self.cap is not None else None)
         try:
             req = next(gen)
