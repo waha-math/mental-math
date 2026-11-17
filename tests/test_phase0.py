@@ -552,6 +552,103 @@ def case_valid_healthy():
     return bad
 
 
+def case_help_check():
+    # القاعدة (3.1 و3.6): «أحتاج مساعدة» في بند فحص ينهي البند منقطعًا ومعه الطلب، ويغلق المحاولة «انتهت بطلب دعم»،
+    # لا «لم تُجتز». والمحاولة التالية في يوم لاحق وببنود جديدة
+    e, sc, st, kid = at(17)                                 # S4، الخانة 2، البند 1-4-1/checkA/03
+    st.show(st.seq)
+    old = st.seq
+    r1 = st.event(old, ('support', 'requested'))
+    r2 = st.event(old, ('support', 'requested'))
+    bad = []
+    expect(bad, 'نتيجة الطلب ثم تكراره', [r1, r2], ['next', 'ignored'])
+    res = [x['result'] for x in e.s['log'] if x['type'] == 'independence_result']
+    expect(bad, 'نتائج الفحص في المحرك وحالة المحاولة', [res, e.s['checks']['1-4-1/check/1']['state']], [['help'], 'closed'])
+    rec = [r for r in sc.records if r['item'] == '1-4-1/checkA/03']
+    expect(bad, 'سجل البند: مرة واحدة، منقطع، ومعه الطلب، بلا إجابة',
+           [(r['status'], r['first'], r['support_before'], r['final']) for r in rec],
+           [('interrupted', None, ['requested'], 'incomplete')])
+    e2, sc2, notes = reopen('young', st.snapshot())         # اللقطة بعد الطلب لا تعيد فتح الفحص
+    # المولّد مضى إلى اليوم التالي وبدأ المحاولة الثانية (3.6: بعد «انتهت بطلب دعم» يكفي اليوم اللاحق)، فالفحص
+    # الجاري في اللقطة هو المحاولة الثانية. المحاولة الأولى مغلقة ولا تُفتح
+    expect(bad, 'بعد الاستعادة: الفحص المحفوظ هو المحاولة الثانية وحدها، والأولى مغلقة بنتيجة واحدة',
+           [[c['act']['check_id'] for c in sc2.saved if c['kind'] == 'check'], count(e2, 'independence_result'),
+            e2.s['checks']['1-4-1/check/1']['state']], [['1-4-1/check/2'], 1, 'closed'])
+    s2 = Stepper(e2, sc2)
+    s2.open(sc2.g_run(14))
+    play(s2, kid)
+    second = [x for x in e2.s['log'] if x['type'] == 'check_started' and x['check_id'] == '1-4-1/check/2']
+    day = lambda x: e2.s['sessions'][x['session']]['day']
+    expect(bad, 'المحاولة الثانية: بدأت مرة، وفي يوم بعد يوم الأولى (3)', [len(second), bool(second) and day(second[0]) > 3], [1, True])
+    later = [r['item'].split('/')[1] for r in sc2.records if r['activity'] == 'check' and r['skill'] == '1-4-1'][2:]
+    expect(bad, 'بنود المحاولة الثانية كلها من مجموعتها الجديدة', sorted(set(later)), ['checkB'])
+    expect(bad, 'نتائج فحص 1-4-1 بترتيبها', [x['result'] for x in e2.s['log'] if x['type'] == 'independence_result'
+                                               and x['skill'] == '1-4-1'], ['help', 'pass'])
+    return bad
+
+
+def case_help_gate():
+    # القاعدة (6.1): طلب الدعم في البوابة ينهيها «انتهت بطلب دعم»، ولا تُسجَّل المهارة «متعثّر فيها»
+    e, sc, st, kid = at(0)                                  # S1، أول بند في بوابة 1-4-1
+    old = st.seq
+    r1 = st.event(old, ('support', 'requested'))
+    r2 = st.event(old, ('support', 'requested'))
+    bad = []
+    expect(bad, 'نتيجة الطلب ثم تكراره', [r1, r2], ['next', 'ignored'])
+    expect(bad, 'نتائج البوابة في المحرك', [x['result'] for x in e.s['log'] if x['type'] == 'gate_result'], ['help'])
+    expect(bad, 'حالة المهارة ليست «متعثّر فيها»', e.derive()['1-4-1'] != 'stumbled', True)
+    rec = sc.records[0]
+    expect(bad, 'سجل البند', [rec['item'], rec['status'], rec['first'], rec['support_before']],
+           ['1-4-1/gate/01', 'interrupted', None, ['requested']])
+    expect(bad, 'عدد سجلات البوابة: بند واحد', len(sc.records), 1)
+    return bad
+
+
+def case_contract():
+    # العقد: الحدث غير المسموح يُرفض قبل أي تغيير، بسبب واضح
+    bad = []
+
+    def refused(n, events, label):
+        e, sc, st, kid = at(n)
+        st.show(st.seq)
+        before, seq = dump(st.snapshot()), st.seq
+        got = [(st.event(seq, ev), bool(st.reject)) for ev in events]
+        expect(bad, label + ': كلها مرفوضة بسبب', got, [('rejected', True)] * len(events))
+        expect(bad, label + ': لا تغيير في اللقطة ولا في الطلب', [dump(st.snapshot()) == before, st.seq == seq, st.raw], [True, True, []])
+        return st, seq
+    st, seq = refused(12, [('support', 'requested'), ('support', 'adult'), ('end',), ('foo',), ('confirm',),
+                           ('confirm', '6'), 'confirm', ('support',), ()], 'بند تعليم (دليل فهم)')
+    expect(bad, 'بند تعليم: تلميح ثم إجابة ثم إنهاء', [st.event(seq, ('support', 'hint')), st.event(seq, ('confirm', 6)),
+                                                    st.event(seq, ('end',))], ['open', 'open', 'next'])
+    st, seq = refused(17, [('support', 'hint'), ('support', 'someone'), ('support', 'adult'), ('end',), ('interrupt',)],
+                      'بند تقييم (فحص)')
+    expect(bad, 'بند تقييم: التأكيد ينهيه', st.event(seq, ('confirm', 3)), 'next')
+    st, seq = refused(5, [('confirm', 5), ('support', 'hint'), ('support', 'requested')], 'بند عرض (درس)')
+    expect(bad, 'بند عرض: الإنهاء', st.event(seq, ('end',)), 'next')
+    return bad
+
+
+def case_help_retention():
+    # مستوى البند وحده (3.1 بقرار 17 نوفمبر): الطلب ينهي بند فحص الاحتفاظ منقطعًا ومعه الطلب. أثره على الجولة
+    # (تنتهي بلا نتيجة وتُعاد في يوم لاحق ببنود بديلة) قرار معتمد لم يُنفَّذ بعد، ولا تفحصه هذه الحالة
+    e, sc = build('retention')
+    st, kid = Stepper(e, sc), Kid()
+    st.open(sc.g_run(100))
+    while st.pending is not None and st.pending[1]['activity'] != 'retention':
+        item, w = st.pending
+        for ev in kid.events(item, w):
+            st.event(st.seq, ev)
+    item, old = st.pending[0], st.seq
+    r1 = st.event(old, ('support', 'requested'))
+    r2 = st.event(old, ('support', 'requested'))
+    rec = [r for r in sc.records if r['item'] == item['id']]
+    bad = []
+    expect(bad, 'نتيجة الطلب ثم تكراره', [r1, r2], ['next', 'ignored'])
+    expect(bad, 'سجل البند: مرة واحدة، منقطع، ومعه الطلب', [(r['activity'], r['status'], r['first'], r['support_before']) for r in rec],
+           [('retention', 'interrupted', None, ['requested'])])
+    return bad
+
+
 print('ب) حالات بنتائج مكتوبة يدويًا')
 for title, fn in (
         ('1. إغلاق عند عرض البند (الخانة 2 من الفحص): يُختم «غير محسوم» منقطعًا، والجلسة S4 نفسها تُكمَل بوقتها (60 ثانية) '
@@ -577,7 +674,14 @@ for title, fn in (
         ('12. المنع المؤقت (R16-01): تعليق المهارة أثناء دليل فهمها يركن النشاط بتقدّمه ولا يُسقطه، والإجابة لا تُحتسب',
          case_valid_temporary),
         ('13. حالة سليمة: الاستئناف في الجلسة نفسها بلا حصة ولا حدث إضافيين. وحكم الاستمرار لا يقرأ النتيجة: هو حكم '
-         'قبول حدث الختام لكل قيم نتيجته، عند كل طلب بند وبعد كل إبطال', case_valid_healthy)):
+         'قبول حدث الختام لكل قيم نتيجته، عند كل طلب بند وبعد كل إبطال', case_valid_healthy),
+        ('14. «أحتاج مساعدة» في فحص الاستقلال (R16-02): طلب واحد ينهي البند والمحاولة «انتهت بطلب دعم» بلا إخفاق، وتكراره '
+         'يُهمل، واللقطة بعده لا تعيد فتح الفحص، والمحاولة الثانية في يوم لاحق ببنود جديدة', case_help_check),
+        ('15. «أحتاج مساعدة» في البوابة (R16-02): تنتهي «انتهت بطلب دعم»، ولا تُسجَّل المهارة «متعثّر فيها»', case_help_gate),
+        ('16. عقد الأحداث (R16-02): نوع غير مسموح للبند يُرفض بسبب قبل أي تغيير، في بند تعليم وبند تقييم وبند عرض',
+         case_contract),
+        ('17. «أحتاج مساعدة» في فحص الاحتفاظ، مستوى البند وحده: ينتهي البند منقطعًا ومعه الطلب، وتكراره يُهمل',
+         case_help_retention)):
     try:
         bad = fn()
     except Exception as x:                                   # noqa: BLE001

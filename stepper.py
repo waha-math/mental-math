@@ -15,6 +15,7 @@ from scheduler import Void
 
 ASSESS = ('gate', 'short', 'check', 'retention')            # بنود التقييم: تنتهي بأول تأكيد
 SHOWN = ('lesson', 'practice')                              # بنود العرض: لا سجل لها
+TEACH_SUPPORT = ('hint', 'extra_model', 'someone')          # الدعم المسموح في بنود التعليم
 
 
 class Stepper:
@@ -26,6 +27,7 @@ class Stepper:
         self.raw, self.shown = [], False
         self.finished, self.broken = True, False
         self.result = None
+        self.reject = None                                  # سبب رفض آخر حدث خالف العقد
         self.halt = None                                    # آخر توقف لتغيّر الصلاحية: (الجلسة، السبب، المهارة، النوع)
 
     # ------------------------------------------------------------ التشغيل
@@ -75,22 +77,58 @@ class Stepper:
         self.shown = True
         return True
 
+    def allowed(self, ev):
+        """عقد الأحداث (R16-02): سبب رفض الحدث، أو None إن كان مسموحًا للبند الجاري. يُفحص قبل أي تغيير.
+        - بند عرض (درس، تدريب): ('end',) وحده.
+        - بند تقييم (بوابة، تحقق قصير، فحص استقلال، فحص احتفاظ): ('confirm', عدد)، و('support', 'requested') وهو
+          زر «أحتاج مساعدة»، ولا دعم آخر فيه (3.1).
+        - بند تعليم (افتتاح، دليل فهم): ('confirm', عدد)، و('support', hint أو extra_model أو someone)، و('end',) بعد
+          إجابة مؤكَّدة.
+        """
+        if not isinstance(ev, (list, tuple)) or not ev or not isinstance(ev[0], str):
+            return 'حدث غير مفهوم'
+        kind, a = ev[0], self.pending[1]['activity']
+        if a in SHOWN:
+            return None if tuple(ev) == ('end',) else 'بند العرض يقبل الإنهاء وحده'
+        if kind == 'confirm':
+            ok = len(ev) == 2 and isinstance(ev[1], int) and not isinstance(ev[1], bool)
+            return None if ok else 'التأكيد يحمل عددًا صحيحًا واحدًا'
+        if kind == 'support':
+            if len(ev) != 2:
+                return 'طلب الدعم يحمل نوعه'
+            if a in ASSESS:
+                return None if ev[1] == 'requested' else 'بند التقييم يقبل طلب «أحتاج مساعدة» (requested) وحده'
+            return None if ev[1] in TEACH_SUPPORT else 'نوع دعم غير مسموح في بند تعليم'
+        if kind == 'end' and len(ev) == 1:
+            if a in ASSESS:
+                return 'بند التقييم ينتهي بالتأكيد أو بطلب المساعدة'
+            return None if any(x[0] == 'confirm' for x in self.raw) else 'لا إنهاء قبل إجابة مؤكَّدة'
+        return 'نوع حدث غير معروف'
+
     def event(self, seq, ev):
-        """حدث خام من الواجهة: ('support', نوع) أو ('confirm', قيمة) أو ('end',). يعيد 'ignored' إن لم يكن للطلب الجاري،
-        و'open' إن بقي البند مفتوحًا، و'next' إن أنهى البند وتم الانتقال، و'void' إن لم يُحتسب لأن النشاط لم يعد
-        صالحًا."""
+        """حدث خام من الواجهة. يعيد:
+        'ignored' إن لم يكن للطلب الجاري (مكرر أو متأخر)،
+        'void' إن لم يُحتسب لأن النشاط لم يعد صالحًا،
+        'rejected' إن خالف عقد الأحداث، والسبب في self.reject، ولا يتغير شيء،
+        'open' إن بقي البند مفتوحًا،
+        'next' إن أنهى البند وتم الانتقال.
+        طلب «أحتاج مساعدة» في بند تقييم نهائي بنفسه (3.1): يُسجَّل الطلب ويُختم البند منقطعًا في الانتقال نفسه، بلا
+        تأكيد ولا حدث إنهاء من الواجهة. وأثره على النشاط بقاعدة النشاط (3.6 و6.1 و6.2)."""
         if not self._check(seq):
             return 'ignored'
         if self._void(True):
             return 'void'
+        self.reject = self.allowed(ev)
+        if self.reject is not None:
+            return 'rejected'
         item, w = self.pending
         if w['activity'] in SHOWN:
-            if ev[0] != 'end':
-                return 'ignored'
             self._advance('correct')
             return 'next'
         self.shown = True
         raw = self.raw + [tuple(ev)]
+        if self.assess() and ev[0] == 'support':
+            raw.append(('interrupt',))
         if not persist.item_ends([list(x) for x in raw], self.assess()):
             self.raw = raw
             return 'open'

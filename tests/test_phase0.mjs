@@ -500,6 +500,101 @@ function caseValidHealthy() {
   return bad;
 }
 
+// القاعدة (3.1 و3.6): «أحتاج مساعدة» في بند فحص ينهي البند منقطعًا ومعه الطلب، ويغلق المحاولة «انتهت بطلب دعم»،
+// لا «لم تُجتز». والمحاولة التالية في يوم لاحق وببنود جديدة
+function caseHelpCheck() {
+  const { e, sc, st, kid } = at(17);
+  st.show(st.seq);
+  const old = st.seq;
+  const r1 = st.event(old, ['support', 'requested']);
+  const r2 = st.event(old, ['support', 'requested']);
+  const bad = [];
+  expect(bad, 'نتيجة الطلب ثم تكراره', [r1, r2], ['next', 'ignored']);
+  expect(bad, 'نتائج الفحص في المحرك وحالة المحاولة', [e.s.log.filter((x) => x.type === 'independence_result')
+    .map((x) => x.result), e.s.checks['1-4-1/check/1'].state], [['help'], 'closed']);
+  expect(bad, 'سجل البند: مرة واحدة، منقطع، ومعه الطلب، بلا إجابة', sc.records.filter((r) => r.item === '1-4-1/checkA/03')
+    .map((r) => [r.status, r.first, r.support_before, r.final]), [['interrupted', null, ['requested'], 'incomplete']]);
+  // المولّد مضى إلى اليوم التالي وبدأ المحاولة الثانية (3.6: بعد «انتهت بطلب دعم» يكفي اليوم اللاحق)، فالفحص الجاري في
+  // اللقطة هو المحاولة الثانية. المحاولة الأولى مغلقة ولا تُفتح
+  const { e: e2, sc: sc2 } = reopen('young', st.snapshot());
+  expect(bad, 'بعد الاستعادة: الفحص المحفوظ هو المحاولة الثانية وحدها، والأولى مغلقة بنتيجة واحدة',
+    [sc2.saved.filter((c) => c.kind === 'check').map((c) => c.act.check_id), count(e2, 'independence_result'),
+      e2.s.checks['1-4-1/check/1'].state], [['1-4-1/check/2'], 1, 'closed']);
+  const s2 = new Stepper(e2, sc2);
+  s2.open(sc2.g_run(14));
+  play(s2, kid);
+  const second = e2.s.log.filter((x) => x.type === 'check_started' && x.check_id === '1-4-1/check/2');
+  expect(bad, 'المحاولة الثانية: بدأت مرة، وفي يوم بعد يوم الأولى (3)',
+    [second.length, second.length > 0 && e2.s.sessions[second[0].session].day > 3], [1, true]);
+  const later = sc2.records.filter((r) => r.activity === 'check' && r.skill === '1-4-1').slice(2)
+    .map((r) => r.item.split('/')[1]);
+  expect(bad, 'بنود المحاولة الثانية كلها من مجموعتها الجديدة', [...new Set(later)].sort(), ['checkB']);
+  expect(bad, 'نتائج فحص 1-4-1 بترتيبها', e2.s.log.filter((x) => x.type === 'independence_result' && x.skill === '1-4-1')
+    .map((x) => x.result), ['help', 'pass']);
+  return bad;
+}
+
+// القاعدة (6.1): طلب الدعم في البوابة ينهيها «انتهت بطلب دعم»، ولا تُسجَّل المهارة «متعثّر فيها»
+function caseHelpGate() {
+  const { e, sc, st } = at(0);
+  const old = st.seq;
+  const r1 = st.event(old, ['support', 'requested']);
+  const r2 = st.event(old, ['support', 'requested']);
+  const bad = [];
+  expect(bad, 'نتيجة الطلب ثم تكراره', [r1, r2], ['next', 'ignored']);
+  expect(bad, 'نتائج البوابة في المحرك', e.s.log.filter((x) => x.type === 'gate_result').map((x) => x.result), ['help']);
+  expect(bad, 'حالة المهارة ليست «متعثّر فيها»', e.derive()['1-4-1'] !== 'stumbled', true);
+  const rec = sc.records[0];
+  expect(bad, 'سجل البند', [rec.item, rec.status, rec.first, rec.support_before],
+    ['1-4-1/gate/01', 'interrupted', null, ['requested']]);
+  expect(bad, 'عدد سجلات البوابة: بند واحد', sc.records.length, 1);
+  return bad;
+}
+
+// العقد: الحدث غير المسموح يُرفض قبل أي تغيير، بسبب واضح
+function caseContract() {
+  const bad = [];
+  const refused = (n, events, label) => {
+    const { st } = at(n);
+    st.show(st.seq);
+    const before = dump(st.snapshot()), seq = st.seq;
+    const got = events.map((ev) => [st.event(seq, ev), Boolean(st.reject)]);
+    expect(bad, label + ': كلها مرفوضة بسبب', got, events.map(() => ['rejected', true]));
+    expect(bad, label + ': لا تغيير في اللقطة ولا في الطلب', [dump(st.snapshot()) === before, st.seq === seq, st.raw], [true, true, []]);
+    return [st, seq];
+  };
+  let [st, seq] = refused(12, [['support', 'requested'], ['support', 'adult'], ['end'], ['foo'], ['confirm'],
+    ['confirm', '6'], 'confirm', ['support'], []], 'بند تعليم (دليل فهم)');
+  expect(bad, 'بند تعليم: تلميح ثم إجابة ثم إنهاء', [st.event(seq, ['support', 'hint']), st.event(seq, ['confirm', 6]),
+    st.event(seq, ['end'])], ['open', 'open', 'next']);
+  [st, seq] = refused(17, [['support', 'hint'], ['support', 'someone'], ['support', 'adult'], ['end'], ['interrupt']],
+    'بند تقييم (فحص)');
+  expect(bad, 'بند تقييم: التأكيد ينهيه', st.event(seq, ['confirm', 3]), 'next');
+  [st, seq] = refused(5, [['confirm', 5], ['support', 'hint'], ['support', 'requested']], 'بند عرض (درس)');
+  expect(bad, 'بند عرض: الإنهاء', st.event(seq, ['end']), 'next');
+  return bad;
+}
+
+// مستوى البند وحده (3.1 بقرار 17 نوفمبر): الطلب ينهي بند فحص الاحتفاظ منقطعًا ومعه الطلب. أثره على الجولة (تنتهي بلا
+// نتيجة وتُعاد في يوم لاحق ببنود بديلة) قرار معتمد لم يُنفَّذ بعد، ولا تفحصه هذه الحالة
+function caseHelpRetention() {
+  const { e, sc } = build('retention');
+  const st = new Stepper(e, sc), kid = new Kid();
+  st.open(sc.g_run(100));
+  while (st.pending !== null && st.pending[1].activity !== 'retention') {
+    const [item, w] = st.pending;
+    for (const ev of kid.events(item, w)) st.event(st.seq, ev);
+  }
+  const item = st.pending[0], old = st.seq;
+  const r1 = st.event(old, ['support', 'requested']);
+  const r2 = st.event(old, ['support', 'requested']);
+  const bad = [];
+  expect(bad, 'نتيجة الطلب ثم تكراره', [r1, r2], ['next', 'ignored']);
+  expect(bad, 'سجل البند: مرة واحدة، منقطع، ومعه الطلب', sc.records.filter((r) => r.item === item.id)
+    .map((r) => [r.activity, r.status, r.first, r.support_before]), [['retention', 'interrupted', null, ['requested']]]);
+  return bad;
+}
+
 console.log('ب) حالات بنتائج مكتوبة يدويًا');
 for (const [title, fn] of [
   ['1. إغلاق عند عرض البند (الخانة 2 من الفحص): يُختم «غير محسوم» منقطعًا، والجلسة S4 نفسها تُكمَل بوقتها (60 ثانية) '
@@ -525,7 +620,14 @@ for (const [title, fn] of [
   ['12. المنع المؤقت (R16-01): تعليق المهارة أثناء دليل فهمها يركن النشاط بتقدّمه ولا يُسقطه، والإجابة لا تُحتسب',
     caseValidTemporary],
   ['13. حالة سليمة: الاستئناف في الجلسة نفسها بلا حصة ولا حدث إضافيين. وحكم الاستمرار لا يقرأ النتيجة: هو حكم '
-    + 'قبول حدث الختام لكل قيم نتيجته، عند كل طلب بند وبعد كل إبطال', caseValidHealthy]]) {
+    + 'قبول حدث الختام لكل قيم نتيجته، عند كل طلب بند وبعد كل إبطال', caseValidHealthy],
+  ['14. «أحتاج مساعدة» في فحص الاستقلال (R16-02): طلب واحد ينهي البند والمحاولة «انتهت بطلب دعم» بلا إخفاق، وتكراره '
+    + 'يُهمل، واللقطة بعده لا تعيد فتح الفحص، والمحاولة الثانية في يوم لاحق ببنود جديدة', caseHelpCheck],
+  ['15. «أحتاج مساعدة» في البوابة (R16-02): تنتهي «انتهت بطلب دعم»، ولا تُسجَّل المهارة «متعثّر فيها»', caseHelpGate],
+  ['16. عقد الأحداث (R16-02): نوع غير مسموح للبند يُرفض بسبب قبل أي تغيير، في بند تعليم وبند تقييم وبند عرض',
+    caseContract],
+  ['17. «أحتاج مساعدة» في فحص الاحتفاظ، مستوى البند وحده: ينتهي البند منقطعًا ومعه الطلب، وتكراره يُهمل',
+    caseHelpRetention]]) {
   let bad;
   try { bad = fn(); } catch (x) { bad = ['استثناء: ' + (x.stack || x).toString().split('\n').slice(0, 2).join(' ')]; }
   check(title, bad);

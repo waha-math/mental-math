@@ -13,6 +13,7 @@ import { Void } from './scheduler.mjs';
 
 export const ASSESS = ['gate', 'short', 'check', 'retention'];   // بنود التقييم: تنتهي بأول تأكيد
 export const SHOWN = ['lesson', 'practice'];                     // بنود العرض: لا سجل لها
+export const TEACH_SUPPORT = ['hint', 'extra_model', 'someone']; // الدعم المسموح في بنود التعليم
 
 export class Stepper {
   constructor(engine, sc) {
@@ -26,6 +27,7 @@ export class Stepper {
     this.finished = true;
     this.broken = false;
     this.result = null;
+    this.reject = null;                 // سبب رفض آخر حدث خالف العقد
     this.halt = null;                   // آخر توقف لتغيّر الصلاحية: [الجلسة، السبب، المهارة، النوع]
   }
 
@@ -84,19 +86,54 @@ export class Stepper {
     return true;
   }
 
-  // حدث خام من الواجهة: ['support', نوع] أو ['confirm', قيمة] أو ['end']. يعيد 'ignored' إن لم يكن للطلب الجاري،
-  // و'open' إن بقي البند مفتوحًا، و'next' إن أنهى البند وتم الانتقال، و'void' إن لم يُحتسب لأن النشاط لم يعد صالحًا
+  // عقد الأحداث (R16-02): سبب رفض الحدث، أو null إن كان مسموحًا للبند الجاري. يُفحص قبل أي تغيير.
+  // - بند عرض (درس، تدريب): ['end'] وحده.
+  // - بند تقييم (بوابة، تحقق قصير، فحص استقلال، فحص احتفاظ): ['confirm', عدد]، و['support', 'requested'] وهو زر
+  //   «أحتاج مساعدة»، ولا دعم آخر فيه (3.1).
+  // - بند تعليم (افتتاح، دليل فهم): ['confirm', عدد]، و['support', hint أو extra_model أو someone]، و['end'] بعد
+  //   إجابة مؤكَّدة.
+  allowed(ev) {
+    if (!Array.isArray(ev) || !ev.length || typeof ev[0] !== 'string') return 'حدث غير مفهوم';
+    const kind = ev[0], a = this.pending[1].activity;
+    if (SHOWN.includes(a)) return ev.length === 1 && kind === 'end' ? null : 'بند العرض يقبل الإنهاء وحده';
+    if (kind === 'confirm') {
+      return ev.length === 2 && Number.isInteger(ev[1]) ? null : 'التأكيد يحمل عددًا صحيحًا واحدًا';
+    }
+    if (kind === 'support') {
+      if (ev.length !== 2) return 'طلب الدعم يحمل نوعه';
+      if (ASSESS.includes(a)) {
+        return ev[1] === 'requested' ? null : 'بند التقييم يقبل طلب «أحتاج مساعدة» (requested) وحده';
+      }
+      return TEACH_SUPPORT.includes(ev[1]) ? null : 'نوع دعم غير مسموح في بند تعليم';
+    }
+    if (kind === 'end' && ev.length === 1) {
+      if (ASSESS.includes(a)) return 'بند التقييم ينتهي بالتأكيد أو بطلب المساعدة';
+      return this.raw.some((x) => x[0] === 'confirm') ? null : 'لا إنهاء قبل إجابة مؤكَّدة';
+    }
+    return 'نوع حدث غير معروف';
+  }
+
+  // حدث خام من الواجهة. يعيد:
+  // 'ignored' إن لم يكن للطلب الجاري (مكرر أو متأخر)،
+  // 'void' إن لم يُحتسب لأن النشاط لم يعد صالحًا،
+  // 'rejected' إن خالف عقد الأحداث، والسبب في this.reject، ولا يتغير شيء،
+  // 'open' إن بقي البند مفتوحًا،
+  // 'next' إن أنهى البند وتم الانتقال.
+  // طلب «أحتاج مساعدة» في بند تقييم نهائي بنفسه (3.1): يُسجَّل الطلب ويُختم البند منقطعًا في الانتقال نفسه، بلا تأكيد
+  // ولا حدث إنهاء من الواجهة. وأثره على النشاط بقاعدة النشاط (3.6 و6.1 و6.2)
   event(seq, ev) {
     if (!this._check(seq)) return 'ignored';
     if (this._void(true)) return 'void';
+    this.reject = this.allowed(ev);
+    if (this.reject !== null) return 'rejected';
     const [item, w] = this.pending;
     if (SHOWN.includes(w.activity)) {
-      if (ev[0] !== 'end') return 'ignored';
       this._advance('correct');
       return 'next';
     }
     this.shown = true;
     const raw = [...this.raw, [...ev]];
+    if (this.assess() && ev[0] === 'support') raw.push(['interrupt']);
     if (!itemEnds(raw, this.assess())) {
       this.raw = raw;
       return 'open';
