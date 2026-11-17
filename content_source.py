@@ -54,8 +54,10 @@ class ContentSource:
             else:
                 it = self._at(self.by[(skill, 'opening', w['role'])], w['pos'])
         elif a == 'evidence':                               # كل جولة ببنودها الجديدة (3.5)
+            # البديل (R18-01) برقمه بين بدائل النوع في الجولة، لا بموضع البند الذي يحل محله
             it = self._at([i for i in self._typed(skill, 'evidence', w['role'], w['type'])
-                           if i.get('round', 1) == w.get('round', 1)], w['pos'])
+                           if i.get('round', 1) == w.get('round', 1)],
+                          w['alternate'] - 1 if w.get('alternate') else w['pos'])
         elif a == 'check':
             group = 'check' + w['attempt']
             it = next((i for i in self.by[(skill, group, w['role'])] if i['slot'] == w['slot']), None)

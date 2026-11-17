@@ -449,6 +449,22 @@ function caseValidTemporary() {
 
 // القاعدة (R17-01): ما سُجّل في البند قبل تغيّر الصلاحية يبقى محفوظًا مع سبب استبعاده، مرة واحدة. لا يتقدم النشاط به،
 // ولا يدخل المؤشرات، والحدث الذي جاء بعد التغيّر لا يُحتسب
+// يكمل المسار إلى نهايته، ويعيد بنود دليل فهم المهارة التي عُرضت: المعرّف والدور والبند الذي يحل محله وعدّ الإعادة
+function servedAfter(e, st, kid, skill = '1-4-2') {
+  const out = [];
+  while (st.pending !== null) {
+    const [item, w] = st.pending;
+    if (w.activity === 'evidence' && item.skill === skill) {
+      out.push([item.id.slice(-2), w.role, (w.replaces || '').slice(-2), w.reshown]);
+    }
+    for (const ev of kid.events(item, w)) st.event(st.seq, ev);
+  }
+  return out;
+}
+
+const proofs = (e, skill = '1-4-2') => e.s.log.filter((x) => x.type === 'understanding_proved' && x.skill === skill)
+  .map((x) => (x.items || []).map((i) => i.slice(-2)));
+
 function caseVoidHistory() {
   const bad = [];
   const ITEM = '1-4-2/evidence/02';                         // S8، دليل فهم 1-4-2، جوابه 4. قبله بند واحد منجز
@@ -510,6 +526,65 @@ function caseVoidHistory() {
   r3 = reopen('young', s2.snapshot());
   expect(bad, 'د: بعد التكملة واستعادة ثانية: مركون، والسجل مرة واحدة', ['1-4-2' in r3.sc.parked, voidOf(r3.sc.records, ITEM)],
     [true, want]);
+
+  // R18-01: الاستبعاد من التقييم لا يمحو التعرّض. بعد رفع التعليق لا يعود البند الذي أُجيب عنه وطُلب فيه تلميح دليلًا
+  // جديدًا: يحل محله بديل نوعه في الجولة (25: ف2، الجولة 1، حقيقته 1 و9 لم ترد في بنود نوعه الأربعة). ثم ف3 (05، 06)
+  // ثم ف4 (09، 10) كما هي. والبند 01 المنجز قبل التعليق باقٍ في الدليل
+  const AFTER = [['25', 'evidence.alternate', '02', 0], ['05', 'evidence', '', 0], ['06', 'evidence', '', 0],
+    ['09', 'evidence', '', 0], ['10', 'evidence', '', 0]];
+  const PROOF = [['01', '25', '05', '06', '09', '10']];
+  const exposedThenVoid = (source = null) => {
+    const x = at(39, source);
+    x.st.event(x.st.seq, ['confirm', 999]);
+    x.st.event(x.st.seq, ['support', 'hint']);
+    inval(x.e);
+    x.st.event(x.st.seq, ['end']);
+    return x;
+  };
+  const verdict = (label, e1, sc1, got) => {
+    const alt = sc1.records.filter((q) => q.item === '1-4-2/evidence/25')
+      .map((q) => [q.status, q.first, q.replaces ?? null, q.fact_seen_before ?? null, q.void ?? null]);
+    expect(bad, label + ': البنود المعروضة بعد رفع التعليق', got, AFTER);
+    expect(bad, label + ': دليل الفهم مرة واحدة ببنوده، وليس البند المستبعد منها', proofs(e1), PROOF);
+    expect(bad, label + ': السجل المستبعد مرة واحدة، ولا سجل آخر للبند', voidOf(sc1.records, ITEM), want);
+    expect(bad, label + ': سجل البديل يذكر البند الذي حلّ محله وأن حقيقته سبق عرضها', alt,
+      [['complete', true, ITEM, true, null]]);
+  };
+  // هـ) المسار المتصل إلى نهايته
+  let x = exposedThenVoid();
+  verdict('هـ', x.e, x.sc, servedAfter(x.e, x.st, x.kid));
+  // و) إغلاق بعد التوقف مباشرة، ثم استعادة وتكملة
+  x = exposedThenVoid();
+  let y = reopen('young', x.st.snapshot());
+  let sy = new Stepper(y.e, y.sc);
+  sy.open(y.sc.g_run(14));
+  verdict('و', y.e, y.sc, servedAfter(y.e, sy, x.kid));
+  // ز) إغلاق والبديل مطلوب لم يُعرض بعد، ثم استعادة وتكملة
+  x = exposedThenVoid();
+  while (x.st.pending !== null && x.st.pending[1].role !== 'evidence.alternate') {
+    for (const ev of x.kid.events(...x.st.pending)) x.st.event(x.st.seq, ev);
+  }
+  y = reopen('young', x.st.snapshot());
+  sy = new Stepper(y.e, y.sc);
+  sy.open(y.sc.g_run(14));
+  verdict('ز', y.e, y.sc, servedAfter(y.e, sy, x.kid));
+  // ح) لا بديل في المحتوى: نفاده يُعلن في سجل المجدول، والجولة تنتهي بلا حكم (لا «لم يثبت»). لا يُعاد البند 02.
+  // ثم الجولة الثانية ببنودها: ف2 (13، 14) ثم ف3 (17، 18) ثم ف4 (21، 22)
+  x = exposedThenVoid((src) => (s, w) => (w.role === 'evidence.alternate' ? null : src(s, w)));
+  let got = servedAfter(x.e, x.st, x.kid);
+  const marks = x.sc.log.filter((q) => q[2] === '1-4-2' && q[1].startsWith('evidence_')).map((q) => q[1]);
+  expect(bad, 'ح: نفاد البدائل معلن، وبلا «لم يثبت»', marks, ['evidence_no_alternate']);
+  expect(bad, 'ح: بنود الجولة الثانية، وليس البند 02 منها', got.map((g) => g[0]), ['13', '14', '17', '18', '21', '22']);
+  expect(bad, 'ح: دليل الفهم ببنود الجولة الثانية وحدها', proofs(x.e), [['13', '14', '17', '18', '21', '22']]);
+  expect(bad, 'ح: السجل المستبعد باقٍ مرة واحدة', voidOf(x.sc.records, ITEM), want);
+  // ط) بند عُرض بلا حدث ثم استُبعد: الطفل لم يُجب عنه، فيُعاد عرضه نفسه موصوفًا بالإعادة (3.5)، ويدخل الدليل
+  x = at(39);
+  x.st.show(x.st.seq);
+  inval(x.e);
+  x.st.event(x.st.seq, ['end']);
+  got = servedAfter(x.e, x.st, x.kid);
+  expect(bad, 'ط: البند نفسه يُعاد عرضه وعدّ الإعادة 1', got.slice(0, 2), [['02', 'evidence', '', 1], ['05', 'evidence', '', 0]]);
+  expect(bad, 'ط: الدليل ببنوده الأصلية', proofs(x.e), [['01', '02', '05', '06', '09', '10']]);
   return bad;
 }
 
@@ -705,7 +780,9 @@ for (const [title, fn] of [
     caseHelpRetention],
   ['18. تاريخ البند عند توقف نشاطه (R17-01): الإجابة المؤكدة وطلب التلميح قبل تغيّر الصلاحية يبقيان في سجل البند مرة '
     + 'واحدة مع سبب الاستبعاد، عبر الحفظ والاستعادة المتكررين. لا يتقدم النشاط بهما ولا يدخلان العدّاد ولا المؤشرات، '
-    + 'والحدث اللاحق للتغيّر لا يُحتسب. وكذلك طلب دعم بلا إجابة، وبند عُرض بلا حدث، والتعليق قبل الاستعادة',
+    + 'والحدث اللاحق للتغيّر لا يُحتسب. وكذلك طلب دعم بلا إجابة، وبند عُرض بلا حدث، والتعليق قبل الاستعادة. '
+    + 'وبعد رفع التعليق (R18-01): البند الذي أُجيب عنه وطُلب فيه تلميح لا يعود دليلًا، ويحل محله بديل نوعه، في المسار '
+    + 'المتصل وبعد الإغلاق والاستعادة. وبلا بديل يُعلن النفاد ولا يُعاد البند. والبند الذي عُرض بلا حدث يُعاد عرضه',
     caseVoidHistory]]) {
   let bad;
   try { bad = fn(); } catch (x) { bad = ['استثناء: ' + (x.stack || x).toString().split('\n').slice(0, 2).join(' ')]; }

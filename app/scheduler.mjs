@@ -58,6 +58,9 @@ export class Halted extends Capped {
 // ما ترسله طبقة الخطوات بدل الإجابة حين تجد النشاط الجاري غير صالح. answered: هل حاول الطفل الإجابة الآن؟
 // ومعه ما سُجّل في البند قبل تغيّر الصلاحية (R17-01): هل عُرض، وأحداثه الخام، وجوابه الصحيح ونوعه. الحدث الذي كشف
 // التغيّر ليس منها
+// هل وقع في البند ما يتجاوز رؤية السؤال: إجابة مؤكدة أو طلب دعم؟ (R18-01)
+export const exposed = (raw) => raw.some((ev) => ev[0] === 'confirm' || ev[0] === 'support');
+
 export class Void {
   constructor(answered, { shown = false, raw = [], answer = null, assess = false } = {}) {
     this.answered = answered;
@@ -353,10 +356,12 @@ export class Scheduler {
         if (got instanceof Void) throw new Error('طبقة الخطوات أبطلت بندًا والمحرك يراه صالحًا');
         return;
       }
-      const entry = { kind, skill: act.skill, act: act.toDict(),
-        items: [...prior, ...recs.filter((r) => r.item).map((r) => r.item)] };
       const [item, w] = req;
       const isObj = item !== null && typeof item === 'object' && !Array.isArray(item);
+      // التعرّض للبند باقٍ وإن استُبعد من التقييم (R18-01)
+      if (got instanceof Void && got.shown) act.voided(isObj ? (item.id ?? null) : null, exposed(got.raw));
+      const entry = { kind, skill: act.skill, act: act.toDict(),
+        items: [...prior, ...recs.filter((r) => r.item).map((r) => r.item)] };
       this.halt(code, entry, sum(act.shown) > 0 || kind === 'check',
         got !== undefined && !(got instanceof Void && !got.answered), got instanceof Void ? got : null,
         { activity: act.name, role: w.role, item: isObj ? (item.id ?? null) : null });

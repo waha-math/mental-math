@@ -662,6 +662,22 @@ def case_help_retention():
     return bad
 
 
+def served_after(e, st, kid, skill='1-4-2'):
+    """يكمل المسار إلى نهايته، ويعيد بنود دليل فهم المهارة التي عُرضت: المعرّف والدور والبند الذي يحل محله وعدّ الإعادة."""
+    out = []
+    while st.pending is not None:
+        item, w = st.pending
+        if w['activity'] == 'evidence' and item['skill'] == skill:
+            out.append((item['id'][-2:], w['role'], (w.get('replaces') or '')[-2:], w['reshown']))
+        for ev in kid.events(item, w):
+            st.event(st.seq, ev)
+    return out
+
+
+def proofs(e, skill='1-4-2'):
+    return [[i[-2:] for i in x.get('items', [])] for x in e.s['log'] if x['type'] == 'understanding_proved' and x['skill'] == skill]
+
+
 def case_void_history():
     # القاعدة (R17-01): ما سُجّل في البند قبل تغيّر الصلاحية يبقى محفوظًا مع سبب استبعاده، مرة واحدة. لا يتقدم النشاط
     # به، ولا يدخل المؤشرات، والحدث الذي جاء بعد التغيّر لا يُحتسب
@@ -724,6 +740,68 @@ def case_void_history():
     e3, sc3, _ = reopen('young', s2.snapshot())
     expect(bad, 'د: بعد التكملة واستعادة ثانية: مركون، والسجل مرة واحدة', ['1-4-2' in sc3.parked, void_of(sc3.records, ITEM)],
            [True, want])
+
+    # R18-01: الاستبعاد من التقييم لا يمحو التعرّض. بعد رفع التعليق لا يعود البند الذي أُجيب عنه وطُلب فيه تلميح دليلًا
+    # جديدًا: يحل محله بديل نوعه في الجولة (25: ف2، الجولة 1، حقيقته 1 و9 لم ترد في بنود نوعه الأربعة). ثم ف3 (05، 06)
+    # ثم ف4 (09، 10) كما هي. والبند 01 المنجز قبل التعليق باقٍ في الدليل
+    AFTER = [('25', 'evidence.alternate', '02', 0), ('05', 'evidence', '', 0), ('06', 'evidence', '', 0),
+             ('09', 'evidence', '', 0), ('10', 'evidence', '', 0)]
+    PROOF = [['01', '25', '05', '06', '09', '10']]
+
+    def exposed_then_void(source=None):
+        e, sc, st, kid = at(39, source)
+        st.event(st.seq, ('confirm', 999))
+        st.event(st.seq, ('support', 'hint'))
+        e.apply(dict(id='t1', type='invalidate_session', target='S6'))
+        st.event(st.seq, ('end',))
+        return e, sc, st, kid
+
+    def verdict(label, e, sc, got):
+        alt = [(r['status'], r['first'], r.get('replaces'), r.get('fact_seen_before'), r.get('void'))
+               for r in sc.records if r['item'] == '1-4-2/evidence/25']
+        expect(bad, label + ': البنود المعروضة بعد رفع التعليق', got, AFTER)
+        expect(bad, label + ': دليل الفهم مرة واحدة ببنوده، وليس البند المستبعد منها', proofs(e), PROOF)
+        expect(bad, label + ': السجل المستبعد مرة واحدة، ولا سجل آخر للبند', void_of(sc.records, ITEM), want)
+        expect(bad, label + ': سجل البديل يذكر البند الذي حلّ محله وأن حقيقته سبق عرضها',
+               alt, [('complete', True, ITEM, True, None)])
+
+    # هـ) المسار المتصل إلى نهايته
+    e, sc, st, kid = exposed_then_void()
+    verdict('هـ', e, sc, served_after(e, st, kid))
+    # و) إغلاق بعد التوقف مباشرة، ثم استعادة وتكملة
+    e, sc, st, kid = exposed_then_void()
+    e2, sc2, _ = reopen('young', st.snapshot())
+    s2 = Stepper(e2, sc2)
+    s2.open(sc2.g_run(14))
+    verdict('و', e2, sc2, served_after(e2, s2, kid))
+    # ز) إغلاق والبديل مطلوب لم يُعرض بعد، ثم استعادة وتكملة
+    e, sc, st, kid = exposed_then_void()
+    while st.pending is not None and st.pending[1].get('role') != 'evidence.alternate':
+        for ev in kid.events(*st.pending):
+            st.event(st.seq, ev)
+    e2, sc2, _ = reopen('young', st.snapshot())
+    s2 = Stepper(e2, sc2)
+    s2.open(sc2.g_run(14))
+    verdict('ز', e2, sc2, served_after(e2, s2, kid))
+    # ح) لا بديل في المحتوى: نفاده يُعلن في سجل المجدول، والجولة تنتهي بلا حكم (لا «لم يثبت»). لا يُعاد البند 02.
+    # ثم الجولة الثانية ببنودها: ف2 (13، 14) ثم ف3 (17، 18) ثم ف4 (21، 22)
+    def without(src):
+        return lambda s, w: None if w.get('role') == 'evidence.alternate' else src(s, w)
+    e, sc, st, kid = exposed_then_void(without)
+    got = served_after(e, st, kid)
+    marks = [x[1] for x in sc.log if x[2] == '1-4-2' and x[1].startswith('evidence_')]
+    expect(bad, 'ح: نفاد البدائل معلن، وبلا «لم يثبت»', marks, ['evidence_no_alternate'])
+    expect(bad, 'ح: بنود الجولة الثانية، وليس البند 02 منها', [g[0] for g in got], ['13', '14', '17', '18', '21', '22'])
+    expect(bad, 'ح: دليل الفهم ببنود الجولة الثانية وحدها', proofs(e), [['13', '14', '17', '18', '21', '22']])
+    expect(bad, 'ح: السجل المستبعد باقٍ مرة واحدة', void_of(sc.records, ITEM), want)
+    # ط) بند عُرض بلا حدث ثم استُبعد: الطفل لم يُجب عنه، فيُعاد عرضه نفسه موصوفًا بالإعادة (3.5)، ويدخل الدليل
+    e, sc, st, kid = at(39)
+    st.show(st.seq)
+    e.apply(dict(id='t1', type='invalidate_session', target='S6'))
+    st.event(st.seq, ('end',))
+    got = served_after(e, st, kid)
+    expect(bad, 'ط: البند نفسه يُعاد عرضه وعدّ الإعادة 1', got[:2], [('02', 'evidence', '', 1), ('05', 'evidence', '', 0)])
+    expect(bad, 'ط: الدليل ببنوده الأصلية', proofs(e), [['01', '02', '05', '06', '09', '10']])
     return bad
 
 
@@ -762,7 +840,9 @@ for title, fn in (
          case_help_retention),
         ('18. تاريخ البند عند توقف نشاطه (R17-01): الإجابة المؤكدة وطلب التلميح قبل تغيّر الصلاحية يبقيان في سجل البند مرة '
          'واحدة مع سبب الاستبعاد، عبر الحفظ والاستعادة المتكررين. لا يتقدم النشاط بهما ولا يدخلان العدّاد ولا المؤشرات، '
-         'والحدث اللاحق للتغيّر لا يُحتسب. وكذلك طلب دعم بلا إجابة، وبند عُرض بلا حدث، والتعليق قبل الاستعادة',
+         'والحدث اللاحق للتغيّر لا يُحتسب. وكذلك طلب دعم بلا إجابة، وبند عُرض بلا حدث، والتعليق قبل الاستعادة. '
+         'وبعد رفع التعليق (R18-01): البند الذي أُجيب عنه وطُلب فيه تلميح لا يعود دليلًا، ويحل محله بديل نوعه، في المسار '
+         'المتصل وبعد الإغلاق والاستعادة. وبلا بديل يُعلن النفاد ولا يُعاد البند. والبند الذي عُرض بلا حدث يُعاد عرضه',
          case_void_history)):
     try:
         bad = fn()

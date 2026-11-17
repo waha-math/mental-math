@@ -154,6 +154,10 @@ class Activity:
     def unavailable(self):
         raise RuntimeError('%s: لا يُطلب بديل في هذا النشاط' % self.name)
 
+    def voided(self, item_id, exposed):
+        """البند المعروض استُبعد لتغيّر صلاحية النشاط (R17-01). exposed: هل أُجيب عنه أو طُلب فيه دعم قبل التغيّر؟
+        الاستبعاد من التقييم لا يمحو التعرّض (R18-01). الأنشطة التي يغيّر التعرّض بندها التالي تعيد تعريفها."""
+
     def to_dict(self):
         return json.loads(json.dumps(dict(self.__dict__, _class=type(self).__name__), ensure_ascii=False))
 
@@ -326,7 +330,11 @@ class EvidenceRun(Activity):
     """دليل الفهم (3.5): لكل نوع بندان جديدان «صحيحان مستقلان». الإخفاق في بند يستدعي درسًا قصيرًا ثم
     بندين جديدين من نوعه. تفسيرات: الأنواع بترتيبها في جدول المهارة؛ البند المدعوم لا يُحسب ويُعامل
     كالإخفاق؛ إخفاق البندين الاحتياطيين ينهي الجولة بلا دليل؛ النوع الذي ثبت يبقى ثابتًا في الدرس نفسه
-    (proven)؛ البند المنقطع يُعاد عرضه."""
+    (proven)؛ البند المنقطع يُعاد عرضه.
+    البند المستبعد لتغيّر الصلاحية (R18-01): إن لم يقع فيه إلا العرض أُعيد عرضه كالمنقطع، فالطفل لم يُجب عنه. وإن
+    أُجيب عنه أو طُلب فيه دعم فقد استُهلك: لا يُحتسب إخفاقًا ولا يُعرض ثانية، ويُطلب لموضعه بديل نوعه في الجولة
+    (evidence.alternate). إن لم يوجد البديل انتهت الجولة no_alternate بلا حكم. الحقلان swap و spent لا يُنشآن إلا
+    عند أول استبعاد، فلا تتغير صورة النشاط المحفوظ في غير ذلك."""
     name = 'evidence'
 
     def __init__(self, skill, types, proven=(), round=1):
@@ -343,9 +351,26 @@ class EvidenceRun(Activity):
     def want(self):
         if self.done:
             return None
-        return dict(activity=self.name, role='evidence' if self.stage == 'first' else 'evidence.reserve',
-                    type=self._current(), pos=self.pos, alternate=0, reshown=self.reshown, round=self.round,
-                    short_lesson_before=self.stage == 'reserve' and self.pos == 0)
+        w = dict(activity=self.name, role='evidence' if self.stage == 'first' else 'evidence.reserve',
+                 type=self._current(), pos=self.pos, alternate=0, reshown=self.reshown, round=self.round,
+                 short_lesson_before=self.stage == 'reserve' and self.pos == 0)
+        swap = getattr(self, 'swap', {}).get(self._key())
+        if swap:                                    # موضع استُهلك بنده: بديل النوع، ومعه البند الذي يحل محله
+            w.update(role='evidence.alternate', alternate=swap['n'], replaces=swap['item'])
+        return w
+
+    def _key(self):
+        return '%s/%s/%d' % (self._current(), self.stage, self.pos)
+
+    def voided(self, item_id, exposed):
+        if not exposed:
+            self.reshown += 1
+            return
+        swap, spent = self.__dict__.setdefault('swap', {}), self.__dict__.setdefault('spent', [])
+        spent.append(item_id)
+        t = self._current()
+        swap[self._key()] = dict(n=1 + sum(1 for k in swap if k.split('/')[0] == t), item=item_id)
+        self.reshown = 0
 
     def feed(self, outcome):
         assert not self.done
@@ -371,6 +396,9 @@ class EvidenceRun(Activity):
         self._finish('not_proven')
 
     def unavailable(self):
+        if getattr(self, 'swap', {}).get(self._key()):
+            self._finish('no_alternate')            # لا بديل لبند استُهلك: بلا حكم، ويظهر للبالغ. لا يُعاد البند سرًا
+            return
         self.failed = self._current()
         self._finish('no_items')                    # لا بنود جديدة في البنك: يحتاج مراجعة المعلم
 
@@ -496,6 +524,9 @@ def drive_steps(act, source, records=None, pause=None):
                      item=item.get('id') if isinstance(item, dict) else None)
             if isinstance(item, dict) and item.get('reshown_same_fact'):
                 r['reshown_after_interrupt'] = True        # 3.6: «أُعيد عرضه بعد انقطاع»
+            if w.get('replaces'):                           # R18-01: بديل بند استُهلك، ووصف التعرّض السابق لحقيقته (3.5)
+                r['replaces'] = w['replaces']
+                r['fact_seen_before'] = bool(isinstance(item, dict) and item.get('fact_seen_before'))
             records.append(r)
         act.feed(classify(rec))
         if pause and pause(w) and not act.done:

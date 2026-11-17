@@ -29,7 +29,7 @@ import copy
 import json
 
 from item_layer import Activity, fold_item, classify
-from scheduler import Scheduler
+from scheduler import Scheduler, exposed
 
 SCHEMA = 3                    # 2: سجل محاولات البنود (المراجعة 14). 3: موضع الجلسة الجارية (المرحلة 0)
 OPTS = ('group', 'start', 'scope', 'learning', 'tolerant', 'compat', 'content_version', 'no_short', 'try_from_gate',
@@ -176,6 +176,7 @@ def restore(record, net, types, source, answer, item_seconds=None, records=None,
                         items.append(j['item'])
                     notes.append(('unsettled_item', act.skill, j.get('item'), classify(rec)))
                 else:
+                    act.voided(j.get('item'), exposed(j['raw']))    # التعرّض باقٍ وإن استُبعد البند (R18-01)
                     more['void'] = v['code']
                     notes.append(('void_item', act.skill, j.get('item'), v['code']))
                 if sc.records is not None:

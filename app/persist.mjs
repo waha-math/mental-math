@@ -11,7 +11,7 @@
 // تُختم، ولا يُقبل سجل يخالف فيه المجدولُ المحرك.
 import { Engine } from './engine.mjs';
 import { Activity, foldItem, classify } from './items.mjs';
-import { Scheduler } from './scheduler.mjs';
+import { Scheduler, exposed } from './scheduler.mjs';
 
 export const SCHEMA = 3;                // 2: سجل محاولات البنود (المراجعة 14). 3: موضع الجلسة الجارية (المرحلة 0)
 export const STATE = ['saved', 'parked', 'carried_items', 'intent', 'pending', 'proven', 'attempt', 'ev_round',
@@ -134,6 +134,7 @@ export function restore(record, { types, source, answer, item_seconds = null, re
           if (j.item) items.push(j.item);
           notes.push(['unsettled_item', act.skill, j.item ?? null, classify(rec)]);
         } else {
+          act.voided(j.item ?? null, exposed(j.raw));   // التعرّض باقٍ وإن استُبعد البند (R18-01)
           more.void = v.code;
           notes.push(['void_item', act.skill, j.item ?? null, v.code]);
         }

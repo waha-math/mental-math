@@ -146,6 +146,10 @@ export class Activity {
     throw new Error(this.name + ': لا يُطلب بديل في هذا النشاط');
   }
 
+  // البند المعروض استُبعد لتغيّر صلاحية النشاط (R17-01). exposed: هل أُجيب عنه أو طُلب فيه دعم قبل التغيّر؟ الاستبعاد من
+  // التقييم لا يمحو التعرّض (R18-01). الأنشطة التي يغيّر التعرّض بندها التالي تعيد تعريفها
+  voided(_itemId, _exposed) {}
+
   toDict() {
     return clone({ ...this, _class: this.constructor.pyName });
   }
@@ -363,11 +367,38 @@ export class EvidenceRun extends Activity {
 
   want() {
     if (this.done) return null;
-    return {
+    const w = {
       activity: this.name, role: this.stage === 'first' ? 'evidence' : 'evidence.reserve', type: this._current(),
       pos: this.pos, alternate: 0, reshown: this.reshown, round: this.round,
       short_lesson_before: this.stage === 'reserve' && this.pos === 0,
     };
+    const swap = (this.swap ?? {})[this._key()];
+    if (swap) {                                   // موضع استُهلك بنده: بديل النوع، ومعه البند الذي يحل محله
+      w.role = 'evidence.alternate';
+      w.alternate = swap.n;
+      w.replaces = swap.item;
+    }
+    return w;
+  }
+
+  _key() {
+    return `${this._current()}/${this.stage}/${this.pos}`;
+  }
+
+  // البند المستبعد لتغيّر الصلاحية (R18-01): إن لم يقع فيه إلا العرض أُعيد عرضه كالمنقطع، فالطفل لم يُجب عنه. وإن أُجيب عنه
+  // أو طُلب فيه دعم فقد استُهلك: لا يُحتسب إخفاقًا ولا يُعرض ثانية، ويُطلب لموضعه بديل نوعه في الجولة. swap و spent لا
+  // يُنشآن إلا عند أول استبعاد، فلا تتغير صورة النشاط المحفوظ في غير ذلك
+  voided(itemId, exposed) {
+    if (!exposed) {
+      this.reshown += 1;
+      return;
+    }
+    if (this.swap === undefined) this.swap = {};
+    if (this.spent === undefined) this.spent = [];
+    this.spent.push(itemId);
+    const t = this._current();
+    this.swap[this._key()] = { n: 1 + Object.keys(this.swap).filter((k) => k.split('/')[0] === t).length, item: itemId };
+    this.reshown = 0;
   }
 
   feed(outcome) {
@@ -400,6 +431,10 @@ export class EvidenceRun extends Activity {
   }
 
   unavailable() {
+    if ((this.swap ?? {})[this._key()]) {
+      this._finish('no_alternate');               // لا بديل لبند استُهلك: بلا حكم، ويظهر للبالغ. لا يُعاد البند سرًا
+      return;
+    }
     this.failed = this._current();
     this._finish('no_items');                     // لا بنود جديدة في البنك: يحتاج مراجعة المعلم
   }
@@ -543,6 +578,10 @@ export function* driveSteps(act, source, records = null, pause = null) {
         const isObj = item !== null && typeof item === 'object' && !Array.isArray(item);
         const r = { ...rec, skill: act.skill, activity: act.name, role: w.role, item: isObj ? (item.id ?? null) : null };
         if (isObj && item.reshown_same_fact) r.reshown_after_interrupt = true;   // 3.6: «أُعيد عرضه بعد انقطاع»
+        if (w.replaces) {                         // R18-01: بديل بند استُهلك، ووصف التعرّض السابق لحقيقته (3.5)
+          r.replaces = w.replaces;
+          r.fact_seen_before = Boolean(isObj && item.fact_seen_before);
+        }
         records.push(r);
       }
       act.feed(classify(rec));
@@ -611,7 +650,9 @@ export class ContentSource {
       if (w.typed) it = at(this._typed(skill, 'tryfirst', 'opening.try', w.type), w.type_index);   // 6.2
       else it = at(this._list(skill, 'opening', w.role), w.pos);
     } else if (a === 'evidence') {                // كل جولة ببنودها الجديدة (3.5)
-      it = at(this._typed(skill, 'evidence', w.role, w.type).filter((i) => (i.round ?? 1) === (w.round ?? 1)), w.pos);
+      // البديل (R18-01) برقمه بين بدائل النوع في الجولة، لا بموضع البند الذي يحل محله
+      it = at(this._typed(skill, 'evidence', w.role, w.type).filter((i) => (i.round ?? 1) === (w.round ?? 1)),
+        w.alternate ? w.alternate - 1 : w.pos);
     } else if (a === 'check') {
       it = this._list(skill, 'check' + w.attempt, w.role).find((i) => i.slot === w.slot) ?? null;
       if (it && (it.note || '').startsWith('لا قيمة أخرى')) {

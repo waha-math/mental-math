@@ -68,6 +68,11 @@ class Halted(Capped):
     سبب الرفض، وتُختم الجلسة كما تُختم عند السقف."""
 
 
+def exposed(raw):
+    """هل وقع في البند ما يتجاوز رؤية السؤال: إجابة مؤكدة أو طلب دعم؟ (R18-01)"""
+    return any(ev[0] in ('confirm', 'support') for ev in raw)
+
+
 class Void:
     """ما ترسله طبقة الخطوات بدل الإجابة حين تجد النشاط الجاري غير صالح. answered: هل حاول الطفل الإجابة الآن؟
     ومعه ما سُجّل في البند قبل تغيّر الصلاحية (R17-01): هل عُرض، وأحداثه الخام، وجوابه الصحيح ونوعه. الحدث الذي
@@ -307,9 +312,11 @@ class Scheduler:
                 if isinstance(got, Void):
                     raise RuntimeError('طبقة الخطوات أبطلت بندًا والمحرك يراه صالحًا')
                 return
+            item, w = req
+            if isinstance(got, Void) and got.shown:         # التعرّض للبند باقٍ وإن استُبعد من التقييم (R18-01)
+                act.voided(item.get('id') if isinstance(item, dict) else None, exposed(got.raw))
             entry = dict(kind=kind, skill=act.skill, act=act.to_dict(),
                          items=prior + [r['item'] for r in recs if r.get('item')])
-            item, w = req
             self.halt(code, entry, bool(sum(act.shown.values())) or kind == 'check',
                       got is not None and not (isinstance(got, Void) and not got.answered),
                       void=got if isinstance(got, Void) else None,
