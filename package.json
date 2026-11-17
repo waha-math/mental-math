@@ -1,0 +1,9 @@
+{
+  "name": "mental-math",
+  "private": true,
+  "type": "module",
+  "description": "الحساب الذهني: اختبارات التطبيق في المتصفح",
+  "devDependencies": {
+    "playwright-core": "1.65.1"
+  }
+}
