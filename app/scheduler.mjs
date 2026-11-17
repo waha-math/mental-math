@@ -13,7 +13,7 @@
 // المرجع هو scheduler.py: كل قرار هنا يطابقه في متجهات app/scheduler_vectors.json (app/test_scheduler_conformance.mjs).
 import { OPEN_CHECK } from './engine.mjs';
 import { CALC, Activity, GateRun, ShortCheckRun, OpeningRun, EvidenceRun, CheckRun, RetentionRun, driveSteps, runSync, gatePlan,
-  foldItem }
+  foldItem, exposure }
   from './items.mjs';
 
 export const GATES_PER_SEARCH = { older: 2, young: 1 };
@@ -348,7 +348,9 @@ export class Scheduler {
       if (this.records !== null) this.records.push(...recs.slice(done));
       done = recs.length;
     };
-    const gen = driveSteps(act, this.source, recs, this.cap !== null ? (w) => this.tick(w) : null);
+    // تاريخ التعرّض من السجلات، لا من كائن النشاط: يبقى بعد إسقاط النشاط وإنشاء غيره (R19-01). لدليل الفهم الآن
+    const history = kind === 'evidence' ? (a) => exposure(this.records, a.skill, a.name) : null;
+    const gen = driveSteps(act, this.source, recs, this.cap !== null ? (w) => this.tick(w) : null, history);
     // الصلاحية تُفحص قبل عرض البند، ومرة أخرى قبل تطبيق الإجابة (R16-01). قرار يقع بينهما يوقف النشاط
     const guard = (req, got = undefined) => {
       const code = this.invalid(kind, act.skill, act.check_id ?? null);
@@ -501,7 +503,8 @@ export class Scheduler {
     const act = this.take('evidence', s) || new EvidenceRun({ skill: s, types: this.types[s],
       proven: this.proven[s] || [], round: get(this.ev_round, s) + 1 });
     (yield* this.g_run_act(act, 'evidence'));
-    if (get(act.shown, 'evidence')) this.ev_round[s] = act.round;   // الجولة التالية ببنود جديدة
+    // الجولة التالية ببنود جديدة. ومنها جولة نفد بديل أول بنودها
+    if (get(act.shown, 'evidence') || act.result === 'no_alternate') this.ev_round[s] = act.round;
     this.proven[s] = [...act.proven];
     this.emit(act);
     if (act.result !== 'proven') this.log.push([this.sessions, 'evidence_' + act.result, s]);

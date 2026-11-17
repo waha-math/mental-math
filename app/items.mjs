@@ -385,7 +385,7 @@ export class EvidenceRun extends Activity {
     return `${this._current()}/${this.stage}/${this.pos}`;
   }
 
-  // البند المستبعد لتغيّر الصلاحية (R18-01): إن لم يقع فيه إلا العرض أُعيد عرضه كالمنقطع، فالطفل لم يُجب عنه. وإن أُجيب عنه
+  // البند المستبعد لتغيّر الصلاحية (R18-01): إن لم يقع فيه إلا العرض أُعيد عرضه كالمنقطع، فلم تُقبل فيه إجابة في محاولة صالحة. وإن أُجيب عنه
   // أو طُلب فيه دعم فقد استُهلك: لا يُحتسب إخفاقًا ولا يُعرض ثانية، ويُطلب لموضعه بديل نوعه في الجولة. swap و spent لا
   // يُنشآن إلا عند أول استبعاد، فلا تتغير صورة النشاط المحفوظ في غير ذلك
   voided(itemId, exposed) {
@@ -395,6 +395,7 @@ export class EvidenceRun extends Activity {
     }
     if (this.swap === undefined) this.swap = {};
     if (this.spent === undefined) this.spent = [];
+    if (this.spent.includes(itemId)) return;      // سُجّل عند التوقف، ثم وجده تاريخ السجلات عند الاستئناف: مرة واحدة
     this.spent.push(itemId);
     const t = this._current();
     this.swap[this._key()] = { n: 1 + Object.keys(this.swap).filter((k) => k.split('/')[0] === t).length, item: itemId };
@@ -559,15 +560,38 @@ export const CLASSES = { GateRun, ShortCheckRun, OpeningRun, EvidenceRun, CheckR
 // [أحداث البند الخام، جوابه الصحيح، هل هو بند تقييم]، أو نتيجة جاهزة نصًّا.
 // pause(want) تُسأل بعد كل بند اكتمل: إن أعادت صحيحًا توقف العرض والنشاط غير منتهٍ، ليُحفظ ويُستأنف في جلسة
 // لاحقة. بها يُنفَّذ سقف الوقت الذي لا يقطع بندًا جاريًا (7.1).
-export function* driveSteps(act, source, records = null, pause = null) {
+// تاريخ التعرّض لبنود نشاط مهارة من السجلات المستبعدة (void) وحدها: لكل بند هل أُجيب عنه أو طُلب فيه دعم قبل استبعاده
+// (exposed)، وكم مرة استُبعد (n). السجلات باقية بعد إسقاط النشاط وإنشاء غيره وبعد الحفظ والاستعادة، فهي المرجع، لا حالة
+// كائن النشاط (R19-01)
+export function exposure(records, skill, activity) {
+  const out = {};
+  for (const r of records || []) {
+    if (r.void && r.item && r.skill === skill && r.activity === activity) {
+      const h = out[r.item] ?? (out[r.item] = { exposed: false, n: 0 });
+      h.n += 1;
+      if (r.first !== null || (r.support_before || []).length || (r.support_unanswered || []).length) h.exposed = true;
+    }
+  }
+  return out;
+}
+
+export function* driveSteps(act, source, records = null, pause = null, history = null) {
   for (;;) {
-    const w = act.want();
+    let w = act.want();
     if (w === null) return act;
     const item = source(act.skill, w);
     if (item === null || item === undefined) {
       act.unavailable();
       continue;
     }
+    // history(act): تاريخ التعرّض لبنود هذا النشاط (exposure). بند استُهلك من قبل لا يُعرض ثانية ولو أُنشئ النشاط من
+    // جديد: يُطلب بديله. وبند عُرض ولم تُقبل فيه إجابة في محاولة صالحة يُعاد عرضه موسومًا بالإعادة (R19-01)
+    const known = history && typeof item === 'object' && !Array.isArray(item) ? history(act)[item.id] : undefined;
+    if (known && known.exposed) {
+      act.voided(item.id, true);
+      continue;
+    }
+    if (known) w = { ...w, reshown: Math.max(w.reshown ?? 0, known.n) };
     const got = yield [item, w];
     if (typeof got === 'string') {
       act.feed(got);

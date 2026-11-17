@@ -331,7 +331,8 @@ class EvidenceRun(Activity):
     بندين جديدين من نوعه. تفسيرات: الأنواع بترتيبها في جدول المهارة؛ البند المدعوم لا يُحسب ويُعامل
     كالإخفاق؛ إخفاق البندين الاحتياطيين ينهي الجولة بلا دليل؛ النوع الذي ثبت يبقى ثابتًا في الدرس نفسه
     (proven)؛ البند المنقطع يُعاد عرضه.
-    البند المستبعد لتغيّر الصلاحية (R18-01): إن لم يقع فيه إلا العرض أُعيد عرضه كالمنقطع، فالطفل لم يُجب عنه. وإن
+    البند المستبعد لتغيّر الصلاحية (R18-01): إن لم يقع فيه إلا العرض أُعيد عرضه كالمنقطع، فلم تُقبل فيه إجابة في محاولة
+    صالحة. وإن
     أُجيب عنه أو طُلب فيه دعم فقد استُهلك: لا يُحتسب إخفاقًا ولا يُعرض ثانية، ويُطلب لموضعه بديل نوعه في الجولة
     (evidence.alternate). إن لم يوجد البديل انتهت الجولة no_alternate بلا حكم. الحقلان swap و spent لا يُنشآن إلا
     عند أول استبعاد، فلا تتغير صورة النشاط المحفوظ في غير ذلك."""
@@ -367,6 +368,8 @@ class EvidenceRun(Activity):
             self.reshown += 1
             return
         swap, spent = self.__dict__.setdefault('swap', {}), self.__dict__.setdefault('spent', [])
+        if item_id in spent:                        # سُجّل عند التوقف، ثم وجده تاريخ السجلات عند الاستئناف: مرة واحدة
+            return
         spent.append(item_id)
         t = self._current()
         swap[self._key()] = dict(n=1 + sum(1 for k in swap if k.split('/')[0] == t), item=item_id)
@@ -498,7 +501,21 @@ CLASSES = {c.__name__: c for c in (GateRun, ShortCheckRun, OpeningRun, EvidenceR
 
 
 # ---------------------------------------------------------------- التشغيل
-def drive_steps(act, source, records=None, pause=None):
+def exposure(records, skill, activity):
+    """تاريخ التعرّض لبنود نشاط مهارة من السجلات المستبعدة (void) وحدها: لكل بند هل أُجيب عنه أو طُلب فيه دعم قبل
+    استبعاده (exposed)، وكم مرة استُبعد (n). السجلات باقية بعد إسقاط النشاط وإنشاء غيره وبعد الحفظ والاستعادة، فهي
+    المرجع، لا حالة كائن النشاط (R19-01)."""
+    out = {}
+    for r in records or ():
+        if r.get('void') and r.get('item') and r['skill'] == skill and r['activity'] == activity:
+            h = out.setdefault(r['item'], dict(exposed=False, n=0))
+            h['n'] += 1
+            if r['first'] is not None or r.get('support_before') or r.get('support_unanswered'):
+                h['exposed'] = True
+    return out
+
+
+def drive_steps(act, source, records=None, pause=None, history=None):
     """مولّد يعرض بنود النشاط حتى ينتهي. source(skill, want) يعيد البند أو None. يعطي (البند، المطلوب) ويستقبل
     أحداث البند الخام وجوابه الصحيح ونوع البند، أو نتيجة جاهزة (للمحاكاة).
     pause(want) تُسأل بعد كل بند اكتمل: إن أعادت صحيحًا توقف العرض والنشاط غير منتهٍ، ليُحفظ ويُستأنف في جلسة
@@ -511,6 +528,14 @@ def drive_steps(act, source, records=None, pause=None):
         if item is None:
             act.unavailable()
             continue
+        # history(act): تاريخ التعرّض لبنود هذا النشاط (exposure). بند استُهلك من قبل لا يُعرض ثانية ولو أُنشئ النشاط
+        # من جديد: يُطلب بديله. وبند عُرض ولم تُقبل فيه إجابة في محاولة صالحة يُعاد عرضه موسومًا بالإعادة (R19-01)
+        h = history(act).get(item.get('id')) if history and isinstance(item, dict) else None
+        if h and h['exposed']:
+            act.voided(item['id'], True)
+            continue
+        if h:
+            w = dict(w, reshown=max(w.get('reshown', 0), h['n']))
         got = yield item, w
         if isinstance(got, str):
             act.feed(got)

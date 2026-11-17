@@ -794,7 +794,7 @@ def case_void_history():
     expect(bad, 'ح: بنود الجولة الثانية، وليس البند 02 منها', [g[0] for g in got], ['13', '14', '17', '18', '21', '22'])
     expect(bad, 'ح: دليل الفهم ببنود الجولة الثانية وحدها', proofs(e), [['13', '14', '17', '18', '21', '22']])
     expect(bad, 'ح: السجل المستبعد باقٍ مرة واحدة', void_of(sc.records, ITEM), want)
-    # ط) بند عُرض بلا حدث ثم استُبعد: الطفل لم يُجب عنه، فيُعاد عرضه نفسه موصوفًا بالإعادة (3.5)، ويدخل الدليل
+    # ط) بند عُرض بلا حدث ثم استُبعد: لم تُقبل فيه إجابة في محاولة صالحة، فيُعاد عرضه نفسه موصوفًا بالإعادة (3.5)، ويدخل الدليل
     e, sc, st, kid = at(39)
     st.show(st.seq)
     e.apply(dict(id='t1', type='invalidate_session', target='S6'))
@@ -802,6 +802,63 @@ def case_void_history():
     got = served_after(e, st, kid)
     expect(bad, 'ط: البند نفسه يُعاد عرضه وعدّ الإعادة 1', got[:2], [('02', 'evidence', '', 1), ('05', 'evidence', '', 0)])
     expect(bad, 'ط: الدليل ببنوده الأصلية', proofs(e), [['01', '02', '05', '06', '09', '10']])
+    return bad
+
+
+def case_first_item():
+    # القاعدة (R19-01): تاريخ التعرّض في السجلات، لا في كائن النشاط. التعليق أثناء أول بند في دليل الفهم يُسقط النشاط
+    # (لم يكتمل فيه بند)، ثم يُنشأ نشاط جديد بعد رفع التعليق. البند 01 (ف2، الجولة 1) إن طُلب فيه دعم أو أُكدت فيه
+    # إجابة لا يعود: بديله 25. وإن عُرض فقط ولم تُقبل فيه إجابة في محاولة صالحة أُعيد عرضه وعدّ الإعادة 1.
+    # وبلا بدائل في المحتوى: يُعلن النفاد، ثم الجولة الثانية ببنودها
+    bad = []
+    ITEM = '1-4-2/evidence/01'
+    ALT = [('25', 'evidence.alternate', '01', 0), ('02', 'evidence', '', 0), ('05', 'evidence', '', 0),
+           ('06', 'evidence', '', 0), ('09', 'evidence', '', 0), ('10', 'evidence', '', 0)]
+    SAME = [('01', 'evidence', '', 1)] + ALT[1:]
+    ROUND2 = [(i, 'evidence', '', 0) for i in ('13', '14', '17', '18', '21', '22')]
+    KINDS = (('طلب دعم فقط', [('support', 'hint')], ('interrupted', None, 'incomplete', ['hint'], [], 'suspended'), ALT),
+             ('إجابة مؤكدة', [('confirm', 999)], ('complete', False, 'incomplete', [], [], 'suspended'), ALT),
+             ('العرض وحده', None, ('interrupted', None, 'incomplete', [], [], 'suspended'), SAME))
+
+    def without(src):
+        return lambda s, w: None if w.get('role') == 'evidence.alternate' else src(s, w)
+
+    def run(evs, mode, bare):
+        e, sc, st, kid = at(38, without if bare else None)
+        if st.pending[0]['id'] != ITEM or e.s['current'] != 'S8':
+            raise AssertionError('الموضع 38 ليس أول بند دليل الفهم في S8')
+        if evs is None:
+            st.show(st.seq)
+        for ev in evs or ():
+            st.event(st.seq, ev)
+        e.apply(dict(id='t1', type='invalidate_session', target='S6'))
+        if mode != 'قبل التوقف':
+            st.event(st.seq, ('confirm', 6))                # تصل بعد التعليق: لا تُحتسب
+        if mode != 'متصل':
+            e, sc, _ = reopen('young', st.snapshot())
+            if bare:
+                sc.source = without(sc.source)
+            st = Stepper(e, sc)
+            st.open(sc.g_run(14))
+        return e, sc, served_after(e, st, kid)
+
+    for name, evs, rec, after in KINDS:
+        for mode in ('متصل', 'قبل التوقف', 'بعد التوقف'):
+            label = '%s، %s' % (name, mode)
+            e, sc, got = run(evs, mode, False)
+            expect(bad, label + ': البنود المعروضة بعد رفع التعليق', got, after)
+            expect(bad, label + ': دليل الفهم مرة واحدة ببنوده', proofs(e), [[g[0] for g in after]])
+            expect(bad, label + ': السجل المستبعد مرة واحدة' + ('' if after is SAME else '، ولا سجل آخر للبند'),
+                   [x for x in void_of(sc.records, ITEM) if x[5]], [rec])
+            expect(bad, label + ': عدد سجلات البند', len(void_of(sc.records, ITEM)), 2 if after is SAME else 1)
+            if after is SAME:
+                continue
+            e, sc, got = run(evs, mode, True)               # المحتوى بلا بدائل
+            marks = [x[1] for x in sc.log if x[2] == '1-4-2' and x[1].startswith('evidence_')]
+            expect(bad, label + '، بلا بدائل: النفاد معلن مرة، وبلا «لم يثبت»', marks, ['evidence_no_alternate'])
+            expect(bad, label + '، بلا بدائل: الجولة الثانية ببنودها، وليس 01 منها', got, ROUND2)
+            expect(bad, label + '، بلا بدائل: الدليل ببنود الجولة الثانية', proofs(e), [[g[0] for g in ROUND2]])
+            expect(bad, label + '، بلا بدائل: السجل المستبعد مرة واحدة', void_of(sc.records, ITEM), [rec])
     return bad
 
 
@@ -843,7 +900,11 @@ for title, fn in (
          'والحدث اللاحق للتغيّر لا يُحتسب. وكذلك طلب دعم بلا إجابة، وبند عُرض بلا حدث، والتعليق قبل الاستعادة. '
          'وبعد رفع التعليق (R18-01): البند الذي أُجيب عنه وطُلب فيه تلميح لا يعود دليلًا، ويحل محله بديل نوعه، في المسار '
          'المتصل وبعد الإغلاق والاستعادة. وبلا بديل يُعلن النفاد ولا يُعاد البند. والبند الذي عُرض بلا حدث يُعاد عرضه',
-         case_void_history)):
+         case_void_history),
+        ('19. التعليق أثناء أول بند في دليل الفهم (R19-01): النشاط يُسقط ثم يُنشأ من جديد، وتاريخ التعرّض باقٍ في السجلات. '
+         'طلب دعم فقط، أو إجابة مؤكدة: البند لا يعود ويحل محله بديله. العرض وحده: يُعاد عرضه موسومًا. كلٌّ في المسار '
+         'المتصل، ومع حفظ واستعادة قبل التوقف وبعده، وبمحتوى بلا بدائل، إلى ما بعد رفع التعليق وإصدار الدليل',
+         case_first_item)):
     try:
         bad = fn()
     except Exception as x:                                   # noqa: BLE001

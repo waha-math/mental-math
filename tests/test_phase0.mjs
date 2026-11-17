@@ -577,7 +577,7 @@ function caseVoidHistory() {
   expect(bad, 'ح: بنود الجولة الثانية، وليس البند 02 منها', got.map((g) => g[0]), ['13', '14', '17', '18', '21', '22']);
   expect(bad, 'ح: دليل الفهم ببنود الجولة الثانية وحدها', proofs(x.e), [['13', '14', '17', '18', '21', '22']]);
   expect(bad, 'ح: السجل المستبعد باقٍ مرة واحدة', voidOf(x.sc.records, ITEM), want);
-  // ط) بند عُرض بلا حدث ثم استُبعد: الطفل لم يُجب عنه، فيُعاد عرضه نفسه موصوفًا بالإعادة (3.5)، ويدخل الدليل
+  // ط) بند عُرض بلا حدث ثم استُبعد: لم تُقبل فيه إجابة في محاولة صالحة، فيُعاد عرضه نفسه موصوفًا بالإعادة (3.5)، ويدخل الدليل
   x = at(39);
   x.st.show(x.st.seq);
   inval(x.e);
@@ -585,6 +585,57 @@ function caseVoidHistory() {
   got = servedAfter(x.e, x.st, x.kid);
   expect(bad, 'ط: البند نفسه يُعاد عرضه وعدّ الإعادة 1', got.slice(0, 2), [['02', 'evidence', '', 1], ['05', 'evidence', '', 0]]);
   expect(bad, 'ط: الدليل ببنوده الأصلية', proofs(x.e), [['01', '02', '05', '06', '09', '10']]);
+  return bad;
+}
+
+// القاعدة (R19-01): تاريخ التعرّض في السجلات، لا في كائن النشاط. التعليق أثناء أول بند في دليل الفهم يُسقط النشاط (لم
+// يكتمل فيه بند)، ثم يُنشأ نشاط جديد بعد رفع التعليق. البند 01 (ف2، الجولة 1) إن طُلب فيه دعم أو أُكدت فيه إجابة لا
+// يعود: بديله 25. وإن عُرض فقط ولم تُقبل فيه إجابة في محاولة صالحة أُعيد عرضه وعدّ الإعادة 1. وبلا بدائل في المحتوى:
+// يُعلن النفاد، ثم الجولة الثانية ببنودها
+function caseFirstItem() {
+  const bad = [];
+  const ITEM = '1-4-2/evidence/01';
+  const ALT = [['25', 'evidence.alternate', '01', 0], ['02', 'evidence', '', 0], ['05', 'evidence', '', 0],
+    ['06', 'evidence', '', 0], ['09', 'evidence', '', 0], ['10', 'evidence', '', 0]];
+  const SAME = [['01', 'evidence', '', 1], ...ALT.slice(1)];
+  const ROUND2 = ['13', '14', '17', '18', '21', '22'].map((i) => [i, 'evidence', '', 0]);
+  const KINDS = [['طلب دعم فقط', [['support', 'hint']], ['interrupted', null, 'incomplete', ['hint'], [], 'suspended'], ALT],
+    ['إجابة مؤكدة', [['confirm', 999]], ['complete', false, 'incomplete', [], [], 'suspended'], ALT],
+    ['العرض وحده', null, ['interrupted', null, 'incomplete', [], [], 'suspended'], SAME]];
+  const without = (src) => (s, w) => (w.role === 'evidence.alternate' ? null : src(s, w));
+  const run = (evs, mode, bare) => {
+    let { e, sc, st, kid } = at(38, bare ? without : null);
+    if (st.pending[0].id !== ITEM || e.s.current !== 'S8') throw new Error('الموضع 38 ليس أول بند دليل الفهم في S8');
+    if (evs === null) st.show(st.seq);
+    for (const ev of evs || []) st.event(st.seq, ev);
+    e.apply({ id: 't1', type: 'invalidate_session', target: 'S6' });
+    if (mode !== 'قبل التوقف') st.event(st.seq, ['confirm', 6]);   // تصل بعد التعليق: لا تُحتسب
+    if (mode !== 'متصل') {
+      ({ e, sc } = reopen('young', st.snapshot()));
+      if (bare) sc.source = without(sc.source);
+      st = new Stepper(e, sc);
+      st.open(sc.g_run(14));
+    }
+    return { e, sc, got: servedAfter(e, st, kid) };
+  };
+  for (const [name, evs, rec, after] of KINDS) {
+    for (const mode of ['متصل', 'قبل التوقف', 'بعد التوقف']) {
+      const label = `${name}، ${mode}`;
+      let r = run(evs, mode, false);
+      expect(bad, label + ': البنود المعروضة بعد رفع التعليق', r.got, after);
+      expect(bad, label + ': دليل الفهم مرة واحدة ببنوده', proofs(r.e), [after.map((g) => g[0])]);
+      expect(bad, label + ': السجل المستبعد مرة واحدة' + (after === SAME ? '' : '، ولا سجل آخر للبند'),
+        voidOf(r.sc.records, ITEM).filter((q) => q[5]), [rec]);
+      expect(bad, label + ': عدد سجلات البند', voidOf(r.sc.records, ITEM).length, after === SAME ? 2 : 1);
+      if (after === SAME) continue;
+      r = run(evs, mode, true);                             // المحتوى بلا بدائل
+      const marks = r.sc.log.filter((q) => q[2] === '1-4-2' && q[1].startsWith('evidence_')).map((q) => q[1]);
+      expect(bad, label + '، بلا بدائل: النفاد معلن مرة، وبلا «لم يثبت»', marks, ['evidence_no_alternate']);
+      expect(bad, label + '، بلا بدائل: الجولة الثانية ببنودها، وليس 01 منها', r.got, ROUND2);
+      expect(bad, label + '، بلا بدائل: الدليل ببنود الجولة الثانية', proofs(r.e), [ROUND2.map((g) => g[0])]);
+      expect(bad, label + '، بلا بدائل: السجل المستبعد مرة واحدة', voidOf(r.sc.records, ITEM), [rec]);
+    }
+  }
   return bad;
 }
 
@@ -783,7 +834,11 @@ for (const [title, fn] of [
     + 'والحدث اللاحق للتغيّر لا يُحتسب. وكذلك طلب دعم بلا إجابة، وبند عُرض بلا حدث، والتعليق قبل الاستعادة. '
     + 'وبعد رفع التعليق (R18-01): البند الذي أُجيب عنه وطُلب فيه تلميح لا يعود دليلًا، ويحل محله بديل نوعه، في المسار '
     + 'المتصل وبعد الإغلاق والاستعادة. وبلا بديل يُعلن النفاد ولا يُعاد البند. والبند الذي عُرض بلا حدث يُعاد عرضه',
-    caseVoidHistory]]) {
+    caseVoidHistory],
+  ['19. التعليق أثناء أول بند في دليل الفهم (R19-01): النشاط يُسقط ثم يُنشأ من جديد، وتاريخ التعرّض باقٍ في السجلات. '
+    + 'طلب دعم فقط، أو إجابة مؤكدة: البند لا يعود ويحل محله بديله. العرض وحده: يُعاد عرضه موسومًا. كلٌّ في المسار '
+    + 'المتصل، ومع حفظ واستعادة قبل التوقف وبعده، وبمحتوى بلا بدائل، إلى ما بعد رفع التعليق وإصدار الدليل',
+    caseFirstItem]]) {
   let bad;
   try { bad = fn(); } catch (x) { bad = ['استثناء: ' + (x.stack || x).toString().split('\n').slice(0, 2).join(' ')]; }
   check(title, bad);

@@ -32,7 +32,7 @@ import itertools
 from collections import Counter
 
 from item_layer import (CALC, Activity, GateRun, ShortCheckRun, OpeningRun, EvidenceRun, CheckRun, RetentionRun,
-                        drive_steps, run_sync, gate_plan, fold_item)
+                        drive_steps, run_sync, gate_plan, fold_item, exposure)
 from transition_engine import OPEN_CHECK
 
 GATES_PER_SEARCH = {'older': 2, 'young': 1}
@@ -322,7 +322,9 @@ class Scheduler:
                       void=got if isinstance(got, Void) else None,
                       about=dict(activity=act.name, role=w['role'], item=item.get('id') if isinstance(item, dict) else None))
         req = None
-        gen = drive_steps(act, self.source, recs, pause=self.tick if self.cap is not None else None)
+        # تاريخ التعرّض من السجلات، لا من كائن النشاط: يبقى بعد إسقاط النشاط وإنشاء غيره (R19-01). لدليل الفهم الآن
+        history = (lambda a: exposure(self.records, a.skill, a.name)) if kind == 'evidence' else None
+        gen = drive_steps(act, self.source, recs, pause=self.tick if self.cap is not None else None, history=history)
         try:
             req = next(gen)
             while True:
@@ -455,8 +457,8 @@ class Scheduler:
         act = self.take('evidence', s) or EvidenceRun(s, self.types[s], proven=self.proven.get(s, []),
                                                       round=self.ev_round.get(s, 0) + 1)
         (yield from self.g_run_act(act, 'evidence'))
-        if act.shown['evidence']:
-            self.ev_round[s] = act.round                    # الجولة التالية ببنود جديدة
+        if act.shown['evidence'] or act.result == 'no_alternate':
+            self.ev_round[s] = act.round                    # الجولة التالية ببنود جديدة. ومنها جولة نفد بديل أول بنودها
         self.proven[s] = list(act.proven)
         self.emit(act)
         if act.result != 'proven':
