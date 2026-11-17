@@ -1,0 +1,361 @@
+// المرحلة 0 على التطبيق بلغة JavaScript: التوقف عند انتظار الطفل، والإغلاق، والاستعادة، وتكملة الجلسة نفسها.
+//
+//     node tests/test_phase0.mjs
+//
+// الحالات والنتائج المتوقعة نفسها في tests/test_phase0.py. أنواع دليل الفهم للمهارات الخمس من صفوفها في الخريطة.
+import { readFileSync } from 'node:fs';
+import { Engine, canonical } from '../app/engine.mjs';
+import { Scheduler } from '../app/scheduler.mjs';
+import { ContentSource } from '../app/items.mjs';
+import { Stepper } from '../app/stepper.mjs';
+import * as persist from '../app/persist.mjs';
+
+const ITEMS = JSON.parse(readFileSync(new URL('../slice-content.json', import.meta.url), 'utf8')).items;
+const TYPES = { '1-4-1': ['ف1', 'ف3'], '1-4-2': ['ف2', 'ف3', 'ف4'], '3-5-1': ['ف1', 'ف2', 'ف3'],
+  '3-5-2': ['ف1', 'ف2', 'ف3', 'ف4'], '3-5-3': ['ف3'] };
+const results = [];
+const dump = (x) => canonical(x ?? null);
+
+function check(title, bad) {
+  results.push(!bad.length);
+  console.log(`  ${bad.length ? 'أخفق' : 'نجح'}  ${title}`);
+  for (const b of bad.slice(0, 4)) console.log('        ' + b);
+}
+
+// طفل نموذجي: يعرف المهارة بعد أن يرى درسها. wrong: بنود يخطئ فيها. help: بنود يطلب فيها تلميحًا أولًا
+class Kid {
+  constructor(wrong = [], help = []) {
+    this.known = new Set();
+    this.wrong = new Set(wrong);
+    this.help = new Set(help);
+  }
+
+  events(item, w) {
+    const a = w.activity;
+    if (a === 'lesson' || a === 'practice') {
+      if (a === 'lesson') this.known.add(item.skill);
+      return [['end']];
+    }
+    const assess = ['gate', 'short', 'check', 'retention'].includes(a);
+    const ok = this.known.has(item.skill) && !this.wrong.has(item.id);
+    const ans = ok ? item.answer : (item.answer < 99 ? item.answer + 1 : item.answer - 1);
+    return [...(this.help.has(item.id) ? [['support', 'hint']] : []), ['confirm', ans], ...(assess ? [] : [['end']])];
+  }
+}
+
+const SCEN = {
+  young: { group: 'young', scope: ['1-4-1', '1-4-2'], decisions: [['1-4-1', ['1-3-3']]], cap: 240, sessions: 14,
+    secs: (w) => (w.activity === 'check' ? 60 : 25) },
+  older: { group: 'older', scope: ['3-5-1', '3-5-2', '3-5-3'],
+    decisions: [['3-5-1', ['3-3-2', '3-2-3']], ['3-5-2', ['3-2-1', '3-3-1', '2-5-2']]], cap: 600, sessions: 16,
+    secs: () => 45 },
+};
+SCEN.retention = { ...SCEN.young, scope: ['1-4-1'], retention: true, sessions: 100 };   // فحوص الاحتفاظ الثلاثة
+
+function build(name, wrapSource = null) {
+  const c = SCEN[name];
+  const e = new Engine(undefined, { group: c.group });
+  c.decisions.forEach(([skill, bypass], k) => e.apply({ id: 'd' + k, type: 'teacher_open', skill, bypass,
+    reason: 'قرار الشريحة في 10.2' }));
+  const src = new ContentSource(ITEMS);
+  let source = (s, w) => src.pick(s, w);
+  if (wrapSource) source = wrapSource(source);
+  const sc = new Scheduler(e, TYPES, source, null, { group: c.group, scope: c.scope, learning: true, cap: c.cap,
+    item_seconds: c.secs, records: [], retention: c.retention ?? false });
+  return { e, sc };
+}
+
+function reopen(name, rec, today = null) {
+  const c = SCEN[name];
+  const src = new ContentSource(ITEMS);
+  const r = persist.restore(JSON.parse(JSON.stringify(rec)), { types: TYPES, source: (s, w) => src.pick(s, w),
+    answer: null, item_seconds: c.secs, records: [], today });
+  return { e: r.engine, sc: r.scheduler, notes: r.notes };
+}
+
+// يجيب الطفل عن الطلبات حتى ينتهي المولّد، أو حتى الطلب رقم stopAt (لا يُعرض ولا يُجاب). يعيد عدد ما أُجيب
+function play(st, kid, stopAt = null, n = 0) {
+  while (st.pending !== null) {
+    if (stopAt !== null && n === stopAt) return n;
+    const [item, w] = st.pending;
+    for (const ev of kid.events(item, w)) st.event(st.seq, ev);
+    n += 1;
+  }
+  return n;
+}
+
+const final = (e, sc) => ({ engine: e.dump(), records: sc.records, log: sc.log, saved: sc.saved, parked: sc.parked,
+  sessions: sc.sessions, refused: sc.refused.length });
+
+function sweep(name, wrong = [], help = []) {
+  const c = SCEN[name];
+  const { e, sc } = build(name);
+  const st = new Stepper(e, sc);
+  st.open(sc.g_run(c.sessions));
+  const total = play(st, new Kid(wrong, help));
+  const base = JSON.parse(JSON.stringify(final(e, sc)));
+  const bad = [];
+  const b0 = build(name), kid0 = new Kid(wrong, help);    // الغلاف المتزامن يعطي النتيجة نفسها
+  b0.sc.answer = (item, w) => {
+    const evs = kid0.events(item, w);
+    if (w.activity === 'lesson' || w.activity === 'practice') return 'correct';
+    return [evs, item.answer, ['gate', 'short', 'check', 'retention'].includes(w.activity)];
+  };
+  b0.sc.run(c.sessions);
+  if (dump(final(b0.e, b0.sc)) !== dump(base)) bad.push('التشغيل خطوة خطوة يخالف الغلاف المتزامن');
+  if (base.refused) bad.push(`المحرك رفض ${base.refused} اقتراحًا في التشغيل المتصل`);
+  const diff = [];
+  for (let k = 0; k < total; k++) {
+    const b1 = build(name), kid = new Kid(wrong, help);
+    const s1 = new Stepper(b1.e, b1.sc);
+    s1.open(b1.sc.g_run(c.sessions));
+    play(s1, kid, k);
+    const rec = s1.snapshot();
+    try {
+      const r = reopen(name, rec);
+      const s2 = new Stepper(r.e, r.sc);
+      s2.open(r.sc.g_run(c.sessions));
+      play(s2, kid);
+      const got = final(r.e, r.sc);
+      if (dump(got) !== dump(base)) diff.push([k, Object.keys(base).filter((f) => dump(got[f]) !== dump(base[f])).join('، ')]);
+    } catch (x) {
+      diff.push([k, 'استثناء ' + x]);
+    }
+  }
+  if (diff.length) bad.push(`${diff.length} من ${total} موضع إغلاق تخالف التشغيل المتصل. أولها: ${JSON.stringify(diff.slice(0, 3))}`);
+  return { bad, total, base };
+}
+
+console.log('=== المرحلة 0، بلغة JavaScript');
+console.log('أ) إغلاق عند كل طلب بند قبل عرضه، ثم استعادة وتكملة: النتيجة كما في التشغيل المتصل');
+for (const [name, wrong, help, label] of [
+  ['young', [], [], 'الصغير في 1-4، بسقف 240 ثانية'],
+  ['young', ['1-4-1/evidence/01', '1-4-1/checkA/03', '1-4-1/checkA/05'], ['1-4-2/evidence/01'],
+    'الصغير، بأخطاء في دليل الفهم والفحص وطلب تلميح'],
+  ['older', [], [], 'الكبيران في 3-5، بسقف 600 ثانية'],
+  ['older', ['3-5-1/checkA/01', '3-5-1/checkA/03', '3-5-2/evidence/01'], [], 'الكبيران، بأخطاء في الفحص ودليل الفهم'],
+  ['retention', [], [], 'الصغير في 1-4-1 مع فحوص الاحتفاظ الثلاثة']]) {
+  const { bad, total, base } = sweep(name, wrong, help);
+  check(`${label}: ${total} موضع إغلاق في ${base.sessions} جلسة و${base.records.length} سجل بند`, bad);
+}
+
+// ---------------------------------------------------------------- ب) حالات بنتائج مكتوبة يدويًا
+// مسار الصغير بلا أخطاء: S1 بوابة 1-4-1، S2 افتتاح ودرس حتى السقف، S3 دليل الفهم، S4 بدء الفحص: الخانات 1 إلى 4،
+// S5 الخانات 5 إلى 8، S6 الخانتان 9 و10 والنتيجة. الطلب 16 الخانة 1، و17 الخانة 2، و25 الخانة 10.
+function at(n, wrapSource = null) {
+  const { e, sc } = build('young', wrapSource);
+  const st = new Stepper(e, sc), kid = new Kid();
+  st.open(sc.g_run(14));
+  play(st, kid, n);
+  return { e, sc, st, kid };
+}
+
+const count = (e, typ, session = null, more = {}) => e.s.log.filter((x) => x.type === typ
+  && (session === null || x.session === session) && Object.entries(more).every(([k, v]) => x[k] === v)).length;
+
+function expect(bad, label, got, want) {
+  if (dump(got) !== dump(want)) bad.push(`${label}: ${JSON.stringify(got)}، والمتوقع ${JSON.stringify(want)}`);
+}
+
+function caseShown() {
+  const { st, kid } = at(17);
+  st.show(st.seq);
+  const { e: e2, sc: sc2, notes } = reopen('young', st.snapshot());
+  const bad = [];
+  expect(bad, 'ملاحظات الاستعادة', notes,
+    [['unsettled_item', '1-4-1', '1-4-1/checkA/03', 'interrupted'], ['current_saved', 'check', '1-4-1']]);
+  expect(bad, 'الجلسة الجارية في المحرك والمجدول وعدد الجلسات والوقت المستهلك',
+    [e2.s.current, sc2.cur, sc2.sessions, sc2.elapsed], ['S4', 'S4', 4, 60]);
+  const last = sc2.records[sc2.records.length - 1];
+  expect(bad, 'سجل البند المعروض', [last.item, last.status, last.first, last.unsettled],
+    ['1-4-1/checkA/03', 'interrupted', null, true]);
+  const s2 = new Stepper(e2, sc2);
+  s2.open(sc2.g_run(14));
+  const [item, w] = s2.pending;
+  expect(bad, 'البند التالي بعد العودة', [item.id, w.role, w.slot, sc2.cur], ['1-4-1/checkA/04', 'check.alternate', 2, 'S4']);
+  play(s2, kid);
+  expect(bad, 'بدايات S4 واستئنافات الفحص فيها', [count(e2, 'session_start', 'S4'), count(e2, 'check_resumed', 'S4')], [1, 0]);
+  expect(bad, 'نتيجة فحص 1-4-1', e2.s.log.filter((x) => x.type === 'independence_result' && x.skill === '1-4-1')
+    .map((x) => x.result), ['pass']);
+  expect(bad, 'مرات ظهور البند المنقطع في السجلات', sc2.records.filter((r) => r.item === '1-4-1/checkA/03').length, 1);
+  return bad;
+}
+
+function caseSupport() {
+  const { st, kid } = at(12);
+  const r = st.event(st.seq, ['support', 'hint']);
+  const { e: e2, sc: sc2 } = reopen('young', st.snapshot());
+  const last = sc2.records[sc2.records.length - 1];
+  const bad = [];
+  expect(bad, 'نتيجة الحدث', r, 'open');
+  expect(bad, 'سجل البند', [last.item, last.status, last.first, last.support_before, last.unsettled],
+    ['1-4-1/evidence/01', 'interrupted', null, ['hint'], true]);
+  expect(bad, 'الجلسة', [sc2.cur, sc2.sessions, count(e2, 'session_start', 'S3'), count(e2, 'resume_lesson', 'S3')],
+    ['S3', 3, 1, 1]);
+  const s2 = new Stepper(e2, sc2);
+  s2.open(sc2.g_continue());
+  play(s2, kid);
+  expect(bad, 'بعد تكملة الجلسة: استئنافات الدرس في S3، والجلسة الجارية', [count(e2, 'resume_lesson', 'S3'), sc2.cur], [1, null]);
+  return bad;
+}
+
+function caseNonfinal() {
+  const { st } = at(13);
+  const r = st.event(st.seq, ['confirm', 5]);
+  const { sc: sc2 } = reopen('young', st.snapshot());
+  const last = sc2.records[sc2.records.length - 1];
+  const bad = [];
+  expect(bad, 'نتيجة الحدث', r, 'open');
+  expect(bad, 'سجل البند', [last.item, last.status, last.first, last.final, last.unsettled],
+    ['1-4-1/evidence/02', 'complete', false, 'incomplete', true]);   // 3.1: مكتمل لأن إجابة أولى أُكّدت
+  expect(bad, 'الجلسة', [sc2.cur, sc2.sessions], ['S3', 3]);
+  return bad;
+}
+
+function caseFinal() {
+  const { e, sc, st, kid } = at(25);
+  st.show(st.seq);
+  const before = st.snapshot(), old = st.seq;
+  const nRec = sc.records.length + sc.live.recs.length;
+  const r1 = st.event(old, ['confirm', 4]);
+  const r2 = st.event(old, ['confirm', 4]);
+  const bad = [];
+  expect(bad, 'نتيجة الإجابة ثم تكرارها', [r1, r2], ['next', 'ignored']);
+  expect(bad, 'نتائج الفحص في المحرك، وحالة المحاولة، وعدد السجلات الجديدة',
+    [count(e, 'independence_result'), e.s.checks['1-4-1/check/1'].state, sc.records.length - nRec], [1, 'closed', 1]);
+  const after = st.snapshot();
+  try {
+    const { e: e2, sc: sc2, notes } = reopen('young', after);
+    expect(bad, 'بعد الاستعادة من اللقطة الجديدة', [count(e2, 'independence_result'), sc2.records.length, notes],
+      [1, nRec + 1, [['current_saved', 'gate', '1-4-2']]]);
+    const s2 = new Stepper(e2, sc2);
+    s2.open(sc2.g_run(14));
+    expect(bad, 'البند التالي لم يُعرض فيُطلب نفسه', s2.pending[0].id, '1-4-2/gate/01');
+    play(s2, kid);
+    expect(bad, 'نتائج فحص 1-4-1 بعد إكمال المسار', count(e2, 'independence_result', null, { skill: '1-4-1' }), 1);
+  } catch (x) {
+    if (!(x instanceof persist.Inconsistent)) throw x;
+    bad.push('اللقطة بعد الانتقال رُفضت: ' + x.message);
+  }
+  const { e: e3, sc: sc3 } = reopen('young', before);
+  const last = sc3.records[sc3.records.length - 1];
+  expect(bad, 'الاستعادة مما قبل الانتقال', [count(e3, 'independence_result'), e3.s.checks['1-4-1/check/1'].state,
+    last.item, last.status, last.unsettled, sc3.records.length], [0, 'pending', '1-4-1/checkA/19', 'interrupted', true, nRec + 1]);
+  return bad;
+}
+
+function caseCap() {
+  const { e, sc } = build('young');
+  const st = new Stepper(e, sc), kid = new Kid();
+  for (const g of ['g_search', 'g_start_session', 'g_follow_learning', 'g_follow_learning']) {
+    st.open(sc[g]());
+    play(st, kid);
+  }
+  const bad = [];
+  expect(bad, 'بعد بلوغ السقف: المولّد، والجلسة، والمحفوظ', [st.finished, e.s.current, sc.cur, sc.elapsed,
+    sc.saved.map((c) => [c.kind, c.act.slot])], [true, null, null, 240, [['check', 5]]]);
+  const rec = st.snapshot();
+  expect(bad, 'النشاط الجاري في اللقطة', rec.current, null);
+  const { e: e2, sc: sc2, notes } = reopen('young', rec);
+  expect(bad, 'ملاحظات الاستعادة والجلسة', [notes, sc2.cur, sc2.sessions], [[], null, 4]);
+  const s2 = new Stepper(e2, sc2);
+  s2.open(sc2.g_follow_learning());
+  expect(bad, 'الجلسة التالية', [sc2.cur, count(e2, 'check_resumed', 'S5'), s2.pending[0].id, sc2.elapsed],
+    ['S5', 1, '1-4-1/checkA/09', 0]);
+  return bad;
+}
+
+function caseBroken() {
+  const failing = (src) => (skill, w) => {
+    if (w.activity === 'check' && w.slot === 3) throw new RangeError('تعذّر تحميل البند');
+    return src(skill, w);
+  };
+  const { st } = at(17, failing);
+  st.show(st.seq);
+  const before = st.snapshot();
+  const bad = [];
+  try {
+    st.event(st.seq, ['confirm', 3]);
+    bad.push('لم يظهر استثناء التحميل');
+  } catch (x) {
+    if (!(x instanceof RangeError)) throw x;
+  }
+  expect(bad, 'الطبقة معطّلة', st.broken, true);
+  for (const [label, fn] of [['لقطة', () => st.snapshot()], ['حدث', () => st.event(st.seq, ['confirm', 3])]]) {
+    try {
+      fn();
+      bad.push(`${label} بعد انتقال لم يكتمل قُبل`);
+    } catch (x) { /* متوقع */ }
+  }
+  const { e: e2, sc: sc2 } = reopen('young', before);
+  expect(bad, 'الاستعادة من المحفوظ السابق', [sc2.cur, sc2.elapsed, sc2.records[sc2.records.length - 1].item,
+    count(e2, 'independence_result')], ['S4', 60, '1-4-1/checkA/03', 0]);
+  return bad;
+}
+
+function caseSession() {
+  let { e, sc, st, kid } = at(17);
+  const seen = [];
+  for (let i = 0; i < 3; i++) {
+    ({ e, sc } = reopen('young', st.snapshot()));
+    seen.push([sc.cur, sc.sessions, sc.searches, sc.elapsed]);
+    st = new Stepper(e, sc);
+    st.open(sc.g_continue());
+    if (st.pending !== null) {
+      const [item, w] = st.pending;
+      for (const ev of kid.events(item, w)) st.event(st.seq, ev);
+    }
+  }
+  play(st, kid);
+  const bad = [];
+  expect(bad, 'الجلسة وعددها وجلسات البحث والوقت بعد كل استعادة', seen,
+    [['S4', 4, 1, 60], ['S4', 4, 1, 120], ['S4', 4, 1, 180]]);
+  expect(bad, 'أحداث S4: بداية، بدء فحص، استئناف فحص، استئناف درس، ختم',
+    ['session_start', 'check_started', 'check_resumed', 'resume_lesson', 'session_end'].map((t) => count(e, t, 'S4')),
+    [1, 1, 0, 0, 1]);
+  expect(bad, 'بنود S4 المعروضة: الخانات الأربع ثم السقف', sc.records.filter((r) => r.activity === 'check').map((r) => r.item),
+    ['1-4-1/checkA/01', '1-4-1/checkA/03', '1-4-1/checkA/05', '1-4-1/checkA/07']);
+  expect(bad, 'بعد السقف', [sc.cur, sc.sessions, sc.saved.map((c) => [c.kind, c.act.slot])], [null, 4, [['check', 5]]]);
+  return bad;
+}
+
+function caseNewday() {
+  const { e, st } = at(17);
+  const day = e.s.sessions.S4.day;
+  const { e: e2, sc: sc2, notes } = reopen('young', st.snapshot(), day + 1);
+  const bad = [];
+  expect(bad, 'يوم S4', day, 3);
+  expect(bad, 'ملاحظات الاستعادة في يوم جديد', notes, [['current_saved', 'check', '1-4-1'], ['session_closed', 'S4']]);
+  expect(bad, 'الجلسة بعدها', [sc2.cur, e2.s.current, sc2.stage], [null, null, null]);
+  sc2.today = day + 1;
+  const s2 = new Stepper(e2, sc2);
+  s2.open(sc2.g_follow_learning());
+  expect(bad, 'الجلسة الجديدة', [sc2.cur, e2.s.sessions.S5.day, count(e2, 'check_resumed', 'S5'), s2.pending[1].slot],
+    ['S5', 4, 1, 2]);
+  const r3 = reopen('young', st.snapshot(), day);
+  expect(bad, 'الاستعادة في اليوم نفسه', [r3.notes, r3.sc.cur], [[['current_saved', 'check', '1-4-1']], 'S4']);
+  return bad;
+}
+
+console.log('ب) حالات بنتائج مكتوبة يدويًا');
+for (const [title, fn] of [
+  ['1. إغلاق عند عرض البند (الخانة 2 من الفحص): يُختم «غير محسوم» منقطعًا، والجلسة S4 نفسها تُكمَل بوقتها (60 ثانية) '
+    + 'وببديل الخانة، بلا بداية جلسة ولا استئناف فحص، ويُجتاز الفحص، والبند المنقطع في السجلات مرة واحدة', caseShown],
+  ['2. إغلاق بعد طلب دعم في بند دليل فهم: السجل منقطع ومعه الدعم، والجلسة S3 تُكمَل بلا استئناف درس ثانٍ', caseSupport],
+  ['3. إغلاق بعد إجابة غير نهائية (خاطئة) في بند دليل فهم: الإجابة الأولى الخاطئة محفوظة، والبند «مكتمل» بقاعدة 3.1 '
+    + 'ونتيجته النهائية «لم تكتمل»', caseNonfinal],
+  ['4. الإجابة النهائية انتقال واحد: آخر خانة تُصدر نتيجة الفحص مرة واحدة، وتكرار التأكيد يُهمل. اللقطة بعده تُستعاد '
+    + 'كاملة والبند التالي يُطلب نفسه. والمحفوظ قبله كامل: لا نتيجة في المحرك والبند «غير محسوم»', caseFinal],
+  ['5. بلوغ السقف بعد ختم البند: تُختم الجلسة ويُحفظ الفحص عند الخانة 5، واللقطة بلا نشاط جارٍ، والجلسة التالية تستأنفه '
+    + 'بحدث واحد ووقت من الصفر', caseCap],
+  ['6. استثناء داخل الانتقال: الطبقة تتعطل فلا لقطة ولا حدث بعده، والمحفوظ السابق يُستعاد كاملًا', caseBroken],
+  ['7. ثلاثة إغلاقات في جلسة واحدة: لا جلسة جديدة ولا جلسة بحث، والوقت 60 ثم 120 ثم 180 لا يبدأ من الصفر، ولا حدث '
+    + 'استئناف يستهلك حصة، والسقف يحلّ بعد الخانة الرابعة كما في التشغيل المتصل', caseSession],
+  ['8. انتقال يوم الأسرة: الاستعادة في يوم جديد تختم S4، والجلسة التالية S5 تستأنف الفحص بحدثه. وفي اليوم نفسه تبقى '
+    + 'S4 مفتوحة', caseNewday]]) {
+  let bad;
+  try { bad = fn(); } catch (x) { bad = ['استثناء: ' + (x.stack || x).toString().split('\n').slice(0, 2).join(' ')]; }
+  check(title, bad);
+}
+console.log(`النتيجة: نجح ${results.filter(Boolean).length} من ${results.length}`);
+process.exit(results.every(Boolean) ? 0 : 1);

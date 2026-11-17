@@ -31,12 +31,12 @@ import json
 from item_layer import Activity, fold_item, classify
 from scheduler import Scheduler
 
-SCHEMA = 2                                                  # 2: ومعه سجل محاولات البنود (المراجعة 14)
+SCHEMA = 3                    # 2: سجل محاولات البنود (المراجعة 14). 3: موضع الجلسة الجارية (المرحلة 0)
 OPTS = ('group', 'start', 'scope', 'learning', 'tolerant', 'compat', 'content_version', 'no_short', 'try_from_gate',
         'cap', 'retention')
 STATE = ('saved', 'parked', 'carried_items', 'intent', 'pending', 'proven', 'attempt', 'ev_round', 'last_items', 'n',
          'gates_run', 'searches', 'sessions', 'day', 'cur', 'log', 'refused', 'stalled', 'elapsed', 'start_at',
-         'items_before', 'start_w', 'start_what')
+         'items_before', 'start_w', 'start_what', 'stage')
 TERMINAL = ('end', 'interrupt')
 
 
@@ -83,14 +83,15 @@ def item_ends(raw, assess):
     return assess and any(ev[0] == 'confirm' for ev in raw)
 
 
-def snapshot(engine, sc, current=None, child=''):
-    """السجل الذي يُكتب في معاملة واحدة. current: dict(kind, skill, act, items, journal) أو None."""
+def snapshot(engine, sc, current=None, child='', extra=()):
+    """السجل الذي يُكتب في معاملة واحدة. current: dict(kind, skill, act, items, journal) أو None.
+    extra: سجلات بنود النشاط الجاري التي لم تُضف بعد إلى سجلات المجدول (تُضاف إليها عند اكتماله)."""
     if current is not None and current.get('journal'):
         j = current['journal']
         if item_ends(j['raw'], j['assess']):
             raise ValueError('البند المنتهي يُطوى ويُعطى للنشاط قبل الحفظ، ولا يُحفظ في journal')
     return dict(schema=SCHEMA, child=child, engine=engine.dump(), scheduler=dict(opts=options(sc), state=state_of(sc)),
-                records=None if sc.records is None else plain(sc.records), current=plain(current))
+                records=None if sc.records is None else plain(list(sc.records) + list(extra)), current=plain(current))
 
 
 def reconcile(engine, st):
@@ -134,7 +135,7 @@ def check_consistent(engine, st):
     return bad
 
 
-def restore(record, net, types, source, answer, item_seconds=None, records=None, content_versions=None):
+def restore(record, net, types, source, answer, item_seconds=None, records=None, content_versions=None, today=None):
     """يعيد (المحرك، المجدول، ملاحظات). يرفع Inconsistent إن خالف المجدولُ المحرك."""
     from transition_engine import Engine
     if record.get('schema') != SCHEMA:
@@ -180,12 +181,14 @@ def restore(record, net, types, source, answer, item_seconds=None, records=None,
     sc.n = Counter(st['n'])
     import itertools
     sc._ids = itertools.count(st['next_id'])
-    if e.s['current'] is not None:                          # التطبيق أُغلق في جلسة لم تُختم
+    # الجلسة التعليمية غير فتح التطبيق: إغلاقه لا يختمها، فتُكمَل بهويتها ووقتها وحصصها (المرحلة 0ج). تُختم هنا
+    # فقط إن انتقل يوم الأسرة: today يوم الأسرة عند الفتح، وبلا قيمة تبقى الجلسة مفتوحة
+    if e.s['current'] is not None and today is not None and today != e.s['sessions'][e.s['current']]['day']:
         ses = e.s['current']
         r = e.apply(dict(id='restore-end-%s' % ses, type='session_end', session=ses))
         if not r['ok']:
             raise Inconsistent('تعذر ختم الجلسة %s: %s' % (ses, r.get('code')))
-        sc.cur = None
+        sc.cur = sc.stage = None
         notes.append(('session_closed', ses))
     if records is not None and local is not None:          # نجحت الاستعادة: تُحدَّث مصفوفة المستدعي بهويتها
         records[:] = local

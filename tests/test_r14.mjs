@@ -50,7 +50,7 @@ function setup() {
 function reopen(rec) {
   const src = new ContentSource(ITEMS), child = new Child(['1-4-1']);
   return persist.restore(JSON.parse(JSON.stringify(rec)), { types: TYPES, source: (s, w) => src.pick(s, w),
-    answer: (i, w) => child.call(i, w), item_seconds: secs, records: [] });
+    answer: (i, w) => child.call(i, w), item_seconds: secs, records: [], today: 10 ** 6 });
 }
 
 function crafted() {

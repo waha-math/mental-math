@@ -13,10 +13,10 @@ import { Engine } from './engine.mjs';
 import { Activity, foldItem, classify } from './items.mjs';
 import { Scheduler } from './scheduler.mjs';
 
-export const SCHEMA = 2;                // 2: ومعه سجل محاولات البنود (المراجعة 14)
+export const SCHEMA = 3;                // 2: سجل محاولات البنود (المراجعة 14). 3: موضع الجلسة الجارية (المرحلة 0)
 export const STATE = ['saved', 'parked', 'carried_items', 'intent', 'pending', 'proven', 'attempt', 'ev_round',
   'last_items', 'n', 'gates_run', 'searches', 'sessions', 'day', 'cur', 'log', 'refused', 'stalled', 'elapsed',
-  'start_at', 'items_before', 'start_w', 'start_what'];
+  'start_at', 'items_before', 'start_w', 'start_what', 'stage'];
 const TERMINAL = ['end', 'interrupt'];
 
 export class Inconsistent extends Error {
@@ -49,12 +49,13 @@ export function itemEnds(raw, assess) {
   return assess && raw.some((ev) => ev[0] === 'confirm');
 }
 
-export function snapshot(engine, sc, current = null, child = '') {
+// extra: سجلات بنود النشاط الجاري التي لم تُضف بعد إلى سجلات المجدول (تُضاف إليها عند اكتماله)
+export function snapshot(engine, sc, current = null, child = '', extra = []) {
   if (current && current.journal && itemEnds(current.journal.raw, current.journal.assess)) {
     throw new Error('البند المنتهي يُطوى ويُعطى للنشاط قبل الحفظ، ولا يُحفظ في journal');
   }
   return { schema: SCHEMA, child, engine: engine.dump(), scheduler: { opts: options(sc), state: stateOf(sc) },
-    records: sc.records === null ? null : clone(sc.records), current: current === null ? null : clone(current) };
+    records: sc.records === null ? null : clone([...sc.records, ...extra]), current: current === null ? null : clone(current) };
 }
 
 // تسوية النشاط المحفوظ الذي أنهى صلاحيتَه حدثٌ مشروع في سجل المحرك: ترك المعلم لمحاولة الفحص
@@ -97,7 +98,7 @@ export function checkConsistent(engine, st) {
 
 // يعيد { engine, scheduler, notes }. يرفع Inconsistent إن خالف المجدولُ المحرك
 export function restore(record, { types, source, answer, item_seconds = null, records = null, contentVersions = null,
-  net = undefined } = {}) {
+  net = undefined, today = null } = {}) {
   if (record.schema !== SCHEMA) throw new Inconsistent(`نسخة سجل غير معروفة: ${record.schema}`);
   const e = Engine.restore(net, record.engine, contentVersions);
   const o = { ...record.scheduler.opts };
@@ -136,11 +137,14 @@ export function restore(record, { types, source, answer, item_seconds = null, re
   if (bad.length) throw new Inconsistent(bad.join('؛ '));
   for (const k of STATE) sc[k] = st[k];
   sc._next = st.next_id;
-  if (e.s.current !== null) {                   // التطبيق أُغلق في جلسة لم تُختم
+  // الجلسة التعليمية غير فتح التطبيق: إغلاقه لا يختمها، فتُكمَل بهويتها ووقتها وحصصها (المرحلة 0ج). تُختم هنا
+  // فقط إن انتقل يوم الأسرة: today يوم الأسرة عند الفتح، وبلا قيمة تبقى الجلسة مفتوحة
+  if (e.s.current !== null && today !== null && today !== e.s.sessions[e.s.current].day) {
     const ses = e.s.current;
     const r = e.apply({ id: `restore-end-${ses}`, type: 'session_end', session: ses });
     if (!r.ok) throw new Inconsistent(`تعذر ختم الجلسة ${ses}: ${r.code}`);
     sc.cur = null;
+    sc.stage = null;
     notes.push(['session_closed', ses]);
   }
   if (records !== null && local !== null) {     // نجحت الاستعادة: تُحدَّث مصفوفة المستدعي بهويتها

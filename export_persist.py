@@ -113,17 +113,18 @@ def corrupt(rng, rec):
     return r
 
 
-def outcome(rec):
+def outcome(rec, today=None):
+    """today=None: الاستعادة في اليوم نفسه، فالجلسة المفتوحة تبقى. وبيوم آخر تُختم (المرحلة 0ج)."""
     src = ContentSource(ITEMS)
     try:
         e, sc, notes = persist.restore(copy.deepcopy(rec), NET, TYPES, src, lambda i, w: 'correct',
-                                       item_seconds=lambda w: 0, records=[])
+                                       item_seconds=lambda w: 0, records=[], today=today)
     except persist.Inconsistent:
         return dict(refused=True)
     return dict(h=digest(e), state=persist.state_of(sc), notes=[list(n) for n in notes], records=sc.records,
                 again=persist.snapshot(e, sc) == persist.snapshot(*persist.restore(
                     json.loads(json.dumps(persist.snapshot(e, sc))), NET, TYPES, ContentSource(ITEMS),
-                    lambda i, w: 'correct', item_seconds=lambda w: 0, records=[])[:2]))
+                    lambda i, w: 'correct', item_seconds=lambda w: 0, records=[], today=today)[:2]))
 
 
 vectors, kinds = [], dict(boundary=0, open_session=0, current=0, journal=0, refused=0, abandoned=0, invalidated=0)
@@ -166,6 +167,8 @@ for seed in range(160):
             kinds['current'] += cur is not None
             kinds['journal'] += bool(cur and cur.get('journal'))
             vectors.append(dict(record=rec, expect=outcome(rec)))
+            if json.loads(rec['engine'])['current'] is not None:   # جلسة مفتوحة: تُستعاد أيضًا في يوم جديد فتُختم
+                vectors.append(dict(record=rec, today=10 ** 6, expect=outcome(rec, 10 ** 6)))
             if rng.random() < 0.2:
                 bad = corrupt(rng, rec)
                 vectors.append(dict(record=bad, expect=outcome(bad)))

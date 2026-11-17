@@ -98,6 +98,9 @@ class Scheduler:
         self.stalled = 0                                    # جلسة متابعة لم يجرِ فيها شيء: خطأ في السياسة
         self._ids = itertools.count(1)
         self.start_at = self.items_before = self.start_w = self.start_what = None
+        # موضع الجلسة الجارية بين أجزائها (المرحلة 0ج): به تُكمَل الجلسة نفسها بعد إغلاق التطبيق، فلا تُستهلك جلسة
+        # ولا حصة ولا يتجدد الوقت. يُحفظ مع الحالة. و live النشاط المعروض الآن، للّقطة، ولا يُحفظ بنفسه
+        self.stage, self.live, self.today = None, None, None
 
     # ---------------------------------------------------------------- المحرك
     def send(self, payload):
@@ -120,15 +123,18 @@ class Scheduler:
         return v['ok']
 
     def begin(self, kind):
-        self.day += 1
+        # today: يوم الأسرة يضعه التطبيق قبل بدء الجلسة. بلا قيمة يمضي يوم لكل جلسة، كما في المحاكاة
+        self.day = self.day + 1 if self.today is None else self.today
         self.sessions += 1
         self.cur = 'S%d' % self.sessions
         self.elapsed = 0
+        self.stage = dict(kind=kind, recall=False, gate=None, gate_done=False, done=0, budget=ITEM_BUDGET, shorts=0,
+                          shorts_done=False, teach=False, lesson=None, after=None, w=None, what=None)
         self.send(dict(type='session_start', session=self.cur, kind=kind, day=self.day))
 
     def end(self):
         self.send(dict(type='session_end', session=self.cur))
-        self.cur = None
+        self.cur = self.stage = None
 
     def view(self):
         e = self.e
@@ -201,6 +207,9 @@ class Scheduler:
         """حدث استئناف نشاط تعليمي محفوظ: check_resumed للفحص، و resume_lesson لأنشطة الدرس إن لم يكن نشطًا."""
         s = c['skill']
         if c['kind'] == 'check':
+            ch = self.e.s['checks'].get(c['act']['check_id'])
+            if ch and self.cur in ch['sessions']:           # المحاولة بدأت أو استؤنفت في هذه الجلسة نفسها
+                return None
             return dict(type='check_resumed', skill=s, check_id=c['act']['check_id'])
         return None if self.e.s['opened'][s]['active'] == self.cur else dict(type='resume_lesson', skill=s)
 
@@ -217,7 +226,9 @@ class Scheduler:
         prior, self.carried_items = self.carried_items, []
         if self.over():                                     # الجلسة بلغت سقفها: لا يُعرض بند جديد
             self.cut(act, kind, prior)
+        self.live = dict(kind=kind, act=act, prior=prior, recs=recs)
         yield from drive_steps(act, self.source, recs, pause=self.tick if self.cap is not None else None)
+        self.live = None
         if self.records is not None:
             self.records.extend(recs)
         items = prior + [r['item'] for r in recs if r.get('item')]
@@ -293,6 +304,8 @@ class Scheduler:
         self.emit(act)
         kind = 'skip' if act.result == 'skip' else 'lesson'
         self.log.append((self.sessions, kind, s))
+        if self.stage is not None:
+            self.stage['what'] = kind
         if kind == 'skip' and self.compat and (self.e.s['regate'] or self.e.direct(s) != 'stumbled'):
             self.pending.append(s)
         if kind == 'lesson' and self.learning:
@@ -315,7 +328,9 @@ class Scheduler:
             item = self.source(s, dict(activity=activity, pos=k))
             if item is None:
                 return k
+            self.live = dict(kind='show', skill=s, activity=activity, pos=k)
             yield item, w                                   # الإجابة تأتي من الغلاف المتزامن أو من الواجهة
+            self.live = None
             self.n[activity] += 1
             self.elapsed += self.item_seconds(w)
             k += 1
@@ -427,42 +442,52 @@ class Scheduler:
                 return
             self.begin('search')
             self.searches += 1
-            budget, done = ITEM_BUDGET, 0
-            try:
-                while x is not None and done < GATES_PER_SEARCH[self.group]:
+            yield from self.g_search_body(x)
+
+    def g_search_body(self, x):
+        st = self.stage
+        try:
+            while x is not None and st['done'] < GATES_PER_SEARCH[self.group]:
+                if st['gate'] != x:                         # بوابة جديدة: تُحسب من الميزانية مرة واحدة
                     size = self.gate_size(x)
-                    if done and size > budget:
+                    if st['done'] and size > st['budget']:
                         break
-                    budget -= size
-                    (yield from self.g_gate(x))
-                    done += 1
-                    x = self.next_gate()
-            except Capped:
-                pass
-            self.end()
+                    st['budget'] -= size
+                    st['gate'] = x
+                (yield from self.g_gate(x))
+                st['gate'] = None
+                st['done'] += 1
+                x = self.next_gate()
+        except Capped:
+            pass
+        self.end()
 
     def g_working_point(self):
         st, helped, gated = self.view()
+        sg = self.stage if self.stage is not None else dict(w=None, shorts=0)
         w = self.candidate(st, helped)
         if w is None:
             w = next((x for x in self.ids if st[x] is None), None)
+        if sg['w'] is not None:                             # جلسة تُكمَل: نقطة العمل التي بلغها البحث قبل الإغلاق
+            w = sg['w']
         if w is None:
             return None
         verified = {x['skill'] for x in self.e.valid_evidence(kind='short_ok')}
-        k = 0
         while True:
             moved = False
             for p in sorted(self.pre[w], key=self.idx.get):
                 if st[p] in DONE or p in verified or p not in self.inscope:
                     continue
-                if k == SHORT_START:
+                if sg['shorts'] == SHORT_START:
                     return w
-                k += 1
+                sg['w'] = w
                 res = (yield from self.g_short(p))
+                sg['shorts'] += 1
                 if res is True:
                     verified.add(p)
                 elif res is False:
                     w, moved = p, True
+                    sg['w'] = w
                     break
             if not moved:
                 return w
@@ -470,12 +495,22 @@ class Scheduler:
     def g_start_session(self):
         self.begin('start')
         self.start_at = self.sessions
+        yield from self.g_start_body()
+
+    def g_start_body(self):
+        sg = self.stage
         w, what = None, 'none'
         try:
-            w = (yield from self.g_working_point())
-            self.items_before = sum(self.n[c] for c in DIAG)
-            if w is not None:
+            if sg['lesson'] is not None:                    # جلسة تُكمَل: درسها فُتح قبل الإغلاق
+                w = sg['lesson']
+                yield from self.g_resume_mine()
+                what = sg['what'] or 'none'
+            else:
+                w = (yield from self.g_working_point())
+                self.items_before = sum(self.n[c] for c in DIAG)
+            if w is not None and sg['lesson'] is None:
                 if self.e.eligible(w, 'start')['ok']:
+                    sg['lesson'] = w
                     what = (yield from self.g_open_lesson(w)) or 'none'
                 else:
                     what = 'use'
@@ -640,8 +675,12 @@ class Scheduler:
                 (yield from self.g_check(s))
                 return True
             if v['code'] == 'check_needs_practice' and self.send(dict(type='resume_lesson', skill=s))['ok']:
+                if self.stage is not None:
+                    self.stage['after'] = ['practice', s]
                 (yield from self.g_show(s, 'practice'))
                 self.log.append((self.sessions, 'practice', s))
+                if self.stage is not None:
+                    self.stage['after'] = None
                 return True
         o = self.pick_lesson()
         if o is not None:
@@ -687,8 +726,11 @@ class Scheduler:
 
     # ---------------------------------------------------------------- التشغيل
     def g_run(self, max_sessions=200):
-        (yield from self.g_search())
-        (yield from self.g_start_session())
+        if self.cur is not None:                            # بعد استعادة: الجلسة الجارية تُكمَل أولًا
+            yield from self.g_continue()
+        if self.start_at is None:
+            (yield from self.g_search())
+            (yield from self.g_start_session())
         if self.learning:
             while self.sessions < max_sessions and not (self.satisfied() and not self.saved and not self.parked and not (
                     self.retention and self.e.retention_pending())):
@@ -701,35 +743,88 @@ class Scheduler:
     def g_follow_learning(self):
         """جلسة متابعة في وضع التعلّم. تُعقد ولو لم يكن فيها غير «استرجع»، فالأيام تمضي."""
         self.begin('follow')
-        taught = False
+        yield from self.g_follow_body()
+
+    def g_follow_body(self):
+        """أجزاء جلسة المتابعة بترتيبها. موضعها في stage، فتُكمَل من حيث توقفت بعد إغلاق التطبيق."""
+        st = self.stage
         try:
-            (yield from self.g_recall())
-            g = self.carried('gate') or self.pick_gate()
-            if g is not None:
-                was_open = g in self.e.s['opened']
-                r = (yield from self.g_gate(g))
-                if was_open and r in ('fail', 'help'):
-                    taught = True
-                    self.log.append((self.sessions, 'lesson', g))
-                    if self.e.s['opened'][g]['phase'] == 'full':
-                        (yield from self.g_lesson_body(g))
-            for _ in range(SHORT_FOLLOW):
+            if not st['recall']:
+                (yield from self.g_recall())
+                st['recall'] = True
+            if not st['gate_done']:
+                g = self.carried('gate') or self.pick_gate()
+                if g is not None:
+                    was_open = g in self.e.s['opened']
+                    r = (yield from self.g_gate(g))
+                    st['gate_done'] = True
+                    if was_open and r in ('fail', 'help'):
+                        st['teach'] = True
+                        self.log.append((self.sessions, 'lesson', g))
+                        if self.e.s['opened'][g]['phase'] == 'full':
+                            st['lesson'] = g
+                            (yield from self.g_lesson_body(g))
+                            st['lesson'] = None
+                st['gate_done'] = True
+            elif st['lesson'] is not None:                  # درس البوابة انقطع بإغلاق التطبيق: يُكمَل قبل ما بعده
+                yield from self.g_resume_mine()
+                st['lesson'] = None
+            while not st['shorts_done'] and st['shorts'] < SHORT_FOLLOW:
                 x = self.carried('short') or self.pick_short()
                 if x is None:
                     break
                 (yield from self.g_short(x))
-            if not taught:
+                st['shorts'] += 1
+            st['shorts_done'] = True
+            if not st['teach']:
+                st['teach'] = True
                 (yield from self.g_teach())
+            else:
+                yield from self.g_resume_mine()             # الحصة بدأت قبل الإغلاق: يُكمَل نشاطها إن بقي منه شيء
         except Capped:
             pass
         self.end()
+
+    def mine(self, c):
+        """هل هذا النشاط المحفوظ من الحصة التعليمية للجلسة الجارية نفسها؟"""
+        if c['kind'] not in TEACH_KINDS:
+            return False
+        if c['kind'] == 'check':
+            ch = self.e.s['checks'].get(c['act']['check_id'])
+            return bool(ch) and self.cur in ch['sessions']
+        o = self.e.s['opened'].get(c['skill'])
+        return bool(o) and o['active'] == self.cur
+
+    def g_resume_mine(self):
+        """يكمل النشاط التعليمي الذي قطعه إغلاق التطبيق في هذه الجلسة، إن وُجد، بلا حدث استئناف ولا حصة جديدة."""
+        c = next((c for c in self.saved if self.mine(c)), None)
+        if c is not None:
+            yield from self.g_resume(c)
+        st = self.stage
+        if st is not None and st['after']:
+            self.log.append((self.sessions, st['after'][0], st['after'][1]))
+            st['after'] = None
+
+    def g_continue(self):
+        """تكملة الجلسة الجارية بعد استعادة: الأجزاء الباقية منها، ثم ختمها. لا تبدأ جلسة ولا تستهلك حصة."""
+        if self.cur is None:
+            return
+        kind = self.stage['kind']
+        if kind == 'search':
+            yield from self.g_search_body(self.stage['gate'] or self.next_gate())
+        elif kind == 'start':
+            yield from self.g_start_body()
+        elif self.learning:
+            yield from self.g_follow_body()
+        else:
+            raise RuntimeError('تكملة جلسة المتابعة في وضع التشخيص وحده غير منفّذة')
 
 
 # ---------------------------------------------------------------- الخطوات والأغلفة المتزامنة
 # سلسلة الاستدعاء التي تعرض بنودًا مولّدات (g_*): تعطي (البند، المطلوب) وتستقبل ما كانت answer تعيده. والدوال
 # بأسمائها السابقة أغلفة متزامنة تشغّل المولّد بـ self.answer، فلا يتغير شيء لمن يستدعيها. والواجهة تشغّل المولّد
 # نفسه خطوة خطوة. حالة المولّد ليست مصدر الاستعادة: المتابعة بعد الإغلاق تُبنى من الحالة المحفوظة.
-STEPPED = ('run_act', 'show', 'lesson_body', 'open_lesson', 'gate', 'short', 'opening', 'evidence', 'check', 'retention_check', 'recall', 'search', 'working_point', 'start_session', 'follow', 'teach', 'resume', 'run', 'follow_learning')
+STEPPED = ('run_act', 'show', 'lesson_body', 'open_lesson', 'gate', 'short', 'opening', 'evidence', 'check', 'retention_check', 'recall', 'search', 'working_point', 'start_session', 'follow', 'teach', 'resume', 'run', 'follow_learning', 'resume_mine')
 
 
 def _sync(name):

@@ -109,6 +109,12 @@ export class Scheduler {
     this.items_before = null;
     this.start_w = null;
     this.start_what = null;
+    // موضع الجلسة الجارية بين أجزائها (المرحلة 0ج): به تُكمَل الجلسة نفسها بعد إغلاق التطبيق، فلا تُستهلك جلسة
+    // ولا حصة ولا يتجدد الوقت. يُحفظ مع الحالة. و live النشاط المعروض الآن، للّقطة، ولا يُحفظ بنفسه.
+    // today: يوم الأسرة يضعه التطبيق قبل بدء الجلسة. بلا قيمة يمضي يوم لكل جلسة، كما في المحاكاة
+    this.stage = null;
+    this.live = null;
+    this.today = null;
   }
 
   // ---------------------------------------------------------------- المحرك
@@ -132,16 +138,19 @@ export class Scheduler {
   }
 
   begin(kind) {
-    this.day += 1;
+    this.day = this.today === null ? this.day + 1 : this.today;
     this.sessions += 1;
     this.cur = 'S' + this.sessions;
     this.elapsed = 0;
+    this.stage = { kind, recall: false, gate: null, gate_done: false, done: 0, budget: ITEM_BUDGET, shorts: 0,
+      shorts_done: false, teach: false, lesson: null, after: null, w: null, what: null };
     this.send({ type: 'session_start', session: this.cur, kind, day: this.day });
   }
 
   end() {
     this.send({ type: 'session_end', session: this.cur });
     this.cur = null;
+    this.stage = null;
   }
 
   view() {
@@ -226,7 +235,11 @@ export class Scheduler {
   // حدث استئناف نشاط تعليمي محفوظ: check_resumed للفحص، و resume_lesson لأنشطة الدرس إن لم يكن نشطًا
   resume_need(c) {
     const s = c.skill;
-    if (c.kind === 'check') return { type: 'check_resumed', skill: s, check_id: c.act.check_id };
+    if (c.kind === 'check') {
+      const ch = this.e.s.checks[c.act.check_id];
+      if (ch && ch.sessions.includes(this.cur)) return null;   // المحاولة بدأت أو استؤنفت في هذه الجلسة نفسها
+      return { type: 'check_resumed', skill: s, check_id: c.act.check_id };
+    }
     return this.e.s.opened[s].active === this.cur ? null : { type: 'resume_lesson', skill: s };
   }
 
@@ -245,7 +258,9 @@ export class Scheduler {
     const prior = this.carried_items;
     this.carried_items = [];
     if (this.over()) this.cut(act, kind, prior);   // الجلسة بلغت سقفها: لا يُعرض بند جديد
+    this.live = { kind, act, prior, recs };
     yield* driveSteps(act, this.source, recs, this.cap !== null ? (w) => this.tick(w) : null);
+    this.live = null;
     if (this.records !== null) this.records.push(...recs);
     const items = [...prior, ...recs.filter((r) => r.item).map((r) => r.item)];
     for (const [k, v] of Object.entries(act.shown)) {
@@ -331,6 +346,7 @@ export class Scheduler {
     this.emit(act);
     const kind = act.result === 'skip' ? 'skip' : 'lesson';
     this.log.push([this.sessions, kind, s]);
+    if (this.stage !== null) this.stage.what = kind;
     if (kind === 'skip' && this.compat && (this.e.s.regate || this.e.direct(s) !== 'stumbled')) this.pending.push(s);
     if (kind === 'lesson' && this.learning) (yield* this.g_lesson_body(s));
     return kind;
@@ -352,7 +368,9 @@ export class Scheduler {
       const w = { activity, pos: k, role: activity };
       const item = this.source(s, { activity, pos: k });
       if (isNone(item)) return k;
+      this.live = { kind: 'show', skill: s, activity, pos: k };
       yield [item, w];                    // الإجابة تأتي من الغلاف المتزامن أو من الواجهة
+      this.live = null;
       this.n[activity] = get(this.n, activity) + 1;
       this.elapsed += this.item_seconds(w);
       k += 1;
@@ -473,41 +491,52 @@ export class Scheduler {
       if (x === null) return;
       this.begin('search');
       this.searches += 1;
-      let budget = ITEM_BUDGET, done = 0;
-      try {
-        while (x !== null && done < GATES_PER_SEARCH[this.group]) {
-          const size = this.gate_size(x);
-          if (done && size > budget) break;
-          budget -= size;
-          (yield* this.g_gate(x));
-          done += 1;
-          x = this.next_gate();
-        }
-      } catch (err) {
-        if (!(err instanceof Capped)) throw err;
-      }
-      this.end();
+      yield* this.g_search_body(x);
     }
+  }
+
+  *g_search_body(x) {
+    const st = this.stage;
+    try {
+      while (x !== null && st.done < GATES_PER_SEARCH[this.group]) {
+        if (st.gate !== x) {                     // بوابة جديدة: تُحسب من الميزانية مرة واحدة
+          const size = this.gate_size(x);
+          if (st.done && size > st.budget) break;
+          st.budget -= size;
+          st.gate = x;
+        }
+        (yield* this.g_gate(x));
+        st.gate = null;
+        st.done += 1;
+        x = this.next_gate();
+      }
+    } catch (err) {
+      if (!(err instanceof Capped)) throw err;
+    }
+    this.end();
   }
 
   *g_working_point() {
     const [st, helped] = this.view();
     let w = this.candidate(st, helped);
     if (w === null) w = this.ids.find((x) => isNone(st[x])) ?? null;
+    const sg = this.stage !== null ? this.stage : { w: null, shorts: 0 };
+    if (sg.w !== null) w = sg.w;                 // جلسة تُكمَل: نقطة العمل التي بلغها البحث قبل الإغلاق
     if (w === null) return null;
     const verified = new Set(this.e.validEvidence(null, 'short_ok').map((x) => x.skill));
-    let k = 0;
     for (;;) {
       let moved = false;
       for (const p of [...this.pre[w]].sort((a, b) => this.idx[a] - this.idx[b])) {
         if (DONE.includes(st[p]) || verified.has(p) || !this.inscope.has(p)) continue;
-        if (k === SHORT_START) return w;
-        k += 1;
+        if (sg.shorts === SHORT_START) return w;
+        sg.w = w;
         const res = (yield* this.g_short(p));
+        sg.shorts += 1;
         if (res === true) {
           verified.add(p);
         } else if (res === false) {
           w = p;
+          sg.w = w;
           moved = true;
           break;
         }
@@ -519,13 +548,25 @@ export class Scheduler {
   *g_start_session() {
     this.begin('start');
     this.start_at = this.sessions;
+    yield* this.g_start_body();
+  }
+
+  *g_start_body() {
+    const sg = this.stage;
     let w = null, what = 'none';
     const diag = () => DIAG.reduce((a, c) => a + get(this.n, c), 0);
     try {
-      w = (yield* this.g_working_point());
-      this.items_before = diag();
-      if (w !== null) {
+      if (sg.lesson !== null) {                  // جلسة تُكمَل: درسها فُتح قبل الإغلاق
+        w = sg.lesson;
+        yield* this.g_resume_mine();
+        what = sg.what || 'none';
+      } else {
+        w = (yield* this.g_working_point());
+        this.items_before = diag();
+      }
+      if (w !== null && sg.lesson === null) {
         if (this.e.eligible(w, 'start').ok) {
+          sg.lesson = w;
           what = (yield* this.g_open_lesson(w)) || 'none';
         } else {
           what = 'use';
@@ -702,8 +743,10 @@ export class Scheduler {
         return true;
       }
       if (v.code === 'check_needs_practice' && this.send({ type: 'resume_lesson', skill: s }).ok) {
+        if (this.stage !== null) this.stage.after = ['practice', s];
         (yield* this.g_show(s, 'practice'));
         this.log.push([this.sessions, 'practice', s]);
+        if (this.stage !== null) this.stage.after = null;
         return true;
       }
     }
@@ -755,8 +798,11 @@ export class Scheduler {
 
   // ---------------------------------------------------------------- التشغيل
   *g_run(max_sessions = 200) {
-    (yield* this.g_search());
-    (yield* this.g_start_session());
+    if (this.cur !== null) yield* this.g_continue();   // بعد استعادة: الجلسة الجارية تُكمَل أولًا
+    if (this.start_at === null) {
+      (yield* this.g_search());
+      (yield* this.g_start_session());
+    }
     if (this.learning) {
       while (this.sessions < max_sessions && !(this.satisfied() && !this.saved.length
         && !Object.keys(this.parked).length && !(this.retention && this.e.retentionPending().length))) {
@@ -771,29 +817,92 @@ export class Scheduler {
   // جلسة متابعة في وضع التعلّم. تُعقد ولو لم يكن فيها غير «استرجع»، فالأيام تمضي
   *g_follow_learning() {
     this.begin('follow');
-    let taught = false;
+    yield* this.g_follow_body();
+  }
+
+  // أجزاء جلسة المتابعة بترتيبها. موضعها في stage، فتُكمَل من حيث توقفت بعد إغلاق التطبيق
+  *g_follow_body() {
+    const st = this.stage;
     try {
-      (yield* this.g_recall());
-      const g = this.carried('gate') || this.pick_gate();
-      if (g !== null) {
-        const wasOpen = g in this.e.s.opened;
-        const r = (yield* this.g_gate(g));
-        if (wasOpen && (r === 'fail' || r === 'help')) {
-          taught = true;
-          this.log.push([this.sessions, 'lesson', g]);
-          if (this.e.s.opened[g].phase === 'full') (yield* this.g_lesson_body(g));
-        }
+      if (!st.recall) {
+        (yield* this.g_recall());
+        st.recall = true;
       }
-      for (let i = 0; i < SHORT_FOLLOW; i++) {
+      if (!st.gate_done) {
+        const g = this.carried('gate') || this.pick_gate();
+        if (g !== null) {
+          const wasOpen = g in this.e.s.opened;
+          const r = (yield* this.g_gate(g));
+          st.gate_done = true;
+          if (wasOpen && (r === 'fail' || r === 'help')) {
+            st.teach = true;
+            this.log.push([this.sessions, 'lesson', g]);
+            if (this.e.s.opened[g].phase === 'full') {
+              st.lesson = g;
+              (yield* this.g_lesson_body(g));
+              st.lesson = null;
+            }
+          }
+        }
+        st.gate_done = true;
+      } else if (st.lesson !== null) {           // درس البوابة انقطع بإغلاق التطبيق: يُكمَل قبل ما بعده
+        yield* this.g_resume_mine();
+        st.lesson = null;
+      }
+      while (!st.shorts_done && st.shorts < SHORT_FOLLOW) {
         const x = this.carried('short') || this.pick_short();
         if (x === null) break;
         (yield* this.g_short(x));
+        st.shorts += 1;
       }
-      if (!taught) (yield* this.g_teach());
+      st.shorts_done = true;
+      if (!st.teach) {
+        st.teach = true;
+        (yield* this.g_teach());
+      } else {
+        yield* this.g_resume_mine();             // الحصة بدأت قبل الإغلاق: يُكمَل نشاطها إن بقي منه شيء
+      }
     } catch (err) {
       if (!(err instanceof Capped)) throw err;
     }
     this.end();
+  }
+
+  // هل هذا النشاط المحفوظ من الحصة التعليمية للجلسة الجارية نفسها؟
+  mine(c) {
+    if (!TEACH_KINDS.includes(c.kind)) return false;
+    if (c.kind === 'check') {
+      const ch = this.e.s.checks[c.act.check_id];
+      return Boolean(ch) && ch.sessions.includes(this.cur);
+    }
+    const o = this.e.s.opened[c.skill];
+    return Boolean(o) && o.active === this.cur;
+  }
+
+  // يكمل النشاط التعليمي الذي قطعه إغلاق التطبيق في هذه الجلسة، إن وُجد، بلا حدث استئناف ولا حصة جديدة
+  *g_resume_mine() {
+    const c = this.saved.find((x) => this.mine(x));
+    if (c !== undefined) yield* this.g_resume(c);
+    const st = this.stage;
+    if (st !== null && st.after) {
+      this.log.push([this.sessions, st.after[0], st.after[1]]);
+      st.after = null;
+    }
+  }
+
+  // تكملة الجلسة الجارية بعد استعادة: الأجزاء الباقية منها، ثم ختمها. لا تبدأ جلسة ولا تستهلك حصة
+  *g_continue() {
+    if (this.cur === null) return;
+    const kind = this.stage.kind;
+    if (kind === 'search') {
+      yield* this.g_search_body(this.stage.gate || this.next_gate());
+    } else if (kind === 'start') {
+      yield* this.g_start_body();
+    } else if (this.learning) {
+      yield* this.g_follow_body();
+    } else {
+      throw new Error('تكملة جلسة المتابعة في وضع التشخيص وحده غير منفّذة');
+    }
   }
 }
 
@@ -801,7 +910,7 @@ export class Scheduler {
 // سلسلة الاستدعاء التي تعرض بنودًا مولّدات (g_*): تعطي [البند، المطلوب] وتستقبل ما كانت answer تعيده. والدوال
 // بأسمائها السابقة أغلفة متزامنة تشغّل المولّد بـ this.answer، فلا يتغير شيء لمن يستدعيها. والواجهة تشغّل المولّد
 // نفسه خطوة خطوة. حالة المولّد ليست مصدر الاستعادة: المتابعة بعد الإغلاق تُبنى من الحالة المحفوظة.
-export const STEPPED = ['run_act', 'show', 'lesson_body', 'open_lesson', 'gate', 'short', 'opening', 'evidence', 'check', 'retention_check', 'recall', 'search', 'working_point', 'start_session', 'follow', 'teach', 'resume', 'run', 'follow_learning'];
+export const STEPPED = ['run_act', 'show', 'lesson_body', 'open_lesson', 'gate', 'short', 'opening', 'evidence', 'check', 'retention_check', 'recall', 'search', 'working_point', 'start_session', 'follow', 'teach', 'resume', 'run', 'follow_learning', 'resume_mine'];
 for (const name of STEPPED) {
   Scheduler.prototype[name] = function sync(...args) {
     return runSync(this['g_' + name](...args), (item, w) => this.answer(item, w));
