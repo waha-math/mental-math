@@ -392,7 +392,12 @@ for (const when of ['before', 'after']) {
 }
 
 await kill();
-rmSync(PROFILE, { recursive: true, force: true });
+// تنظيف مجلد Chrome المؤقت ليس من الاختبار: Chrome قد يكتب فيه لحظة بعد قتله، فيُعاد الحذف، وإخفاقه يُذكر ولا يغيّر النتيجة
+try {
+  rmSync(PROFILE, { recursive: true, force: true, maxRetries: 20, retryDelay: 250 });
+} catch (x) {
+  console.log(`  تنبيه: لم يُحذف المجلد المؤقت ${PROFILE}: ${x.code || x}`);
+}
 server.close();
 console.log(results.every(Boolean) ? `نجحت الاختبارات كلها: ${results.length}` : 'أخفق اختبار');
 process.exit(results.every(Boolean) ? 0 : 1);

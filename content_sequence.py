@@ -5,7 +5,8 @@
 
 لا يقرأ ترتيب البنود في الملف. يشغّل أنشطة طبقة البنود نفسها (item_layer) بمصدر البنود نفسه (content_source)،
 ويستكشف كل فروع كل نشاط: إجابة صحيحة، وخاطئة، وصحيحة بعد دعم، وطلب مساعدة، وانقطاع (فيأتي البديل أو يُعاد
-العرض)، واستبعاد البند لتغيّر الصلاحية بعد تعرّض (فيأتي بديله عند الاستئناف) أو بعد عرض فقط. ويجمع كل زوج
+العرض)، واستبعاد البند لتغيّر الصلاحية بعد تعرّض (فيأتي بديله عند الاستئناف) أو بعد عرض فقط، ودخول النشاط عند بند يكرر
+حقيقة ما عُرض قبله من نشاط آخر (فيطلب النشاط غيره). ويجمع كل زوج
 (بند، البند الذي يليه) يمكن أن يراه الطفل، ومعه كيف انتهى الأول.
 
 ما يغطيه:
@@ -15,13 +16,19 @@
 - بين الأنشطة التي يصلها المجدول في الجلسة نفسها للمهارة نفسها: آخر بند في الافتتاح ثم أول بند في الدرس، وآخر
   بند في الدرس ثم أول بند في دليل الفهم.
 
-ما لا يغطيه: التتابع بين أنشطة أخرى في الجلسة (فحص احتفاظ ثم بوابة مثلًا)، وبين مهارتين مختلفتين، وبين جلستين.
+ما لا يضمنه المحتوى، ويعالجه التشغيل (R22-01): دخول نشاط بعد بند من نشاط آخر للمهارة نفسها في الجلسة نفسها، كالبوابة ثم
+افتتاح الدرس، وإعادة التحقق ثم دليل الفهم. المجدول يحفظ آخر بند عُرض، والنشاط يطلب بندًا آخر أو بديلًا إن كرر
+أول بنوده الحقيقة. دخول بنود الدرس والتدريب مسموح فيه التكرار: عرض تعليمي لا يصنع دليلًا ولا قرارًا. ودخول نشاط
+تقييم لا علاج له بعد: يوسَم البند fact_just_seen. tests/test_content_sequence.py يصنّف كل انتقال فعلي ويُخفق بما لا صنف له.
+
+ما لا يغطيه شيء: التتابع بين مهارتين مختلفتين، وبين جلستين.
 
 المستثنى من القاعدة، بنصها:
 - إعادة عرض البند نفسه: المنقطع في الافتتاح ودليل الفهم (3.5)، والموجَّه المكرر للتعليم (6.2).
-- البند الذي يلي بندًا منقطعًا: المنقطع لم تُقبل فيه إجابة ولم يُعطَ فيه دعم ولا تغذية راجعة، فلا يتسرّب منه غير
-  رؤية السؤال (3.6). وبهذا يُعاد في فحص الاستقلال عرض حقيقة الخانة نفسها بديلًا حين لا قيمة أخرى تحقق شرطها، بقرار
-  الأب. لكن البديل نفسه يُفحص مع ما يليه كأي بند.
+- إعادة الحقيقة بعد انقطاع لم تُقبل قبله إجابة، ولم يُقدَّم فيه دعم أو جواب أو تغذية راجعة (R22-02). وصف السجل بأنه
+  منقطع لا يكفي: البند الذي طُلب فيه دعم ثم انقطع نتيجته help لا interrupted، وما يليه يُفحص. وبهذا يُعاد في فحص
+  الاستقلال عرض حقيقة الخانة نفسها بديلًا حين لا قيمة أخرى تحقق شرطها، بقرار الأب (3.6). والبديل نفسه يُفحص مع ما
+  يليه كأي بند.
 """
 import json
 import os
@@ -36,7 +43,8 @@ from content_source import ContentSource  # noqa: E402
 
 TEACH = ('correct', 'wrong', 'supported', 'help', 'interrupted', 'void_exposed', 'void_shown')
 ASSESS = ('correct', 'wrong', 'supported', 'help', 'interrupted')
-SCORE_ONLY = ('answers', 'correct', 'shown', 'reshown')
+ENTRY = '*'                                             # ما قبل هذا البند من نشاط آخر
+SCORE_ONLY = ('answers', 'correct', 'shown', 'reshown', 'spent')
 
 
 def fact(it):
@@ -48,7 +56,8 @@ def fact(it):
 
 
 def explore(act, source, outcomes, label, pairs, firsts, lasts):
-    """كل فروع النشاط. pairs: (السابق، التالي، كيف انتهى السابق، الوصف). firsts: أول بند ممكن. lasts: آخر بند ممكن."""
+    """كل فروع النشاط. pairs: (السابق، التالي، كيف انتهى السابق، الوصف). firsts: أول بند ممكن. lasts: (آخر بند ممكن،
+    نتيجة النشاط عنده)."""
     queue, seen = deque([(act.to_dict(), None, None)]), set()
     while queue:
         d, prev, how = queue.popleft()
@@ -61,8 +70,8 @@ def explore(act, source, outcomes, label, pairs, firsts, lasts):
         while True:
             w = a.want()
             if w is None:
-                if prev is not None:
-                    lasts.add(prev)
+                if prev is not None and prev != ENTRY:
+                    lasts.add((prev, a.result))
                 break
             item = source(a.skill, w)
             if item is None:
@@ -70,8 +79,13 @@ def explore(act, source, outcomes, label, pairs, firsts, lasts):
                 continue
             if prev is None:
                 firsts.add(item['id'])
-            else:
+            elif prev != ENTRY:
                 pairs.add((prev, item['id'], how, label))
+            # دخول النشاط عند هذا البند بعد بند من نشاط آخر بالحقيقة نفسها (R22-01): النشاط يطلب غيره إن كان له علاج.
+            # ما قبل البند التالي عندئذ من نشاط آخر، فلا زوج له هنا، لكن ما بعده يُستكشف
+            b = Activity.from_dict(a.to_dict())
+            if b.repeated(item['id']):
+                queue.append((b.to_dict(), ENTRY, None))
             for o in outcomes:
                 b = Activity.from_dict(a.to_dict())
                 if o == 'void_exposed':
@@ -119,12 +133,12 @@ def collect(items, types):
             pairs.update((a, b, 'shown', name) for a, b in zip(ids, ids[1:]))
         open_last = set()
         _f, l = run(OpeningRun(skill, ts, typed=True), TEACH, 'افتتاح الدرس، البندان الثابتان')
-        open_last |= l
+        open_last |= {i for i, result in l if result != 'skip'}     # الدرس لا يلي افتتاحًا انتهى بتخطٍّ أو اختصار
         for t1 in ts:
             for t2 in ts:
                 _f, l = run(OpeningRun(skill, ts, try_types=[t1, t2], typed=True), TEACH,
                             'افتتاح الدرس، نوعا الخطأ %s ثم %s' % (t1, t2))
-                open_last |= l
+                open_last |= {i for i, result in l if result != 'skip'}
         ev_first = set()
         for rnd in (1, 2):
             for proven in subsets(ts):
@@ -156,7 +170,7 @@ def violations(pairs, by_id):
         if a == b or fact(x) != fact(y):
             continue                                        # البند نفسه أُعيد عرضه، أو حقيقتان مختلفتان
         if how == 'interrupted':
-            continue                                        # السابق منقطع: لم يتسرّب منه غير رؤية السؤال (3.6)
+            continue                                        # انقطاع بلا إجابة مقبولة ولا دعم قبله (help غير interrupted)
         out.append((a, b, how, label, list(fact(x))))
     return out
 

@@ -154,6 +154,12 @@ class Activity:
     def unavailable(self):
         raise RuntimeError('%s: لا يُطلب بديل في هذا النشاط' % self.name)
 
+    def repeated(self, item_id):
+        """أول بند يُطلب للنشاط حقيقته حقيقة آخر بند عُرض للمهارة نفسها في الجلسة نفسها من نشاط آخر (R22-01).
+        تعيد صحيحًا إن غيّر النشاط ما يطلبه (فيُطلب من جديد)، وغير ذلك إن عُرض البند كما هو، فيوسَم بأن حقيقته
+        عُرضت للتو. الأنشطة التي لها علاج تعيد تعريفها."""
+        return False
+
     def voided(self, item_id, exposed):
         """البند المعروض استُبعد لتغيّر صلاحية النشاط (R17-01). exposed: هل أُجيب عنه أو طُلب فيه دعم قبل التغيّر؟
         الاستبعاد من التقييم لا يمحو التعرّض (R18-01). الأنشطة التي يغيّر التعرّض بندها التالي تعيد تعريفها.
@@ -300,8 +306,28 @@ class OpeningRun(Activity):
         w = dict(activity=self.name, role='opening.try' if self.stage == 'try' else 'opening.guided',
                  type=t, pos=self.pos, alternate=0, reshown=self.reshown)
         if self.stage == 'try' and self.typed:
-            w.update(typed=True, type_index=self.try_types[:self.pos].count(t))
+            k = self.try_types[:self.pos].count(t)
+            if getattr(self, 'flip', {}).get(t):    # لكل نوع بندان: بدأ بالثاني لأن الأول يكرر حقيقة ما عُرض للتو
+                k = 1 - k
+            w.update(typed=True, type_index=k)
         return w
+
+    def repeated(self, item_id):
+        """R22-01: بند الافتتاح الأول يكرر حقيقة آخر بند عُرض (آخر بند في البوابة مثلًا). في «جرّب أولًا» بنوعي الخطأ
+        يُبدأ بالبند الآخر من نوعه. وإن لم يكن له آخر، أو كرر الآخر الحقيقة أيضًا، لا يُعرض ونتيجته void: لا يُتخذ منه
+        قرار اختصار ولا يُعدّ خطأ. والبند الموجَّه يُعرض للتعليم ولا تُستعمل نتيجته."""
+        if self.stage == 'guided':
+            self.__dict__['taint'] = item_id
+            return False
+        t = self.try_types[self.pos]
+        flip = self.__dict__.setdefault('flip', {})
+        if self.typed and not flip.get(t) and self.try_types[:self.pos].count(t) == 0:
+            flip[t] = True
+            return True
+        self.try_out.append('void')
+        self.reshown = 0
+        self._after_try()
+        return True
 
     def voided(self, item_id, exposed):
         if not exposed:
@@ -386,6 +412,14 @@ class EvidenceRun(Activity):
 
     def _key(self):
         return '%s/%s/%d' % (self._current(), self.stage, self.pos)
+
+    def repeated(self, item_id):
+        """R22-01: أول بند يُطلب عند دخول دليل الفهم يكرر حقيقة آخر بند عُرض من نشاط آخر: لا يُعرض الآن، ويُطلب لموضعه
+        بديل نوعه في الجولة. وإن لم يوجد بديل، أو كرر الحقيقة هو أيضًا، انتهت الجولة no_alternate بلا حكم."""
+        swap = self.__dict__.setdefault('swap', {})
+        t = self._current()
+        swap[self._key()] = dict(n=1 + sum(1 for k in swap if k.split('/')[0] == t), item=item_id)
+        return True
 
     def voided(self, item_id, exposed):
         if not exposed:
@@ -540,11 +574,12 @@ def exposure(records, skill, activity):
     return out
 
 
-def drive_steps(act, source, records=None, pause=None, history=None):
+def drive_steps(act, source, records=None, pause=None, history=None, prev=None):
     """مولّد يعرض بنود النشاط حتى ينتهي. source(skill, want) يعيد البند أو None. يعطي (البند، المطلوب) ويستقبل
     أحداث البند الخام وجوابه الصحيح ونوع البند، أو نتيجة جاهزة (للمحاكاة).
     pause(want) تُسأل بعد كل بند اكتمل: إن أعادت صحيحًا توقف العرض والنشاط غير منتهٍ، ليُحفظ ويُستأنف في جلسة
     لاحقة. بها يُنفَّذ سقف الوقت الذي لا يقطع بندًا جاريًا (7.1)."""
+    entry = True                                            # أول بند يُعرض في هذا الدخول إلى النشاط
     while True:
         w = act.want()
         if w is None:
@@ -562,6 +597,15 @@ def drive_steps(act, source, records=None, pause=None, history=None):
             w = dict(w, reshown=max(w.get('reshown', 0), h['n']))
             if h['exposed']:
                 w['repeated'] = True
+        # prev(): آخر بند عُرض للمهارة نفسها في الجلسة نفسها من نشاط آخر، (معرّفه، حقيقته)، إن كان يُحتسب تعرّضًا.
+        # الحقيقة نفسها لا تُعرض في بندين متتاليين (3.5) ولو كانا من نشاطين (R22-01): النشاط يغيّر ما يطلبه إن كان له
+        # علاج، وإلا عُرض البند موسومًا بأن حقيقته عُرضت للتو. داخل النشاط الواحد يضمن المحتوى ذلك (content_sequence)
+        p = prev() if entry and prev and isinstance(item, dict) and item.get('fact') is not None else None
+        if p and p[0] != item['id'] and list(p[1]) == list(item['fact']):
+            if act.repeated(item['id']):
+                continue
+            w = dict(w, fact_just_seen=p[0])
+        entry = False
         got = yield item, w
         if isinstance(got, str):
             act.feed(got)
@@ -575,6 +619,8 @@ def drive_steps(act, source, records=None, pause=None, history=None):
                      item=item.get('id') if isinstance(item, dict) else None)
             if isinstance(item, dict) and item.get('reshown_same_fact'):
                 r['reshown_after_interrupt'] = True        # 3.6: «أُعيد عرضه بعد انقطاع»
+            if w.get('fact_just_seen'):                     # حقيقته حقيقة آخر بند عُرض من نشاط آخر، ولا علاج له
+                r['fact_just_seen'] = w['fact_just_seen']
             if w.get('repeated'):                           # بند مستهلك أُعيد للتعليم، لا دليلًا لقرار
                 r['repeated_after_void'] = True
             if w.get('replaces'):                           # R18-01: بديل بند استُهلك، ووصف التعرّض السابق لحقيقته (3.5)

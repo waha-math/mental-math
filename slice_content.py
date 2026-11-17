@@ -538,7 +538,12 @@ def respace_small(items):
         def fact_of(x):
             return fixed[x] if x in fixed else frozenset((value[x], 10 - value[x])) if x in value else None
 
+        steps = [0]
+
         def solve(k):
+            steps[0] += 1
+            if steps[0] > 500000:                           # لا يُترك البحث يدور بلا نهاية: الإخفاق يُعلن
+                raise RuntimeError('تعذّر إيجاد أعداد تحقق التتابع في %s بعد %d خطوة' % (skill, steps[0]))
             if k == len(order):
                 return True
             it = order[k]
@@ -546,13 +551,15 @@ def respace_small(items):
             cur, grp = it['numbers'][key], (it['group'], it['performance'])
             taken = {fact_of(x) for x in near[it['id']]} - {None}
             cands = sorted((v for v in range(1, 10) if frozenset((v, 10 - v)) not in taken),
-                           key=lambda v: (v != cur, used[(grp, v)], (v - cur) % 9))
+                           key=lambda v: (v != cur, used[(grp, v)], used[(it['group'], v)], (v - cur) % 9))
             for v in cands:
                 value[it['id']] = v
                 used[(grp, v)] += 1
+                used[(it['group'], v)] += 1
                 if solve(k + 1):
                     return True
                 used[(grp, v)] -= 1
+                used[(it['group'], v)] -= 1
                 del value[it['id']]
             return False
 
@@ -961,6 +968,11 @@ if __name__ == '__main__':
             it.setdefault('round', 1)
     respaced = respace_small(bank.items)
     mark_seen(bank.items)
+    for it in bank.items:                                   # كل بند يحمل حقيقته: يقرؤها المجدول للتتابع بين الأنشطة
+        if 'fact' not in it:
+            n = it['numbers']
+            v = n.get('n', n.get('e'))
+            it['fact'] = [n['a'], n['b']] if 'a' in n else sorted((v, 10 - v))
     bad = validate(bank.items)
     from content_sequence import collect, violations
     seq_pairs, seq_by, seq_n = collect(bank.items, EVIDENCE)

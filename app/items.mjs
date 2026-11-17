@@ -151,6 +151,10 @@ export class Activity {
   // يُعرض ثانية (يُطلب غيره)، وغير ذلك إن جاز عرضه
   voided(_itemId, _exposed) { return false; }
 
+  // أول بند يُطلب للنشاط حقيقته حقيقة آخر بند عُرض للمهارة نفسها في الجلسة نفسها من نشاط آخر (R22-01). تعيد صحيحًا إن
+  // غيّر النشاط ما يطلبه (فيُطلب من جديد)، وغير ذلك إن عُرض البند كما هو، فيوسَم بأن حقيقته عُرضت للتو
+  repeated(_itemId) { return false; }
+
   toDict() {
     return clone({ ...this, _class: this.constructor.pyName });
   }
@@ -304,7 +308,9 @@ export class OpeningRun extends Activity {
       pos: this.pos, alternate: 0, reshown: this.reshown };
     if (this.stage === 'try' && this.typed) {
       w.typed = true;
-      w.type_index = this.try_types.slice(0, this.pos).filter((x) => x === t).length;
+      let k = this.try_types.slice(0, this.pos).filter((x) => x === t).length;
+      if ((this.flip ?? {})[t]) k = 1 - k;        // لكل نوع بندان: بدأ بالثاني لأن الأول يكرر حقيقة ما عُرض للتو
+      w.type_index = k;
     }
     return w;
   }
@@ -329,6 +335,26 @@ export class OpeningRun extends Activity {
       this.reshown = 0;
       this._afterTry();
     }
+    return true;
+  }
+
+  // R22-01: بند الافتتاح الأول يكرر حقيقة آخر بند عُرض (آخر بند في البوابة مثلًا). في «جرّب أولًا» بنوعي الخطأ يُبدأ
+  // بالبند الآخر من نوعه. وإن لم يكن له آخر، أو كرر الآخر الحقيقة أيضًا، لا يُعرض ونتيجته void: لا يُتخذ منه قرار
+  // اختصار ولا يُعدّ خطأ. والبند الموجَّه يُعرض للتعليم ولا تُستعمل نتيجته
+  repeated(itemId) {
+    if (this.stage === 'guided') {
+      this.taint = itemId;
+      return false;
+    }
+    const t = this.try_types[this.pos];
+    if (this.flip === undefined) this.flip = {};
+    if (this.typed && !this.flip[t] && this.try_types.slice(0, this.pos).filter((x) => x === t).length === 0) {
+      this.flip[t] = true;
+      return true;
+    }
+    this.try_out.push('void');
+    this.reshown = 0;
+    this._afterTry();
     return true;
   }
 
@@ -415,6 +441,15 @@ export class EvidenceRun extends Activity {
 
   _key() {
     return `${this._current()}/${this.stage}/${this.pos}`;
+  }
+
+  // R22-01: أول بند يُطلب عند دخول دليل الفهم يكرر حقيقة آخر بند عُرض من نشاط آخر: لا يُعرض الآن، ويُطلب لموضعه بديل
+  // نوعه في الجولة. وإن لم يوجد بديل، أو كرر الحقيقة هو أيضًا، انتهت الجولة no_alternate بلا حكم
+  repeated(itemId) {
+    if (this.swap === undefined) this.swap = {};
+    const t = this._current();
+    this.swap[this._key()] = { n: 1 + Object.keys(this.swap).filter((k) => k.split('/')[0] === t).length, item: itemId };
+    return true;
   }
 
   // البند المستبعد لتغيّر الصلاحية (R18-01): إن لم يقع فيه إلا العرض أُعيد عرضه كالمنقطع، فلم تُقبل فيه إجابة في محاولة صالحة. وإن أُجيب عنه
@@ -608,7 +643,8 @@ export function exposure(records, skill, activity) {
   return out;
 }
 
-export function* driveSteps(act, source, records = null, pause = null, history = null) {
+export function* driveSteps(act, source, records = null, pause = null, history = null, prev = null) {
+  let entry = true;                               // أول بند يُعرض في هذا الدخول إلى النشاط
   for (;;) {
     let w = act.want();
     if (w === null) return act;
@@ -625,6 +661,16 @@ export function* driveSteps(act, source, records = null, pause = null, history =
       w = { ...w, reshown: Math.max(w.reshown ?? 0, known.n) };
       if (known.exposed) w.repeated = true;
     }
+    // prev(): آخر بند عُرض للمهارة نفسها في الجلسة نفسها من نشاط آخر، [معرّفه، حقيقته]، إن كان يُحتسب تعرّضًا. الحقيقة
+    // نفسها لا تُعرض في بندين متتاليين (3.5) ولو كانا من نشاطين (R22-01): النشاط يغيّر ما يطلبه إن كان له علاج، وإلا
+    // عُرض البند موسومًا بأن حقيقته عُرضت للتو. داخل النشاط الواحد يضمن المحتوى ذلك (content_sequence)
+    const isItem = item !== null && typeof item === 'object' && !Array.isArray(item);
+    const p = entry && prev && isItem && item.fact !== undefined && item.fact !== null ? prev() : null;
+    if (p && p[0] !== item.id && JSON.stringify(p[1]) === JSON.stringify(item.fact)) {
+      if (act.repeated(item.id)) continue;
+      w = { ...w, fact_just_seen: p[0] };
+    }
+    entry = false;
     const got = yield [item, w];
     if (typeof got === 'string') {
       act.feed(got);
@@ -635,6 +681,7 @@ export function* driveSteps(act, source, records = null, pause = null, history =
         const isObj = item !== null && typeof item === 'object' && !Array.isArray(item);
         const r = { ...rec, skill: act.skill, activity: act.name, role: w.role, item: isObj ? (item.id ?? null) : null };
         if (isObj && item.reshown_same_fact) r.reshown_after_interrupt = true;   // 3.6: «أُعيد عرضه بعد انقطاع»
+        if (w.fact_just_seen) r.fact_just_seen = w.fact_just_seen;   // حقيقته حقيقة آخر بند عُرض من نشاط آخر، ولا علاج له
         if (w.repeated) r.repeated_after_void = true;   // بند مستهلك أُعيد للتعليم، لا دليلًا لقرار
         if (w.replaces) {                         // R18-01: بديل بند استُهلك، ووصف التعرّض السابق لحقيقته (3.5)
           r.replaces = w.replaces;

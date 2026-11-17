@@ -39,6 +39,7 @@ export function stateOf(sc) {
   for (const k of STATE) d[k] = clone(sc[k] === undefined ? null : sc[k]);
   d.n = Object.fromEntries(Object.entries(d.n).filter(([, v]) => v));
   d.next_id = sc._next;
+  if (sc.last !== null && sc.last !== undefined) d.last = clone(sc.last);   // آخر بند عُرض في الجلسة المفتوحة (R22-01)
   return d;
 }
 
@@ -149,6 +150,7 @@ export function restore(record, { types, source, answer, item_seconds = null, re
   const bad = checkConsistent(e, st);
   if (bad.length) throw new Inconsistent(bad.join('؛ '));
   for (const k of STATE) sc[k] = st[k];
+  sc.last = st.cur !== null && st.last !== undefined ? st.last : null;
   sc._next = st.next_id;
   // الجلسة التعليمية غير فتح التطبيق: إغلاقه لا يختمها، فتُكمَل بهويتها ووقتها وحصصها (المرحلة 0ج). تُختم هنا
   // فقط إن انتقل يوم الأسرة: today يوم الأسرة عند الفتح، وبلا قيمة تبقى الجلسة مفتوحة

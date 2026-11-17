@@ -121,6 +121,7 @@ class Scheduler:
         # موضع الجلسة الجارية بين أجزائها (المرحلة 0ج): به تُكمَل الجلسة نفسها بعد إغلاق التطبيق، فلا تُستهلك جلسة
         # ولا حصة ولا يتجدد الوقت. يُحفظ مع الحالة. و live النشاط المعروض الآن، للّقطة، ولا يُحفظ بنفسه
         self.stage, self.live, self.today = None, None, None
+        self.last = None                    # آخر بند عُرض في الجلسة المفتوحة (seen)، للتتابع بين الأنشطة (R22-01)
         self.halts = []                     # توقفات هذا التشغيل لتغيّر الصلاحية: (الجلسة، السبب، المهارة، النوع). للبالغ
 
     # ---------------------------------------------------------------- المحرك
@@ -155,7 +156,24 @@ class Scheduler:
 
     def end(self):
         self.send(dict(type='session_end', session=self.cur))
-        self.cur = self.stage = None
+        self.cur = self.stage = self.last = None
+
+    def seen(self, skill, activity, item, got=None):
+        """آخر بند عُرض في الجلسة (R22-01): مهارته ونشاطه ومعرّفه وحقيقته. counts: هل يُحتسب تعرّضًا؟ لا يُحتسب بند
+        انقطع ولم تُقبل قبل انقطاعه إجابة ولم يُقدَّم فيه دعم (R22-02): وصف السجل بأنه منقطع لا يكفي. البنود التي لا
+        تحمل حقيقة (مصادر المحاكاة المجردة) لا تُسجَّل، فلا تتغير الحالة المحفوظة في غير المحتوى الفعلي."""
+        if not isinstance(item, dict) or item.get('fact') is None:
+            self.last = None
+            return
+        if isinstance(got, str):
+            counts = got != 'interrupted'
+        elif isinstance(got, (tuple, list)):
+            raw = got[0]
+            counts = exposed(raw) or not (raw and raw[-1][0] == 'interrupt')
+        else:
+            counts = True
+        self.last = dict(session=self.cur, skill=skill, activity=activity, item=item.get('id'),
+                         fact=list(item['fact']), counts=counts)
 
     def view(self):
         e = self.e
@@ -324,13 +342,22 @@ class Scheduler:
         req = None
         # تاريخ التعرّض من السجلات، لا من كائن النشاط: يبقى بعد إسقاط النشاط وإنشاء غيره (R19-01). لدليل الفهم وافتتاح الدرس
         history = (lambda a: exposure(self.records, a.skill, a.name)) if kind in ('evidence', 'opening') else None
-        gen = drive_steps(act, self.source, recs, pause=self.tick if self.cap is not None else None, history=history)
+
+        def prev():
+            # آخر بند عُرض للمهارة نفسها في الجلسة نفسها من نشاط آخر، إن كان يُحتسب تعرّضًا (R22-01)
+            x = self.last
+            if x and x['session'] == self.cur and x['skill'] == act.skill and x['activity'] != act.name and x['counts']:
+                return x['item'], x['fact']
+            return None
+        gen = drive_steps(act, self.source, recs, pause=self.tick if self.cap is not None else None, history=history,
+                          prev=prev)
         try:
             req = next(gen)
             while True:
                 guard()
                 got = yield req
                 guard(got)
+                self.seen(act.skill, act.name, req[0], got)
                 req = gen.send(got)
                 settle()
         except StopIteration:
@@ -445,6 +472,7 @@ class Scheduler:
             self.live = None
             self.n[activity] += 1
             self.elapsed += self.item_seconds(w)
+            self.seen(s, activity, item)
             k += 1
 
     def g_lesson_body(self, s, k=0):

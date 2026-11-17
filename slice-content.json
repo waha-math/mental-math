@@ -898,17 +898,17 @@
    "evidence": "ف3",
    "performance": "make_ten",
    "numbers": {
-    "n": 8
+    "n": 2
    },
    "resource": "بلا نموذج",
    "answer_type": "ج1",
-   "answer": 2,
-   "text_ar": "8 وكم تصير 10؟",
-   "text_en": "8 and how many make 10?",
-   "audio_ar": "8 وكم تصير 10؟",
-   "audio_en": "8 and how many make 10?",
+   "answer": 8,
+   "text_ar": "2 وكم تصير 10؟",
+   "text_en": "2 and how many make 10?",
+   "audio_ar": "2 وكم تصير 10؟",
+   "audio_en": "2 and how many make 10?",
    "wrong": {
-    "8": "given_back"
+    "2": "given_back"
    },
    "slot": null,
    "alt_of": null,
@@ -1002,7 +1002,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    3,
+    7
+   ]
   },
   {
    "id": "1-4-1/gate/02",
@@ -1026,7 +1030,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    4,
+    6
+   ]
   },
   {
    "id": "1-4-1/gate/03",
@@ -1050,7 +1058,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    2,
+    8
+   ]
   },
   {
    "id": "1-4-1/gate/04",
@@ -1074,7 +1086,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    1,
+    9
+   ]
   },
   {
    "id": "1-4-1/gate/05",
@@ -1096,7 +1112,11 @@
    "wrong": {},
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    5,
+    5
+   ]
   },
   {
    "id": "1-4-1/gate/06",
@@ -1106,21 +1126,25 @@
    "evidence": "ف1",
    "performance": "frame_empty",
    "numbers": {
-    "n": 8
+    "n": 9
    },
    "resource": "إطار العشرة وعليه الأقراص",
    "answer_type": "ج1",
-   "answer": 2,
+   "answer": 1,
    "text_ar": "كم خانة فارغة في الإطار؟",
    "text_en": "How many boxes in the frame are empty?",
    "audio_ar": "كم خانة فارغة في الإطار؟",
    "audio_en": "How many boxes in the frame are empty?",
    "wrong": {
-    "8": "given_back"
+    "9": "given_back"
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    1,
+    9
+   ]
   },
   {
    "id": "1-4-1/gate/07",
@@ -1144,7 +1168,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    3,
+    7
+   ]
   },
   {
    "id": "1-4-1/gate/08",
@@ -1168,7 +1196,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    2,
+    8
+   ]
   },
   {
    "id": "1-4-1/gate/09",
@@ -1192,7 +1224,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    1,
+    9
+   ]
   },
   {
    "id": "1-4-1/gate/10",
@@ -1216,7 +1252,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    1,
+    9
+   ]
   },
   {
    "id": "1-4-1/gate/11",
@@ -1240,7 +1280,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    2,
+    8
+   ]
   },
   {
    "id": "1-4-1/gate/12",
@@ -1262,7 +1306,11 @@
    "wrong": {},
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    5,
+    5
+   ]
   },
   {
    "id": "1-4-1/gate/13",
@@ -1286,7 +1334,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    4,
+    6
+   ]
   },
   {
    "id": "1-4-1/gate/14",
@@ -1310,7 +1362,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    3,
+    7
+   ]
   },
   {
    "id": "1-4-1/gate/15",
@@ -1334,7 +1390,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    4,
+    6
+   ]
   },
   {
    "id": "1-4-1/regate/01",
@@ -1356,7 +1416,11 @@
    "wrong": {},
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    5,
+    5
+   ]
   },
   {
    "id": "1-4-1/regate/02",
@@ -1380,7 +1444,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    1,
+    9
+   ]
   },
   {
    "id": "1-4-1/regate/03",
@@ -1404,7 +1472,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    3,
+    7
+   ]
   },
   {
    "id": "1-4-1/regate/04",
@@ -1428,7 +1500,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    4,
+    6
+   ]
   },
   {
    "id": "1-4-1/regate/05",
@@ -1450,7 +1526,11 @@
    "wrong": {},
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    5,
+    5
+   ]
   },
   {
    "id": "1-4-1/regate/06",
@@ -1474,7 +1554,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    4,
+    6
+   ]
   },
   {
    "id": "1-4-1/regate/07",
@@ -1498,7 +1582,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    1,
+    9
+   ]
   },
   {
    "id": "1-4-1/regate/08",
@@ -1522,7 +1610,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    2,
+    8
+   ]
   },
   {
    "id": "1-4-1/regate/09",
@@ -1532,21 +1624,25 @@
    "evidence": "ف1",
    "performance": "frame_empty",
    "numbers": {
-    "n": 7
+    "n": 1
    },
    "resource": "إطار العشرة وعليه الأقراص",
    "answer_type": "ج1",
-   "answer": 3,
+   "answer": 9,
    "text_ar": "كم خانة فارغة في الإطار؟",
    "text_en": "How many boxes in the frame are empty?",
    "audio_ar": "كم خانة فارغة في الإطار؟",
    "audio_en": "How many boxes in the frame are empty?",
    "wrong": {
-    "7": "given_back"
+    "1": "given_back"
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    1,
+    9
+   ]
   },
   {
    "id": "1-4-1/regate/10",
@@ -1570,7 +1666,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    4,
+    6
+   ]
   },
   {
    "id": "1-4-1/regate/11",
@@ -1594,10 +1694,42 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    3,
+    7
+   ]
   },
   {
    "id": "1-4-1/regate/12",
+   "skill": "1-4-1",
+   "group": "regate",
+   "role": "gate.alternate",
+   "evidence": "ف1",
+   "performance": "frame_empty",
+   "numbers": {
+    "n": 7
+   },
+   "resource": "إطار العشرة وعليه الأقراص",
+   "answer_type": "ج1",
+   "answer": 3,
+   "text_ar": "كم خانة فارغة في الإطار؟",
+   "text_en": "How many boxes in the frame are empty?",
+   "audio_ar": "كم خانة فارغة في الإطار؟",
+   "audio_en": "How many boxes in the frame are empty?",
+   "wrong": {
+    "7": "given_back"
+   },
+   "slot": null,
+   "alt_of": null,
+   "graded": true,
+   "fact": [
+    3,
+    7
+   ]
+  },
+  {
+   "id": "1-4-1/regate/13",
    "skill": "1-4-1",
    "group": "regate",
    "role": "gate.alternate",
@@ -1616,31 +1748,11 @@
    "wrong": {},
    "slot": null,
    "alt_of": null,
-   "graded": true
-  },
-  {
-   "id": "1-4-1/regate/13",
-   "skill": "1-4-1",
-   "group": "regate",
-   "role": "gate.alternate",
-   "evidence": "ف1",
-   "performance": "frame_empty",
-   "numbers": {
-    "n": 1
-   },
-   "resource": "إطار العشرة وعليه الأقراص",
-   "answer_type": "ج1",
-   "answer": 9,
-   "text_ar": "كم خانة فارغة في الإطار؟",
-   "text_en": "How many boxes in the frame are empty?",
-   "audio_ar": "كم خانة فارغة في الإطار؟",
-   "audio_en": "How many boxes in the frame are empty?",
-   "wrong": {
-    "1": "given_back"
-   },
-   "slot": null,
-   "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    5,
+    5
+   ]
   },
   {
    "id": "1-4-1/regate/14",
@@ -1664,7 +1776,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    2,
+    8
+   ]
   },
   {
    "id": "1-4-1/regate/15",
@@ -1688,7 +1804,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    1,
+    9
+   ]
   },
   {
    "id": "1-4-1/short/01",
@@ -1712,7 +1832,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    1,
+    9
+   ]
   },
   {
    "id": "1-4-1/short/02",
@@ -1736,7 +1860,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    2,
+    8
+   ]
   },
   {
    "id": "1-4-1/short/03",
@@ -1760,7 +1888,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    1,
+    9
+   ]
   },
   {
    "id": "1-4-1/checkA/01",
@@ -4103,17 +4235,17 @@
    "evidence": "ف3",
    "performance": "make_ten",
    "numbers": {
-    "n": 2
+    "n": 8
    },
    "resource": "بلا نموذج",
    "answer_type": "ج1",
-   "answer": 8,
-   "text_ar": "2 وكم تصير 10؟",
-   "text_en": "2 and how many make 10?",
-   "audio_ar": "2 وكم تصير 10؟",
-   "audio_en": "2 and how many make 10?",
+   "answer": 2,
+   "text_ar": "8 وكم تصير 10؟",
+   "text_en": "8 and how many make 10?",
+   "audio_ar": "8 وكم تصير 10؟",
+   "audio_en": "8 and how many make 10?",
    "wrong": {
-    "2": "given_back"
+    "8": "given_back"
    },
    "slot": null,
    "alt_of": null,
@@ -4133,25 +4265,25 @@
    "evidence": "ف3",
    "performance": "make_ten",
    "numbers": {
-    "n": 7
+    "n": 9
    },
    "resource": "بلا نموذج",
    "answer_type": "ج1",
-   "answer": 3,
-   "text_ar": "7 وكم تصير 10؟",
-   "text_en": "7 and how many make 10?",
-   "audio_ar": "7 وكم تصير 10؟",
-   "audio_en": "7 and how many make 10?",
+   "answer": 1,
+   "text_ar": "9 وكم تصير 10؟",
+   "text_en": "9 and how many make 10?",
+   "audio_ar": "9 وكم تصير 10؟",
+   "audio_en": "9 and how many make 10?",
    "wrong": {
-    "7": "given_back"
+    "9": "given_back"
    },
    "slot": null,
    "alt_of": null,
    "graded": true,
    "round": 2,
    "fact": [
-    3,
-    7
+    1,
+    9
    ],
    "fact_seen_before": true
   },
@@ -4177,7 +4309,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    4,
+    6
+   ]
   },
   {
    "id": "1-4-1/tryfirst/02",
@@ -4201,7 +4337,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    2,
+    8
+   ]
   },
   {
    "id": "1-4-1/tryfirst/03",
@@ -4211,21 +4351,23 @@
    "evidence": "ف3",
    "performance": "make_ten",
    "numbers": {
-    "n": 8
+    "n": 5
    },
    "resource": "بلا نموذج",
    "answer_type": "ج1",
-   "answer": 2,
-   "text_ar": "8 وكم تصير 10؟",
-   "text_en": "8 and how many make 10?",
-   "audio_ar": "8 وكم تصير 10؟",
-   "audio_en": "8 and how many make 10?",
-   "wrong": {
-    "8": "given_back"
-   },
+   "answer": 5,
+   "text_ar": "5 وكم تصير 10؟",
+   "text_en": "5 and how many make 10?",
+   "audio_ar": "5 وكم تصير 10؟",
+   "audio_en": "5 and how many make 10?",
+   "wrong": {},
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    5,
+    5
+   ]
   },
   {
    "id": "1-4-1/tryfirst/04",
@@ -4235,21 +4377,25 @@
    "evidence": "ف3",
    "performance": "make_ten",
    "numbers": {
-    "n": 6
+    "n": 9
    },
    "resource": "بلا نموذج",
    "answer_type": "ج1",
-   "answer": 4,
-   "text_ar": "6 وكم تصير 10؟",
-   "text_en": "6 and how many make 10?",
-   "audio_ar": "6 وكم تصير 10؟",
-   "audio_en": "6 and how many make 10?",
+   "answer": 1,
+   "text_ar": "9 وكم تصير 10؟",
+   "text_en": "9 and how many make 10?",
+   "audio_ar": "9 وكم تصير 10؟",
+   "audio_en": "9 and how many make 10?",
    "wrong": {
-    "6": "given_back"
+    "9": "given_back"
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    1,
+    9
+   ]
   },
   {
    "id": "1-4-1/evidence/17",
@@ -5043,25 +5189,25 @@
    "evidence": "ف3",
    "performance": "subtract",
    "numbers": {
-    "n": 7
+    "n": 2
    },
    "resource": "بلا نموذج",
    "answer_type": "ج1",
-   "answer": 3,
-   "text_ar": "ما العدد الناقص؟ ⁦ 10 − 7 = ▢ ⁩",
-   "text_en": "What number is missing? ⁦ 10 − 7 = ▢ ⁩",
-   "audio_ar": "ما العدد الناقص؟ ⁦ 10 − 7 = ▢ ⁩",
-   "audio_en": "What number is missing? ⁦ 10 − 7 = ▢ ⁩",
+   "answer": 8,
+   "text_ar": "ما العدد الناقص؟ ⁦ 10 − 2 = ▢ ⁩",
+   "text_en": "What number is missing? ⁦ 10 − 2 = ▢ ⁩",
+   "audio_ar": "ما العدد الناقص؟ ⁦ 10 − 2 = ▢ ⁩",
+   "audio_en": "What number is missing? ⁦ 10 − 2 = ▢ ⁩",
    "wrong": {
-    "7": "given_back"
+    "2": "given_back"
    },
    "slot": null,
    "alt_of": null,
    "graded": true,
    "round": 1,
    "fact": [
-    3,
-    7
+    2,
+    8
    ],
    "fact_seen_before": true
   },
@@ -5073,23 +5219,25 @@
    "evidence": "ف3",
    "performance": "missing_second",
    "numbers": {
-    "n": 5
+    "n": 3
    },
    "resource": "بلا نموذج",
    "answer_type": "ج1",
-   "answer": 5,
-   "text_ar": "ما العدد الناقص؟ ⁦ 5 + ▢ = 10 ⁩",
-   "text_en": "What number is missing? ⁦ 5 + ▢ = 10 ⁩",
-   "audio_ar": "ما العدد الناقص؟ ⁦ 5 + ▢ = 10 ⁩",
-   "audio_en": "What number is missing? ⁦ 5 + ▢ = 10 ⁩",
-   "wrong": {},
+   "answer": 7,
+   "text_ar": "ما العدد الناقص؟ ⁦ 3 + ▢ = 10 ⁩",
+   "text_en": "What number is missing? ⁦ 3 + ▢ = 10 ⁩",
+   "audio_ar": "ما العدد الناقص؟ ⁦ 3 + ▢ = 10 ⁩",
+   "audio_en": "What number is missing? ⁦ 3 + ▢ = 10 ⁩",
+   "wrong": {
+    "3": "given_back"
+   },
    "slot": null,
    "alt_of": null,
    "graded": true,
    "round": 1,
    "fact": [
-    5,
-    5
+    3,
+    7
    ],
    "fact_seen_before": true
   },
@@ -5162,18 +5310,18 @@
    "evidence": "ف4",
    "performance": "context10",
    "numbers": {
-    "n": 8,
+    "n": 2,
     "ctx": "ctx_balloons"
    },
    "resource": "صورة الموقف، والنص منطوق",
    "answer_type": "ج1",
-   "answer": 2,
-   "text_ar": "كان مع عمر 10 بالونات. عدد ما طار منها 8. كم بالونًا بقي؟",
-   "text_en": "Omar had 10 balloons. Balloons that flew away: 8. How many are left?",
-   "audio_ar": "كان مع عمر 10 بالونات. عدد ما طار منها 8. كم بالونًا بقي؟",
-   "audio_en": "Omar had 10 balloons. Balloons that flew away: 8. How many are left?",
+   "answer": 8,
+   "text_ar": "كان مع عمر 10 بالونات. عدد ما طار منها 2. كم بالونًا بقي؟",
+   "text_en": "Omar had 10 balloons. Balloons that flew away: 2. How many are left?",
+   "audio_ar": "كان مع عمر 10 بالونات. عدد ما طار منها 2. كم بالونًا بقي؟",
+   "audio_en": "Omar had 10 balloons. Balloons that flew away: 2. How many are left?",
    "wrong": {
-    "8": "given_back"
+    "2": "given_back"
    },
    "slot": null,
    "alt_of": null,
@@ -5269,7 +5417,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    3,
+    7
+   ]
   },
   {
    "id": "1-4-2/gate/02",
@@ -5279,21 +5431,25 @@
    "evidence": "ف3",
    "performance": "subtract",
    "numbers": {
-    "n": 4
+    "n": 6
    },
    "resource": "بلا نموذج",
    "answer_type": "ج1",
-   "answer": 6,
-   "text_ar": "ما العدد الناقص؟ ⁦ 10 − 4 = ▢ ⁩",
-   "text_en": "What number is missing? ⁦ 10 − 4 = ▢ ⁩",
-   "audio_ar": "ما العدد الناقص؟ ⁦ 10 − 4 = ▢ ⁩",
-   "audio_en": "What number is missing? ⁦ 10 − 4 = ▢ ⁩",
+   "answer": 4,
+   "text_ar": "ما العدد الناقص؟ ⁦ 10 − 6 = ▢ ⁩",
+   "text_en": "What number is missing? ⁦ 10 − 6 = ▢ ⁩",
+   "audio_ar": "ما العدد الناقص؟ ⁦ 10 − 6 = ▢ ⁩",
+   "audio_en": "What number is missing? ⁦ 10 − 6 = ▢ ⁩",
    "wrong": {
-    "4": "given_back"
+    "6": "given_back"
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    4,
+    6
+   ]
   },
   {
    "id": "1-4-2/gate/03",
@@ -5317,7 +5473,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    2,
+    8
+   ]
   },
   {
    "id": "1-4-2/gate/04",
@@ -5341,7 +5501,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    1,
+    9
+   ]
   },
   {
    "id": "1-4-2/gate/05",
@@ -5363,7 +5527,11 @@
    "wrong": {},
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    5,
+    5
+   ]
   },
   {
    "id": "1-4-2/gate/06",
@@ -5373,22 +5541,26 @@
    "evidence": "ف4",
    "performance": "context10",
    "numbers": {
-    "n": 8,
+    "n": 9,
     "ctx": "ctx_bus"
    },
    "resource": "صورة الموقف، والنص منطوق",
    "answer_type": "ج1",
-   "answer": 2,
-   "text_ar": "في الحافلة الصغيرة 10 مقاعد. عدد الركاب 8. كم مقعدًا بقي فارغًا؟",
-   "text_en": "The minibus has 10 seats. Passengers: 8. How many seats are still empty?",
-   "audio_ar": "في الحافلة الصغيرة 10 مقاعد. عدد الركاب 8. كم مقعدًا بقي فارغًا؟",
-   "audio_en": "The minibus has 10 seats. Passengers: 8. How many seats are still empty?",
+   "answer": 1,
+   "text_ar": "في الحافلة الصغيرة 10 مقاعد. عدد الركاب 9. كم مقعدًا بقي فارغًا؟",
+   "text_en": "The minibus has 10 seats. Passengers: 9. How many seats are still empty?",
+   "audio_ar": "في الحافلة الصغيرة 10 مقاعد. عدد الركاب 9. كم مقعدًا بقي فارغًا؟",
+   "audio_en": "The minibus has 10 seats. Passengers: 9. How many seats are still empty?",
    "wrong": {
-    "8": "given_back"
+    "9": "given_back"
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    1,
+    9
+   ]
   },
   {
    "id": "1-4-2/gate/07",
@@ -5413,7 +5585,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    3,
+    7
+   ]
   },
   {
    "id": "1-4-2/gate/08",
@@ -5437,7 +5613,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    4,
+    6
+   ]
   },
   {
    "id": "1-4-2/gate/09",
@@ -5461,7 +5641,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    3,
+    7
+   ]
   },
   {
    "id": "1-4-2/gate/10",
@@ -5485,7 +5669,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    2,
+    8
+   ]
   },
   {
    "id": "1-4-2/gate/11",
@@ -5509,7 +5697,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    1,
+    9
+   ]
   },
   {
    "id": "1-4-2/gate/12",
@@ -5533,7 +5725,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    1,
+    9
+   ]
   },
   {
    "id": "1-4-2/gate/13",
@@ -5557,7 +5753,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    2,
+    8
+   ]
   },
   {
    "id": "1-4-2/gate/14",
@@ -5582,7 +5782,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    2,
+    8
+   ]
   },
   {
    "id": "1-4-2/gate/15",
@@ -5607,7 +5811,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    1,
+    9
+   ]
   },
   {
    "id": "1-4-2/gate/16",
@@ -5629,7 +5837,11 @@
    "wrong": {},
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    5,
+    5
+   ]
   },
   {
    "id": "1-4-2/gate/17",
@@ -5653,7 +5865,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    4,
+    6
+   ]
   },
   {
    "id": "1-4-2/gate/18",
@@ -5677,7 +5893,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    3,
+    7
+   ]
   },
   {
    "id": "1-4-2/gate/19",
@@ -5701,7 +5921,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    4,
+    6
+   ]
   },
   {
    "id": "1-4-2/gate/20",
@@ -5724,7 +5948,11 @@
    "wrong": {},
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    5,
+    5
+   ]
   },
   {
    "id": "1-4-2/gate/21",
@@ -5749,7 +5977,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    2,
+    8
+   ]
   },
   {
    "id": "1-4-2/regate/01",
@@ -5771,7 +6003,11 @@
    "wrong": {},
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    5,
+    5
+   ]
   },
   {
    "id": "1-4-2/regate/02",
@@ -5795,7 +6031,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    1,
+    9
+   ]
   },
   {
    "id": "1-4-2/regate/03",
@@ -5819,7 +6059,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    3,
+    7
+   ]
   },
   {
    "id": "1-4-2/regate/04",
@@ -5829,21 +6073,23 @@
    "evidence": "ف3",
    "performance": "missing_first",
    "numbers": {
-    "n": 4
+    "n": 5
    },
    "resource": "بلا نموذج",
    "answer_type": "ج1",
-   "answer": 6,
-   "text_ar": "ما العدد الناقص؟ ⁦ ▢ + 4 = 10 ⁩",
-   "text_en": "What number is missing? ⁦ ▢ + 4 = 10 ⁩",
-   "audio_ar": "ما العدد الناقص؟ ⁦ ▢ + 4 = 10 ⁩",
-   "audio_en": "What number is missing? ⁦ ▢ + 4 = 10 ⁩",
-   "wrong": {
-    "4": "given_back"
-   },
+   "answer": 5,
+   "text_ar": "ما العدد الناقص؟ ⁦ ▢ + 5 = 10 ⁩",
+   "text_en": "What number is missing? ⁦ ▢ + 5 = 10 ⁩",
+   "audio_ar": "ما العدد الناقص؟ ⁦ ▢ + 5 = 10 ⁩",
+   "audio_en": "What number is missing? ⁦ ▢ + 5 = 10 ⁩",
+   "wrong": {},
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    5,
+    5
+   ]
   },
   {
    "id": "1-4-2/regate/05",
@@ -5853,19 +6099,25 @@
    "evidence": "ف3",
    "performance": "subtract",
    "numbers": {
-    "n": 5
+    "n": 4
    },
    "resource": "بلا نموذج",
    "answer_type": "ج1",
-   "answer": 5,
-   "text_ar": "ما العدد الناقص؟ ⁦ 10 − 5 = ▢ ⁩",
-   "text_en": "What number is missing? ⁦ 10 − 5 = ▢ ⁩",
-   "audio_ar": "ما العدد الناقص؟ ⁦ 10 − 5 = ▢ ⁩",
-   "audio_en": "What number is missing? ⁦ 10 − 5 = ▢ ⁩",
-   "wrong": {},
+   "answer": 6,
+   "text_ar": "ما العدد الناقص؟ ⁦ 10 − 4 = ▢ ⁩",
+   "text_en": "What number is missing? ⁦ 10 − 4 = ▢ ⁩",
+   "audio_ar": "ما العدد الناقص؟ ⁦ 10 − 4 = ▢ ⁩",
+   "audio_en": "What number is missing? ⁦ 10 − 4 = ▢ ⁩",
+   "wrong": {
+    "4": "given_back"
+   },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    4,
+    6
+   ]
   },
   {
    "id": "1-4-2/regate/06",
@@ -5875,22 +6127,24 @@
    "evidence": "ف4",
    "performance": "context10",
    "numbers": {
-    "n": 6,
+    "n": 5,
     "ctx": "ctx_bus"
    },
    "resource": "صورة الموقف، والنص منطوق",
    "answer_type": "ج1",
-   "answer": 4,
-   "text_ar": "في الحافلة الصغيرة 10 مقاعد. عدد الركاب 6. كم مقعدًا بقي فارغًا؟",
-   "text_en": "The minibus has 10 seats. Passengers: 6. How many seats are still empty?",
-   "audio_ar": "في الحافلة الصغيرة 10 مقاعد. عدد الركاب 6. كم مقعدًا بقي فارغًا؟",
-   "audio_en": "The minibus has 10 seats. Passengers: 6. How many seats are still empty?",
-   "wrong": {
-    "6": "given_back"
-   },
+   "answer": 5,
+   "text_ar": "في الحافلة الصغيرة 10 مقاعد. عدد الركاب 5. كم مقعدًا بقي فارغًا؟",
+   "text_en": "The minibus has 10 seats. Passengers: 5. How many seats are still empty?",
+   "audio_ar": "في الحافلة الصغيرة 10 مقاعد. عدد الركاب 5. كم مقعدًا بقي فارغًا؟",
+   "audio_en": "The minibus has 10 seats. Passengers: 5. How many seats are still empty?",
+   "wrong": {},
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    5,
+    5
+   ]
   },
   {
    "id": "1-4-2/regate/07",
@@ -5915,7 +6169,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    1,
+    9
+   ]
   },
   {
    "id": "1-4-2/regate/08",
@@ -5937,7 +6195,11 @@
    "wrong": {},
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    5,
+    5
+   ]
   },
   {
    "id": "1-4-2/regate/09",
@@ -5961,7 +6223,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    1,
+    9
+   ]
   },
   {
    "id": "1-4-2/regate/10",
@@ -5985,7 +6251,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    2,
+    8
+   ]
   },
   {
    "id": "1-4-2/regate/11",
@@ -6009,7 +6279,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    3,
+    7
+   ]
   },
   {
    "id": "1-4-2/regate/12",
@@ -6033,7 +6307,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    3,
+    7
+   ]
   },
   {
    "id": "1-4-2/regate/13",
@@ -6043,19 +6321,25 @@
    "evidence": "ف3",
    "performance": "missing_first",
    "numbers": {
-    "n": 5
+    "n": 6
    },
    "resource": "بلا نموذج",
    "answer_type": "ج1",
-   "answer": 5,
-   "text_ar": "ما العدد الناقص؟ ⁦ ▢ + 5 = 10 ⁩",
-   "text_en": "What number is missing? ⁦ ▢ + 5 = 10 ⁩",
-   "audio_ar": "ما العدد الناقص؟ ⁦ ▢ + 5 = 10 ⁩",
-   "audio_en": "What number is missing? ⁦ ▢ + 5 = 10 ⁩",
-   "wrong": {},
+   "answer": 4,
+   "text_ar": "ما العدد الناقص؟ ⁦ ▢ + 6 = 10 ⁩",
+   "text_en": "What number is missing? ⁦ ▢ + 6 = 10 ⁩",
+   "audio_ar": "ما العدد الناقص؟ ⁦ ▢ + 6 = 10 ⁩",
+   "audio_en": "What number is missing? ⁦ ▢ + 6 = 10 ⁩",
+   "wrong": {
+    "6": "given_back"
+   },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    4,
+    6
+   ]
   },
   {
    "id": "1-4-2/regate/14",
@@ -6080,7 +6364,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    2,
+    8
+   ]
   },
   {
    "id": "1-4-2/regate/15",
@@ -6105,7 +6393,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    3,
+    7
+   ]
   },
   {
    "id": "1-4-2/regate/16",
@@ -6129,7 +6421,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    4,
+    6
+   ]
   },
   {
    "id": "1-4-2/regate/17",
@@ -6153,7 +6449,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    4,
+    6
+   ]
   },
   {
    "id": "1-4-2/regate/18",
@@ -6177,7 +6477,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    2,
+    8
+   ]
   },
   {
    "id": "1-4-2/regate/19",
@@ -6201,7 +6505,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    1,
+    9
+   ]
   },
   {
    "id": "1-4-2/regate/20",
@@ -6226,7 +6534,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    4,
+    6
+   ]
   },
   {
    "id": "1-4-2/regate/21",
@@ -6251,7 +6563,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    4,
+    6
+   ]
   },
   {
    "id": "1-4-2/short/01",
@@ -6275,7 +6591,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    1,
+    9
+   ]
   },
   {
    "id": "1-4-2/short/02",
@@ -6299,7 +6619,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    2,
+    8
+   ]
   },
   {
    "id": "1-4-2/short/03",
@@ -6323,7 +6647,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    1,
+    9
+   ]
   },
   {
    "id": "1-4-2/checkA/01",
@@ -8179,24 +8507,22 @@
    "evidence": "ف3",
    "performance": "missing_second",
    "numbers": {
-    "n": 4
+    "n": 5
    },
    "resource": "بلا نموذج",
    "answer_type": "ج1",
-   "answer": 6,
-   "text_ar": "ما العدد الناقص؟ ⁦ 4 + ▢ = 10 ⁩",
-   "text_en": "What number is missing? ⁦ 4 + ▢ = 10 ⁩",
-   "audio_ar": "ما العدد الناقص؟ ⁦ 4 + ▢ = 10 ⁩",
-   "audio_en": "What number is missing? ⁦ 4 + ▢ = 10 ⁩",
-   "wrong": {
-    "4": "given_back"
-   },
+   "answer": 5,
+   "text_ar": "ما العدد الناقص؟ ⁦ 5 + ▢ = 10 ⁩",
+   "text_en": "What number is missing? ⁦ 5 + ▢ = 10 ⁩",
+   "audio_ar": "ما العدد الناقص؟ ⁦ 5 + ▢ = 10 ⁩",
+   "audio_en": "What number is missing? ⁦ 5 + ▢ = 10 ⁩",
+   "wrong": {},
    "slot": 1,
    "alt_of": null,
    "graded": true,
    "fact": [
-    4,
-    6
+    5,
+    5
    ],
    "fact_seen_before": true
   },
@@ -8380,22 +8706,24 @@
    "evidence": "ف3",
    "performance": "missing_first",
    "numbers": {
-    "n": 5
+    "n": 1
    },
    "resource": "بلا نموذج",
    "answer_type": "ج1",
-   "answer": 5,
-   "text_ar": "ما العدد الناقص؟ ⁦ ▢ + 5 = 10 ⁩",
-   "text_en": "What number is missing? ⁦ ▢ + 5 = 10 ⁩",
-   "audio_ar": "ما العدد الناقص؟ ⁦ ▢ + 5 = 10 ⁩",
-   "audio_en": "What number is missing? ⁦ ▢ + 5 = 10 ⁩",
-   "wrong": {},
+   "answer": 9,
+   "text_ar": "ما العدد الناقص؟ ⁦ ▢ + 1 = 10 ⁩",
+   "text_en": "What number is missing? ⁦ ▢ + 1 = 10 ⁩",
+   "audio_ar": "ما العدد الناقص؟ ⁦ ▢ + 1 = 10 ⁩",
+   "audio_en": "What number is missing? ⁦ ▢ + 1 = 10 ⁩",
+   "wrong": {
+    "1": "given_back"
+   },
    "slot": 3,
    "alt_of": null,
    "graded": true,
    "fact": [
-    5,
-    5
+    1,
+    9
    ],
    "fact_seen_before": true
   },
@@ -8611,25 +8939,23 @@
    "evidence": "ف2",
    "performance": "step_pair",
    "numbers": {
-    "n": 3
+    "n": 5
    },
    "resource": "هيكل الإطار الشفاف",
    "answer_type": "ج1",
-   "answer": 7,
-   "text_ar": "⁦ 10 − 3 = ▢ ⁩ لأن ⁦ 3 + ▢ = 10 ⁩. ما العدد الذي يكمل الاثنتين؟",
-   "text_en": "⁦ 10 − 3 = ▢ ⁩ because ⁦ 3 + ▢ = 10 ⁩. What number completes both?",
-   "audio_ar": "⁦ 10 − 3 = ▢ ⁩ لأن ⁦ 3 + ▢ = 10 ⁩. ما العدد الذي يكمل الاثنتين؟",
-   "audio_en": "⁦ 10 − 3 = ▢ ⁩ because ⁦ 3 + ▢ = 10 ⁩. What number completes both?",
-   "wrong": {
-    "3": "given_back"
-   },
+   "answer": 5,
+   "text_ar": "⁦ 10 − 5 = ▢ ⁩ لأن ⁦ 5 + ▢ = 10 ⁩. ما العدد الذي يكمل الاثنتين؟",
+   "text_en": "⁦ 10 − 5 = ▢ ⁩ because ⁦ 5 + ▢ = 10 ⁩. What number completes both?",
+   "audio_ar": "⁦ 10 − 5 = ▢ ⁩ لأن ⁦ 5 + ▢ = 10 ⁩. ما العدد الذي يكمل الاثنتين؟",
+   "audio_en": "⁦ 10 − 5 = ▢ ⁩ because ⁦ 5 + ▢ = 10 ⁩. What number completes both?",
+   "wrong": {},
    "slot": null,
    "alt_of": null,
    "graded": true,
    "round": 2,
    "fact": [
-    3,
-    7
+    5,
+    5
    ],
    "fact_seen_before": true
   },
@@ -8699,25 +9025,25 @@
    "evidence": "ف3",
    "performance": "missing_first",
    "numbers": {
-    "n": 2
+    "n": 7
    },
    "resource": "بلا نموذج",
    "answer_type": "ج1",
-   "answer": 8,
-   "text_ar": "ما العدد الناقص؟ ⁦ ▢ + 2 = 10 ⁩",
-   "text_en": "What number is missing? ⁦ ▢ + 2 = 10 ⁩",
-   "audio_ar": "ما العدد الناقص؟ ⁦ ▢ + 2 = 10 ⁩",
-   "audio_en": "What number is missing? ⁦ ▢ + 2 = 10 ⁩",
+   "answer": 3,
+   "text_ar": "ما العدد الناقص؟ ⁦ ▢ + 7 = 10 ⁩",
+   "text_en": "What number is missing? ⁦ ▢ + 7 = 10 ⁩",
+   "audio_ar": "ما العدد الناقص؟ ⁦ ▢ + 7 = 10 ⁩",
+   "audio_en": "What number is missing? ⁦ ▢ + 7 = 10 ⁩",
    "wrong": {
-    "2": "given_back"
+    "7": "given_back"
    },
    "slot": null,
    "alt_of": null,
    "graded": true,
    "round": 2,
    "fact": [
-    2,
-    8
+    3,
+    7
    ],
    "fact_seen_before": true
   },
@@ -8729,25 +9055,25 @@
    "evidence": "ف3",
    "performance": "subtract",
    "numbers": {
-    "n": 3
+    "n": 2
    },
    "resource": "بلا نموذج",
    "answer_type": "ج1",
-   "answer": 7,
-   "text_ar": "ما العدد الناقص؟ ⁦ 10 − 3 = ▢ ⁩",
-   "text_en": "What number is missing? ⁦ 10 − 3 = ▢ ⁩",
-   "audio_ar": "ما العدد الناقص؟ ⁦ 10 − 3 = ▢ ⁩",
-   "audio_en": "What number is missing? ⁦ 10 − 3 = ▢ ⁩",
+   "answer": 8,
+   "text_ar": "ما العدد الناقص؟ ⁦ 10 − 2 = ▢ ⁩",
+   "text_en": "What number is missing? ⁦ 10 − 2 = ▢ ⁩",
+   "audio_ar": "ما العدد الناقص؟ ⁦ 10 − 2 = ▢ ⁩",
+   "audio_en": "What number is missing? ⁦ 10 − 2 = ▢ ⁩",
    "wrong": {
-    "3": "given_back"
+    "2": "given_back"
    },
    "slot": null,
    "alt_of": null,
    "graded": true,
    "round": 2,
    "fact": [
-    3,
-    7
+    2,
+    8
    ],
    "fact_seen_before": true
   },
@@ -8819,18 +9145,18 @@
    "evidence": "ف4",
    "performance": "context10",
    "numbers": {
-    "n": 2,
+    "n": 8,
     "ctx": "ctx_steps"
    },
    "resource": "صورة الموقف، والنص منطوق",
    "answer_type": "ج1",
-   "answer": 8,
-   "text_ar": "السلّم 10 درجات. عدد ما صعدته سلمى 2. كم درجة بقيت؟",
-   "text_en": "The stairs have 10 steps. Steps Salma has climbed: 2. How many steps are left?",
-   "audio_ar": "السلّم 10 درجات. عدد ما صعدته سلمى 2. كم درجة بقيت؟",
-   "audio_en": "The stairs have 10 steps. Steps Salma has climbed: 2. How many steps are left?",
+   "answer": 2,
+   "text_ar": "السلّم 10 درجات. عدد ما صعدته سلمى 8. كم درجة بقيت؟",
+   "text_en": "The stairs have 10 steps. Steps Salma has climbed: 8. How many steps are left?",
+   "audio_ar": "السلّم 10 درجات. عدد ما صعدته سلمى 8. كم درجة بقيت؟",
+   "audio_en": "The stairs have 10 steps. Steps Salma has climbed: 8. How many steps are left?",
    "wrong": {
-    "2": "given_back"
+    "8": "given_back"
    },
    "slot": null,
    "alt_of": null,
@@ -8850,26 +9176,26 @@
    "evidence": "ف4",
    "performance": "context10",
    "numbers": {
-    "n": 7,
+    "n": 9,
     "ctx": "ctx_eggs"
    },
    "resource": "صورة الموقف، والنص منطوق",
    "answer_type": "ج1",
-   "answer": 3,
-   "text_ar": "في العلبة 10 أماكن للبيض. عدد البيض فيها 7. كم مكانًا فارغًا؟",
-   "text_en": "The box has 10 places for eggs. Eggs in it: 7. How many places are empty?",
-   "audio_ar": "في العلبة 10 أماكن للبيض. عدد البيض فيها 7. كم مكانًا فارغًا؟",
-   "audio_en": "The box has 10 places for eggs. Eggs in it: 7. How many places are empty?",
+   "answer": 1,
+   "text_ar": "في العلبة 10 أماكن للبيض. عدد البيض فيها 9. كم مكانًا فارغًا؟",
+   "text_en": "The box has 10 places for eggs. Eggs in it: 9. How many places are empty?",
+   "audio_ar": "في العلبة 10 أماكن للبيض. عدد البيض فيها 9. كم مكانًا فارغًا؟",
+   "audio_en": "The box has 10 places for eggs. Eggs in it: 9. How many places are empty?",
    "wrong": {
-    "7": "given_back"
+    "9": "given_back"
    },
    "slot": null,
    "alt_of": null,
    "graded": true,
    "round": 2,
    "fact": [
-    3,
-    7
+    1,
+    9
    ],
    "fact_seen_before": true
   },
@@ -8895,7 +9221,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    4,
+    6
+   ]
   },
   {
    "id": "1-4-2/tryfirst/02",
@@ -8905,21 +9235,25 @@
    "evidence": "ف2",
    "performance": "step_pair",
    "numbers": {
-    "n": 8
+    "n": 9
    },
    "resource": "هيكل الإطار الشفاف",
    "answer_type": "ج1",
-   "answer": 2,
-   "text_ar": "⁦ 10 − 8 = ▢ ⁩ لأن ⁦ 8 + ▢ = 10 ⁩. ما العدد الذي يكمل الاثنتين؟",
-   "text_en": "⁦ 10 − 8 = ▢ ⁩ because ⁦ 8 + ▢ = 10 ⁩. What number completes both?",
-   "audio_ar": "⁦ 10 − 8 = ▢ ⁩ لأن ⁦ 8 + ▢ = 10 ⁩. ما العدد الذي يكمل الاثنتين؟",
-   "audio_en": "⁦ 10 − 8 = ▢ ⁩ because ⁦ 8 + ▢ = 10 ⁩. What number completes both?",
+   "answer": 1,
+   "text_ar": "⁦ 10 − 9 = ▢ ⁩ لأن ⁦ 9 + ▢ = 10 ⁩. ما العدد الذي يكمل الاثنتين؟",
+   "text_en": "⁦ 10 − 9 = ▢ ⁩ because ⁦ 9 + ▢ = 10 ⁩. What number completes both?",
+   "audio_ar": "⁦ 10 − 9 = ▢ ⁩ لأن ⁦ 9 + ▢ = 10 ⁩. ما العدد الذي يكمل الاثنتين؟",
+   "audio_en": "⁦ 10 − 9 = ▢ ⁩ because ⁦ 9 + ▢ = 10 ⁩. What number completes both?",
    "wrong": {
-    "8": "given_back"
+    "9": "given_back"
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    1,
+    9
+   ]
   },
   {
    "id": "1-4-2/tryfirst/03",
@@ -8929,21 +9263,23 @@
    "evidence": "ف3",
    "performance": "missing_first",
    "numbers": {
-    "n": 8
+    "n": 5
    },
    "resource": "بلا نموذج",
    "answer_type": "ج1",
-   "answer": 2,
-   "text_ar": "ما العدد الناقص؟ ⁦ ▢ + 8 = 10 ⁩",
-   "text_en": "What number is missing? ⁦ ▢ + 8 = 10 ⁩",
-   "audio_ar": "ما العدد الناقص؟ ⁦ ▢ + 8 = 10 ⁩",
-   "audio_en": "What number is missing? ⁦ ▢ + 8 = 10 ⁩",
-   "wrong": {
-    "8": "given_back"
-   },
+   "answer": 5,
+   "text_ar": "ما العدد الناقص؟ ⁦ ▢ + 5 = 10 ⁩",
+   "text_en": "What number is missing? ⁦ ▢ + 5 = 10 ⁩",
+   "audio_ar": "ما العدد الناقص؟ ⁦ ▢ + 5 = 10 ⁩",
+   "audio_en": "What number is missing? ⁦ ▢ + 5 = 10 ⁩",
+   "wrong": {},
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    5,
+    5
+   ]
   },
   {
    "id": "1-4-2/tryfirst/04",
@@ -8953,21 +9289,25 @@
    "evidence": "ف3",
    "performance": "subtract",
    "numbers": {
-    "n": 6
+    "n": 1
    },
    "resource": "بلا نموذج",
    "answer_type": "ج1",
-   "answer": 4,
-   "text_ar": "ما العدد الناقص؟ ⁦ 10 − 6 = ▢ ⁩",
-   "text_en": "What number is missing? ⁦ 10 − 6 = ▢ ⁩",
-   "audio_ar": "ما العدد الناقص؟ ⁦ 10 − 6 = ▢ ⁩",
-   "audio_en": "What number is missing? ⁦ 10 − 6 = ▢ ⁩",
+   "answer": 9,
+   "text_ar": "ما العدد الناقص؟ ⁦ 10 − 1 = ▢ ⁩",
+   "text_en": "What number is missing? ⁦ 10 − 1 = ▢ ⁩",
+   "audio_ar": "ما العدد الناقص؟ ⁦ 10 − 1 = ▢ ⁩",
+   "audio_en": "What number is missing? ⁦ 10 − 1 = ▢ ⁩",
    "wrong": {
-    "6": "given_back"
+    "1": "given_back"
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    1,
+    9
+   ]
   },
   {
    "id": "1-4-2/tryfirst/05",
@@ -8977,22 +9317,26 @@
    "evidence": "ف4",
    "performance": "context10",
    "numbers": {
-    "n": 9,
+    "n": 8,
     "ctx": "ctx_bus"
    },
    "resource": "صورة الموقف، والنص منطوق",
    "answer_type": "ج1",
-   "answer": 1,
-   "text_ar": "في الحافلة الصغيرة 10 مقاعد. عدد الركاب 9. كم مقعدًا بقي فارغًا؟",
-   "text_en": "The minibus has 10 seats. Passengers: 9. How many seats are still empty?",
-   "audio_ar": "في الحافلة الصغيرة 10 مقاعد. عدد الركاب 9. كم مقعدًا بقي فارغًا؟",
-   "audio_en": "The minibus has 10 seats. Passengers: 9. How many seats are still empty?",
+   "answer": 2,
+   "text_ar": "في الحافلة الصغيرة 10 مقاعد. عدد الركاب 8. كم مقعدًا بقي فارغًا؟",
+   "text_en": "The minibus has 10 seats. Passengers: 8. How many seats are still empty?",
+   "audio_ar": "في الحافلة الصغيرة 10 مقاعد. عدد الركاب 8. كم مقعدًا بقي فارغًا؟",
+   "audio_en": "The minibus has 10 seats. Passengers: 8. How many seats are still empty?",
    "wrong": {
-    "9": "given_back"
+    "8": "given_back"
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    2,
+    8
+   ]
   },
   {
    "id": "1-4-2/tryfirst/06",
@@ -9002,22 +9346,26 @@
    "evidence": "ف4",
    "performance": "context10",
    "numbers": {
-    "n": 6,
+    "n": 9,
     "ctx": "ctx_balloons"
    },
    "resource": "صورة الموقف، والنص منطوق",
    "answer_type": "ج1",
-   "answer": 4,
-   "text_ar": "كان مع عمر 10 بالونات. عدد ما طار منها 6. كم بالونًا بقي؟",
-   "text_en": "Omar had 10 balloons. Balloons that flew away: 6. How many are left?",
-   "audio_ar": "كان مع عمر 10 بالونات. عدد ما طار منها 6. كم بالونًا بقي؟",
-   "audio_en": "Omar had 10 balloons. Balloons that flew away: 6. How many are left?",
+   "answer": 1,
+   "text_ar": "كان مع عمر 10 بالونات. عدد ما طار منها 9. كم بالونًا بقي؟",
+   "text_en": "Omar had 10 balloons. Balloons that flew away: 9. How many are left?",
+   "audio_ar": "كان مع عمر 10 بالونات. عدد ما طار منها 9. كم بالونًا بقي؟",
+   "audio_en": "Omar had 10 balloons. Balloons that flew away: 9. How many are left?",
    "wrong": {
-    "6": "given_back"
+    "9": "given_back"
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    1,
+    9
+   ]
   },
   {
    "id": "1-4-2/evidence/25",
@@ -10162,7 +10510,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    91,
+    23
+   ]
   },
   {
    "id": "3-5-1/gate/02",
@@ -10189,7 +10541,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    51,
+    34
+   ]
   },
   {
    "id": "3-5-1/gate/03",
@@ -10216,7 +10572,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    90,
+    62
+   ]
   },
   {
    "id": "3-5-1/gate/04",
@@ -10242,7 +10602,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    52,
+    43
+   ]
   },
   {
    "id": "3-5-1/gate/05",
@@ -10268,7 +10632,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    84,
+    33
+   ]
   },
   {
    "id": "3-5-1/gate/06",
@@ -10295,7 +10663,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    42,
+    29
+   ]
   },
   {
    "id": "3-5-1/gate/07",
@@ -10322,7 +10694,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    83,
+    59
+   ]
   },
   {
    "id": "3-5-1/gate/08",
@@ -10345,7 +10721,11 @@
    "wrong": {},
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    60,
+    11
+   ]
   },
   {
    "id": "3-5-1/gate/09",
@@ -10368,7 +10748,11 @@
    "wrong": {},
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    33,
+    24
+   ]
   },
   {
    "id": "3-5-1/gate/10",
@@ -10394,7 +10778,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    49,
+    22
+   ]
   },
   {
    "id": "3-5-1/gate/11",
@@ -10421,7 +10809,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    73,
+    27
+   ]
   },
   {
    "id": "3-5-1/gate/12",
@@ -10444,7 +10836,11 @@
    "wrong": {},
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    92,
+    47
+   ]
   },
   {
    "id": "3-5-1/gate/13",
@@ -10467,7 +10863,11 @@
    "wrong": {},
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    70,
+    41
+   ]
   },
   {
    "id": "3-5-1/gate/14",
@@ -10493,7 +10893,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    60,
+    58
+   ]
   },
   {
    "id": "3-5-1/gate/15",
@@ -10518,7 +10922,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    99,
+    77
+   ]
   },
   {
    "id": "3-5-1/gate/16",
@@ -10545,7 +10953,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    76,
+    27
+   ]
   },
   {
    "id": "3-5-1/gate/17",
@@ -10572,7 +10984,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    84,
+    35
+   ]
   },
   {
    "id": "3-5-1/gate/18",
@@ -10595,7 +11011,11 @@
    "wrong": {},
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    90,
+    65
+   ]
   },
   {
    "id": "3-5-1/gate/19",
@@ -10618,7 +11038,11 @@
    "wrong": {},
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    22,
+    17
+   ]
   },
   {
    "id": "3-5-1/gate/20",
@@ -10644,7 +11068,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    68,
+    11
+   ]
   },
   {
    "id": "3-5-1/gate/21",
@@ -10671,7 +11099,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    71,
+    13
+   ]
   },
   {
    "id": "3-5-1/regate/01",
@@ -10698,7 +11130,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    72,
+    57
+   ]
   },
   {
    "id": "3-5-1/regate/02",
@@ -10725,7 +11161,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    80,
+    48
+   ]
   },
   {
    "id": "3-5-1/regate/03",
@@ -10751,7 +11191,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    67,
+    59
+   ]
   },
   {
    "id": "3-5-1/regate/04",
@@ -10776,7 +11220,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    78,
+    68
+   ]
   },
   {
    "id": "3-5-1/regate/05",
@@ -10803,7 +11251,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    32,
+    17
+   ]
   },
   {
    "id": "3-5-1/regate/06",
@@ -10830,7 +11282,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    83,
+    44
+   ]
   },
   {
    "id": "3-5-1/regate/07",
@@ -10857,7 +11313,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    40,
+    23
+   ]
   },
   {
    "id": "3-5-1/regate/08",
@@ -10880,7 +11340,11 @@
    "wrong": {},
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    34,
+    29
+   ]
   },
   {
    "id": "3-5-1/regate/09",
@@ -10903,7 +11367,11 @@
    "wrong": {},
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    28,
+    11
+   ]
   },
   {
    "id": "3-5-1/regate/10",
@@ -10930,7 +11398,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    85,
+    29
+   ]
   },
   {
    "id": "3-5-1/regate/11",
@@ -10957,7 +11429,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    78,
+    39
+   ]
   },
   {
    "id": "3-5-1/regate/12",
@@ -10980,7 +11456,11 @@
    "wrong": {},
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    50,
+    35
+   ]
   },
   {
    "id": "3-5-1/regate/13",
@@ -11003,7 +11483,11 @@
    "wrong": {},
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    41,
+    39
+   ]
   },
   {
    "id": "3-5-1/regate/14",
@@ -11029,7 +11513,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    85,
+    53
+   ]
   },
   {
    "id": "3-5-1/regate/15",
@@ -11056,7 +11544,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    66,
+    28
+   ]
   },
   {
    "id": "3-5-1/regate/16",
@@ -11083,7 +11575,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    92,
+    77
+   ]
   },
   {
    "id": "3-5-1/regate/17",
@@ -11110,7 +11606,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    60,
+    23
+   ]
   },
   {
    "id": "3-5-1/regate/18",
@@ -11133,7 +11633,11 @@
    "wrong": {},
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    81,
+    76
+   ]
   },
   {
    "id": "3-5-1/regate/19",
@@ -11156,7 +11660,11 @@
    "wrong": {},
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    91,
+    81
+   ]
   },
   {
    "id": "3-5-1/regate/20",
@@ -11183,7 +11691,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    66,
+    17
+   ]
   },
   {
    "id": "3-5-1/regate/21",
@@ -11209,7 +11721,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    81,
+    48
+   ]
   },
   {
    "id": "3-5-1/short/01",
@@ -11236,7 +11752,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    80,
+    32
+   ]
   },
   {
    "id": "3-5-1/short/02",
@@ -11262,7 +11782,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    82,
+    75
+   ]
   },
   {
    "id": "3-5-1/short/03",
@@ -11287,7 +11811,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    87,
+    65
+   ]
   },
   {
    "id": "3-5-1/checkA/01",
@@ -14104,7 +14632,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    48,
+    34
+   ]
   },
   {
    "id": "3-5-2/gate/02",
@@ -14129,7 +14661,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    55,
+    35
+   ]
   },
   {
    "id": "3-5-2/gate/03",
@@ -14156,7 +14692,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    92,
+    65
+   ]
   },
   {
    "id": "3-5-2/gate/04",
@@ -14183,7 +14723,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    80,
+    66
+   ]
   },
   {
    "id": "3-5-2/gate/05",
@@ -14209,7 +14753,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    48,
+    13
+   ]
   },
   {
    "id": "3-5-2/gate/06",
@@ -14235,7 +14783,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    22,
+    11
+   ]
   },
   {
    "id": "3-5-2/gate/07",
@@ -14262,7 +14814,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    45,
+    21
+   ]
   },
   {
    "id": "3-5-2/gate/08",
@@ -14289,7 +14845,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    51,
+    27
+   ]
   },
   {
    "id": "3-5-2/gate/09",
@@ -14316,7 +14876,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    50,
+    32
+   ]
   },
   {
    "id": "3-5-2/gate/10",
@@ -14339,7 +14903,11 @@
    "wrong": {},
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    76,
+    45
+   ]
   },
   {
    "id": "3-5-2/gate/11",
@@ -14362,7 +14930,11 @@
    "wrong": {},
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    86,
+    72
+   ]
   },
   {
    "id": "3-5-2/gate/12",
@@ -14388,7 +14960,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    69,
+    43
+   ]
   },
   {
    "id": "3-5-2/gate/13",
@@ -14413,7 +14989,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    46,
+    16
+   ]
   },
   {
    "id": "3-5-2/gate/14",
@@ -14437,7 +15017,11 @@
    "slot": null,
    "alt_of": null,
    "graded": true,
-   "note": "استُبدلت أعداده: كانت قفزته الثانية صفرًا"
+   "note": "استُبدلت أعداده: كانت قفزته الثانية صفرًا",
+   "fact": [
+    50,
+    34
+   ]
   },
   {
    "id": "3-5-2/gate/15",
@@ -14460,7 +15044,11 @@
    "wrong": {},
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    86,
+    53
+   ]
   },
   {
    "id": "3-5-2/gate/16",
@@ -14486,7 +15074,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    87,
+    73
+   ]
   },
   {
    "id": "3-5-2/gate/17",
@@ -14513,7 +15105,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    93,
+    77
+   ]
   },
   {
    "id": "3-5-2/gate/18",
@@ -14541,7 +15137,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    92,
+    67
+   ]
   },
   {
    "id": "3-5-2/gate/19",
@@ -14569,7 +15169,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    60,
+    31
+   ]
   },
   {
    "id": "3-5-2/gate/20",
@@ -14595,7 +15199,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    89,
+    33
+   ]
   },
   {
    "id": "3-5-2/gate/21",
@@ -14621,7 +15229,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    67,
+    53
+   ]
   },
   {
    "id": "3-5-2/gate/22",
@@ -14644,7 +15256,11 @@
    "wrong": {},
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    73,
+    54
+   ]
   },
   {
    "id": "3-5-2/gate/23",
@@ -14667,7 +15283,11 @@
    "wrong": {},
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    41,
+    16
+   ]
   },
   {
    "id": "3-5-2/gate/24",
@@ -14693,7 +15313,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    40,
+    38
+   ]
   },
   {
    "id": "3-5-2/gate/25",
@@ -14719,7 +15343,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    69,
+    31
+   ]
   },
   {
    "id": "3-5-2/gate/26",
@@ -14746,7 +15374,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    28,
+    15
+   ]
   },
   {
    "id": "3-5-2/gate/27",
@@ -14773,7 +15405,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    88,
+    61
+   ]
   },
   {
    "id": "3-5-2/regate/01",
@@ -14798,7 +15434,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    63,
+    33
+   ]
   },
   {
    "id": "3-5-2/regate/02",
@@ -14824,7 +15464,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    90,
+    68
+   ]
   },
   {
    "id": "3-5-2/regate/03",
@@ -14850,7 +15494,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    96,
+    14
+   ]
   },
   {
    "id": "3-5-2/regate/04",
@@ -14875,7 +15523,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    49,
+    39
+   ]
   },
   {
    "id": "3-5-2/regate/05",
@@ -14902,7 +15554,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    54,
+    36
+   ]
   },
   {
    "id": "3-5-2/regate/06",
@@ -14930,7 +15586,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    68,
+    39
+   ]
   },
   {
    "id": "3-5-2/regate/07",
@@ -14957,7 +15617,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    50,
+    46
+   ]
   },
   {
    "id": "3-5-2/regate/08",
@@ -14983,7 +15647,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    99,
+    64
+   ]
   },
   {
    "id": "3-5-2/regate/09",
@@ -15009,7 +15677,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    76,
+    64
+   ]
   },
   {
    "id": "3-5-2/regate/10",
@@ -15032,7 +15704,11 @@
    "wrong": {},
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    99,
+    76
+   ]
   },
   {
    "id": "3-5-2/regate/11",
@@ -15055,7 +15731,11 @@
    "wrong": {},
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    72,
+    44
+   ]
   },
   {
    "id": "3-5-2/regate/12",
@@ -15082,7 +15762,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    60,
+    41
+   ]
   },
   {
    "id": "3-5-2/regate/13",
@@ -15108,7 +15792,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    74,
+    43
+   ]
   },
   {
    "id": "3-5-2/regate/14",
@@ -15131,7 +15819,11 @@
    "wrong": {},
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    24,
+    12
+   ]
   },
   {
    "id": "3-5-2/regate/15",
@@ -15154,7 +15846,11 @@
    "wrong": {},
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    79,
+    59
+   ]
   },
   {
    "id": "3-5-2/regate/16",
@@ -15181,7 +15877,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    81,
+    56
+   ]
   },
   {
    "id": "3-5-2/regate/17",
@@ -15208,7 +15908,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    50,
+    24
+   ]
   },
   {
    "id": "3-5-2/regate/18",
@@ -15234,7 +15938,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    98,
+    18
+   ]
   },
   {
    "id": "3-5-2/regate/19",
@@ -15261,7 +15969,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    84,
+    71
+   ]
   },
   {
    "id": "3-5-2/regate/20",
@@ -15288,7 +16000,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    51,
+    35
+   ]
   },
   {
    "id": "3-5-2/regate/21",
@@ -15315,7 +16031,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    71,
+    44
+   ]
   },
   {
    "id": "3-5-2/regate/22",
@@ -15339,7 +16059,11 @@
    "slot": null,
    "alt_of": null,
    "graded": true,
-   "note": "استُبدلت أعداده: كانت قفزته الثانية صفرًا"
+   "note": "استُبدلت أعداده: كانت قفزته الثانية صفرًا",
+   "fact": [
+    50,
+    27
+   ]
   },
   {
    "id": "3-5-2/regate/23",
@@ -15362,7 +16086,11 @@
    "wrong": {},
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    97,
+    27
+   ]
   },
   {
    "id": "3-5-2/regate/24",
@@ -15387,7 +16115,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    44,
+    34
+   ]
   },
   {
    "id": "3-5-2/regate/25",
@@ -15414,7 +16146,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    67,
+    48
+   ]
   },
   {
    "id": "3-5-2/regate/26",
@@ -15442,7 +16178,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    91,
+    62
+   ]
   },
   {
    "id": "3-5-2/regate/27",
@@ -15470,7 +16210,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    90,
+    61
+   ]
   },
   {
    "id": "3-5-2/short/01",
@@ -15495,7 +16239,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    96,
+    52
+   ]
   },
   {
    "id": "3-5-2/short/02",
@@ -15521,7 +16269,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    26,
+    11
+   ]
   },
   {
    "id": "3-5-2/short/03",
@@ -15547,7 +16299,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    95,
+    71
+   ]
   },
   {
    "id": "3-5-2/checkA/01",
@@ -17972,7 +18728,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    67,
+    49
+   ]
   },
   {
    "id": "3-5-3/gate/02",
@@ -17997,7 +18757,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    28,
+    22
+   ]
   },
   {
    "id": "3-5-3/gate/03",
@@ -18023,7 +18787,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    35,
+    12
+   ]
   },
   {
    "id": "3-5-3/gate/04",
@@ -18050,7 +18818,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    74,
+    56
+   ]
   },
   {
    "id": "3-5-3/gate/05",
@@ -18075,7 +18847,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    79,
+    71
+   ]
   },
   {
    "id": "3-5-3/gate/06",
@@ -18100,7 +18876,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    25,
+    15
+   ]
   },
   {
    "id": "3-5-3/gate/07",
@@ -18127,7 +18907,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    84,
+    46
+   ]
   },
   {
    "id": "3-5-3/gate/08",
@@ -18152,7 +18936,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    39,
+    38
+   ]
   },
   {
    "id": "3-5-3/gate/09",
@@ -18178,7 +18966,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    39,
+    18
+   ]
   },
   {
    "id": "3-5-3/gate/10",
@@ -18204,7 +18996,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    82,
+    38
+   ]
   },
   {
    "id": "3-5-3/regate/01",
@@ -18229,7 +19025,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    85,
+    83
+   ]
   },
   {
    "id": "3-5-3/regate/02",
@@ -18255,7 +19055,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    55,
+    13
+   ]
   },
   {
    "id": "3-5-3/regate/03",
@@ -18282,7 +19086,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    82,
+    65
+   ]
   },
   {
    "id": "3-5-3/regate/04",
@@ -18307,7 +19115,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    88,
+    86
+   ]
   },
   {
    "id": "3-5-3/regate/05",
@@ -18333,7 +19145,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    83,
+    11
+   ]
   },
   {
    "id": "3-5-3/regate/06",
@@ -18360,7 +19176,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    54,
+    38
+   ]
   },
   {
    "id": "3-5-3/regate/07",
@@ -18385,7 +19205,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    85,
+    82
+   ]
   },
   {
    "id": "3-5-3/regate/08",
@@ -18411,7 +19235,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    65,
+    12
+   ]
   },
   {
    "id": "3-5-3/regate/09",
@@ -18438,7 +19266,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    80,
+    35
+   ]
   },
   {
    "id": "3-5-3/regate/10",
@@ -18463,7 +19295,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    28,
+    27
+   ]
   },
   {
    "id": "3-5-3/short/01",
@@ -18489,7 +19325,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    25,
+    13
+   ]
   },
   {
    "id": "3-5-3/short/02",
@@ -18516,7 +19356,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    71,
+    57
+   ]
   },
   {
    "id": "3-5-3/short/03",
@@ -18541,7 +19385,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    53,
+    52
+   ]
   },
   {
    "id": "3-5-3/checkA/01",
@@ -20278,7 +21126,11 @@
     "B",
     "same"
    ],
-   "note": "وصفي: يُعرض في اللوحة ولا يُشترط لتقدم"
+   "note": "وصفي: يُعرض في اللوحة ولا يُشترط لتقدم",
+   "fact": [
+    91,
+    17
+   ]
   },
   {
    "id": "3-5-3/compare/02",
@@ -20307,7 +21159,11 @@
     "B",
     "same"
    ],
-   "note": "وصفي: يُعرض في اللوحة ولا يُشترط لتقدم"
+   "note": "وصفي: يُعرض في اللوحة ولا يُشترط لتقدم",
+   "fact": [
+    59,
+    20
+   ]
   },
   {
    "id": "3-5-3/compare/03",
@@ -20336,7 +21192,11 @@
     "B",
     "same"
    ],
-   "note": "وصفي: يُعرض في اللوحة ولا يُشترط لتقدم"
+   "note": "وصفي: يُعرض في اللوحة ولا يُشترط لتقدم",
+   "fact": [
+    97,
+    62
+   ]
   },
   {
    "id": "3-5-3/compare/04",
@@ -20365,7 +21225,11 @@
     "B",
     "same"
    ],
-   "note": "وصفي: يُعرض في اللوحة ولا يُشترط لتقدم"
+   "note": "وصفي: يُعرض في اللوحة ولا يُشترط لتقدم",
+   "fact": [
+    68,
+    19
+   ]
   },
   {
    "id": "3-5-3/lesson/08",
@@ -23334,7 +24198,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    96,
+    19
+   ]
   },
   {
    "id": "3-5-1/tryfirst/02",
@@ -23361,7 +24229,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    86,
+    58
+   ]
   },
   {
    "id": "3-5-1/tryfirst/03",
@@ -23384,7 +24256,11 @@
    "wrong": {},
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    70,
+    19
+   ]
   },
   {
    "id": "3-5-1/tryfirst/04",
@@ -23407,7 +24283,11 @@
    "wrong": {},
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    84,
+    76
+   ]
   },
   {
    "id": "3-5-1/tryfirst/05",
@@ -23433,7 +24313,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    88,
+    35
+   ]
   },
   {
    "id": "3-5-1/tryfirst/06",
@@ -23460,7 +24344,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    37,
+    19
+   ]
   },
   {
    "id": "3-5-2/tryfirst/01",
@@ -23486,7 +24374,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    97,
+    73
+   ]
   },
   {
    "id": "3-5-2/tryfirst/02",
@@ -23513,7 +24405,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    57,
+    28
+   ]
   },
   {
    "id": "3-5-2/tryfirst/03",
@@ -23537,7 +24433,11 @@
    "slot": null,
    "alt_of": null,
    "graded": true,
-   "note": "استُبدلت أعداده: كانت قفزته الثانية صفرًا"
+   "note": "استُبدلت أعداده: كانت قفزته الثانية صفرًا",
+   "fact": [
+    50,
+    28
+   ]
   },
   {
    "id": "3-5-2/tryfirst/04",
@@ -23560,7 +24460,11 @@
    "wrong": {},
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    98,
+    33
+   ]
   },
   {
    "id": "3-5-2/tryfirst/05",
@@ -23585,7 +24489,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    72,
+    61
+   ]
   },
   {
    "id": "3-5-2/tryfirst/06",
@@ -23611,7 +24519,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    63,
+    42
+   ]
   },
   {
    "id": "3-5-2/tryfirst/07",
@@ -23637,7 +24549,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    43,
+    13
+   ]
   },
   {
    "id": "3-5-2/tryfirst/08",
@@ -23664,7 +24580,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    90,
+    86
+   ]
   },
   {
    "id": "3-5-3/tryfirst/01",
@@ -23690,7 +24610,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    74,
+    12
+   ]
   },
   {
    "id": "3-5-3/tryfirst/02",
@@ -23717,7 +24641,11 @@
    },
    "slot": null,
    "alt_of": null,
-   "graded": true
+   "graded": true,
+   "fact": [
+    42,
+    28
+   ]
   },
   {
    "id": "3-5-1/evidence/25",

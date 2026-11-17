@@ -253,7 +253,7 @@ def pick(self, skill, w):
         raise
 
 
-def drive_steps(act, source, records=None, pause=None, history=None):
+def drive_steps(act, source, records=None, pause=None, **more):       # ما يُضاف إلى drive_steps يمرّ كما هو
     """يسجّل تشغيل المولّد كما كان يسجّل drive: الغلاف المتزامن والمجدول يمران به كلاهما."""
     rec = dict(start=act.to_dict(), steps=[], pauses=[])
     step = {}
@@ -276,7 +276,7 @@ def drive_steps(act, source, records=None, pause=None, history=None):
         rec['pauses'].append(r)
         return r
     mine = []
-    gen = _drive_steps(act, src, mine, stop if pause else None, history)
+    gen = _drive_steps(act, src, mine, stop if pause else None, **more)
     try:
         req = next(gen)
         while True:

@@ -60,6 +60,8 @@ def state_of(sc):
     d = {k: plain(getattr(sc, k)) for k in STATE}
     d['n'] = {k: v for k, v in d['n'].items() if v}
     d['next_id'] = next_id(sc)
+    if sc.last is not None:                                 # آخر بند عُرض في الجلسة المفتوحة (R22-01)
+        d['last'] = plain(sc.last)
     return d
 
 
@@ -190,6 +192,7 @@ def restore(record, net, types, source, answer, item_seconds=None, records=None,
         raise Inconsistent('؛ '.join(bad))
     for k in STATE:
         setattr(sc, k, st[k])
+    sc.last = st.get('last') if st['cur'] is not None else None
     from collections import Counter
     sc.n = Counter(st['n'])
     import itertools

@@ -142,6 +142,7 @@ export class Scheduler {
     this.stage = null;
     this.live = null;
     this.today = null;
+    this.last = null;                   // آخر بند عُرض في الجلسة المفتوحة (seen)، للتتابع بين الأنشطة (R22-01)
     this.halts = [];                    // توقفات هذا التشغيل لتغيّر الصلاحية: [الجلسة، السبب، المهارة، النوع]. للبالغ
   }
 
@@ -179,6 +180,25 @@ export class Scheduler {
     this.send({ type: 'session_end', session: this.cur });
     this.cur = null;
     this.stage = null;
+    this.last = null;
+  }
+
+  // آخر بند عُرض في الجلسة (R22-01): مهارته ونشاطه ومعرّفه وحقيقته. counts: هل يُحتسب تعرّضًا؟ لا يُحتسب بند انقطع ولم
+  // تُقبل قبل انقطاعه إجابة ولم يُقدَّم فيه دعم (R22-02): وصف السجل بأنه منقطع لا يكفي. البنود التي لا تحمل حقيقة
+  // (مصادر المحاكاة المجردة) لا تُسجَّل، فلا تتغير الحالة المحفوظة في غير المحتوى الفعلي
+  seen(skill, activity, item, got = undefined) {
+    const isItem = item !== null && typeof item === 'object' && !Array.isArray(item);
+    if (!isItem || item.fact === undefined || item.fact === null) {
+      this.last = null;
+      return;
+    }
+    let counts = true;
+    if (typeof got === 'string') counts = got !== 'interrupted';
+    else if (Array.isArray(got)) {
+      const raw = got[0];
+      counts = exposed(raw) || !(raw.length && raw[raw.length - 1][0] === 'interrupt');
+    }
+    this.last = { session: this.cur, skill, activity, item: item.id ?? null, fact: [...item.fact], counts };
   }
 
   view() {
@@ -350,7 +370,13 @@ export class Scheduler {
     };
     // تاريخ التعرّض من السجلات، لا من كائن النشاط: يبقى بعد إسقاط النشاط وإنشاء غيره (R19-01). لدليل الفهم وافتتاح الدرس
     const history = kind === 'evidence' || kind === 'opening' ? (a) => exposure(this.records, a.skill, a.name) : null;
-    const gen = driveSteps(act, this.source, recs, this.cap !== null ? (w) => this.tick(w) : null, history);
+    // آخر بند عُرض للمهارة نفسها في الجلسة نفسها من نشاط آخر، إن كان يُحتسب تعرّضًا (R22-01)
+    const prev = () => {
+      const x = this.last;
+      return x && x.session === this.cur && x.skill === act.skill && x.activity !== act.name && x.counts
+        ? [x.item, x.fact] : null;
+    };
+    const gen = driveSteps(act, this.source, recs, this.cap !== null ? (w) => this.tick(w) : null, history, prev);
     // الصلاحية تُفحص قبل عرض البند، ومرة أخرى قبل تطبيق الإجابة (R16-01). قرار يقع بينهما يوقف النشاط
     const guard = (req, got = undefined) => {
       const code = this.invalid(kind, act.skill, act.check_id ?? null);
@@ -372,6 +398,7 @@ export class Scheduler {
       guard(r.value);
       const got = yield r.value;
       guard(r.value, got);
+      this.seen(act.skill, act.name, r.value[0], got);
       r = gen.next(got);
       settle();
     }
@@ -489,6 +516,7 @@ export class Scheduler {
       this.live = null;
       this.n[activity] = get(this.n, activity) + 1;
       this.elapsed += this.item_seconds(w);
+      this.seen(s, activity, item);
       k += 1;
     }
   }

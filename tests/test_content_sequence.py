@@ -8,16 +8,19 @@
 2. الفحص يكشف: يُزرع في نسخة من المحتوى بند دليل فهم بحقيقة البند الذي قبله، فيجده. ويُزرع بديل دليل فهم بحقيقة
    البند الذي يليه في الموضع التالي، فيجده (البديل يُفحص مع ما يليه).
 3. الاستثناء محدود: البند الذي يلي بندًا منقطعًا لا يُعدّ مخالفة، والذي يلي بندًا أُجيب عنه يُعدّ.
-4. التغطية: أزواج البنود التي يعرضها المجدول فعلًا في تشغيل كامل للشريحة (الصغير، والكبيران، بأخطاء وطلبات دعم)
-   داخل النشاط الواحد، وبين الافتتاح والدرس ودليل الفهم، كلها من الأزواج التي استكشفها الفحص. لو فات الفحصَ فرعٌ
-   يسلكه المجدول لظهر هنا.
+4. التغطية: كل بندين متتاليين يعرضهما المجدول فعلًا للمهارة نفسها في الجلسة نفسها، في 13 تشغيلًا كاملًا للشريحة
+   (منها عشوائية بالبذرتين 79 و16 من المراجعة 22)، لهما صنف صريح: يضمنه المحتوى (من أزواج الفحص)، أو يعالجه التشغيل
+   (دخول الافتتاح ودليل الفهم من نشاط آخر: لا حقيقة مكررة)، أو عرض تعليمي (مسموح)، أو يوسَم (دخول نشاط تقييم).
+   انتقال بلا صنف، أو لا يحقق شرط صنفه، إخفاق لا سطر مطبوع.
 5. محتوى الالتزام 17d7b0b (قبل الإصلاح) يُخفق في الفحص نفسه: للمقارنة، إن وُجد git.
 """
 import copy
 import json
 import os
+import random
 import subprocess
 import sys
+from collections import Counter
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
@@ -81,39 +84,75 @@ g = {'__file__': os.path.join(HERE, 'test_phase0.py'), '__name__': 'phase0_helpe
 sys.argv = [g['__file__'], MAP]
 exec(compile(src[:src.index("\nprint('=== ")], 'test_phase0.py', 'exec'), g)
 known = {(x, y) for x, y, _h, _l in pairs}
-JUNCTIONS = {('opening', 'lesson'), ('lesson', 'evidence')}
-seen = dict(inside=0, junction=0, other=0)
-missing, others = [], []
-for name, wrong, helped in (('young', (), ()), ('young', ('1-4-2/evidence/02', '1-4-1/checkA/05'), ('1-4-2/evidence/06',)),
-                            ('older', (), ()), ('older', ('3-5-2/checkA/03', '3-5-1/evidence/01'), ()),
-                            ('retention', (), ())):
-    e, sc = g['build'](name)
-    log, inner = [], sc.source
+DISPLAY, ASSESS, REMEDY = ('lesson', 'practice'), ('gate', 'short', 'check', 'retention'), ('opening', 'evidence')
+STATIC = {('opening', 'lesson'), ('lesson', 'evidence')}
 
-    def source(skill, w, inner=inner, log=log, sc=sc):
-        it = inner(skill, w)
-        if it is not None:
-            log.append((sc.sessions, skill, w['activity'], it['id']))
-        return it
-    sc.source = source
+
+def classify(a1, a2):
+    """كل انتقال بين بندين متتاليين للمهارة نفسها في الجلسة نفسها له صنف صريح. ما لا صنف له نقص في التغطية."""
+    if a1 == a2 or (a1, a2) in STATIC:
+        return 'يضمنه المحتوى'            # من أزواج content_sequence، والمحتوى لا يكرر فيها الحقيقة
+    if a2 in REMEDY:
+        return 'يعالجه التشغيل'           # دخول الافتتاح أو دليل الفهم من نشاط آخر: يُطلب بند آخر أو بديل (R22-01)
+    if a2 in DISPLAY:
+        return 'عرض تعليمي'               # دخول بنود الدرس أو التدريب: لا تصنع دليلًا ولا قرارًا، والتكرار فيها مسموح
+    if a2 in ASSESS:
+        return 'يوسَم'                    # دخول نشاط تقييم من نشاط آخر: لا علاج له بعد، والبند يوسَم fact_just_seen
+    return None
+
+
+def shown_run(name, sessions, events):
+    e, sc = g['build'](name)
     st = g['Stepper'](e, sc)
-    st.open(sc.g_run(g['SCEN'][name]['sessions']))
-    g['play'](st, g['Kid'](wrong, helped))
-    for (s1, k1, a1, i1), (s2, k2, a2, i2) in zip(log, log[1:]):
+    st.open(sc.g_run(sessions))
+    log = []
+    while st.pending is not None:
+        item, w = st.pending
+        log.append((e.s['current'], item['skill'], w['activity'], item['id'], w.get('fact_just_seen')))
+        for ev in events(item, w):
+            st.event(st.seq, ev)
+    return log
+
+
+def random_kid(seed, p=0.6):
+    rng = random.Random(seed)
+
+    def events(item, w):
+        if w['activity'] in DISPLAY:
+            return [('end',)]
+        ans = item['answer'] if rng.random() < p else item['answer'] + 1
+        return [('confirm', ans)] + ([] if w['activity'] in ASSESS else [('end',)])
+    return events
+
+
+runs = [(n, g['SCEN'][n]['sessions'], g['Kid'](w, h).events) for n, w, h in (
+    ('young', (), ()), ('young', ('1-4-2/evidence/02', '1-4-1/checkA/05'), ('1-4-2/evidence/06',)),
+    ('older', (), ()), ('older', ('3-5-2/checkA/03', '3-5-1/evidence/01'), ()), ('retention', (), ()))]
+runs += [('young', 20, random_kid(s)) for s in (79, 16, 1, 2, 3, 4)] + [('older', 20, random_kid(s)) for s in (1, 2)]
+kinds, classes, problems = Counter(), Counter(), []
+for name, sessions, events in runs:
+    log = shown_run(name, sessions, events)
+    for (s1, k1, a1, i1, _m1), (s2, k2, a2, i2, m2) in zip(log, log[1:]):
         if s1 != s2 or k1 != k2 or i1 == i2:
             continue
-        kind = 'inside' if a1 == a2 else 'junction' if (a1, a2) in JUNCTIONS else 'other'
-        seen[kind] += 1
-        if kind != 'other' and (i1, i2) not in known:
-            missing.append((i1, i2, a1, a2))
-        if kind == 'other':
-            others.append((a1, a2, i1, i2, cs.fact(by_id[i1]) == cs.fact(by_id[i2])))
-expect('4. أزواج عرضها المجدول فعلًا داخل النشاط وبين الافتتاح والدرس ودليل الفهم: كلها مما استكشفه الفحص '
-       '(%d داخل النشاط، %d بين الأنشطة المغطاة)' % (seen['inside'], seen['junction']), missing[:5], [])
-print('        أزواج بين أنشطة لا يغطيها الفحص، في الجلسة نفسها والمهارة نفسها: %d، منها بالحقيقة نفسها: %d'
-      % (len(others), sum(1 for o in others if o[4])))
-for o in sorted(set(o[:2] for o in others)):
-    print('          %s ثم %s' % o)
+        c = classify(a1, a2)
+        classes[c] += 1
+        if a1 != a2:
+            kinds[(a1, a2, c)] += 1
+        same = cs.fact(by_id[i1]) == cs.fact(by_id[i2])
+        if c is None:
+            problems.append(('بلا صنف', a1, a2, i1, i2))
+        elif c == 'يضمنه المحتوى' and (i1, i2) not in known:
+            problems.append(('ليس مما استكشفه الفحص', a1, a2, i1, i2))
+        elif c == 'يعالجه التشغيل' and same:
+            problems.append(('الحقيقة نفسها بلا علاج', a1, a2, i1, i2))
+        elif c == 'يوسَم' and same and m2 != i1:
+            problems.append(('الحقيقة نفسها بلا وسم', a1, a2, i1, i2))
+expect('4. كل انتقال بين بندين متتاليين للمهارة نفسها في الجلسة نفسها، في %d تشغيلًا كاملًا، له صنف صريح ويحقق شرط '
+       'صنفه (%s)' % (len(runs), '، '.join('%s: %d' % (k, v) for k, v in sorted(classes.items(), key=str))),
+       problems[:5], [])
+for (a1, a2, c), n in sorted(kinds.items()):
+    print('        %s ثم %s: %d (%s)' % (a1, a2, n, c))
 
 # 5) المحتوى قبل الإصلاح
 try:
@@ -127,8 +166,9 @@ else:
     p, b, _n = cs.collect(old, cs.load_types(old))
     v = {(x, y) for x, y, _h, _l, _f in cs.violations(p, b)}
     z = sorted(i['id'] for i in old if i['skill'] in SLOTS and zero_step(i))
-    expect('5. محتوى 17d7b0b: 65 زوجًا مخالفًا (عدد مقيس لا متوقع)، و5 بنود بقفزة صفرية', [len(v), z],
-           [65, ['3-5-2/evidence/19', '3-5-2/gate/14', '3-5-2/lesson/03', '3-5-2/regate/22', '3-5-2/tryfirst/03']])
+    print('        أزواج مخالفة في محتوى 17d7b0b بالفحص الحالي: %d (عدد مقيس، يزيد كلما استكشف الفحص فروعًا أكثر)' % len(v))
+    expect('5. محتوى 17d7b0b يُخفق: فيه أزواج مخالفة، و5 بنود بقفزة صفرية', [len(v) > 0, z],
+           [True, ['3-5-2/evidence/19', '3-5-2/gate/14', '3-5-2/lesson/03', '3-5-2/regate/22', '3-5-2/tryfirst/03']])
 
 print('النتيجة: نجح %d من %d' % (sum(results), len(results)))
 sys.exit(0 if all(results) else 1)
