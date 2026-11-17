@@ -111,32 +111,65 @@ export class Saver {
     return p;
   }
 
+  // إشعار الواجهة. خطأ في دالة العرض لا يوقف طابور الحفظ ولا يغيّر نتيجته (المراجعة 14)
+  _status(s) {
+    try {
+      this.onStatus(s);
+    } catch (err) {
+      this.statusErrors = (this.statusErrors || 0) + 1;
+    }
+  }
+
+  // كل مسار ينتهي بحسم الطلبات التي حملها، و running يعود false في كل حال (المراجعة 14). خطأ صنع اللقطة
+  // (snapshot_failed) غير خطأ التخزين (quota، write_failed، aborted، conflict)، والطلب التالي يعيد المحاولة
   async _run() {
     this.running = true;
-    while (this.done < this.seq) {
-      if (this.readOnly) {
-        this._settle(this.seq, { ok: false, code: 'read_only' });
-        break;
+    try {
+      while (this.done < this.seq) {
+        if (this.readOnly) {
+          this._settle(this.seq, { ok: false, code: 'read_only' });
+          break;
+        }
+        const upto = this.seq;          // ما طُلب حتى الآن تحمله هذه الكتابة
+        let record;
+        try {
+          record = { ...this.snap(), child: this.child };
+        } catch (err) {
+          this._fail({ ok: false, code: 'snapshot_failed', detail: String(err) });
+          break;
+        }
+        this._status({ status: 'saving', upto });
+        let r;
+        try {
+          r = await commit(this.db, record, this.rev, this.hooks);
+        } catch (err) {
+          r = { ok: false, code: 'write_failed', detail: String(err) };
+        }
+        this.commits += 1;
+        this.last = r;
+        if (r.ok) {
+          this.rev = r.rev;
+          this.done = upto;
+          this._status({ status: 'saved', rev: r.rev, upto });
+          this._settle(upto, r);
+        } else {
+          if (r.code === 'conflict') this.readOnly = true;   // نافذة أخرى كتبت: تُعاد القراءة قبل أي كتابة
+          this._fail(r);
+          break;
+        }
       }
-      const upto = this.seq;            // ما طُلب حتى الآن تحمله هذه الكتابة
-      const record = { ...this.snap(), child: this.child };
-      this.onStatus({ status: 'saving', upto });
-      const r = await commit(this.db, record, this.rev, this.hooks);
-      this.commits += 1;
-      this.last = r;
-      if (r.ok) {
-        this.rev = r.rev;
-        this.done = upto;
-        this.onStatus({ status: 'saved', rev: r.rev, upto });
-        this._settle(upto, r);
-      } else {
-        if (r.code === 'conflict') this.readOnly = true;   // نافذة أخرى كتبت: تُعاد القراءة قبل أي كتابة
-        this.onStatus({ status: 'failed', code: r.code, upto: this.seq });
-        this._settle(this.seq, r);      // الحالة في الذاكرة غير محفوظة. الطلب التالي يعيد المحاولة بأحدثها
-        break;
-      }
+    } catch (err) {                     // لا يُتوقع، ولا يُترك طلب بلا حسم
+      this._fail({ ok: false, code: 'internal', detail: String(err) });
+    } finally {
+      this.running = false;
     }
-    this.running = false;
+  }
+
+  // الحالة في الذاكرة غير محفوظة: يُرفض كل طلب معلّق بسببه، والطلب التالي يعيد المحاولة بأحدث حالة
+  _fail(r) {
+    this.last = r;
+    this._status({ status: 'failed', code: r.code, upto: this.seq });
+    this._settle(this.seq, r);
   }
 
   _settle(upto, r) {

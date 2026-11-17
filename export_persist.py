@@ -6,7 +6,8 @@
 
 مسارات تعلّم عشوائية ببذرة ثابتة على محتوى الشريحة، بسقف وقت. عند حدود جلسات عشوائية، وأحيانًا في منتصف جلسة لم
 تُختم، يُصنع سجل حفظ. وإن كان في المجدول نشاط محفوظ، يُجعل أحيانًا نشاطًا جاريًا: يُعرض منه عدد عشوائي من البنود،
-ثم بند جارٍ بأحداث خام لم تُنهه (دعم، أو إجابة مؤكدة في بند غير تقييمي). ويُفسد بعض السجلات عمدًا ليُرفض.
+ثم بند جارٍ بأحداث خام لم تُنهه (دعم، أو إجابة مؤكدة في بند غير تقييمي). وقبل بعض اللقطات يترك المعلم محاولة فحص
+محفوظة، أو يُبطل جلسة منتهية (المراجعة 14). ويُفسد بعض السجلات عمدًا ليُرفض.
 لكل سجل: نصه، وما تعيده الاستعادة في المرجع: بصمة المحرك، وحالة المجدول، والملاحظات، والسجلات، أو سبب الرفض.
 """
 import copy
@@ -119,10 +120,13 @@ def outcome(rec):
                                        item_seconds=lambda w: 0, records=[])
     except persist.Inconsistent:
         return dict(refused=True)
-    return dict(h=digest(e), state=persist.state_of(sc), notes=[list(n) for n in notes], records=sc.records)
+    return dict(h=digest(e), state=persist.state_of(sc), notes=[list(n) for n in notes], records=sc.records,
+                again=persist.snapshot(e, sc) == persist.snapshot(*persist.restore(
+                    json.loads(json.dumps(persist.snapshot(e, sc))), NET, TYPES, ContentSource(ITEMS),
+                    lambda i, w: 'correct', item_seconds=lambda w: 0, records=[])[:2]))
 
 
-vectors, kinds = [], dict(boundary=0, open_session=0, current=0, journal=0, refused=0)
+vectors, kinds = [], dict(boundary=0, open_session=0, current=0, journal=0, refused=0, abandoned=0, invalidated=0)
 for seed in range(160):
     rng = random.Random(seed)
     scope, group, start, decisions = UNITS[seed % 2]
@@ -146,6 +150,15 @@ for seed in range(160):
                 sc.begin('follow')
                 kinds['open_session'] += 1
             work = copy.deepcopy((e.s, sc.saved, sc.parked))
+            checks = [c['act']['check_id'] for c in sc.saved + list(sc.parked.values()) if c['kind'] == 'check']
+            if checks and rng.random() < 0.3:               # قرار المعلم قبل الحفظ (المراجعة 14)
+                e.apply(dict(id='abandon-%d' % n, type='check_abandoned', check_id=rng.choice(checks),
+                             reason='قرار المعلم'))
+                kinds['abandoned'] += 1
+            ended = [x for x in e.s['order'] if e.s['sessions'][x]['ended'] and not e.s['sessions'][x]['invalid']]
+            if ended and rng.random() < 0.15:
+                e.apply(dict(id='inval-%d' % n, type='invalidate_session', target=rng.choice(ended)))
+                kinds['invalidated'] += 1
             cur = make_current(rng, sc, src) if rng.random() < 0.6 else None
             rec = json.loads(json.dumps(persist.snapshot(e, sc, cur, child='k%d' % seed)))
             e.s, sc.saved, sc.parked = work                 # الحالة الحية لا تتغير بصنع السجل
@@ -166,6 +179,7 @@ with open(OUT, 'w', encoding='utf-8') as f:
     json.dump(dict(types=TYPES, vectors=vectors), f, ensure_ascii=False, separators=(',', ':'))
 refused = sum(1 for v in vectors if v['expect'].get('refused'))
 print('سجلات: %d (عند حد جلسة أو في منتصف جلسة لم تُختم %d، منها في جلسة مفتوحة %d، وبنشاط جارٍ %d، وببند جارٍ %d، '
-      'ومفسدة %d). رفضها المرجع: %d' % (len(vectors), kinds['boundary'], kinds['open_session'], kinds['current'],
-                                       kinds['journal'], kinds['refused'], refused))
+      'وبعد ترك المعلم محاولة محفوظة %d، وبعد إبطال جلسة %d، ومفسدة %d). رفضها المرجع: %d' % (
+          len(vectors), kinds['boundary'], kinds['open_session'], kinds['current'], kinds['journal'],
+          kinds['abandoned'], kinds['invalidated'], kinds['refused'], refused))
 print('الحجم: %.1f ميغابايت' % (os.path.getsize(OUT) / 1e6))

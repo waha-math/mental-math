@@ -1,17 +1,19 @@
 // سياسة الحفظ والاستعادة (9.2) بلغة التطبيق: نقل persist.py. ما يُحفظ، وكيف تُستعاد منه حالة كاملة متسقة.
 // الكتابة نفسها في app/store.mjs، معاملة واحدة لسجل الطفل كله.
 //
-// السجل: engine (نص المحرك)، و scheduler (خياراته وحالته كلها، ومنها saved و parked)، و current (النشاط الجاري
+// السجل: engine (نص المحرك)، و scheduler (خياراته وحالته كلها، ومنها saved و parked)، و records (سجل محاولات البنود
+// الذي تُشتق منه المؤشرات، المراجعة 14)، و current (النشاط الجاري
 // وبنوده المعروضة و journal: البند المعروض الآن وأحداثه الخام حتى الآن). الحدث الذي يُنهي البند لا يُحفظ في
 // journal: يُطوى البند ويُعطى للنشاط ويُفرَّغ journal في الحفظ نفسه.
 //
-// الاستعادة: البند الجاري يُختم بانقطاع ويُعلَّم «غير محسوم»، والنشاط الجاري يُحفظ في saved، والجلسة التي لم تُختم
+// الاستعادة: النشاط الجاري يُضم إلى المخزن، ثم يُسوّى ما فسّره حدث مشروع محفوظ (فحص محفوظ تركه المعلم يُسقط
+// من المخزن)، والبند الجاري يُختم بانقطاع ويُعلَّم «غير محسوم»، والنشاط الجاري يُحفظ في saved، والجلسة التي لم تُختم
 // تُختم، ولا يُقبل سجل يخالف فيه المجدولُ المحرك.
 import { Engine } from './engine.mjs';
 import { Activity, foldItem, classify } from './items.mjs';
 import { Scheduler } from './scheduler.mjs';
 
-export const SCHEMA = 1;
+export const SCHEMA = 2;                // 2: ومعه سجل محاولات البنود (المراجعة 14)
 export const STATE = ['saved', 'parked', 'carried_items', 'intent', 'pending', 'proven', 'attempt', 'ev_round',
   'last_items', 'n', 'gates_run', 'searches', 'sessions', 'day', 'cur', 'log', 'refused', 'stalled', 'elapsed',
   'start_at', 'items_before', 'start_w', 'start_what'];
@@ -52,7 +54,26 @@ export function snapshot(engine, sc, current = null, child = '') {
     throw new Error('البند المنتهي يُطوى ويُعطى للنشاط قبل الحفظ، ولا يُحفظ في journal');
   }
   return { schema: SCHEMA, child, engine: engine.dump(), scheduler: { opts: options(sc), state: stateOf(sc) },
-    current: current === null ? null : clone(current) };
+    records: sc.records === null ? null : clone(sc.records), current: current === null ? null : clone(current) };
+}
+
+// تسوية النشاط المحفوظ الذي أنهى صلاحيتَه حدثٌ مشروع في سجل المحرك: ترك المعلم لمحاولة الفحص
+export function reconcile(engine, st) {
+  const notes = [];
+  const abandoned = new Set(engine.s.log.filter((ev) => ev.type === 'check_abandoned').map((ev) => ev.check_id));
+  const stale = (c) => {
+    if (c.kind !== 'check') return false;
+    const ch = engine.s.checks[c.act.check_id];
+    return Boolean(ch) && ch.state === 'abandoned' && abandoned.has(c.act.check_id);
+  };
+  const drop = [...st.saved.filter(stale), ...Object.values(st.parked).filter(stale)];
+  for (const c of drop) {
+    if (st.saved.includes(c)) st.saved.splice(st.saved.indexOf(c), 1);
+    else delete st.parked[c.skill];
+    st.log.push([st.sessions, 'carry_dropped:check_abandoned', c.skill]);
+    notes.push(['reconciled', c.act.check_id, 'check_abandoned']);
+  }
+  return notes;
 }
 
 export function checkConsistent(engine, st) {
@@ -80,15 +101,15 @@ export function restore(record, { types, source, answer, item_seconds = null, re
   if (record.schema !== SCHEMA) throw new Inconsistent(`نسخة سجل غير معروفة: ${record.schema}`);
   const e = Engine.restore(net, record.engine, contentVersions);
   const o = { ...record.scheduler.opts };
+  if (record.records !== null && record.records !== undefined) {   // سجل محاولات البنود كما حُفظ
+    records = records === null ? [] : records;
+    records.splice(0, records.length, ...clone(record.records));
+  }
   const sc = new Scheduler(e, types, source, answer, { ...o, records, item_seconds });
   const st = clone(record.scheduler.state);
-  const bad = checkConsistent(e, st);
-  if (bad.length) throw new Inconsistent(bad.join('؛ '));
-  for (const k of STATE) sc[k] = st[k];
-  sc._next = st.next_id;
   const notes = [];
   const cur = record.current ? clone(record.current) : null;
-  if (cur) {
+  if (cur) {                                    // النشاط الجاري يُضم إلى المخزن قبل التسوية والفحص
     let entry;
     if (cur.kind === 'show') {
       entry = { kind: 'show', skill: cur.skill, activity: cur.activity, pos: cur.pos, items: [] };
@@ -108,9 +129,14 @@ export function restore(record, { types, source, answer, item_seconds = null, re
       }
       entry = { kind: cur.kind, skill: act.skill, act: act.toDict(), items };
     }
-    sc.save(entry);
+    st.saved.push(entry);
     notes.push(['current_saved', cur.kind, cur.skill]);
   }
+  notes.push(...reconcile(e, st));
+  const bad = checkConsistent(e, st);
+  if (bad.length) throw new Inconsistent(bad.join('؛ '));
+  for (const k of STATE) sc[k] = st[k];
+  sc._next = st.next_id;
   if (e.s.current !== null) {                   // التطبيق أُغلق في جلسة لم تُختم
     const ses = e.s.current;
     const r = e.apply({ id: `restore-end-${ses}`, type: 'session_end', session: ses });

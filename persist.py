@@ -7,13 +7,18 @@
 السجل:
 - engine: نص المحرك المحفوظ (dump)، بنسخة ترحيله.
 - scheduler: خيارات المجدول وحالته كلها: الأنشطة المحفوظة (saved)، والمركونة (parked)، والنوايا، والعدّادات، والسجل.
+- records: سجل محاولات البنود (3.1): لكل بند حقوله الخمسة ونتيجته، ومنها الإجابة الأولى والدعم والمحاولات اللاحقة
+  والانقطاع والبند «غير المحسوم». منه تُشتق المؤشرات الأربعة (3.2)، فيُحفظ في المعاملة نفسها (المراجعة 14).
 - current: النشاط الجاري إن كان: نوعه ومهارته وحالته (to_dict)، والبنود التي عُرضت منه، و journal: البند الجاري.
 - journal: البند المعروض الآن ببنده وما طلبه النشاط (want) وأحداثه الخام حتى الآن: الدعم، والإجابات المؤكدة التي لم
   تُنهِ البند. يُحفظ كل حدث منها فور وقوعه. والحدث الذي يُنهي البند لا يُحفظ في journal: يُطوى البند ويُعطى للنشاط
   ويُفرَّغ journal في الحفظ نفسه، فلا يُحسب البند مرتين.
 
 الاستعادة:
-1. المحرك من نصه، والمجدول بخياراته وحالته.
+1. المحرك من نصه، والمجدول بخياراته وحالته، وسجل محاولات البنود كما حُفظ.
+1أ. تسوية ما فسّره حدث مشروع محفوظ (المراجعة 14)، بعد ضم النشاط الجاري إلى المخزن: فحص محفوظ أو مركون تركه المعلم بحدث check_abandoned في سجل
+   المحرك يُسقط من المخزن، ويُكتب إسقاطه في سجل المجدول كما يكتبه المجدول الحي عند الرفض النهائي. وما لا يفسّره
+   حدث في السجل لا يُسوّى، ويُرفض في فحص الاتساق.
 2. البند الجاري، إن كان، لم يكتمل بالضرورة: يُختم بانقطاع ويُعلَّم «غير محسوم» (9.2)، ويُعطى للنشاط بقواعد البند
    المنقطع نفسها (3.1). الدعم الذي طُلب فيه يبقى معه، والإجابات المؤكدة قبله تبقى.
 3. النشاط الجاري يُحفظ في saved كما لو قطعه السقف، فيُستأنف بأولوية 7.1 في جلسة تالية.
@@ -26,7 +31,7 @@ import json
 from item_layer import Activity, fold_item, classify
 from scheduler import Scheduler
 
-SCHEMA = 1
+SCHEMA = 2                                                  # 2: ومعه سجل محاولات البنود (المراجعة 14)
 OPTS = ('group', 'start', 'scope', 'learning', 'tolerant', 'compat', 'content_version', 'no_short', 'try_from_gate',
         'cap', 'retention')
 STATE = ('saved', 'parked', 'carried_items', 'intent', 'pending', 'proven', 'attempt', 'ev_round', 'last_items', 'n',
@@ -85,7 +90,29 @@ def snapshot(engine, sc, current=None, child=''):
         if item_ends(j['raw'], j['assess']):
             raise ValueError('البند المنتهي يُطوى ويُعطى للنشاط قبل الحفظ، ولا يُحفظ في journal')
     return dict(schema=SCHEMA, child=child, engine=engine.dump(), scheduler=dict(opts=options(sc), state=state_of(sc)),
-                current=plain(current))
+                records=None if sc.records is None else plain(sc.records), current=plain(current))
+
+
+def reconcile(engine, st):
+    """تسوية النشاط المحفوظ الذي أنهى صلاحيتَه حدثٌ مشروع في سجل المحرك: ترك المعلم لمحاولة الفحص."""
+    notes = []
+    abandoned = {ev['check_id'] for ev in engine.s['log'] if ev['type'] == 'check_abandoned'}
+
+    def stale(c):
+        if c['kind'] != 'check':
+            return False
+        cid = c['act']['check_id']
+        ch = engine.s['checks'].get(cid)
+        return ch is not None and ch['state'] == 'abandoned' and cid in abandoned
+
+    for c in [c for c in st['saved'] if stale(c)] + [c for c in st['parked'].values() if stale(c)]:
+        if c in st['saved']:
+            st['saved'].remove(c)
+        else:
+            del st['parked'][c['skill']]
+        st['log'].append([st['sessions'], 'carry_dropped:check_abandoned', c['skill']])
+        notes.append(('reconciled', c['act']['check_id'], 'check_abandoned'))
+    return notes
 
 
 def check_consistent(engine, st):
@@ -115,20 +142,14 @@ def restore(record, net, types, source, answer, item_seconds=None, records=None,
     e = Engine.restore(net, record['engine'], content_versions)
     o = dict(record['scheduler']['opts'])
     o['scope'] = None if o['scope'] is None else set(o['scope'])
+    if record.get('records') is not None:                  # سجل محاولات البنود كما حُفظ
+        records = [] if records is None else records
+        records[:] = copy.deepcopy(record['records'])
     sc = Scheduler(e, types, source, answer, records=records, item_seconds=item_seconds, **o)
     st = copy.deepcopy(record['scheduler']['state'])
-    bad = check_consistent(e, st)
-    if bad:
-        raise Inconsistent('؛ '.join(bad))
-    for k in STATE:
-        setattr(sc, k, st[k])
-    from collections import Counter
-    sc.n = Counter(st['n'])
-    import itertools
-    sc._ids = itertools.count(st['next_id'])
     notes = []
     cur = copy.deepcopy(record.get('current'))
-    if cur:
+    if cur:                                                 # النشاط الجاري يُضم إلى المخزن قبل التسوية والفحص
         if cur['kind'] == 'show':
             entry = dict(kind='show', skill=cur['skill'], activity=cur['activity'], pos=cur['pos'], items=[])
         else:
@@ -145,8 +166,18 @@ def restore(record, net, types, source, answer, item_seconds=None, records=None,
                                            item=j.get('item'), unsettled=True))
                 notes.append(('unsettled_item', act.skill, j.get('item'), classify(rec)))
             entry = dict(kind=cur['kind'], skill=act.skill, act=act.to_dict(), items=items)
-        sc.save(entry)
+        st['saved'].append(entry)
         notes.append(('current_saved', cur['kind'], cur['skill']))
+    notes += reconcile(e, st)
+    bad = check_consistent(e, st)
+    if bad:
+        raise Inconsistent('؛ '.join(bad))
+    for k in STATE:
+        setattr(sc, k, st[k])
+    from collections import Counter
+    sc.n = Counter(st['n'])
+    import itertools
+    sc._ids = itertools.count(st['next_id'])
     if e.s['current'] is not None:                          # التطبيق أُغلق في جلسة لم تُختم
         ses = e.s['current']
         r = e.apply(dict(id='restore-end-%s' % ses, type='session_end', session=ses))

@@ -150,11 +150,13 @@ console.log(`=== الحفظ الذرّي في Chrome ${browser.version()} (Index
     const rec = await store.load(other, 'kid');
     const back = window.H.reopen(rec);
     return { res, seen, pAt, rev: rec.rev, same: JSON.stringify(persist.snapshot(back.engine, back.scheduler, null, 'kid'))
-      === JSON.stringify(persist.snapshot(e, sc, null, 'kid')), notes: back.notes };
+      === JSON.stringify(persist.snapshot(e, sc, null, 'kid')), notes: back.notes, nrec: sc.records.length,
+      recs: JSON.stringify(back.scheduler.records) === JSON.stringify(sc.records) };
   });
   check('حفظ أول: «جارٍ الحفظ» ثم «تم الحفظ» بعد اكتمال المعاملة، واتصال آخر يرى السجل عند «تم الحفظ» نفسه. والسجل '
-    + 'المقروء يُستعاد إلى الحالة نفسها حرفًا بحرف', r.res.ok && r.res.rev === 1 && r.seen.join() === 'saving,saved'
-    && r.pAt.join() === '1' && r.rev === 1 && r.same && r.notes.length === 0, JSON.stringify(r));
+    + `المقروء يُستعاد إلى الحالة نفسها حرفًا بحرف، ومعها سجلات البنود الـ${r.nrec} كما هي (R14-01)`,
+  r.res.ok && r.res.rev === 1 && r.seen.join() === 'saving,saved' && r.pAt.join() === '1' && r.rev === 1 && r.same
+    && r.notes.length === 0 && r.nrec > 0 && r.recs, JSON.stringify(r));
   await page.close();
 }
 
@@ -269,6 +271,39 @@ console.log(`=== الحفظ الذرّي في Chrome ${browser.version()} (Index
     && forced.again === 'read_only' && forced.rev === 2 && forced.fromA && !forced.b && after.got && after.res.ok
     && after.res.rev === 3, JSON.stringify({ ra, rb, forced, after }));
   await B.page.close();
+}
+
+// 8. استثناء في صنع اللقطة أو في دالة العرض (R14-03)
+{
+  const { page } = await open();
+  const r = await page.evaluate(async () => {
+    const { store, persist, setup } = window.H;
+    const db = await store.openDB('t8');
+    const st = setup();
+    let failSnap = true, failStatus = 0;
+    const seen = [];
+    const saver = new store.Saver(db, 'kid8', () => {
+      if (failSnap) { failSnap = false; throw new Error('منشئ اللقطة فشل'); }
+      return persist.snapshot(st.e, st.sc, null, 'kid8');
+    }, { onStatus: (s) => {
+      seen.push(s.status + (s.code ? ':' + s.code : ''));
+      if (s.status === 'saving' && failStatus++ === 0) throw new Error('دالة العرض فشلت');
+    } });
+    const within = (p) => Promise.race([p.then((x) => ({ ok: true, rev: x.rev }), (x) => ({ ok: false, code: x.code })),
+      new Promise((res) => setTimeout(() => res({ pending: true }), 2000))]);
+    const first = await within(saver.request());
+    const runningAfter = saver.running;
+    const second = await within(saver.request());
+    const rec = await store.load(db, 'kid8');
+    return { first, runningAfter, second, rev: rec ? rec.rev : 0, seen, waiting: saver.waiting.length,
+      statusErrors: saver.statusErrors || 0 };
+  });
+  check('منشئ لقطة يفشل مرة ثم يعمل: يُرفض الطلب الأول بـ snapshot_failed ويظهر «فشل»، ويعود الكاتب غير مشغول. ثم ينجح '
+    + 'طلب تالٍ على IndexedDB وتُحسم وعوده، ولو رمت دالة العرض استثناءً عند «جارٍ الحفظ»',
+  r.first.code === 'snapshot_failed' && r.runningAfter === false && r.second.ok && r.second.rev === 1 && r.rev === 1
+    && r.waiting === 0 && r.seen.join() === 'failed:snapshot_failed,saving,saved' && r.statusErrors === 1,
+  JSON.stringify(r));
+  await page.close();
 }
 
 // 4. إغلاق التطبيق قبل اكتمال المعاملة، وبعده: قتل عملية Chrome كلها، ثم تشغيله بملف التعريف نفسه
