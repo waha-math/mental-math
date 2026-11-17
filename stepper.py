@@ -11,6 +11,7 @@
 - استثناء داخل الانتقال يعطّل الطبقة (broken): لا لقطة ولا خطوة بعده، والحالة المحفوظة السابقة تبقى هي المرجع.
 """
 import persist
+from scheduler import Void
 
 ASSESS = ('gate', 'short', 'check', 'retention')            # بنود التقييم: تنتهي بأول تأكيد
 SHOWN = ('lesson', 'practice')                              # بنود العرض: لا سجل لها
@@ -25,6 +26,7 @@ class Stepper:
         self.raw, self.shown = [], False
         self.finished, self.broken = True, False
         self.result = None
+        self.halt = None                                    # آخر توقف لتغيّر الصلاحية: (الجلسة، السبب، المهارة، النوع)
 
     # ------------------------------------------------------------ التشغيل
     def open(self, gen):
@@ -56,17 +58,31 @@ class Stepper:
     def assess(self):
         return self.pending[1]['activity'] in ASSESS
 
+    def _void(self, answered):
+        """النشاط الجاري لم يعد صالحًا (قرار وقع أثناءه): لا يُعرض البند ولا يُحتسب الحدث. المجدول يحفظ النشاط أو
+        يركنه أو يُسقطه بقاعدة السبب ويختم الجلسة، والسبب في self.halt للبالغ."""
+        if self.sc.live_invalid() is None:
+            return False
+        self._advance(Void(answered))
+        self.halt = self.sc.halts[-1]
+        return True
+
     def show(self, seq):
-        """عُرض البند على الطفل. من هنا إغلاق التطبيق انقطاعٌ في البند."""
-        if self._check(seq):
-            self.shown = True
-        return self.shown
+        """عُرض البند على الطفل. من هنا إغلاق التطبيق انقطاعٌ في البند. يعيد False إن لم يُعرض: طلب آخر، أو نشاط لم
+        يعد صالحًا (R16-01)."""
+        if not self._check(seq) or self._void(False):
+            return False
+        self.shown = True
+        return True
 
     def event(self, seq, ev):
         """حدث خام من الواجهة: ('support', نوع) أو ('confirm', قيمة) أو ('end',). يعيد 'ignored' إن لم يكن للطلب الجاري،
-        و'open' إن بقي البند مفتوحًا، و'next' إن أنهى البند وتم الانتقال."""
+        و'open' إن بقي البند مفتوحًا، و'next' إن أنهى البند وتم الانتقال، و'void' إن لم يُحتسب لأن النشاط لم يعد
+        صالحًا."""
         if not self._check(seq):
             return 'ignored'
+        if self._void(True):
+            return 'void'
         item, w = self.pending
         if w['activity'] in SHOWN:
             if ev[0] != 'end':

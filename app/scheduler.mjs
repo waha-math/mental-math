@@ -44,6 +44,23 @@ export class Capped extends Error {
   }
 }
 
+// تغيّرت صلاحية النشاط الجاري أثناءه (المراجعة 16): لا يتقدم ولا تُحتسب الإجابة. حُفظ أو رُكن أو أُسقط بقاعدة سبب
+// الرفض، وتُختم الجلسة كما تُختم عند السقف
+export class Halted extends Capped {
+  constructor(code) {
+    super();
+    this.name = 'Halted';
+    this.code = code;
+  }
+}
+
+// ما ترسله طبقة الخطوات بدل الإجابة حين تجد النشاط الجاري غير صالح. answered: هل حاول الطفل الإجابة؟
+export class Void {
+  constructor(answered) {
+    this.answered = answered;
+  }
+}
+
 // أنواع البنود كما اختارتها المحاكاة القديمة، لوضع compat
 export function oldTypes(types) {
   const plan = gatePlan(types);
@@ -115,6 +132,7 @@ export class Scheduler {
     this.stage = null;
     this.live = null;
     this.today = null;
+    this.halts = [];                    // توقفات هذا التشغيل لتغيّر الصلاحية: [الجلسة، السبب، المهارة، النوع]. للبالغ
   }
 
   // ---------------------------------------------------------------- المحرك
@@ -233,6 +251,48 @@ export class Scheduler {
   }
 
   // حدث استئناف نشاط تعليمي محفوظ: check_resumed للفحص، و resume_lesson لأنشطة الدرس إن لم يكن نشطًا
+  // سبب رفض المحرك لاستمرار هذا النشاط في الجلسة الجارية، أو null إن كان صالحًا
+  invalid(kind, skill, check_id = null) {
+    const v = this.e.may_continue(kind, this.cur, skill, check_id);
+    return v.ok ? null : v.code;
+  }
+
+  // سبب عدم صلاحية النشاط المعروض الآن، أو null. تسأله طبقة الخطوات قبل العرض وقبل قبول أي حدث
+  live_invalid() {
+    const v = this.live;
+    if (v === null) return null;
+    if (v.kind === 'show') return this.invalid('show', v.skill);
+    return this.invalid(v.kind, v.act.skill, v.act.check_id ?? null);
+  }
+
+  // النشاط الجاري لم يعد صالحًا: لا يتقدم. مصيره بقاعدة سبب الرفض كما عند استئناف نشاط محفوظ: الرفض الخاص بالجلسة
+  // يُبقيه محفوظًا، والمؤقت الخاص بالمهارة يركن النشاط التعليمي بتقدّمه، وما عداهما يُسقطه. ما أُنجز منه باقٍ في
+  // السجلات. وإجابة جاءت بعد تغيّر الصلاحية لا تُحتسب دليلًا ولا خطأً
+  halt(code, entry, started, answered) {
+    this.live = null;
+    this.carried_items = [];
+    const k = refusalKind(code), skill = entry.skill;
+    let what = 'carry_dropped';
+    if (k === 'session' && started) {
+      this.save(entry);
+      what = 'carry_kept';
+    } else if (k === 'later' && TEACH_KINDS.includes(entry.kind) && started) {
+      this.parked[skill] = entry;
+      what = 'carry_parked';
+    }
+    this.log.push([this.sessions, what + ':' + code, skill]);
+    if (answered) this.log.push([this.sessions, 'answer_void:' + code, skill]);
+    this.halts.push([this.cur, code, skill, entry.kind]);
+    throw new Halted(code);
+  }
+
+  // حكم المحرك على استئناف نشاط تعليمي محفوظ. بحدث استئناف: قبول الحدث. وبلا حدث، لأن النشاط من هذه الجلسة نفسها
+  // فلا حصة جديدة: صلاحية استمراره الآن. سبق الإذن ليس إذنًا دائمًا (R16-01)
+  resume_verdict(c, need) {
+    if (need) return this.e.preflight({ ...need, id: 'ask', session: this.cur });
+    return this.e.may_continue(c.kind, this.cur, c.skill, c.kind === 'check' ? c.act.check_id : null);
+  }
+
   resume_need(c) {
     const s = c.skill;
     if (c.kind === 'check') {
@@ -272,8 +332,22 @@ export class Scheduler {
       done = recs.length;
     };
     const gen = driveSteps(act, this.source, recs, this.cap !== null ? (w) => this.tick(w) : null);
+    // الصلاحية تُفحص قبل عرض البند، ومرة أخرى قبل تطبيق الإجابة (R16-01). قرار يقع بينهما يوقف النشاط
+    const guard = (got = undefined) => {
+      const code = this.invalid(kind, act.skill, act.check_id ?? null);
+      if (code === null) {
+        if (got instanceof Void) throw new Error('طبقة الخطوات أبطلت بندًا والمحرك يراه صالحًا');
+        return;
+      }
+      const entry = { kind, skill: act.skill, act: act.toDict(),
+        items: [...prior, ...recs.filter((r) => r.item).map((r) => r.item)] };
+      this.halt(code, entry, sum(act.shown) > 0 || kind === 'check',
+        got !== undefined && !(got instanceof Void && !got.answered));
+    };
     for (let r = gen.next(); !r.done;) {
+      guard();
       const got = yield r.value;
+      guard(got);
       r = gen.next(got);
       settle();
     }
@@ -382,7 +456,12 @@ export class Scheduler {
       const item = this.source(s, { activity, pos: k });
       if (isNone(item)) return k;
       this.live = { kind: 'show', skill: s, activity, pos: k };
-      yield [item, w];                    // الإجابة تأتي من الغلاف المتزامن أو من الواجهة
+      const entry = { kind: 'show', skill: s, activity, pos: k, items: [] };
+      let code = this.invalid('show', s);        // قبل العرض (R16-01)
+      if (code !== null) this.halt(code, entry, true, false);
+      const got = yield [item, w];        // الإجابة تأتي من الغلاف المتزامن أو من الواجهة
+      code = this.invalid('show', s);            // وقبل احتساب البند معروضًا
+      if (code !== null) this.halt(code, entry, true, !(got instanceof Void && !got.answered));
       this.live = null;
       this.n[activity] = get(this.n, activity) + 1;
       this.elapsed += this.item_seconds(w);
@@ -723,7 +802,7 @@ export class Scheduler {
     for (const s of teaching ? [] : Object.keys(this.parked)) {   // نشاط رُكن: أول جلسة يُقبل فيها
       const c = this.parked[s];
       const need = this.resume_need(c);
-      const v = need ? this.e.preflight({ ...need, id: 'ask', session: this.cur }) : { ok: true };
+      const v = this.resume_verdict(c, need);
       if (v.ok || refusalKind(v.code) !== 'later') {
         delete this.parked[s];
         this.save(c);
@@ -775,7 +854,7 @@ export class Scheduler {
   // و null إن أُسقط أو رُكن فتمضي الحصة إلى غيره
   *g_resume(c) {
     const s = c.skill, need = this.resume_need(c);
-    const v = need ? this.e.preflight({ ...need, id: 'ask', session: this.cur }) : { ok: true };
+    const v = this.resume_verdict(c, need);
     if (!v.ok) {
       const kind = refusalKind(v.code);
       if (kind === 'session') return false;     // تبقى محفوظة لجلسة فيها الحصة، أو حتى يؤكَّد التاريخ

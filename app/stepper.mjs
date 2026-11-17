@@ -9,6 +9,7 @@
 // - كل طلب بند له رقم seq. الحدث الذي يحمل رقمًا غير رقم الطلب الجاري يُهمل: إجابة مكررة أو متأخرة لا تُحتسب مرتين.
 // - استثناء داخل الانتقال يعطّل الطبقة (broken): لا لقطة ولا خطوة بعده، والحالة المحفوظة السابقة تبقى هي المرجع.
 import { itemEnds, snapshot } from './persist.mjs';
+import { Void } from './scheduler.mjs';
 
 export const ASSESS = ['gate', 'short', 'check', 'retention'];   // بنود التقييم: تنتهي بأول تأكيد
 export const SHOWN = ['lesson', 'practice'];                     // بنود العرض: لا سجل لها
@@ -25,6 +26,7 @@ export class Stepper {
     this.finished = true;
     this.broken = false;
     this.result = null;
+    this.halt = null;                   // آخر توقف لتغيّر الصلاحية: [الجلسة، السبب، المهارة، النوع]
   }
 
   // يبدأ مولّد خطوات (sc.g_continue() أو sc.g_follow_learning() ...) ويتقدم إلى أول طلب بند
@@ -65,16 +67,28 @@ export class Stepper {
     return ASSESS.includes(this.pending[1].activity);
   }
 
-  // عُرض البند على الطفل. من هنا إغلاق التطبيق انقطاعٌ في البند
+  // النشاط الجاري لم يعد صالحًا (قرار وقع أثناءه): لا يُعرض البند ولا يُحتسب الحدث. المجدول يحفظ النشاط أو يركنه أو
+  // يُسقطه بقاعدة السبب ويختم الجلسة، والسبب في this.halt للبالغ
+  _void(answered) {
+    if (this.sc.live_invalid() === null) return false;
+    this._advance(new Void(answered));
+    this.halt = this.sc.halts[this.sc.halts.length - 1];
+    return true;
+  }
+
+  // عُرض البند على الطفل. من هنا إغلاق التطبيق انقطاعٌ في البند. يعيد false إن لم يُعرض: طلب آخر، أو نشاط لم يعد
+  // صالحًا (R16-01)
   show(seq) {
-    if (this._check(seq)) this.shown = true;
-    return this.shown;
+    if (!this._check(seq) || this._void(false)) return false;
+    this.shown = true;
+    return true;
   }
 
   // حدث خام من الواجهة: ['support', نوع] أو ['confirm', قيمة] أو ['end']. يعيد 'ignored' إن لم يكن للطلب الجاري،
-  // و'open' إن بقي البند مفتوحًا، و'next' إن أنهى البند وتم الانتقال
+  // و'open' إن بقي البند مفتوحًا، و'next' إن أنهى البند وتم الانتقال، و'void' إن لم يُحتسب لأن النشاط لم يعد صالحًا
   event(seq, ev) {
     if (!this._check(seq)) return 'ignored';
+    if (this._void(true)) return 'void';
     const [item, w] = this.pending;
     if (SHOWN.includes(w.activity)) {
       if (ev[0] !== 'end') return 'ignored';

@@ -35,6 +35,9 @@ export function canonical(x) {
   return '{' + Object.keys(x).sort().map((k) => JSON.stringify(k) + ': ' + canonical(x[k])).join(', ') + '}';
 }
 
+// حدث ختام كل نشاط: قاعدة قبوله هي قاعدة استمرار النشاط (may_continue)
+const CONTINUE = { gate: 'gate_result', short: 'short_check_result', opening: 'lesson_opening_result',
+  evidence: 'understanding_proved', check: 'independence_result', retention: 'retention_result' };
 const ok = (extra = {}) => ({ ok: true, ...extra });
 const no = (code, missing = null) => ({ ok: false, code, reason: REASONS[code], missing });
 
@@ -562,6 +565,16 @@ export class Engine {
     if (o.phase === 'due') o.phase = 'full';
     o.active = ev.session;
     o.taught.push(ev.session);
+  }
+
+  // هل يستمر نشاط جارٍ في هذه الجلسة؟ يسأله المجدول قبل عرض كل بند وقبل تطبيق كل إجابة (المراجعة 16)، فقرار يقع
+  // أثناء النشاط، كإبطال جلسة أو ترك محاولة، يوقفه قبل أن يُعرض بند أو تُحتسب إجابة. لا يكتب شيئًا ولا يستهلك حصة.
+  // القاعدة هي قاعدة قبول حدث ختام النشاط نفسها، وهي لا تقرأ نتيجته (تفحصه الحالة 13 في tests/test_phase0).
+  // وبنود الدرس والتدريب (show) لا حدث لها، فشرطها شرط الدرس النشط في الجلسة
+  may_continue(kind, session, skill, check_id = null) {
+    const ev = { session, skill, check_id, correct: 0 };
+    if (kind === 'show') return this._lesson(ev, ['opening', 'skipped', 'full']) || ok();
+    return this['can_' + CONTINUE[kind]](ev);
   }
 
   can_lesson_opening_result(ev) {

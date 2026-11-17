@@ -266,6 +266,11 @@ def no(code, missing=None):
     return dict(ok=False, code=code, reason=REASONS[code], missing=missing)
 
 
+# حدث ختام كل نشاط: قاعدة قبوله هي قاعدة استمرار النشاط (may_continue)
+CONTINUE = dict(gate='gate_result', short='short_check_result', opening='lesson_opening_result',
+                evidence='understanding_proved', check='independence_result', retention='retention_result')
+
+
 class Engine:
     def __init__(self, net, group='older', regate=True, versions=None):
         self.ids, self.pre = net
@@ -753,6 +758,16 @@ class Engine:
             o['phase'] = 'full'
         o['active'] = ev['session']
         o['taught'].append(ev['session'])
+
+    def may_continue(self, kind, session, skill, check_id=None):
+        """هل يستمر نشاط جارٍ في هذه الجلسة؟ يسأله المجدول قبل عرض كل بند وقبل تطبيق كل إجابة (المراجعة 16)، فقرار
+        يقع أثناء النشاط، كإبطال جلسة أو ترك محاولة، يوقفه قبل أن يُعرض بند أو تُحتسب إجابة. لا يكتب شيئًا ولا يستهلك
+        حصة. القاعدة هي قاعدة قبول حدث ختام النشاط نفسها، وهي لا تقرأ نتيجته: فالحكم واحد مهما كانت الإجابة المقبلة
+        (تفحصه الحالة 13 في tests/test_phase0). وبنود الدرس والتدريب (show) لا حدث لها، فشرطها شرط الدرس النشط في الجلسة."""
+        ev = dict(session=session, skill=skill, check_id=check_id, correct=0)
+        if kind == 'show':
+            return self._lesson(ev, ('opening', 'skipped', 'full')) or ok()
+        return getattr(self, 'can_' + CONTINUE[kind])(ev)
 
     def can_lesson_opening_result(self, ev):
         return self._lesson(ev, ('opening',)) or ok()

@@ -411,6 +411,147 @@ def case_counters():
     return bad
 
 
+def base_counts(sc):
+    return [len(sc.records), dict(sc.n)]
+
+
+def case_valid_restore():
+    # القاعدة (8.3): إبطال جلسة أسهمت في محاولة غير مكتملة يجعلها «تحتاج إعادة بدء»، فلا تُستأنف. والاستئناف في
+    # الجلسة نفسها لا يستهلك حصة، لكنه يتحقق من الصلاحية لحظة التنفيذ
+    e, sc, st, kid = at(21)                                 # S5، خمس خانات منجزة، والخانة 6 (1-4-1/checkA/11) تنتظر
+    r = e.apply(dict(id='t1', type='invalidate_session', target='S4'))
+    rec = st.snapshot()
+    e2, sc2, notes = reopen('young', rec)
+    before = base_counts(sc2)
+    s2 = Stepper(e2, sc2)
+    s2.open(sc2.g_continue())
+    bad = []
+    expect(bad, 'قبول الإبطال وحالة المحاولة', [r['ok'], e2.s['checks']['1-4-1/check/1']['state']], [True, 'needs_restart'])
+    expect(bad, 'بعد الاستعادة: لا بند معروض، والمولّد انتهى، والجلسة خُتمت', [s2.pending, s2.finished, sc2.cur], [None, True, None])
+    expect(bad, 'سجل المجدول', [list(x) for x in sc2.log[-1:]], [[5, 'carry_dropped:check_state', '1-4-1']])
+    expect(bad, 'المخزنان', [sc2.saved, sc2.parked], [[], {}])
+    expect(bad, 'السجلات والعدّادات لم تتغير', base_counts(sc2), before)
+    expect(bad, 'عدّاد بنود الفحص: الخانات الخمس', sc2.n['check'], 5)
+    expect(bad, 'أحداث S5: استئناف واحد، ولا نتيجة', [count(e2, 'check_resumed', 'S5'), count(e2, 'independence_result')], [1, 0])
+    return bad
+
+
+def case_valid_live():
+    bad = []
+    # قبل عرض السؤال التالي
+    e, sc, st, kid = at(21)
+    before = base_counts(sc)
+    e.apply(dict(id='t1', type='invalidate_session', target='S4'))
+    shown = st.show(st.seq)
+    expect(bad, 'قبل العرض: لم يُعرض، وسبب التوقف للبالغ', [shown, list(st.halt)], [False, ['S5', 'check_state', '1-4-1', 'check']])
+    expect(bad, 'قبل العرض: سجل المجدول بلا إجابة مُهملة', [list(x) for x in sc.log if x[0] == 5],
+           [[5, 'carry_dropped:check_state', '1-4-1']])
+    expect(bad, 'قبل العرض: السجلات والعدّادات', base_counts(sc), before)
+    # بعد عرض السؤال وقبل تأكيده
+    e, sc, st, kid = at(21)
+    st.show(st.seq)
+    before, old = base_counts(sc), st.seq
+    e.apply(dict(id='t1', type='invalidate_session', target='S4'))
+    r1 = st.event(old, ('confirm', 7))
+    r2 = st.event(old, ('confirm', 7))
+    expect(bad, 'بعد العرض: نتيجة الإجابة ثم تكرارها', [r1, r2], ['void', 'ignored'])
+    expect(bad, 'بعد العرض: سجل المجدول', [list(x) for x in sc.log if x[0] == 5],
+           [[5, 'carry_dropped:check_state', '1-4-1'], [5, 'answer_void:check_state', '1-4-1']])
+    expect(bad, 'بعد العرض: لا سجل بند ولا عدّاد ولا نتيجة', [base_counts(sc), count(e, 'independence_result')], [before, 0])
+    expect(bad, 'بعد العرض: الجلسة خُتمت والمحاولة كما هي', [e.s['sessions']['S5']['ended'],
+                                                           e.s['checks']['1-4-1/check/1']['state']], [True, 'needs_restart'])
+    return bad
+
+
+def case_valid_temporary():
+    # القاعدة (8.3): إبطال الدليل الذي فتح مهارة يعلّق أنشطتها حتى إعادة التحقق. هذا منع مؤقت: يُركن النشاط بتقدّمه
+    e, sc, st, kid = at(39)                                 # S8، دليل فهم 1-4-2: بند واحد منجز، والثاني معروض
+    st.show(st.seq)
+    before = base_counts(sc)
+    r = e.apply(dict(id='t1', type='invalidate_session', target='S6'))   # الجلسة التي اجتيز فيها فحص 1-4-1
+    res = st.event(st.seq, ('confirm', 4))
+    bad = []
+    expect(bad, 'الإبطال والتعليق', [r['ok'], sorted(e.s['suspended'])], [True, ['1-4-2']])
+    expect(bad, 'نتيجة الإجابة وسبب التوقف', [res, list(st.halt)], ['void', ['S8', 'suspended', '1-4-2', 'evidence']])
+    p = sc.parked.get('1-4-2') or {}
+    expect(bad, 'النشاط مركون بتقدّمه: بند واحد منجز', [p.get('kind'), (p.get('act') or {}).get('shown'), p.get('items')],
+           ['evidence', {'evidence': 1}, ['1-4-2/evidence/01']])
+    expect(bad, 'سجل المجدول في S8', [list(x) for x in sc.log if x[0] == 8],
+           [[8, 'carry_parked:suspended', '1-4-2'], [8, 'answer_void:suspended', '1-4-2']])
+    expect(bad, 'السجلات والعدّادات لم تتغير', base_counts(sc), before)
+    expect(bad, 'S8 خُتمت', e.s['sessions']['S8']['ended'], True)
+    return bad
+
+
+RESULTS = ('pass', 'fail', 'help')
+VARIANTS = dict(gate=[dict(result=r) for r in RESULTS + ('interrupted',)], short=[dict(ok=True), dict(ok=False)],
+                opening=[dict(outcome=o) for o in ('skip', 'full_error', 'full_help')], evidence=[dict()],
+                check=[dict(result=r) for r in RESULTS], retention=[dict(correct=c) for c in range(6)])
+TYPE = dict(gate='gate_result', short='short_check_result', opening='lesson_opening_result',
+            evidence='understanding_proved', check='independence_result', retention='retention_result')
+
+
+def verdicts(e, sc):
+    v = sc.live
+    if v is None or v['kind'] == 'show':
+        return None
+    act, kind = v['act'], v['kind']
+    base = dict(type=TYPE[kind], id='ask', session=sc.cur, skill=act.skill)
+    if kind == 'check':
+        base['check_id'] = act.check_id
+    got = []
+    for extra in VARIANTS[kind]:
+        r = e.preflight(dict(base, **extra))
+        got.append('ok' if r['ok'] else r['code'])
+    c = e.may_continue(kind, sc.cur, act.skill, getattr(act, 'check_id', None))
+    return kind, got, 'ok' if c['ok'] else c['code']
+
+
+def case_valid_healthy():
+    bad = []
+    # حالة سليمة: الاستئناف في الجلسة نفسها يعرض البند نفسه بلا حصة ولا حدث استئناف إضافيين
+    e, sc, st, kid = at(21)
+    e2, sc2, notes = reopen('young', st.snapshot())
+    s2 = Stepper(e2, sc2)
+    s2.open(sc2.g_continue())
+    expect(bad, 'سليمة: البند المعروض، واستئنافات S5، وحصتها التعليمية المستهلكة',
+           [s2.pending[0]['id'], count(e2, 'check_resumed', 'S5'), e2.s['sessions']['S5']['teach']], ['1-4-1/checkA/11', 1, 1])
+    # حكم الاستمرار لا يقرأ النتيجة: عند كل طلب بند في المسار، وبعد كل إبطال من الثلاثة، حكم قبول حدث الختام واحد
+    # لكل قيم نتيجته، وهو حكم may_continue نفسه
+    seen, split = {}, []
+    def probe(e, sc, label):
+        v = verdicts(e, sc)
+        if v is None:
+            return
+        kind, got, c = v
+        seen.setdefault(kind, set()).add(c)
+        if len(set(got)) != 1 or got[0] != c:
+            split.append((label, kind, got, c))
+    e, sc = build('retention')
+    st, kid = Stepper(e, sc), Kid()
+    st.open(sc.g_run(100))
+    k = 0
+    while st.pending is not None:
+        probe(e, sc, k)
+        item, w = st.pending
+        for ev in kid.events(item, w):
+            st.event(st.seq, ev)
+        k += 1
+    for n, target in ((21, 'S4'), (21, 'S3'), (39, 'S6'), (1, None), (13, 'S2')):
+        e, sc, st, kid = at(n)
+        if target:
+            e.apply(dict(id='t1', type='invalidate_session', target=target))
+        else:
+            e.apply(dict(id='t1', type='session_end', session=sc.cur))      # جلسة خُتمت من خارج المجدول
+        probe(e, sc, (n, target))
+    expect(bad, 'مواضع يختلف فيها الحكم باختلاف النتيجة', split, [])
+    # جرد لما بلغه الفحص، لا نتيجة مشتقة من قاعدة: يثبت أن المقارنة جرت على أحكام قبول ورفض متنوعة
+    expect(bad, 'الأنواع المفحوصة وأحكامها', {k: sorted(v) for k, v in sorted(seen.items())},
+           dict(check=['check_state', 'ok', 'understanding_first'], evidence=['lesson_idle', 'ok', 'suspended'],
+                gate=['no_session', 'ok'], opening=['ok'], retention=['ok']))
+    return bad
+
+
 print('ب) حالات بنتائج مكتوبة يدويًا')
 for title, fn in (
         ('1. إغلاق عند عرض البند (الخانة 2 من الفحص): يُختم «غير محسوم» منقطعًا، والجلسة S4 نفسها تُكمَل بوقتها (60 ثانية) '
@@ -428,7 +569,15 @@ for title, fn in (
         ('8. انتقال يوم الأسرة: الاستعادة في يوم جديد تختم S4، والجلسة التالية S5 تستأنف الفحص بحدثه. وفي اليوم نفسه تبقى '
          'S4 مفتوحة', case_newday),
         ('9. العدّادات (R16-03): كل بند خُتم يُحتسب مرة واحدة. 20 بند فحص و40 سجلًا بلا إغلاق وبعد إغلاق واستعادة. والبند '
-         'الذي يُختم منقطعًا أثناء الاستعادة يدخل العدّاد عندها، فيصير المجموع 21 و41 مع بديله', case_counters)):
+         'الذي يُختم منقطعًا أثناء الاستعادة يدخل العدّاد عندها، فيصير المجموع 21 و41 مع بديله', case_counters),
+        ('10. الصلاحية قبل الاستعادة (R16-01): أُبطلت S4 والفحص في S5 ينتظر الخانة 6، ثم حُفظ واستُعيد. لا يُعرض بند: يُسقط '
+         'النشاط «يحتاج إعادة بدء»، وتُختم الجلسة، والسجلات والعدّادات كما هي، ولا نتيجة', case_valid_restore),
+        ('11. الصلاحية في الجلسة الحية (R16-01): إبطال قبل عرض السؤال التالي فلا يُعرض، وإبطال بعد عرضه وقبل تأكيده فلا '
+         'تُحتسب الإجابة دليلًا ولا خطأً، وتكرارها يُهمل. والسبب يُحفظ للبالغ', case_valid_live),
+        ('12. المنع المؤقت (R16-01): تعليق المهارة أثناء دليل فهمها يركن النشاط بتقدّمه ولا يُسقطه، والإجابة لا تُحتسب',
+         case_valid_temporary),
+        ('13. حالة سليمة: الاستئناف في الجلسة نفسها بلا حصة ولا حدث إضافيين. وحكم الاستمرار لا يقرأ النتيجة: هو حكم '
+         'قبول حدث الختام لكل قيم نتيجته، عند كل طلب بند وبعد كل إبطال', case_valid_healthy)):
     try:
         bad = fn()
     except Exception as x:                                   # noqa: BLE001

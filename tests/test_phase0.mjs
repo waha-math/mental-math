@@ -370,6 +370,136 @@ function caseCounters() {
   return bad;
 }
 
+const baseCounts = (sc) => [sc.records.length, { ...sc.n }];
+
+// القاعدة (8.3): إبطال جلسة أسهمت في محاولة غير مكتملة يجعلها «تحتاج إعادة بدء»، فلا تُستأنف. والاستئناف في الجلسة
+// نفسها لا يستهلك حصة، لكنه يتحقق من الصلاحية لحظة التنفيذ
+function caseValidRestore() {
+  const { e, st } = at(21);
+  const r = e.apply({ id: 't1', type: 'invalidate_session', target: 'S4' });
+  const { e: e2, sc: sc2 } = reopen('young', st.snapshot());
+  const before = baseCounts(sc2);
+  const s2 = new Stepper(e2, sc2);
+  s2.open(sc2.g_continue());
+  const bad = [];
+  expect(bad, 'قبول الإبطال وحالة المحاولة', [r.ok, e2.s.checks['1-4-1/check/1'].state], [true, 'needs_restart']);
+  expect(bad, 'بعد الاستعادة: لا بند معروض، والمولّد انتهى، والجلسة خُتمت', [s2.pending, s2.finished, sc2.cur], [null, true, null]);
+  expect(bad, 'سجل المجدول', sc2.log.slice(-1), [[5, 'carry_dropped:check_state', '1-4-1']]);
+  expect(bad, 'المخزنان', [sc2.saved, sc2.parked], [[], {}]);
+  expect(bad, 'السجلات والعدّادات لم تتغير', baseCounts(sc2), before);
+  expect(bad, 'عدّاد بنود الفحص: الخانات الخمس', sc2.n.check, 5);
+  expect(bad, 'أحداث S5: استئناف واحد، ولا نتيجة', [count(e2, 'check_resumed', 'S5'), count(e2, 'independence_result')], [1, 0]);
+  return bad;
+}
+
+function caseValidLive() {
+  const bad = [];
+  let { e, sc, st } = at(21);
+  let before = baseCounts(sc);
+  e.apply({ id: 't1', type: 'invalidate_session', target: 'S4' });
+  const shown = st.show(st.seq);
+  expect(bad, 'قبل العرض: لم يُعرض، وسبب التوقف للبالغ', [shown, st.halt], [false, ['S5', 'check_state', '1-4-1', 'check']]);
+  expect(bad, 'قبل العرض: سجل المجدول بلا إجابة مُهملة', sc.log.filter((x) => x[0] === 5),
+    [[5, 'carry_dropped:check_state', '1-4-1']]);
+  expect(bad, 'قبل العرض: السجلات والعدّادات', baseCounts(sc), before);
+  ({ e, sc, st } = at(21));
+  st.show(st.seq);
+  before = baseCounts(sc);
+  const old = st.seq;
+  e.apply({ id: 't1', type: 'invalidate_session', target: 'S4' });
+  const r1 = st.event(old, ['confirm', 7]);
+  const r2 = st.event(old, ['confirm', 7]);
+  expect(bad, 'بعد العرض: نتيجة الإجابة ثم تكرارها', [r1, r2], ['void', 'ignored']);
+  expect(bad, 'بعد العرض: سجل المجدول', sc.log.filter((x) => x[0] === 5),
+    [[5, 'carry_dropped:check_state', '1-4-1'], [5, 'answer_void:check_state', '1-4-1']]);
+  expect(bad, 'بعد العرض: لا سجل بند ولا عدّاد ولا نتيجة', [baseCounts(sc), count(e, 'independence_result')], [before, 0]);
+  expect(bad, 'بعد العرض: الجلسة خُتمت والمحاولة كما هي', [e.s.sessions.S5.ended, e.s.checks['1-4-1/check/1'].state],
+    [true, 'needs_restart']);
+  return bad;
+}
+
+// القاعدة (8.3): إبطال الدليل الذي فتح مهارة يعلّق أنشطتها حتى إعادة التحقق. هذا منع مؤقت: يُركن النشاط بتقدّمه
+function caseValidTemporary() {
+  const { e, sc, st } = at(39);
+  st.show(st.seq);
+  const before = baseCounts(sc);
+  const r = e.apply({ id: 't1', type: 'invalidate_session', target: 'S6' });
+  const res = st.event(st.seq, ['confirm', 4]);
+  const bad = [];
+  expect(bad, 'الإبطال والتعليق', [r.ok, Object.keys(e.s.suspended).sort()], [true, ['1-4-2']]);
+  expect(bad, 'نتيجة الإجابة وسبب التوقف', [res, st.halt], ['void', ['S8', 'suspended', '1-4-2', 'evidence']]);
+  const p = sc.parked['1-4-2'] || {};
+  expect(bad, 'النشاط مركون بتقدّمه: بند واحد منجز', [p.kind ?? null, (p.act || {}).shown ?? null, p.items ?? null],
+    ['evidence', { evidence: 1 }, ['1-4-2/evidence/01']]);
+  expect(bad, 'سجل المجدول في S8', sc.log.filter((x) => x[0] === 8),
+    [[8, 'carry_parked:suspended', '1-4-2'], [8, 'answer_void:suspended', '1-4-2']]);
+  expect(bad, 'السجلات والعدّادات لم تتغير', baseCounts(sc), before);
+  expect(bad, 'S8 خُتمت', e.s.sessions.S8.ended, true);
+  return bad;
+}
+
+const RESULTS = ['pass', 'fail', 'help'];
+const VARIANTS = { gate: [...RESULTS, 'interrupted'].map((result) => ({ result })), short: [{ ok: true }, { ok: false }],
+  opening: ['skip', 'full_error', 'full_help'].map((outcome) => ({ outcome })), evidence: [{}],
+  check: RESULTS.map((result) => ({ result })), retention: [0, 1, 2, 3, 4, 5].map((correct) => ({ correct })) };
+const TYPE = { gate: 'gate_result', short: 'short_check_result', opening: 'lesson_opening_result',
+  evidence: 'understanding_proved', check: 'independence_result', retention: 'retention_result' };
+
+function verdicts(e, sc) {
+  const v = sc.live;
+  if (v === null || v.kind === 'show') return null;
+  const act = v.act, kind = v.kind;
+  const base = { type: TYPE[kind], id: 'ask', session: sc.cur, skill: act.skill };
+  if (kind === 'check') base.check_id = act.check_id;
+  const got = VARIANTS[kind].map((extra) => {
+    const r = e.preflight({ ...base, ...extra });
+    return r.ok ? 'ok' : r.code;
+  });
+  const c = e.may_continue(kind, sc.cur, act.skill, act.check_id ?? null);
+  return [kind, got, c.ok ? 'ok' : c.code];
+}
+
+function caseValidHealthy() {
+  const bad = [];
+  const a = at(21);
+  const r2 = reopen('young', a.st.snapshot());
+  const s2 = new Stepper(r2.e, r2.sc);
+  s2.open(r2.sc.g_continue());
+  expect(bad, 'سليمة: البند المعروض، واستئنافات S5، وحصتها التعليمية المستهلكة',
+    [s2.pending[0].id, count(r2.e, 'check_resumed', 'S5'), r2.e.s.sessions.S5.teach], ['1-4-1/checkA/11', 1, 1]);
+  // حكم الاستمرار لا يقرأ النتيجة: عند كل طلب بند في المسار، وبعد كل إبطال، حكم قبول حدث الختام واحد لكل قيم
+  // نتيجته، وهو حكم may_continue نفسه
+  const seen = {}, split = [];
+  const probe = (e, sc, label) => {
+    const v = verdicts(e, sc);
+    if (v === null) return;
+    const [kind, got, c] = v;
+    (seen[kind] ||= new Set()).add(c);
+    if (new Set(got).size !== 1 || got[0] !== c) split.push([label, kind, got, c]);
+  };
+  const b = build('retention');
+  const st = new Stepper(b.e, b.sc), kid = new Kid();
+  st.open(b.sc.g_run(100));
+  for (let k = 0; st.pending !== null; k++) {
+    probe(b.e, b.sc, k);
+    const [item, w] = st.pending;
+    for (const ev of kid.events(item, w)) st.event(st.seq, ev);
+  }
+  for (const [n, target] of [[21, 'S4'], [21, 'S3'], [39, 'S6'], [1, null], [13, 'S2']]) {
+    const x = at(n);
+    if (target) x.e.apply({ id: 't1', type: 'invalidate_session', target });
+    else x.e.apply({ id: 't1', type: 'session_end', session: x.sc.cur });   // جلسة خُتمت من خارج المجدول
+    probe(x.e, x.sc, [n, target]);
+  }
+  expect(bad, 'مواضع يختلف فيها الحكم باختلاف النتيجة', split, []);
+  // جرد لما بلغه الفحص، لا نتيجة مشتقة من قاعدة: يثبت أن المقارنة جرت على أحكام قبول ورفض متنوعة
+  expect(bad, 'الأنواع المفحوصة وأحكامها',
+    Object.fromEntries(Object.keys(seen).sort().map((k) => [k, [...seen[k]].sort()])),
+    { check: ['check_state', 'ok', 'understanding_first'], evidence: ['lesson_idle', 'ok', 'suspended'],
+      gate: ['no_session', 'ok'], opening: ['ok'], retention: ['ok'] });
+  return bad;
+}
+
 console.log('ب) حالات بنتائج مكتوبة يدويًا');
 for (const [title, fn] of [
   ['1. إغلاق عند عرض البند (الخانة 2 من الفحص): يُختم «غير محسوم» منقطعًا، والجلسة S4 نفسها تُكمَل بوقتها (60 ثانية) '
@@ -387,7 +517,15 @@ for (const [title, fn] of [
   ['8. انتقال يوم الأسرة: الاستعادة في يوم جديد تختم S4، والجلسة التالية S5 تستأنف الفحص بحدثه. وفي اليوم نفسه تبقى '
     + 'S4 مفتوحة', caseNewday],
   ['9. العدّادات (R16-03): كل بند خُتم يُحتسب مرة واحدة. 20 بند فحص و40 سجلًا بلا إغلاق وبعد إغلاق واستعادة. والبند '
-    + 'الذي يُختم منقطعًا أثناء الاستعادة يدخل العدّاد عندها، فيصير المجموع 21 و41 مع بديله', caseCounters]]) {
+    + 'الذي يُختم منقطعًا أثناء الاستعادة يدخل العدّاد عندها، فيصير المجموع 21 و41 مع بديله', caseCounters],
+  ['10. الصلاحية قبل الاستعادة (R16-01): أُبطلت S4 والفحص في S5 ينتظر الخانة 6، ثم حُفظ واستُعيد. لا يُعرض بند: يُسقط '
+    + 'النشاط «يحتاج إعادة بدء»، وتُختم الجلسة، والسجلات والعدّادات كما هي، ولا نتيجة', caseValidRestore],
+  ['11. الصلاحية في الجلسة الحية (R16-01): إبطال قبل عرض السؤال التالي فلا يُعرض، وإبطال بعد عرضه وقبل تأكيده فلا '
+    + 'تُحتسب الإجابة دليلًا ولا خطأً، وتكرارها يُهمل. والسبب يُحفظ للبالغ', caseValidLive],
+  ['12. المنع المؤقت (R16-01): تعليق المهارة أثناء دليل فهمها يركن النشاط بتقدّمه ولا يُسقطه، والإجابة لا تُحتسب',
+    caseValidTemporary],
+  ['13. حالة سليمة: الاستئناف في الجلسة نفسها بلا حصة ولا حدث إضافيين. وحكم الاستمرار لا يقرأ النتيجة: هو حكم '
+    + 'قبول حدث الختام لكل قيم نتيجته، عند كل طلب بند وبعد كل إبطال', caseValidHealthy]]) {
   let bad;
   try { bad = fn(); } catch (x) { bad = ['استثناء: ' + (x.stack || x).toString().split('\n').slice(0, 2).join(' ')]; }
   check(title, bad);

@@ -63,6 +63,18 @@ class Capped(Exception):
     """بلغت الجلسة سقف وقتها: تُختم، وما لم يكتمل محفوظ في saved."""
 
 
+class Halted(Capped):
+    """تغيّرت صلاحية النشاط الجاري أثناءه (المراجعة 16): لا يتقدم ولا تُحتسب الإجابة. حُفظ أو رُكن أو أُسقط بقاعدة
+    سبب الرفض، وتُختم الجلسة كما تُختم عند السقف."""
+
+
+class Void:
+    """ما ترسله طبقة الخطوات بدل الإجابة حين تجد النشاط الجاري غير صالح. answered: هل حاول الطفل الإجابة؟"""
+
+    def __init__(self, answered):
+        self.answered = answered
+
+
 def old_types(types):
     """أنواع البنود كما اختارتها المحاكاة القديمة، لوضع compat."""
     plan = gate_plan(types)
@@ -101,6 +113,7 @@ class Scheduler:
         # موضع الجلسة الجارية بين أجزائها (المرحلة 0ج): به تُكمَل الجلسة نفسها بعد إغلاق التطبيق، فلا تُستهلك جلسة
         # ولا حصة ولا يتجدد الوقت. يُحفظ مع الحالة. و live النشاط المعروض الآن، للّقطة، ولا يُحفظ بنفسه
         self.stage, self.live, self.today = None, None, None
+        self.halts = []                     # توقفات هذا التشغيل لتغيّر الصلاحية: (الجلسة، السبب، المهارة، النوع). للبالغ
 
     # ---------------------------------------------------------------- المحرك
     def send(self, payload):
@@ -203,6 +216,48 @@ class Scheduler:
         self.unsave(c)
         self.carried_items = []
 
+    def invalid(self, kind, skill, check_id=None):
+        """سبب رفض المحرك لاستمرار هذا النشاط في الجلسة الجارية، أو None إن كان صالحًا."""
+        v = self.e.may_continue(kind, self.cur, skill, check_id)
+        return None if v['ok'] else v['code']
+
+    def live_invalid(self):
+        """سبب عدم صلاحية النشاط المعروض الآن، أو None. تسأله طبقة الخطوات قبل العرض وقبل قبول أي حدث."""
+        v = self.live
+        if v is None:
+            return None
+        if v['kind'] == 'show':
+            return self.invalid('show', v['skill'])
+        return self.invalid(v['kind'], v['act'].skill, getattr(v['act'], 'check_id', None))
+
+    def halt(self, code, entry, started, answered):
+        """النشاط الجاري لم يعد صالحًا: لا يتقدم. مصيره بقاعدة سبب الرفض كما عند استئناف نشاط محفوظ: الرفض الخاص
+        بالجلسة يُبقيه محفوظًا، والمؤقت الخاص بالمهارة يركن النشاط التعليمي بتقدّمه، وما عداهما يُسقطه. ما أُنجز منه
+        باقٍ في السجلات. وإجابة جاءت بعد تغيّر الصلاحية لا تُحتسب دليلًا ولا خطأً."""
+        self.live, self.carried_items = None, []
+        k, skill = refusal_kind(code), entry['skill']
+        if k == 'session' and started:
+            self.save(entry)
+            what = 'carry_kept'
+        elif k == 'later' and entry['kind'] in TEACH_KINDS and started:
+            self.parked[skill] = entry
+            what = 'carry_parked'
+        else:
+            what = 'carry_dropped'
+        self.log.append((self.sessions, what + ':' + code, skill))
+        if answered:
+            self.log.append((self.sessions, 'answer_void:' + code, skill))
+        self.halts.append((self.cur, code, skill, entry['kind']))
+        raise Halted(code)
+
+    def resume_verdict(self, c, need):
+        """حكم المحرك على استئناف نشاط تعليمي محفوظ. بحدث استئناف: قبول الحدث. وبلا حدث، لأن النشاط من هذه الجلسة
+        نفسها فلا حصة جديدة: صلاحية استمراره الآن. سبق الإذن ليس إذنًا دائمًا (R16-01)."""
+        if need:
+            return self.e.preflight(dict(need, id='ask', session=self.cur))
+        return self.e.may_continue(c['kind'], self.cur, c['skill'],
+                                   c['act']['check_id'] if c['kind'] == 'check' else None)
+
     def resume_need(self, c):
         """حدث استئناف نشاط تعليمي محفوظ: check_resumed للفحص، و resume_lesson لأنشطة الدرس إن لم يكن نشطًا."""
         s = c['skill']
@@ -236,11 +291,24 @@ class Scheduler:
             if self.records is not None:
                 self.records.extend(recs[mark[1]:])
             mark[1] = len(recs)
+        def guard(got=None):
+            # الصلاحية تُفحص قبل عرض البند، ومرة أخرى قبل تطبيق الإجابة (R16-01). قرار يقع بينهما يوقف النشاط
+            code = self.invalid(kind, act.skill, getattr(act, 'check_id', None))
+            if code is None:
+                if isinstance(got, Void):
+                    raise RuntimeError('طبقة الخطوات أبطلت بندًا والمحرك يراه صالحًا')
+                return
+            entry = dict(kind=kind, skill=act.skill, act=act.to_dict(),
+                         items=prior + [r['item'] for r in recs if r.get('item')])
+            self.halt(code, entry, bool(sum(act.shown.values())) or kind == 'check',
+                      got is not None and not (isinstance(got, Void) and not got.answered))
         gen = drive_steps(act, self.source, recs, pause=self.tick if self.cap is not None else None)
         try:
             req = next(gen)
             while True:
+                guard()
                 got = yield req
+                guard(got)
                 req = gen.send(got)
                 settle()
         except StopIteration:
@@ -344,7 +412,14 @@ class Scheduler:
             if item is None:
                 return k
             self.live = dict(kind='show', skill=s, activity=activity, pos=k)
-            yield item, w                                   # الإجابة تأتي من الغلاف المتزامن أو من الواجهة
+            entry = dict(kind='show', skill=s, activity=activity, pos=k, items=[])
+            code = self.invalid('show', s)                  # قبل العرض (R16-01)
+            if code is not None:
+                self.halt(code, entry, True, False)
+            got = yield item, w                             # الإجابة تأتي من الغلاف المتزامن أو من الواجهة
+            code = self.invalid('show', s)                  # وقبل احتساب البند معروضًا
+            if code is not None:
+                self.halt(code, entry, True, not (isinstance(got, Void) and not got.answered))
             self.live = None
             self.n[activity] += 1
             self.elapsed += self.item_seconds(w)
@@ -652,7 +727,7 @@ class Scheduler:
         for s in list(self.parked) if not teaching else ():   # نشاط رُكن: يُستأنف أول جلسة يُقبل فيها
             c = self.parked[s]
             need = self.resume_need(c)
-            v = self.e.preflight(dict(need, id='ask', session=self.cur)) if need else dict(ok=True)
+            v = self.resume_verdict(c, need)
             if v['ok'] or refusal_kind(v['code']) != 'later':
                 c = self.parked.pop(s)
                 self.save(c)
@@ -707,7 +782,7 @@ class Scheduler:
         """استئناف النشاط التعليمي المحفوظ في saved. True إن استؤنف، و False إن بقي محفوظًا ولا تعليم في الجلسة،
         و None إن أُسقط أو رُكن فتمضي الحصة إلى غيره."""
         s, need = c['skill'], self.resume_need(c)
-        v = self.e.preflight(dict(need, id='ask', session=self.cur)) if need else dict(ok=True)
+        v = self.resume_verdict(c, need)
         if not v['ok']:
             kind = refusal_kind(v['code'])
             if kind == 'session':
