@@ -313,15 +313,15 @@ check('زلّتان في بوابة 3-5-3 لطفل يعرفها: «جرّب أو
 
 # د) انقطاع في خانة لا عدد آخر يحقق شرطها في المجال الصغير. بقرار الأب (3.6): تُعاد الحقيقة نفسها ويُسجَّل ذلك
 def abandon_when_held(sc):
-    old_teach = sc.teach
+    old_teach = sc.g_teach                                  # الحصة مولّد خطوات منذ المرحلة 0: يُبدَّل المولّد
 
     def teach():
         held = [k for k, c in sc.e.s['checks'].items() if c['state'] == 'held' and sc.cur and
                 c['held_session'] != sc.cur]
         for k in held:                                     # المعلم يرى الفحص المعلَّق فيتركه
             sc.send(dict(type='check_abandoned', check_id=k, reason='انقطاعان في خانة واحدة'))
-        return old_teach()
-    sc.teach = teach
+        return (yield from old_teach())
+    sc.g_teach = teach
 
 
 cut = item_of('1-4-1', 'checkA', 'check', slot=7)                         # خانة «خمسة أقراص»

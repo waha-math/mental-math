@@ -518,11 +518,11 @@ export class RetentionRun extends Activity {
 export const CLASSES = { GateRun, ShortCheckRun, OpeningRun, EvidenceRun, CheckRun, RetentionRun };
 
 // ---------------------------------------------------------------- التشغيل
-// يعرض بنود النشاط حتى ينتهي. source(skill, want) يعيد البند أو null. answer(item, want) يعيد
+// مولّد يعرض بنود النشاط حتى ينتهي. source(skill, want) يعيد البند أو null. يعطي [البند، المطلوب] ويستقبل
 // [أحداث البند الخام، جوابه الصحيح، هل هو بند تقييم]، أو نتيجة جاهزة نصًّا.
 // pause(want) تُسأل بعد كل بند اكتمل: إن أعادت صحيحًا توقف العرض والنشاط غير منتهٍ، ليُحفظ ويُستأنف في جلسة
 // لاحقة. بها يُنفَّذ سقف الوقت الذي لا يقطع بندًا جاريًا (7.1).
-export function drive(act, source, answer, records = null, pause = null) {
+export function* driveSteps(act, source, records = null, pause = null) {
   for (;;) {
     const w = act.want();
     if (w === null) return act;
@@ -531,7 +531,7 @@ export function drive(act, source, answer, records = null, pause = null) {
       act.unavailable();
       continue;
     }
-    const got = answer(item, w);
+    const got = yield [item, w];
     if (typeof got === 'string') {
       act.feed(got);
     } else {
@@ -547,6 +547,18 @@ export function drive(act, source, answer, records = null, pause = null) {
     }
     if (pause && pause(w) && !act.done) return act;
   }
+}
+
+// يشغّل مولّد خطوات حتى نهايته، ويجيب عن كل بند بـ answer(item, want). يعيد قيمة المولّد.
+export function runSync(gen, answer) {
+  let r = gen.next();
+  while (!r.done) r = gen.next(answer(...r.value));
+  return r.value;
+}
+
+// الغلاف المتزامن لـ driveSteps
+export function drive(act, source, answer, records = null, pause = null) {
+  return runSync(driveSteps(act, source, records, pause), answer);
 }
 
 // ---------------------------------------------------------------- مصدر البنود من محتوى الشريحة

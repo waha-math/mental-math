@@ -27,11 +27,12 @@ compat=True يعيد خيارات المحاكاة القديمة التي تخ�
 فحوص الاحتفاظ (3.7، ك8): retention=True يعرض في أول جلسة المتابعة ما استحق منها، واحدًا في الجلسة والأقدم
 استحقاقًا أولًا (تفسير: النص لا يحدد العدد، و«لا يتضاعف العمل»)، ويواصل الجلسات حتى تنتهي الفحوص الثلاثة.
 """
+import functools
 import itertools
 from collections import Counter
 
 from item_layer import (CALC, Activity, GateRun, ShortCheckRun, OpeningRun, EvidenceRun, CheckRun, RetentionRun,
-                        drive, gate_plan)
+                        drive_steps, run_sync, gate_plan)
 from transition_engine import OPEN_CHECK
 
 GATES_PER_SEARCH = {'older': 2, 'young': 1}
@@ -211,12 +212,12 @@ class Scheduler:
         self.log.append((self.sessions, 'capped', act.skill))
         raise Capped()
 
-    def run_act(self, act, kind=None):
+    def g_run_act(self, act, kind=None):
         recs, before = [], Counter(act.shown)
         prior, self.carried_items = self.carried_items, []
         if self.over():                                     # الجلسة بلغت سقفها: لا يُعرض بند جديد
             self.cut(act, kind, prior)
-        drive(act, self.source, self.answer, recs, pause=self.tick if self.cap is not None else None)
+        yield from drive_steps(act, self.source, recs, pause=self.tick if self.cap is not None else None)
         if self.records is not None:
             self.records.extend(recs)
         items = prior + [r['item'] for r in recs if r.get('item')]
@@ -238,7 +239,7 @@ class Scheduler:
             self.drop_carry(v['code'], self.entry(kind, payload['skill']))   # رفض الجلسة (حصتها، تاريخها) لا يُسقطه
         return v['ok']
 
-    def gate(self, s):
+    def g_gate(self, s):
         if self.carried('gate', s):
             if not self.still_ok(dict(type='gate_result', skill=s, result='pass'), 'gate'):
                 return None
@@ -246,12 +247,12 @@ class Scheduler:
             return None
         act = self.take('gate', s) or GateRun(s, self.types[s], tolerant=self.tolerant,
                                               attempt=self.e.valid_gates(s) + 1)
-        self.run_act(act, 'gate')
+        (yield from self.g_run_act(act, 'gate'))
         self.gates_run += 1
         self.emit(act)
         return act.result
 
-    def short(self, s):
+    def g_short(self, s):
         if self.carried('short', s):
             if not self.still_ok(dict(type='short_check_result', skill=s, ok=True), 'short'):
                 return None
@@ -262,7 +263,7 @@ class Scheduler:
             act = ShortCheckRun(s, self.types[s], stop_early=not self.compat)
             if self.compat:
                 act.types = old_types(self.types[s])['short']
-        self.run_act(act, 'short')
+        (yield from self.g_run_act(act, 'short'))
         self.emit(act)
         return act.result
 
@@ -274,7 +275,7 @@ class Scheduler:
                 return x.get('errors') or None
         return None
 
-    def opening(self, s):
+    def g_opening(self, s):
         """نتيجة افتتاح الدرس. الدرس يجب أن يكون نشطًا في الجلسة (فُتح أو استؤنف فيها)."""
         act = self.take('opening', s)
         if act is not None:
@@ -288,22 +289,22 @@ class Scheduler:
         else:
             errs = self.last_gate_errors(s) if self.try_from_gate else None
             act = OpeningRun(s, self.types[s], try_types=[errs[0], errs[-1]] if errs else None, typed=True)
-        self.run_act(act, 'opening')
+        (yield from self.g_run_act(act, 'opening'))
         self.emit(act)
         kind = 'skip' if act.result == 'skip' else 'lesson'
         self.log.append((self.sessions, kind, s))
         if kind == 'skip' and self.compat and (self.e.s['regate'] or self.e.direct(s) != 'stumbled'):
             self.pending.append(s)
         if kind == 'lesson' and self.learning:
-            self.lesson_body(s)
+            (yield from self.g_lesson_body(s))
         return kind
 
-    def open_lesson(self, s):
+    def g_open_lesson(self, s):
         if not self.send(dict(type='open_lesson', skill=s))['ok']:
             return None
-        return self.opening(s)
+        return (yield from self.g_opening(s))
 
-    def show(self, s, activity, k=0):
+    def g_show(self, s, activity, k=0):
         """بنود الدرس أو التدريب: تُعرض ولا تصنع حدثًا للمحرك. مصدر المحاكاة المجرد لا يعيد منها شيئًا."""
         while True:
             if self.over():                                 # السقف: يُستأنف العرض من موضعه في جلسة لاحقة
@@ -314,21 +315,21 @@ class Scheduler:
             item = self.source(s, dict(activity=activity, pos=k))
             if item is None:
                 return k
-            self.answer(item, w)
+            yield item, w                                   # الإجابة تأتي من الغلاف المتزامن أو من الواجهة
             self.n[activity] += 1
             self.elapsed += self.item_seconds(w)
             k += 1
 
-    def lesson_body(self, s, k=0):
-        self.show(s, 'lesson', k)
-        self.evidence(s)
+    def g_lesson_body(self, s, k=0):
+        (yield from self.g_show(s, 'lesson', k))
+        (yield from self.g_evidence(s))
 
-    def evidence(self, s):
+    def g_evidence(self, s):
         if not self.ask(dict(type='understanding_proved', skill=s)):
             return None
         act = self.take('evidence', s) or EvidenceRun(s, self.types[s], proven=self.proven.get(s, []),
                                                       round=self.ev_round.get(s, 0) + 1)
-        self.run_act(act, 'evidence')
+        (yield from self.g_run_act(act, 'evidence'))
         if act.shown['evidence']:
             self.ev_round[s] = act.round                    # الجولة التالية ببنود جديدة
         self.proven[s] = list(act.proven)
@@ -337,7 +338,7 @@ class Scheduler:
             self.log.append((self.sessions, 'evidence_' + act.result, s))
         return act.result
 
-    def check(self, s):
+    def g_check(self, s):
         act = self.take('check', s)                         # محاولة قطعها السقف: استؤنفت بحدث check_resumed
         if act is None:
             k = self.attempt.get(s, 0)
@@ -345,12 +346,12 @@ class Scheduler:
             if not self.send(act.start_event())['ok']:
                 return None
             self.attempt[s] = k + 1
-        self.run_act(act, 'check')
+        (yield from self.g_run_act(act, 'check'))
         self.emit(act)
         self.log.append((self.sessions, 'check_' + act.result, s))
         return act.result
 
-    def retention_check(self, s, rnd):
+    def g_retention_check(self, s, rnd):
         """فحص احتفاظ مستحق (3.7): 5 بنود جولته، ونتيجته حدث retention_result."""
         if self.carried('retention', s):
             if not self.still_ok(dict(type='retention_result', skill=s, correct=0), 'retention'):
@@ -358,24 +359,24 @@ class Scheduler:
         elif not self.ask(dict(type='retention_result', skill=s, correct=0)):
             return None
         act = self.take('retention', s) or RetentionRun(s, rnd)
-        self.run_act(act, 'retention')
+        (yield from self.g_run_act(act, 'retention'))
         self.emit(act)
         self.log.append((self.sessions, 'retention_%s' % (act.correct if act.result else 'cut'), s))
         return act.result
 
-    def recall(self):
+    def g_recall(self):
         """«استرجع» في أول الجلسة: فحص احتفاظ قطعه السقف، ثم ما استحق، الأقدم استحقاقًا أولًا."""
         if not self.retention:
             return
         done = 0
         s = self.carried('retention')
         if s:
-            self.retention_check(s, None)
+            (yield from self.g_retention_check(s, None))
             done += 1
         for s, rnd, _due in self.e.retention_due(self.day):
             if done >= RETENTION_PER_SESSION:
                 break
-            self.retention_check(s, rnd)
+            (yield from self.g_retention_check(s, rnd))
             done += 1
 
     # ---------------------------------------------------------------- سياسة التشخيص (6.2)
@@ -419,7 +420,7 @@ class Scheduler:
             return len(a['plan']) - a['pos'] if a['stage'] == 'main' else 2 - a['pos']
         return len(gate_plan(self.types[x]))
 
-    def search(self):
+    def g_search(self):
         while self.searches < SEARCH_CAP:
             x = self.carried('gate') or self.next_gate()    # بوابة قطعها السقف تُستأنف أول الجلسة التالية
             if x is None:
@@ -433,14 +434,14 @@ class Scheduler:
                     if done and size > budget:
                         break
                     budget -= size
-                    self.gate(x)
+                    (yield from self.g_gate(x))
                     done += 1
                     x = self.next_gate()
             except Capped:
                 pass
             self.end()
 
-    def working_point(self):
+    def g_working_point(self):
         st, helped, gated = self.view()
         w = self.candidate(st, helped)
         if w is None:
@@ -457,7 +458,7 @@ class Scheduler:
                 if k == SHORT_START:
                     return w
                 k += 1
-                res = self.short(p)
+                res = (yield from self.g_short(p))
                 if res is True:
                     verified.add(p)
                 elif res is False:
@@ -466,16 +467,16 @@ class Scheduler:
             if not moved:
                 return w
 
-    def start_session(self):
+    def g_start_session(self):
         self.begin('start')
         self.start_at = self.sessions
         w, what = None, 'none'
         try:
-            w = self.working_point()
+            w = (yield from self.g_working_point())
             self.items_before = sum(self.n[c] for c in DIAG)
             if w is not None:
                 if self.e.eligible(w, 'start')['ok']:
-                    what = self.open_lesson(w) or 'none'
+                    what = (yield from self.g_open_lesson(w)) or 'none'
                 else:
                     what = 'use'
                     st, helped, gated = self.view()
@@ -544,7 +545,7 @@ class Scheduler:
                 return s
         return None
 
-    def follow(self):
+    def g_follow(self):
         """جلسة متابعة في وضع التشخيص: بوابة، ثم تحققان قصيران، ثم الحصة التعليمية إن لم تُستهلك."""
         g = self.carried('gate') or self.pick_gate()
         if g is None and not self.saved and self.pick_short() is None and self.pick_lesson() is None:
@@ -555,30 +556,30 @@ class Scheduler:
         try:
             if g is not None:
                 was_open = g in self.e.s['opened']
-                r = self.gate(g)
+                r = (yield from self.g_gate(g))
                 if was_open and r in ('fail', 'help'):
                     taught = True                           # المحرك أمضى الدرس كاملًا واستهلك الحصة
                     self.log.append((self.sessions, 'lesson', g))
                     if self.learning:
-                        self.lesson_body(g)
+                        (yield from self.g_lesson_body(g))
             for _ in range(SHORT_FOLLOW):
                 x = self.carried('short') or self.pick_short()
                 if x is None:
                     break
-                if self.short(x) is False and self.compat:
+                if (yield from self.g_short(x)) is False and self.compat:
                     self.pending.append(x)
             if not taught:
                 if self.learning:
-                    taught = self.teach()
+                    taught = (yield from self.g_teach())
                 elif self.carried('opening'):               # افتتاح قطعه السقف: يُستأنف درسه ثم يُكمل
                     o = self.carried('opening')
                     if self.still_ok(dict(type='resume_lesson', skill=o), 'opening'):
                         self.send(dict(type='resume_lesson', skill=o))
-                        self.opening(o)
+                        (yield from self.g_opening(o))
                 else:
                     o = self.pick_lesson()
                     if o is not None:
-                        self.open_lesson(o)
+                        (yield from self.g_open_lesson(o))
         except Capped:
             capped = True
         self.end()
@@ -590,11 +591,11 @@ class Scheduler:
         return True
 
     # ---------------------------------------------------------------- مسار التعلّم
-    def teach(self):
+    def g_teach(self):
         """الحصة التعليمية في وضع التعلّم: درس جارٍ، ثم فحص مستحق أو جلسة تدريب قبله، ثم درس جديد."""
         for c in [c for c in self.saved if c['kind'] in TEACH_KINDS]:
             # نشاط قطعه السقف: يُستأنف أولًا. الفحص بحدث check_resumed، وأنشطة الدرس بعد resume_lesson
-            r = self.resume(c)
+            r = (yield from self.g_resume(c))
             if r is not None:
                 return r
         teaching = any(c['kind'] in TEACH_KINDS for c in self.saved)
@@ -607,7 +608,7 @@ class Scheduler:
                 self.save(c)
                 if v['ok']:
                     self.log.append((self.sessions, 'carry_resumed', s))
-                r = self.resume(c)
+                r = (yield from self.g_resume(c))
                 if r is not None:
                     return r
         st = self.e.derive()
@@ -619,9 +620,9 @@ class Scheduler:
                 if o['active'] != self.cur and not self.send(dict(type='resume_lesson', skill=s))['ok']:
                     continue
                 if self.e.s['opened'][s]['phase'] == 'opening':
-                    self.opening(s)
+                    (yield from self.g_opening(s))
                 else:
-                    self.lesson_body(s)
+                    (yield from self.g_lesson_body(s))
                 return True
         for s in self.ids:
             o = self.e.s['opened'].get(s)
@@ -636,19 +637,19 @@ class Scheduler:
             v = self.e.preflight(dict(type='check_started', id='ask', session=self.cur, skill=s,
                                       check_id='%s/check/%d' % (s, k + 1), content_version=self.content_version))
             if v['ok']:
-                self.check(s)
+                (yield from self.g_check(s))
                 return True
             if v['code'] == 'check_needs_practice' and self.send(dict(type='resume_lesson', skill=s))['ok']:
-                self.show(s, 'practice')
+                (yield from self.g_show(s, 'practice'))
                 self.log.append((self.sessions, 'practice', s))
                 return True
         o = self.pick_lesson()
         if o is not None:
-            self.open_lesson(o)
+            (yield from self.g_open_lesson(o))
             return True
         return False
 
-    def resume(self, c):
+    def g_resume(self, c):
         """استئناف النشاط التعليمي المحفوظ في saved. True إن استؤنف، و False إن بقي محفوظًا ولا تعليم في الجلسة،
         و None إن أُسقط أو رُكن فتمضي الحصة إلى غيره."""
         s, need = c['skill'], self.resume_need(c)
@@ -667,17 +668,17 @@ class Scheduler:
         if need:
             self.send(need)
         if c['kind'] == 'check':
-            self.check(s)
+            (yield from self.g_check(s))
         elif c['kind'] == 'opening':
-            self.opening(s)
+            (yield from self.g_opening(s))
         elif c['kind'] == 'evidence':
-            self.evidence(s)
+            (yield from self.g_evidence(s))
         else:
             self.unsave(c)
             if c['activity'] == 'lesson':
-                self.lesson_body(s, c['pos'])
+                (yield from self.g_lesson_body(s, c['pos']))
             else:
-                self.show(s, 'practice', c['pos'])
+                (yield from self.g_show(s, 'practice', c['pos']))
         return True
 
     def satisfied(self):
@@ -685,40 +686,62 @@ class Scheduler:
         return all(st[s] in DONE for s in self.ids)
 
     # ---------------------------------------------------------------- التشغيل
-    def run(self, max_sessions=200):
-        self.search()
-        self.start_session()
+    def g_run(self, max_sessions=200):
+        (yield from self.g_search())
+        (yield from self.g_start_session())
         if self.learning:
             while self.sessions < max_sessions and not (self.satisfied() and not self.saved and not self.parked and not (
                     self.retention and self.e.retention_pending())):
-                self.follow_learning()
+                (yield from self.g_follow_learning())
         else:
-            while self.follow():
+            while (yield from self.g_follow()):
                 pass
         return self.start_w, self.start_what
 
-    def follow_learning(self):
+    def g_follow_learning(self):
         """جلسة متابعة في وضع التعلّم. تُعقد ولو لم يكن فيها غير «استرجع»، فالأيام تمضي."""
         self.begin('follow')
         taught = False
         try:
-            self.recall()
+            (yield from self.g_recall())
             g = self.carried('gate') or self.pick_gate()
             if g is not None:
                 was_open = g in self.e.s['opened']
-                r = self.gate(g)
+                r = (yield from self.g_gate(g))
                 if was_open and r in ('fail', 'help'):
                     taught = True
                     self.log.append((self.sessions, 'lesson', g))
                     if self.e.s['opened'][g]['phase'] == 'full':
-                        self.lesson_body(g)
+                        (yield from self.g_lesson_body(g))
             for _ in range(SHORT_FOLLOW):
                 x = self.carried('short') or self.pick_short()
                 if x is None:
                     break
-                self.short(x)
+                (yield from self.g_short(x))
             if not taught:
-                self.teach()
+                (yield from self.g_teach())
         except Capped:
             pass
         self.end()
+
+
+# ---------------------------------------------------------------- الخطوات والأغلفة المتزامنة
+# سلسلة الاستدعاء التي تعرض بنودًا مولّدات (g_*): تعطي (البند، المطلوب) وتستقبل ما كانت answer تعيده. والدوال
+# بأسمائها السابقة أغلفة متزامنة تشغّل المولّد بـ self.answer، فلا يتغير شيء لمن يستدعيها. والواجهة تشغّل المولّد
+# نفسه خطوة خطوة. حالة المولّد ليست مصدر الاستعادة: المتابعة بعد الإغلاق تُبنى من الحالة المحفوظة.
+STEPPED = ('run_act', 'show', 'lesson_body', 'open_lesson', 'gate', 'short', 'opening', 'evidence', 'check', 'retention_check', 'recall', 'search', 'working_point', 'start_session', 'follow', 'teach', 'resume', 'run', 'follow_learning')
+
+
+def _sync(name):
+    g = getattr(Scheduler, 'g_' + name)
+
+    @functools.wraps(g)
+    def method(self, *args, **kw):
+        return run_sync(getattr(self, 'g_' + name)(*args, **kw), lambda item, w: self.answer(item, w))
+    method.__name__ = name
+    method.__qualname__ = 'Scheduler.' + name
+    return method
+
+
+for _n in STEPPED:
+    setattr(Scheduler, _n, _sync(_n))

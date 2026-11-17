@@ -222,7 +222,7 @@ for c in list(il.CLASSES.values()):
 _unavailable = il.Activity.unavailable
 il.Activity.unavailable = lambda self: act_op(self, 'unavailable', lambda: _unavailable(self))
 
-_fold, _indicators, _drive, _pick = il.fold_item, il.indicators, il.drive, cs.ContentSource.__call__
+_fold, _indicators, _drive_steps, _pick = il.fold_item, il.indicators, il.drive_steps, cs.ContentSource.__call__
 
 
 def fold_item(raw, answer, assess):
@@ -253,7 +253,8 @@ def pick(self, skill, w):
         raise
 
 
-def drive(act, source, answer, records=None, pause=None):
+def drive_steps(act, source, records=None, pause=None):
+    """يسجّل تشغيل المولّد كما كان يسجّل drive: الغلاف المتزامن والمجدول يمران به كلاهما."""
     rec = dict(start=act.to_dict(), steps=[], pauses=[])
     step = {}
 
@@ -265,8 +266,7 @@ def drive(act, source, answer, records=None, pause=None):
             rec['steps'].append(dict(step))
         return item
 
-    def ans(item, w):
-        got = answer(item, w)
+    def note(got):
         step['got'] = got if isinstance(got, str) else jsonable([[list(e) for e in got[0]], got[1], got[2]])
         rec['steps'].append(dict(step))
         return got
@@ -276,7 +276,13 @@ def drive(act, source, answer, records=None, pause=None):
         rec['pauses'].append(r)
         return r
     mine = []
-    out = _drive(act, src, ans, mine, stop if pause else None)
+    gen = _drive_steps(act, src, mine, stop if pause else None)
+    try:
+        req = next(gen)
+        while True:
+            req = gen.send(note((yield req)))
+    except StopIteration as done:
+        out = done.value
     if records is not None:
         records.extend(mine)
     rec.update(end=act.to_dict(), records=jsonable(mine), paused=bool(pause),
@@ -286,7 +292,7 @@ def drive(act, source, answer, records=None, pause=None):
     return out
 
 
-il.fold_item, il.indicators, il.drive, cs.ContentSource.__call__ = fold_item, indicators, drive, pick
+il.fold_item, il.indicators, il.drive_steps, cs.ContentSource.__call__ = fold_item, indicators, drive_steps, pick
 
 for script in ('test_transition_engine.py', 'test_item_layer.py', 'tests/test_r10.py', 'tests/test_r11.py'):
     sys.argv = [script, MAP]

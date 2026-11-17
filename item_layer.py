@@ -468,9 +468,9 @@ CLASSES = {c.__name__: c for c in (GateRun, ShortCheckRun, OpeningRun, EvidenceR
 
 
 # ---------------------------------------------------------------- التشغيل
-def drive(act, source, answer, records=None, pause=None):
-    """يعرض بنود النشاط حتى ينتهي. source(skill, want) يعيد البند أو None. answer(item, want) يعيد أحداث
-    البند الخام وجوابه الصحيح ونوع البند، أو نتيجة جاهزة (للمحاكاة).
+def drive_steps(act, source, records=None, pause=None):
+    """مولّد يعرض بنود النشاط حتى ينتهي. source(skill, want) يعيد البند أو None. يعطي (البند، المطلوب) ويستقبل
+    أحداث البند الخام وجوابه الصحيح ونوع البند، أو نتيجة جاهزة (للمحاكاة).
     pause(want) تُسأل بعد كل بند اكتمل: إن أعادت صحيحًا توقف العرض والنشاط غير منتهٍ، ليُحفظ ويُستأنف في جلسة
     لاحقة. بها يُنفَّذ سقف الوقت الذي لا يقطع بندًا جاريًا (7.1)."""
     while True:
@@ -481,7 +481,7 @@ def drive(act, source, answer, records=None, pause=None):
         if item is None:
             act.unavailable()
             continue
-        got = answer(item, w)
+        got = yield item, w
         if isinstance(got, str):
             act.feed(got)
             if pause and pause(w) and not act.done:
@@ -498,3 +498,18 @@ def drive(act, source, answer, records=None, pause=None):
         act.feed(classify(rec))
         if pause and pause(w) and not act.done:
             return act
+
+
+def run_sync(gen, answer):
+    """يشغّل مولّد خطوات حتى نهايته، ويجيب عن كل بند بـ answer(item, want). يعيد قيمة المولّد."""
+    try:
+        req = next(gen)
+        while True:
+            req = gen.send(answer(*req))
+    except StopIteration as stop:
+        return stop.value
+
+
+def drive(act, source, answer, records=None, pause=None):
+    """الغلاف المتزامن لـ drive_steps: answer(item, want) تجيب عن كل بند."""
+    return run_sync(drive_steps(act, source, records, pause), answer)
