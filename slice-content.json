@@ -4260,6 +4260,126 @@
    "graded": true
   },
   {
+   "id": "1-4-1/evidence/17",
+   "skill": "1-4-1",
+   "group": "evidence",
+   "role": "evidence.alternate",
+   "evidence": "ف1",
+   "performance": "frame_empty",
+   "numbers": {
+    "n": 1
+   },
+   "resource": "إطار العشرة وعليه الأقراص",
+   "answer_type": "ج1",
+   "answer": 9,
+   "text_ar": "كم خانة فارغة في الإطار؟",
+   "text_en": "How many boxes in the frame are empty?",
+   "audio_ar": "كم خانة فارغة في الإطار؟",
+   "audio_en": "How many boxes in the frame are empty?",
+   "wrong": {
+    "1": "given_back"
+   },
+   "slot": null,
+   "alt_of": null,
+   "graded": true,
+   "round": 1,
+   "fact": [
+    1,
+    9
+   ],
+   "fact_seen_before": true
+  },
+  {
+   "id": "1-4-1/evidence/18",
+   "skill": "1-4-1",
+   "group": "evidence",
+   "role": "evidence.alternate",
+   "evidence": "ف3",
+   "performance": "make_ten",
+   "numbers": {
+    "n": 1
+   },
+   "resource": "بلا نموذج",
+   "answer_type": "ج1",
+   "answer": 9,
+   "text_ar": "1 وكم تصير 10؟",
+   "text_en": "1 and how many make 10?",
+   "audio_ar": "1 وكم تصير 10؟",
+   "audio_en": "1 and how many make 10?",
+   "wrong": {
+    "1": "given_back"
+   },
+   "slot": null,
+   "alt_of": null,
+   "graded": true,
+   "round": 1,
+   "fact": [
+    1,
+    9
+   ],
+   "fact_seen_before": true
+  },
+  {
+   "id": "1-4-1/evidence/19",
+   "skill": "1-4-1",
+   "group": "evidence",
+   "role": "evidence.alternate",
+   "evidence": "ف1",
+   "performance": "frame_empty",
+   "numbers": {
+    "n": 6
+   },
+   "resource": "إطار العشرة وعليه الأقراص",
+   "answer_type": "ج1",
+   "answer": 4,
+   "text_ar": "كم خانة فارغة في الإطار؟",
+   "text_en": "How many boxes in the frame are empty?",
+   "audio_ar": "كم خانة فارغة في الإطار؟",
+   "audio_en": "How many boxes in the frame are empty?",
+   "wrong": {
+    "6": "given_back"
+   },
+   "slot": null,
+   "alt_of": null,
+   "graded": true,
+   "round": 2,
+   "fact": [
+    4,
+    6
+   ],
+   "fact_seen_before": true
+  },
+  {
+   "id": "1-4-1/evidence/20",
+   "skill": "1-4-1",
+   "group": "evidence",
+   "role": "evidence.alternate",
+   "evidence": "ف3",
+   "performance": "make_ten",
+   "numbers": {
+    "n": 6
+   },
+   "resource": "بلا نموذج",
+   "answer_type": "ج1",
+   "answer": 4,
+   "text_ar": "6 وكم تصير 10؟",
+   "text_en": "6 and how many make 10?",
+   "audio_ar": "6 وكم تصير 10؟",
+   "audio_en": "6 and how many make 10?",
+   "wrong": {
+    "6": "given_back"
+   },
+   "slot": null,
+   "alt_of": null,
+   "graded": true,
+   "round": 2,
+   "fact": [
+    4,
+    6
+   ],
+   "fact_seen_before": true
+  },
+  {
    "id": "1-4-2/lesson/01",
    "skill": "1-4-2",
    "group": "lesson",
@@ -8914,6 +9034,188 @@
    "slot": null,
    "alt_of": null,
    "graded": true
+  },
+  {
+   "id": "1-4-2/evidence/25",
+   "skill": "1-4-2",
+   "group": "evidence",
+   "role": "evidence.alternate",
+   "evidence": "ف2",
+   "performance": "step_pair",
+   "numbers": {
+    "n": 1
+   },
+   "resource": "هيكل الإطار الشفاف",
+   "answer_type": "ج1",
+   "answer": 9,
+   "text_ar": "⁦ 10 − 1 = ▢ ⁩ لأن ⁦ 1 + ▢ = 10 ⁩. ما العدد الذي يكمل الاثنتين؟",
+   "text_en": "⁦ 10 − 1 = ▢ ⁩ because ⁦ 1 + ▢ = 10 ⁩. What number completes both?",
+   "audio_ar": "⁦ 10 − 1 = ▢ ⁩ لأن ⁦ 1 + ▢ = 10 ⁩. ما العدد الذي يكمل الاثنتين؟",
+   "audio_en": "⁦ 10 − 1 = ▢ ⁩ because ⁦ 1 + ▢ = 10 ⁩. What number completes both?",
+   "wrong": {
+    "1": "given_back"
+   },
+   "slot": null,
+   "alt_of": null,
+   "graded": true,
+   "round": 1,
+   "fact": [
+    1,
+    9
+   ],
+   "fact_seen_before": true
+  },
+  {
+   "id": "1-4-2/evidence/26",
+   "skill": "1-4-2",
+   "group": "evidence",
+   "role": "evidence.alternate",
+   "evidence": "ف3",
+   "performance": "missing_second",
+   "numbers": {
+    "n": 1
+   },
+   "resource": "بلا نموذج",
+   "answer_type": "ج1",
+   "answer": 9,
+   "text_ar": "ما العدد الناقص؟ ⁦ 1 + ▢ = 10 ⁩",
+   "text_en": "What number is missing? ⁦ 1 + ▢ = 10 ⁩",
+   "audio_ar": "ما العدد الناقص؟ ⁦ 1 + ▢ = 10 ⁩",
+   "audio_en": "What number is missing? ⁦ 1 + ▢ = 10 ⁩",
+   "wrong": {
+    "1": "given_back"
+   },
+   "slot": null,
+   "alt_of": null,
+   "graded": true,
+   "round": 1,
+   "fact": [
+    1,
+    9
+   ],
+   "fact_seen_before": true
+  },
+  {
+   "id": "1-4-2/evidence/27",
+   "skill": "1-4-2",
+   "group": "evidence",
+   "role": "evidence.alternate",
+   "evidence": "ف4",
+   "performance": "context10",
+   "numbers": {
+    "n": 1,
+    "ctx": "ctx_bus"
+   },
+   "resource": "صورة الموقف، والنص منطوق",
+   "answer_type": "ج1",
+   "answer": 9,
+   "text_ar": "في الحافلة الصغيرة 10 مقاعد. عدد الركاب 1. كم مقعدًا بقي فارغًا؟",
+   "text_en": "The minibus has 10 seats. Passengers: 1. How many seats are still empty?",
+   "audio_ar": "في الحافلة الصغيرة 10 مقاعد. عدد الركاب 1. كم مقعدًا بقي فارغًا؟",
+   "audio_en": "The minibus has 10 seats. Passengers: 1. How many seats are still empty?",
+   "wrong": {
+    "1": "given_back"
+   },
+   "slot": null,
+   "alt_of": null,
+   "graded": true,
+   "round": 1,
+   "fact": [
+    1,
+    9
+   ],
+   "fact_seen_before": true
+  },
+  {
+   "id": "1-4-2/evidence/28",
+   "skill": "1-4-2",
+   "group": "evidence",
+   "role": "evidence.alternate",
+   "evidence": "ف2",
+   "performance": "step_pair",
+   "numbers": {
+    "n": 6
+   },
+   "resource": "هيكل الإطار الشفاف",
+   "answer_type": "ج1",
+   "answer": 4,
+   "text_ar": "⁦ 10 − 6 = ▢ ⁩ لأن ⁦ 6 + ▢ = 10 ⁩. ما العدد الذي يكمل الاثنتين؟",
+   "text_en": "⁦ 10 − 6 = ▢ ⁩ because ⁦ 6 + ▢ = 10 ⁩. What number completes both?",
+   "audio_ar": "⁦ 10 − 6 = ▢ ⁩ لأن ⁦ 6 + ▢ = 10 ⁩. ما العدد الذي يكمل الاثنتين؟",
+   "audio_en": "⁦ 10 − 6 = ▢ ⁩ because ⁦ 6 + ▢ = 10 ⁩. What number completes both?",
+   "wrong": {
+    "6": "given_back"
+   },
+   "slot": null,
+   "alt_of": null,
+   "graded": true,
+   "round": 2,
+   "fact": [
+    4,
+    6
+   ],
+   "fact_seen_before": true
+  },
+  {
+   "id": "1-4-2/evidence/29",
+   "skill": "1-4-2",
+   "group": "evidence",
+   "role": "evidence.alternate",
+   "evidence": "ف3",
+   "performance": "missing_first",
+   "numbers": {
+    "n": 6
+   },
+   "resource": "بلا نموذج",
+   "answer_type": "ج1",
+   "answer": 4,
+   "text_ar": "ما العدد الناقص؟ ⁦ ▢ + 6 = 10 ⁩",
+   "text_en": "What number is missing? ⁦ ▢ + 6 = 10 ⁩",
+   "audio_ar": "ما العدد الناقص؟ ⁦ ▢ + 6 = 10 ⁩",
+   "audio_en": "What number is missing? ⁦ ▢ + 6 = 10 ⁩",
+   "wrong": {
+    "6": "given_back"
+   },
+   "slot": null,
+   "alt_of": null,
+   "graded": true,
+   "round": 2,
+   "fact": [
+    4,
+    6
+   ],
+   "fact_seen_before": true
+  },
+  {
+   "id": "1-4-2/evidence/30",
+   "skill": "1-4-2",
+   "group": "evidence",
+   "role": "evidence.alternate",
+   "evidence": "ف4",
+   "performance": "context10",
+   "numbers": {
+    "n": 6,
+    "ctx": "ctx_balloons"
+   },
+   "resource": "صورة الموقف، والنص منطوق",
+   "answer_type": "ج1",
+   "answer": 4,
+   "text_ar": "كان مع عمر 10 بالونات. عدد ما طار منها 6. كم بالونًا بقي؟",
+   "text_en": "Omar had 10 balloons. Balloons that flew away: 6. How many are left?",
+   "audio_ar": "كان مع عمر 10 بالونات. عدد ما طار منها 6. كم بالونًا بقي؟",
+   "audio_en": "Omar had 10 balloons. Balloons that flew away: 6. How many are left?",
+   "wrong": {
+    "6": "given_back"
+   },
+   "slot": null,
+   "alt_of": null,
+   "graded": true,
+   "round": 2,
+   "fact": [
+    4,
+    6
+   ],
+   "fact_seen_before": true
   },
   {
    "id": "3-5-1/lesson/01",
@@ -23425,6 +23727,514 @@
    "slot": null,
    "alt_of": null,
    "graded": true
+  },
+  {
+   "id": "3-5-1/evidence/25",
+   "skill": "3-5-1",
+   "group": "evidence",
+   "role": "evidence.alternate",
+   "evidence": "ف1",
+   "performance": "line_back",
+   "numbers": {
+    "a": 76,
+    "b": 19
+   },
+   "resource": "خط الأعداد الفارغ والقفزات مرسومة",
+   "answer_type": "ج1",
+   "answer": 57,
+   "text_ar": "الخط يبدأ من 76 ثم يقفز للخلف: 10 ثم 6 ثم 3. عند أي عدد يقف؟",
+   "text_en": "The line starts at 76 and jumps back: 10, then 6, then 3. What number does it land on?",
+   "audio_ar": "الخط يبدأ من 76 ثم يقفز للخلف: 10 ثم 6 ثم 3. عند أي عدد يقف؟",
+   "audio_en": "The line starts at 76 and jumps back: 10, then 6, then 3. What number does it land on?",
+   "wrong": {
+    "63": "digitwise",
+    "75": "reversed",
+    "95": "sum"
+   },
+   "slot": null,
+   "alt_of": null,
+   "graded": true,
+   "round": 1,
+   "fact": [
+    76,
+    19
+   ],
+   "fact_seen_before": false
+  },
+  {
+   "id": "3-5-1/evidence/26",
+   "skill": "3-5-1",
+   "group": "evidence",
+   "role": "evidence.alternate",
+   "evidence": "ف2",
+   "performance": "station_back",
+   "numbers": {
+    "a": 85,
+    "b": 47
+   },
+   "resource": "هيكل خط الأعداد الشفاف",
+   "answer_type": "ج1",
+   "answer": 40,
+   "text_ar": "⁦ 85 − 40 = 45 ⁩ ثم ⁦ 45 − 5 = ▢ ⁩ ثم ⁦ ▢ − 2 = 38 ⁩. ما العدد الناقص؟",
+   "text_en": "⁦ 85 − 40 = 45 ⁩, then ⁦ 45 − 5 = ▢ ⁩, then ⁦ ▢ − 2 = 38 ⁩. What number is missing?",
+   "audio_ar": "⁦ 85 − 40 = 45 ⁩ ثم ⁦ 45 − 5 = ▢ ⁩ ثم ⁦ ▢ − 2 = 38 ⁩. ما العدد الناقص؟",
+   "audio_en": "⁦ 85 − 40 = 45 ⁩, then ⁦ 45 − 5 = ▢ ⁩, then ⁦ ▢ − 2 = 38 ⁩. What number is missing?",
+   "wrong": {},
+   "slot": null,
+   "alt_of": null,
+   "graded": true,
+   "round": 1,
+   "fact": [
+    85,
+    47
+   ],
+   "fact_seen_before": false
+  },
+  {
+   "id": "3-5-1/evidence/27",
+   "skill": "3-5-1",
+   "group": "evidence",
+   "role": "evidence.alternate",
+   "evidence": "ف3",
+   "performance": "solve",
+   "numbers": {
+    "a": 90,
+    "b": 17
+   },
+   "resource": "بلا نموذج",
+   "answer_type": "ج1",
+   "answer": 73,
+   "text_ar": "احسب: ⁦ 90 − 17 = ▢ ⁩",
+   "text_en": "Work out: ⁦ 90 − 17 = ▢ ⁩",
+   "audio_ar": "احسب: ⁦ 90 − 17 = ▢ ⁩",
+   "audio_en": "Work out: ⁦ 90 − 17 = ▢ ⁩",
+   "wrong": {
+    "87": "digitwise",
+    "37": "reversed",
+    "107": "sum"
+   },
+   "slot": null,
+   "alt_of": null,
+   "graded": true,
+   "round": 1,
+   "fact": [
+    90,
+    17
+   ],
+   "fact_seen_before": false
+  },
+  {
+   "id": "3-5-1/evidence/28",
+   "skill": "3-5-1",
+   "group": "evidence",
+   "role": "evidence.alternate",
+   "evidence": "ف1",
+   "performance": "line_back",
+   "numbers": {
+    "a": 54,
+    "b": 48
+   },
+   "resource": "خط الأعداد الفارغ والقفزات مرسومة",
+   "answer_type": "ج1",
+   "answer": 6,
+   "text_ar": "الخط يبدأ من 54 ثم يقفز للخلف: 40 ثم 4 ثم 4. عند أي عدد يقف؟",
+   "text_en": "The line starts at 54 and jumps back: 40, then 4, then 4. What number does it land on?",
+   "audio_ar": "الخط يبدأ من 54 ثم يقفز للخلف: 40 ثم 4 ثم 4. عند أي عدد يقف؟",
+   "audio_en": "The line starts at 54 and jumps back: 40, then 4, then 4. What number does it land on?",
+   "wrong": {
+    "14": "digitwise",
+    "102": "sum"
+   },
+   "slot": null,
+   "alt_of": null,
+   "graded": true,
+   "round": 2,
+   "fact": [
+    54,
+    48
+   ],
+   "fact_seen_before": false
+  },
+  {
+   "id": "3-5-1/evidence/29",
+   "skill": "3-5-1",
+   "group": "evidence",
+   "role": "evidence.alternate",
+   "evidence": "ف2",
+   "performance": "station_back",
+   "numbers": {
+    "a": 93,
+    "b": 52
+   },
+   "resource": "هيكل خط الأعداد الشفاف",
+   "answer_type": "ج1",
+   "answer": 43,
+   "text_ar": "⁦ 93 − 50 = ▢ ⁩ ثم ⁦ ▢ − 2 = 41 ⁩. ما العدد الناقص؟",
+   "text_en": "⁦ 93 − 50 = ▢ ⁩, then ⁦ ▢ − 2 = 41 ⁩. What number is missing?",
+   "audio_ar": "⁦ 93 − 50 = ▢ ⁩ ثم ⁦ ▢ − 2 = 41 ⁩. ما العدد الناقص؟",
+   "audio_en": "⁦ 93 − 50 = ▢ ⁩, then ⁦ ▢ − 2 = 41 ⁩. What number is missing?",
+   "wrong": {},
+   "slot": null,
+   "alt_of": null,
+   "graded": true,
+   "round": 2,
+   "fact": [
+    93,
+    52
+   ],
+   "fact_seen_before": false
+  },
+  {
+   "id": "3-5-1/evidence/30",
+   "skill": "3-5-1",
+   "group": "evidence",
+   "role": "evidence.alternate",
+   "evidence": "ف3",
+   "performance": "solve",
+   "numbers": {
+    "a": 83,
+    "b": 14
+   },
+   "resource": "بلا نموذج",
+   "answer_type": "ج1",
+   "answer": 69,
+   "text_ar": "احسب: ⁦ 83 − 14 = ▢ ⁩",
+   "text_en": "Work out: ⁦ 83 − 14 = ▢ ⁩",
+   "audio_ar": "احسب: ⁦ 83 − 14 = ▢ ⁩",
+   "audio_en": "Work out: ⁦ 83 − 14 = ▢ ⁩",
+   "wrong": {
+    "71": "digitwise",
+    "96": "reversed",
+    "97": "sum"
+   },
+   "slot": null,
+   "alt_of": null,
+   "graded": true,
+   "round": 2,
+   "fact": [
+    83,
+    14
+   ],
+   "fact_seen_before": false
+  },
+  {
+   "id": "3-5-2/evidence/33",
+   "skill": "3-5-2",
+   "group": "evidence",
+   "role": "evidence.alternate",
+   "evidence": "ف1",
+   "performance": "line_up",
+   "numbers": {
+    "a": 88,
+    "b": 65
+   },
+   "resource": "خط الأعداد: المحطات فوقه والقفزات تحته",
+   "answer_type": "ج1",
+   "answer": 23,
+   "text_ar": "على الخط: من 65 إلى 70 قفزة 5، ومن 70 إلى 88 قفزة 18. كم ⁦ 88 − 65 ⁩؟",
+   "text_en": "On the line: from 65 to 70 is a jump of 5, and from 70 to 88 is a jump of 18. What is ⁦ 88 − 65 ⁩?",
+   "audio_ar": "على الخط: من 65 إلى 70 قفزة 5، ومن 70 إلى 88 قفزة 18. كم ⁦ 88 − 65 ⁩؟",
+   "audio_en": "On the line: from 65 to 70 is a jump of 5, and from 70 to 88 is a jump of 18. What is ⁦ 88 − 65 ⁩?",
+   "wrong": {
+    "32": "reversed",
+    "153": "sum"
+   },
+   "slot": null,
+   "alt_of": null,
+   "graded": true,
+   "round": 1,
+   "fact": [
+    88,
+    65
+   ],
+   "fact_seen_before": false
+  },
+  {
+   "id": "3-5-2/evidence/34",
+   "skill": "3-5-2",
+   "group": "evidence",
+   "role": "evidence.alternate",
+   "evidence": "ف2",
+   "performance": "jump_missing",
+   "numbers": {
+    "a": 53,
+    "b": 24
+   },
+   "resource": "هيكل خط الأعداد الشفاف",
+   "answer_type": "ج1",
+   "answer": 23,
+   "text_ar": "لحساب ⁦ 53 − 24 ⁩: من 24 إلى 30 قفزة 6، ومن 30 إلى 53 قفزة ▢. ما القفزة الناقصة؟",
+   "text_en": "To work out ⁦ 53 − 24 ⁩: from 24 to 30 is a jump of 6, and from 30 to 53 is a jump of ▢. What is the missing jump?",
+   "audio_ar": "لحساب ⁦ 53 − 24 ⁩: من 24 إلى 30 قفزة 6، ومن 30 إلى 53 قفزة ▢. ما القفزة الناقصة؟",
+   "audio_en": "To work out ⁦ 53 − 24 ⁩: from 24 to 30 is a jump of 6, and from 30 to 53 is a jump of ▢. What is the missing jump?",
+   "wrong": {},
+   "slot": null,
+   "alt_of": null,
+   "graded": true,
+   "round": 1,
+   "fact": [
+    53,
+    24
+   ],
+   "fact_seen_before": false
+  },
+  {
+   "id": "3-5-2/evidence/35",
+   "skill": "3-5-2",
+   "group": "evidence",
+   "role": "evidence.alternate",
+   "evidence": "ف3",
+   "performance": "solve",
+   "numbers": {
+    "a": 70,
+    "b": 42
+   },
+   "resource": "بلا نموذج",
+   "answer_type": "ج1",
+   "answer": 28,
+   "text_ar": "احسب: ⁦ 70 − 42 = ▢ ⁩",
+   "text_en": "Work out: ⁦ 70 − 42 = ▢ ⁩",
+   "audio_ar": "احسب: ⁦ 70 − 42 = ▢ ⁩",
+   "audio_en": "Work out: ⁦ 70 − 42 = ▢ ⁩",
+   "wrong": {
+    "32": "digitwise",
+    "82": "reversed",
+    "112": "sum"
+   },
+   "slot": null,
+   "alt_of": null,
+   "graded": true,
+   "round": 1,
+   "fact": [
+    70,
+    42
+   ],
+   "fact_seen_before": false
+  },
+  {
+   "id": "3-5-2/evidence/36",
+   "skill": "3-5-2",
+   "group": "evidence",
+   "role": "evidence.alternate",
+   "evidence": "ف4",
+   "performance": "context_sub",
+   "numbers": {
+    "a": 72,
+    "b": 31,
+    "ctx": "ctx_seats"
+   },
+   "resource": "صورة الموقف، والنص منطوق",
+   "answer_type": "ج1",
+   "answer": 41,
+   "text_ar": "في القاعة 72 مقعدًا. جلس الأطفال على 31 مقعدًا. كم مقعدًا فارغًا؟",
+   "text_en": "The hall has 72 seats. Children are sitting on 31 of them. How many seats are empty?",
+   "audio_ar": "في القاعة 72 مقعدًا. جلس الأطفال على 31 مقعدًا. كم مقعدًا فارغًا؟",
+   "audio_en": "The hall has 72 seats. Children are sitting on 31 of them. How many seats are empty?",
+   "wrong": {
+    "14": "reversed",
+    "103": "sum"
+   },
+   "slot": null,
+   "alt_of": null,
+   "graded": true,
+   "round": 1,
+   "fact": [
+    72,
+    31
+   ],
+   "fact_seen_before": false
+  },
+  {
+   "id": "3-5-2/evidence/37",
+   "skill": "3-5-2",
+   "group": "evidence",
+   "role": "evidence.alternate",
+   "evidence": "ف1",
+   "performance": "line_up",
+   "numbers": {
+    "a": 59,
+    "b": 41
+   },
+   "resource": "خط الأعداد: المحطات فوقه والقفزات تحته",
+   "answer_type": "ج1",
+   "answer": 18,
+   "text_ar": "على الخط: من 41 إلى 50 قفزة 9، ومن 50 إلى 59 قفزة 9. كم ⁦ 59 − 41 ⁩؟",
+   "text_en": "On the line: from 41 to 50 is a jump of 9, and from 50 to 59 is a jump of 9. What is ⁦ 59 − 41 ⁩?",
+   "audio_ar": "على الخط: من 41 إلى 50 قفزة 9، ومن 50 إلى 59 قفزة 9. كم ⁦ 59 − 41 ⁩؟",
+   "audio_en": "On the line: from 41 to 50 is a jump of 9, and from 50 to 59 is a jump of 9. What is ⁦ 59 − 41 ⁩?",
+   "wrong": {
+    "81": "reversed",
+    "100": "sum"
+   },
+   "slot": null,
+   "alt_of": null,
+   "graded": true,
+   "round": 2,
+   "fact": [
+    59,
+    41
+   ],
+   "fact_seen_before": false
+  },
+  {
+   "id": "3-5-2/evidence/38",
+   "skill": "3-5-2",
+   "group": "evidence",
+   "role": "evidence.alternate",
+   "evidence": "ف2",
+   "performance": "jump_missing",
+   "numbers": {
+    "a": 31,
+    "b": 19
+   },
+   "resource": "هيكل خط الأعداد الشفاف",
+   "answer_type": "ج1",
+   "answer": 11,
+   "text_ar": "لحساب ⁦ 31 − 19 ⁩: من 19 إلى 20 قفزة 1، ومن 20 إلى 31 قفزة ▢. ما القفزة الناقصة؟",
+   "text_en": "To work out ⁦ 31 − 19 ⁩: from 19 to 20 is a jump of 1, and from 20 to 31 is a jump of ▢. What is the missing jump?",
+   "audio_ar": "لحساب ⁦ 31 − 19 ⁩: من 19 إلى 20 قفزة 1، ومن 20 إلى 31 قفزة ▢. ما القفزة الناقصة؟",
+   "audio_en": "To work out ⁦ 31 − 19 ⁩: from 19 to 20 is a jump of 1, and from 20 to 31 is a jump of ▢. What is the missing jump?",
+   "wrong": {},
+   "slot": null,
+   "alt_of": null,
+   "graded": true,
+   "round": 2,
+   "fact": [
+    31,
+    19
+   ],
+   "fact_seen_before": false
+  },
+  {
+   "id": "3-5-2/evidence/39",
+   "skill": "3-5-2",
+   "group": "evidence",
+   "role": "evidence.alternate",
+   "evidence": "ف3",
+   "performance": "solve",
+   "numbers": {
+    "a": 91,
+    "b": 67
+   },
+   "resource": "بلا نموذج",
+   "answer_type": "ج1",
+   "answer": 24,
+   "text_ar": "احسب: ⁦ 91 − 67 = ▢ ⁩",
+   "text_en": "Work out: ⁦ 91 − 67 = ▢ ⁩",
+   "audio_ar": "احسب: ⁦ 91 − 67 = ▢ ⁩",
+   "audio_en": "Work out: ⁦ 91 − 67 = ▢ ⁩",
+   "wrong": {
+    "36": "digitwise",
+    "42": "reversed",
+    "158": "sum"
+   },
+   "slot": null,
+   "alt_of": null,
+   "graded": true,
+   "round": 2,
+   "fact": [
+    91,
+    67
+   ],
+   "fact_seen_before": false
+  },
+  {
+   "id": "3-5-2/evidence/40",
+   "skill": "3-5-2",
+   "group": "evidence",
+   "role": "evidence.alternate",
+   "evidence": "ف4",
+   "performance": "context_sub",
+   "numbers": {
+    "a": 60,
+    "b": 38,
+    "ctx": "ctx_seats"
+   },
+   "resource": "صورة الموقف، والنص منطوق",
+   "answer_type": "ج1",
+   "answer": 22,
+   "text_ar": "في القاعة 60 مقعدًا. جلس الأطفال على 38 مقعدًا. كم مقعدًا فارغًا؟",
+   "text_en": "The hall has 60 seats. Children are sitting on 38 of them. How many seats are empty?",
+   "audio_ar": "في القاعة 60 مقعدًا. جلس الأطفال على 38 مقعدًا. كم مقعدًا فارغًا؟",
+   "audio_en": "The hall has 60 seats. Children are sitting on 38 of them. How many seats are empty?",
+   "wrong": {
+    "38": "digitwise",
+    "98": "sum"
+   },
+   "slot": null,
+   "alt_of": null,
+   "graded": true,
+   "round": 2,
+   "fact": [
+    60,
+    38
+   ],
+   "fact_seen_before": false
+  },
+  {
+   "id": "3-5-3/evidence/09",
+   "skill": "3-5-3",
+   "group": "evidence",
+   "role": "evidence.alternate",
+   "evidence": "ف3",
+   "performance": "solve",
+   "numbers": {
+    "a": 88,
+    "b": 15
+   },
+   "resource": "بلا نموذج",
+   "answer_type": "ج1",
+   "answer": 73,
+   "text_ar": "احسب: ⁦ 88 − 15 = ▢ ⁩",
+   "text_en": "Work out: ⁦ 88 − 15 = ▢ ⁩",
+   "audio_ar": "احسب: ⁦ 88 − 15 = ▢ ⁩",
+   "audio_en": "Work out: ⁦ 88 − 15 = ▢ ⁩",
+   "wrong": {
+    "37": "reversed",
+    "103": "sum"
+   },
+   "slot": null,
+   "alt_of": null,
+   "graded": true,
+   "round": 1,
+   "fact": [
+    88,
+    15
+   ],
+   "fact_seen_before": false
+  },
+  {
+   "id": "3-5-3/evidence/10",
+   "skill": "3-5-3",
+   "group": "evidence",
+   "role": "evidence.alternate",
+   "evidence": "ف3",
+   "performance": "solve",
+   "numbers": {
+    "a": 93,
+    "b": 47
+   },
+   "resource": "بلا نموذج",
+   "answer_type": "ج1",
+   "answer": 46,
+   "text_ar": "احسب: ⁦ 93 − 47 = ▢ ⁩",
+   "text_en": "Work out: ⁦ 93 − 47 = ▢ ⁩",
+   "audio_ar": "احسب: ⁦ 93 − 47 = ▢ ⁩",
+   "audio_en": "Work out: ⁦ 93 − 47 = ▢ ⁩",
+   "wrong": {
+    "54": "digitwise",
+    "64": "reversed",
+    "140": "sum"
+   },
+   "slot": null,
+   "alt_of": null,
+   "graded": true,
+   "round": 2,
+   "fact": [
+    93,
+    47
+   ],
+   "fact_seen_before": false
   }
  ]
 }

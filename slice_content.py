@@ -332,9 +332,9 @@ def build_big(bank, rng, used):
         def modelled(a, b):                                 # بنود النموذج والخطوة تحتاج محطتين على الأقل
             return len(back_steps(a, b)) >= 2 if skill == '3-5-1' else td(a, b) >= 1
 
-        def put(group, role, ev, perf, **kw):
+        def put(group, role, ev, perf, extra=lambda a, b: True, **kw):
             need = modelled if perf not in ('solve', 'context_sub', 'compare') else (lambda a, b: True)
-            a, b = nxt(need)
+            a, b = nxt(lambda a, b: need(a, b) and extra(a, b))
             n = dict(a=a, b=b)
             if perf == 'context_sub':
                 n['ctx'] = CTXSUB[bank.count[(skill, group)] % len(CTXSUB)]
@@ -433,6 +433,23 @@ def build_big(bank, rng, used):
         for t in EVIDENCE[skill]:
             for _ in range(2):
                 put('tryfirst', 'opening.try', t, PERF[skill][t])
+    # بديل لبند دليل فهم استُبعد بعد أن أُجيب عنه أو طُلب فيه دعم (R18-01): واحد لكل نوع في كل جولة، بحقيقة جديدة.
+    # بعد كل ما سبق، فلا تتغير أعداده. والقفزة المطلوبة فيه ليست صفرًا
+    for skill in ('3-5-1', '3-5-2', '3-5-3'):
+        put = maker(skill)
+        for rnd in (1, 2):
+            for t in EVIDENCE[skill]:
+                perf = PERF[skill][t]
+                for _ in SLOTS[skill]:                      # عائلة أعداد لا تحقق الشرط تُترك إلى التالية
+                    try:
+                        it = put('evidence', 'evidence.alternate', t, perf,
+                                 extra=(lambda a, b: a % 10 != 0) if perf == 'jump_missing' else (lambda a, b: True))
+                        break
+                    except RuntimeError:
+                        continue
+                else:
+                    raise RuntimeError('لا بديل لدليل الفهم: %s %s' % (skill, t))
+                it['round'] = rnd
 
 
 # ---------------------------------------------------------------- توليد وحدة 1-4
@@ -442,10 +459,10 @@ def build_small(bank, rng):
         order = [6, 3, 8, 1, 5, 9, 2, 7, 4]
         turn = defaultdict(int)
 
-        def put(group, role, ev, perf, **kw):
+        def put(group, role, ev, perf, force=None, **kw):
             key = (group, perf)                             # كل أداء يدور على الأعداد مستقلًا داخل مجموعته
             turn[key] += 1
-            n = dict(n=order[(turn[key] + 2 * len(group)) % 9])
+            n = dict(n=order[(turn[key] + 2 * len(group)) % 9] if force is None else force)
             if perf == 'missing':
                 perf = ('missing_second', 'missing_first', 'subtract')[turn[key] % 3]
             if perf == 'context10':
@@ -520,6 +537,16 @@ def build_small(bank, rng):
         for t in types:                                     # بندا «جرّب أولًا» لكل نوع (6.2، ك4)
             for _ in range(2):
                 put('tryfirst', 'opening.try', t, P[t])
+        # بديل لبند دليل فهم استُبعد بعد أن أُجيب عنه أو طُلب فيه دعم (R18-01): واحد لكل نوع في كل جولة، بحقيقة لم ترد
+        # في بنود نوعه الأربعة في تلك الجولة، فلا يعيد البند المستبعد بمعرّف آخر ولا يجاور الحقيقة نفسها (3.5).
+        # بعد كل ما سبق، فلا تتغير أعداده
+        for rnd in (1, 2):
+            for t in types:
+                group = [i for i in bank.items if i['skill'] == skill and i['group'] == 'evidence'
+                         and i['evidence'] == t and i.get('round', 1) == rnd]
+                taken = {frozenset((i['numbers']['n'], 10 - i['numbers']['n'])) for i in group}
+                free = [n for n in order if frozenset((n, 10 - n)) not in taken]
+                put('evidence', 'evidence.alternate', t, P[t], force=free[0])['round'] = rnd
 
 
 # ---------------------------------------------------------------- التحقق المستقل
@@ -616,7 +643,12 @@ def validate(items):
         for t in EVIDENCE[skill]:
             for rnd in (1, 2):
                 ev = [i for i in by[(skill, 'evidence')] if i['evidence'] == t and i.get('round') == rnd]
+                alt = [i for i in ev if i['role'] == 'evidence.alternate']
+                ev = [i for i in ev if i['role'] != 'evidence.alternate']
                 bad['دليل الفهم ليس 2 + 2 لكل نوع في كل جولة'] += int(len(ev) != 4)
+                bad['لا بديل واحد لنوع في جولة دليل الفهم'] += int(len(alt) != 1)
+                bad['بديل دليل الفهم يكرر حقيقة من بنود نوعه في جولته'] += sum(
+                    1 for a in alt if a.get('fact') in [i.get('fact') for i in ev])
             bad['لا بندا «جرّب أولًا» لنوع'] += int(
                 sum(1 for i in by[(skill, 'tryfirst')] if i['evidence'] == t) != 2)
             bad['لا بندا تعويض لنوع في البوابة'] += int(
@@ -688,7 +720,8 @@ def markdown(items, bad, cases, accepted):
             '## 4. بقية البنود', '']
     names = [('lesson', 'الدرس'), ('opening', 'الافتتاح: «جرّب أولًا» ثم 3 بنود موجَّهة'),
              ('tryfirst', '«جرّب أولًا» بعد بوابة أخفقت: بندان لكل نوع، يُعرض منها نوعا الخطأ (6.2)'), ('practice', 'التدريب'),
-             ('evidence', 'دليل الفهم: جولتان، في كل منهما بندان لكل نوع وبندان احتياطيان بعد الدرس القصير'),
+             ('evidence', 'دليل الفهم: جولتان، في كل منهما بندان لكل نوع وبندان احتياطيان بعد الدرس القصير. وآخر القائمة '
+                          'بديل واحد لكل نوع في كل جولة، لبند استُبعد بعد أن أُجيب عنه أو طُلب فيه دعم (R18-01)'),
              ('gate', 'البوابة، بنود الحساب أولًا، ثم بندا تعويض وبديلان لكل نوع'),
              ('regate', 'إعادة البوابة الوحيدة، ببنود جديدة وبالبنية نفسها'), ('short', 'التحقق القصير'),
              ('deferred', 'الفحص المؤجل: ثلاث جولات من 5 بنود بعد 7 و21 و60 يومًا'),
@@ -773,7 +806,8 @@ def mark_seen(items):
                     fact = (n['a'], n['b']) if 'a' in n else tuple(sorted((v, 10 - v)))
                     it['fact'] = list(fact)
                     it['fact_seen_before'] = fact in seen
-                    now.add(fact)
+                    if it['role'] != 'evidence.alternate':  # البديل يُعرض نادرًا، فلا يجعل ما بعده «سبق عرضه»
+                        now.add(fact)
             seen |= now
 
 
