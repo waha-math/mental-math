@@ -467,7 +467,7 @@ const proofs = (e, skill = '1-4-2') => e.s.log.filter((x) => x.type === 'underst
 
 function caseVoidHistory() {
   const bad = [];
-  const ITEM = '1-4-2/evidence/02';                         // S8، دليل فهم 1-4-2، جوابه 4. قبله بند واحد منجز
+  const ITEM = '1-4-2/evidence/02';                         // S8، دليل فهم 1-4-2. قبله بند واحد منجز
   const inval = (e) => e.apply({ id: 't1', type: 'invalidate_session', target: 'S6' });
   // أ) إجابة مؤكدة خاطئة ثم طلب تلميح، ثم التعليق، ثم إنهاء
   let { e, sc, st } = at(39);

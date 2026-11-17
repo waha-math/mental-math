@@ -310,6 +310,12 @@ class Bank:
 
 
 # ---------------------------------------------------------------- توليد وحدة 3-5
+def zero_step(it):
+    """هل في تسلسل الحل المعروض قفزة قيمتها صفر؟"""
+    n = it['numbers']
+    return it['performance'] in ('line_up', 'jump_missing') and n['a'] == n['b'] + 10 - n['b'] % 10
+
+
 def build_big(bank, rng, used):
     pool = [(a, b) for a in range(21, 100) for b in range(11, a) if b % 10]
     rng.shuffle(pool)
@@ -450,10 +456,120 @@ def build_big(bank, rng, used):
                 else:
                     raise RuntimeError('لا بديل لدليل الفهم: %s %s' % (skill, t))
                 it['round'] = rnd
+    # بنود يُعرض فيها الإكمال بقفزتين وثانيتهما صفر (من 26 إلى 30 ثم «من 30 إلى 30»): الصفر صحيح حسابيًا، لكن البند لا
+    # يقيس الإكمال بقفزتين. تُستبدل أعدادها بأول زوج لم يُستعمل من عائلة خانتها نفسها وقفزته الثانية ليست صفرًا.
+    # بعد كل ما سبق، فلا تتغير أعداد بند آخر
+    for it in bank.items:
+        if it['skill'] in SLOTS and it['performance'] in ('line_up', 'jump_missing') and zero_step(it):
+            a, b = it['numbers']['a'], it['numbers']['b']
+            fam = next(f for _c, _d, f in SLOTS[it['skill']] if f(a, b))
+            a, b = take(fam, lambda a, b: len(up_steps(a, b)) == 2)
+            it['numbers'].update(a=a, b=b)
+            rerender(it)
+            it['note'] = 'استُبدلت أعداده: كانت قفزته الثانية صفرًا'
 
 
 # ---------------------------------------------------------------- توليد وحدة 1-4
+def check_plan_142():
+    """أعداد الخانات التسع الأولى في محاولات فحص 1-4-2 الثلاث. كل خانة من ثلاثيتها (1 إلى 3، 4 إلى 6، 7 إلى 9)، وكل
+    عدد من 1 إلى 9 مرة واحدة في المحاولة، ولا خانتان متتاليتان بعددين متتامين إلى 10 (3.5: الحقيقة نفسها لا تُعرض
+    في بندين متتاليين)، وعدد كل خانة يتبدل بين المحاولات الثلاث. المحاولة الأولى كما كانت، والباقيتان أول ما يحقق
+    الشروط بالترتيب المعجمي."""
+    triples = [(1, 2, 3), (4, 5, 6), (7, 8, 9)]
+
+    def fill(prefix, banned):
+        k = len(prefix)
+        if k == 9:
+            yield list(prefix)
+            return
+        for v in triples[k % 3]:
+            if v in prefix or v in banned[k] or (prefix and prefix[-1] + v == 10):
+                continue
+            yield from fill(prefix + [v], banned)
+    plans = [[1, 4, 7, 2, 5, 8, 3, 6, 9]]
+    assert plans[0] in list(fill([], [set()] * 9))
+    for _ in range(2):
+        plans.append(next(fill([], [{p[k] for p in plans} for k in range(9)])))
+    return plans
+
+
+def rerender(it):
+    """يعيد كتابة نص البند وجوابه وإجاباته الخاطئة المتوقعة بعد تغيير أعداده."""
+    ar, en, ans = render(it['performance'], it['numbers'])
+    it.update(answer=ans, text_ar=ar, text_en=en, audio_ar=ar, audio_en=en,
+              wrong=wrong_answers(it['performance'], it['numbers'], ans))
+
+
+def small_fact(it):
+    n = it['numbers']
+    v = n.get('n', n.get('e'))
+    return frozenset((v, 10 - v))
+
+
+def respace_small(items):
+    """3.5: لا تُعرض الحقيقة نفسها في بندين متتاليين. يأخذ من content_sequence كل زوج بنود يمكن أن يراه الطفل متتاليين
+    أثناء التشغيل (بكل الفروع والبدائل والاستئناف)، ويعيد اختيار أعداد بنود الوحدة 1-4 خارج فحص الاستقلال (خاناته
+    تُضبط عند توليدها) حتى لا يخالف زوج. بحث بالتراجع: البند الأكثر قيودًا أولًا، وعدده الحالي أول ما يُجرَّب، فلا
+    يتغير بند بلا حاجة، ثم أقل الأعداد استعمالًا في مجموعته وأدائه. وبديل دليل الفهم تبقى حقيقته خارج بنود نوعه في
+    جولته. يعيد عدد البنود التي تغيّرت."""
+    from content_sequence import collect
+    pairs, by_id, _n = collect(items, EVIDENCE)
+    near = defaultdict(set)
+    for a, b, how, _label in pairs:
+        if a != b and how != 'interrupted' and by_id[a]['skill'] in SLOTS_SMALL:
+            near[a].add(b)
+            near[b].add(a)
+    changed = 0
+    for skill in SLOTS_SMALL:
+        for it in items:                                    # بديل دليل الفهم: حقيقته خارج بنود نوعه في جولته
+            if it['skill'] == skill and it['role'] == 'evidence.alternate':
+                for o in items:
+                    if (o['skill'] == skill and o['group'] == 'evidence' and o is not it
+                            and o['evidence'] == it['evidence'] and o.get('round', 1) == it.get('round', 1)):
+                        near[it['id']].add(o['id'])
+                        near[o['id']].add(it['id'])
+        todo = [i for i in items if i['skill'] == skill and not i['group'].startswith('check')
+                and 1 <= i['numbers'].get('n', i['numbers'].get('e')) <= 9]
+        ids = {i['id'] for i in todo}
+        order = sorted(todo, key=lambda i: -len(near[i['id']]))      # الترتيب ثابت: sorted مستقر على ترتيب الملف
+        fixed = {i['id']: small_fact(i) for i in items if i['skill'] == skill and i['id'] not in ids}
+        value, used = {}, Counter()
+
+        def fact_of(x):
+            return fixed[x] if x in fixed else frozenset((value[x], 10 - value[x])) if x in value else None
+
+        def solve(k):
+            if k == len(order):
+                return True
+            it = order[k]
+            key = 'e' if 'e' in it['numbers'] else 'n'
+            cur, grp = it['numbers'][key], (it['group'], it['performance'])
+            taken = {fact_of(x) for x in near[it['id']]} - {None}
+            cands = sorted((v for v in range(1, 10) if frozenset((v, 10 - v)) not in taken),
+                           key=lambda v: (v != cur, used[(grp, v)], (v - cur) % 9))
+            for v in cands:
+                value[it['id']] = v
+                used[(grp, v)] += 1
+                if solve(k + 1):
+                    return True
+                used[(grp, v)] -= 1
+                del value[it['id']]
+            return False
+
+        sys.setrecursionlimit(10000)
+        if not solve(0):
+            raise RuntimeError('لا أعداد تحقق التتابع في %s' % skill)
+        for it in todo:
+            key = 'e' if 'e' in it['numbers'] else 'n'
+            if it['numbers'][key] != value[it['id']]:
+                it['numbers'][key] = value[it['id']]
+                rerender(it)
+                changed += 1
+    return changed
+
+
 def build_small(bank, rng):
+    plan_142 = check_plan_142()
     for skill in ('1-4-1', '1-4-2'):
         P, types = PERF[skill], EVIDENCE[skill]
         order = [6, 3, 8, 1, 5, 9, 2, 7, 4]
@@ -500,16 +616,21 @@ def build_small(bank, rng):
         for t in [und[0], 'ف3', 'ف3']:
             put('short', 'short_check', t, P[t])
         for ai, attempt in enumerate(('A', 'B', 'C')):
-            k, taken = 0, set()
+            k, taken, tail = 0, set(), []                   # tail: آخر ما قد يُعرض قبل هذه المجموعة، بندًا وبديلًا
             for c, _d, perf, values in SLOTS_SMALL[skill]:
                 vals = list(values)
-                if skill == '1-4-2' and len(vals) == 3:     # كل عدد مرة واحدة في المحاولة، وتتبدل بين المحاولتين
-                    pick = [vals[(k // 3 + ai) % 3]]
+                if skill == '1-4-2' and len(vals) == 3:     # كل عدد مرة واحدة في المحاولة، وتتبدل بين المحاولات (3.5)
+                    pick = [plan_142[ai][k]]
                 elif len(vals) == 2 and c == 1 and set(vals) == {0, 10}:
                     pick = [vals[ai % 2]]                   # الحالة الأخرى في المحاولة التالية
                 else:
                     r = ai % len(vals)
-                    pick = (vals[r:] + vals[:r])[:c]
+                    for shift in range(len(vals)):          # أول المجموعة لا يتمّ عشرةً مع آخر ما سبقها (3.5)
+                        pick = (vals[r + shift:] + vals[:r + shift])[:c]
+                        if all(pick[0] + t != 10 for t in tail):
+                            break
+                    else:
+                        raise RuntimeError('لا ترتيب لخانات %s يحقق التتابع' % skill)
                 spare = [v for v in values if v not in pick and v not in taken]
                 for v in pick:
                     k += 1
@@ -519,9 +640,11 @@ def build_small(bank, rng):
                                  perf, slot=k, **{key: v})
                     if spare and skill == '1-4-1':
                         alt = spare[0] if c == 1 else spare[-1]
+                        tail = [v, alt]
                         bank.add(skill, 'check' + attempt, 'check.alternate', m['evidence'], perf, slot=k,
                                  alt_of=m['id'], note='بديل مشترك لخانات مجموعته' if c > 1 else None, **{key: alt})
                     else:
+                        tail = [v]
                         bank.add(skill, 'check' + attempt, 'check.alternate', m['evidence'], perf, slot=k,
                                  alt_of=m['id'], note='لا قيمة أخرى تحقق شرط الخانة: إعادة عرض الحقيقة نفسها بعد '
                                  'الانقطاع، بقرار الأب (3.6)', **{key: v})
@@ -655,6 +778,7 @@ def validate(items):
                 sum(1 for i in by[(skill, 'gate')] if i['role'] == 'gate.compensation' and i['evidence'] == t) != 2)
             bad['لا بديلان لنوع في البوابة'] += int(
                 sum(1 for i in by[(skill, 'gate')] if i['role'] == 'gate.alternate' and i['evidence'] == t) != 2)
+        bad['قفزة قيمتها صفر في تسلسل الحل المعروض'] += sum(1 for i in items if i['skill'] == skill and zero_step(i))
         rounds = Counter(i['slot'] for i in by[(skill, 'deferred')])
         bad['الفحص المؤجل ليس 3 جولات من 5 بنود'] += int(rounds != Counter({1: 5, 2: 5, 3: 5}))
     return bad
@@ -835,12 +959,17 @@ if __name__ == '__main__':
     for it in bank.items:
         if it['group'] == 'evidence':
             it.setdefault('round', 1)
+    respaced = respace_small(bank.items)
     mark_seen(bank.items)
     bad = validate(bank.items)
+    from content_sequence import collect, violations
+    seq_pairs, seq_by, seq_n = collect(bank.items, EVIDENCE)
+    seq_bad = violations(seq_pairs, seq_by)
+    bad['الحقيقة نفسها في بندين متتاليين أثناء التشغيل (3.5)'] += len(seq_bad)
     cases, accepted = rejected_examples()
     for it in bank.items:
         it['wrong'] = {str(k): v for k, v in it['wrong'].items()}
-    json.dump(dict(version=1, seed=SEED, texts={k: dict(ar=v[0], en=v[1]) for k, v in T.items()},
+    json.dump(dict(version=2, seed=SEED, texts={k: dict(ar=v[0], en=v[1]) for k, v in T.items()},
                    ui={k: dict(ar=v[0], en=v[1]) for k, v in UI.items()},
                    cards={g: {k: dict(ar=v[0], en=v[1]) for k, v in d.items()} for g, d in CARDS.items()},
                    describe={k: dict(ar=v[0], en=v[1], ask_ar=v[2], ask_en=v[3]) for k, v in DESCRIBE.items()},
@@ -852,6 +981,10 @@ if __name__ == '__main__':
         print('  %s: %d' % (k, v))
     wrong = [n for n, v in cases if v] + [n for n, v in accepted if not v]
     print('أمثلة 10.2 المرفوضة والمقبولة: %s' % ('مطابقة' if not wrong else 'تخالف: ' + '، '.join(wrong)))
+    print('تتابع البنود أثناء التشغيل: %d نشاطًا مستكشَفًا، و%d زوجًا ممكنًا، وأُعيد اختيار عدد %d بندًا في الوحدة 1-4'
+          % (seq_n, len(seq_pairs), respaced))
+    for a, b, how, label, f in seq_bad[:8]:
+        print('    %s ثم %s (%s) في %s: الحقيقة %s' % (a, b, how, label, f))
     flagged = sum(1 for it in bank.items if it.get('note', '').startswith('لا قيمة'))
     print('بدائل تعيد الحقيقة نفسها (3.6، بقرار الأب): %d' % flagged)
     hard = {k: v for k, v in bad.items() if v and k != 'هوية مكررة في محاولة واحدة'}

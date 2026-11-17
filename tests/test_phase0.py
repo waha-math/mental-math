@@ -247,7 +247,7 @@ def case_support():
 
 
 def case_nonfinal():
-    e, sc, st, kid = at(13)                                 # البند 1-4-1/evidence/02 وجوابه 4
+    e, sc, st, kid = at(13)                                 # البند 1-4-1/evidence/02
     r = st.event(st.seq, ('confirm', 5))
     e2, sc2, notes = reopen('young', st.snapshot())
     last = sc2.records[-1]
@@ -682,7 +682,7 @@ def case_void_history():
     # القاعدة (R17-01): ما سُجّل في البند قبل تغيّر الصلاحية يبقى محفوظًا مع سبب استبعاده، مرة واحدة. لا يتقدم النشاط
     # به، ولا يدخل المؤشرات، والحدث الذي جاء بعد التغيّر لا يُحتسب
     bad = []
-    ITEM = '1-4-2/evidence/02'                              # S8، دليل فهم 1-4-2، جوابه 4. قبله بند واحد منجز
+    ITEM = '1-4-2/evidence/02'                              # S8، دليل فهم 1-4-2. قبله بند واحد منجز
     # أ) إجابة مؤكدة خاطئة ثم طلب تلميح، ثم التعليق، ثم إنهاء
     e, sc, st, kid = at(39)
     n0, ind0 = dict(sc.n), dump(indicators(sc.records))

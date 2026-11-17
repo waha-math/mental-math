@@ -25,6 +25,7 @@ import tempfile
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 VECTORS = ('conformance_vectors.json', 'item_vectors.json', 'scheduler_vectors.json', 'persist_vectors.json')
 SKIP_DIRS = ('.git', 'node_modules', '__pycache__')
+SAME = 'import sys; sys.exit(open(sys.argv[1], "rb").read() != open(sys.argv[2], "rb").read())'
 
 
 def copy_tree(src, dst):
@@ -97,7 +98,11 @@ def main(argv):
             steps += [('اختبارات المحرك المرجعي', [py, 'test_transition_engine.py', m], all_passed, ()),
                       ('اختبارات طبقة البنود', [py, 'test_item_layer.py', m], all_passed, ()),
                       ('سياسة الحفظ والاستعادة', [py, 'tests/test_persist.py', m], all_passed, ()),
-                      ('فحص المحتوى', [py, 'slice_content.py', m], None, ())]
+                      ('توليد المحتوى وفحصه', [py, 'slice_content.py', m], None, ()),
+                      ('المحتوى المحفوظ هو ما يولّده المولّد', [py, '-c', SAME, os.path.join(tree, 'slice-content.json'),
+                                                             'slice-content.json'], None, ()),
+                      ('تتابع البنود أثناء التشغيل', [py, 'content_sequence.py'], None, ()),
+                      ('اختبار فحص التتابع', [py, 'tests/test_content_sequence.py', m], all_passed, ())]
             for t in ('r10', 'r11', 'r13', 'r14', 'r15', 'phase0'):
                 steps.append(('حالات %s، بايثون' % t, [py, 'tests/test_%s.py' % t, m], all_passed, ()))
                 steps.append(('حالات %s، JavaScript' % t, [node, 'tests/test_%s.mjs' % t], all_passed, ()))

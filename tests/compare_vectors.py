@@ -8,6 +8,7 @@
 """
 import json
 import os
+from collections import Counter
 import subprocess
 import sys
 import tempfile
@@ -38,9 +39,35 @@ with tempfile.TemporaryDirectory() as tmp:
         a = open(os.path.join(ROOT, 'app', f), 'rb').read()
         b = open(os.path.join(old, 'app', f), 'rb').read()
         print('  %s: %s' % (f, 'مطابق بايتًا ببايت' if a == b else 'مختلف'))
-        if a == b or f != 'scheduler_vectors.json':
+        if a == b:
             continue
         new, was = json.loads(a), json.loads(b)
+        if f == 'item_vectors.json':
+            # ما الذي اختلف: مدخلات (البند المعروض وما أُجيب به) أم نتائج (حالة النشاط وسجلاته وأحداثه)؟
+            for k in new:
+                if new[k] == was[k]:
+                    print('    %s: مطابق' % k)
+                elif k != 'drives':
+                    x = {json.dumps(v, sort_keys=True, ensure_ascii=False) for v in new[k]}
+                    y = {json.dumps(v, sort_keys=True, ensure_ascii=False) for v in was[k]}
+                    print('    %s: %d الآن و%d قبل؛ جديد %d وزائل %d' % (k, len(new[k]), len(was[k]), len(x - y), len(y - x)))
+            diff = [(x, y) for x, y in zip(new['drives'], was['drives']) if x != y]
+            keys, inner, ids = Counter(), Counter(), 0
+            for x, y in diff:
+                keys.update(k for k in x if x[k] != y.get(k))
+                for p, q in zip(x['steps'], y['steps']):
+                    inner.update(k for k in set(p) | set(q) if p.get(k) != q.get(k))
+                    ids += int(bool(p.get('item')) and bool(q.get('item')) and p['item'].get('id') != q['item'].get('id'))
+            print('    drives: %d، والمختلف %d. الحقول المختلفة فيها: %s. داخل الخطوات: %s. بنود اختلف معرّفها: %d' % (
+                len(new['drives']), len(diff) + abs(len(new['drives']) - len(was['drives'])),
+                dict(keys), dict(inner), ids))
+            continue
+        if f != 'scheduler_vectors.json':
+            continue
+        top = [k for k in new if k != 'traces' and new[k] != was[k]]
+        parts = Counter(k for x, y in zip(new['traces'], was['traces']) if x != y for k in x if x[k] != y.get(k))
+        print('    خارج المسارات، المختلف: %s. وفي المسارات المختلفة، الحقول: %s' % (top or 'لا شيء', dict(parts)))
+        print('    (tape و tables مدخلات: البند المعروض وما أُجيب به. ops قرارات المجدول وحالته بعد كل عملية.)')
         diff = [i for i, (x, y) in enumerate(zip(new['traces'], was['traces'])) if x != y]
         print('    المسارات: %d، والمختلف منها %d. ما عدا المسارات مطابق: %s' % (
             len(new['traces']), len(diff) + abs(len(new['traces']) - len(was['traces'])),
