@@ -101,11 +101,10 @@ export function restore(record, { types, source, answer, item_seconds = null, re
   if (record.schema !== SCHEMA) throw new Inconsistent(`نسخة سجل غير معروفة: ${record.schema}`);
   const e = Engine.restore(net, record.engine, contentVersions);
   const o = { ...record.scheduler.opts };
-  if (record.records !== null && record.records !== undefined) {   // سجل محاولات البنود كما حُفظ
-    records = records === null ? [] : records;
-    records.splice(0, records.length, ...clone(record.records));
-  }
-  const sc = new Scheduler(e, types, source, answer, { ...o, records, item_seconds });
+  // الحالة المرشحة تُبنى في نسخ مستقلة، ولا يتغير شيء مما مرّره المستدعي إلا بعد نجاح كل المراحل (R15-01)
+  const local = (record.records !== null && record.records !== undefined) ? clone(record.records)   // كما حُفظ
+    : (records === null ? null : clone(records));
+  const sc = new Scheduler(e, types, source, answer, { ...o, records: local, item_seconds });
   const st = clone(record.scheduler.state);
   const notes = [];
   const cur = record.current ? clone(record.current) : null;
@@ -143,6 +142,10 @@ export function restore(record, { types, source, answer, item_seconds = null, re
     if (!r.ok) throw new Inconsistent(`تعذر ختم الجلسة ${ses}: ${r.code}`);
     sc.cur = null;
     notes.push(['session_closed', ses]);
+  }
+  if (records !== null && local !== null) {     // نجحت الاستعادة: تُحدَّث مصفوفة المستدعي بهويتها
+    records.splice(0, records.length, ...local);
+    sc.records = records;
   }
   return { engine: e, scheduler: sc, notes };
 }

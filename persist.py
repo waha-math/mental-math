@@ -142,10 +142,12 @@ def restore(record, net, types, source, answer, item_seconds=None, records=None,
     e = Engine.restore(net, record['engine'], content_versions)
     o = dict(record['scheduler']['opts'])
     o['scope'] = None if o['scope'] is None else set(o['scope'])
+    # الحالة المرشحة تُبنى في نسخ مستقلة، ولا يتغير شيء مما مرّره المستدعي إلا بعد نجاح كل المراحل (R15-01)
     if record.get('records') is not None:                  # سجل محاولات البنود كما حُفظ
-        records = [] if records is None else records
-        records[:] = copy.deepcopy(record['records'])
-    sc = Scheduler(e, types, source, answer, records=records, item_seconds=item_seconds, **o)
+        local = copy.deepcopy(record['records'])
+    else:
+        local = None if records is None else copy.deepcopy(records)
+    sc = Scheduler(e, types, source, answer, records=local, item_seconds=item_seconds, **o)
     st = copy.deepcopy(record['scheduler']['state'])
     notes = []
     cur = copy.deepcopy(record.get('current'))
@@ -185,4 +187,7 @@ def restore(record, net, types, source, answer, item_seconds=None, records=None,
             raise Inconsistent('تعذر ختم الجلسة %s: %s' % (ses, r.get('code')))
         sc.cur = None
         notes.append(('session_closed', ses))
+    if records is not None and local is not None:          # نجحت الاستعادة: تُحدَّث مصفوفة المستدعي بهويتها
+        records[:] = local
+        sc.records = records
     return e, sc, notes
