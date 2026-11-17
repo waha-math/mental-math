@@ -322,8 +322,8 @@ class Scheduler:
                       void=got if isinstance(got, Void) else None,
                       about=dict(activity=act.name, role=w['role'], item=item.get('id') if isinstance(item, dict) else None))
         req = None
-        # تاريخ التعرّض من السجلات، لا من كائن النشاط: يبقى بعد إسقاط النشاط وإنشاء غيره (R19-01). لدليل الفهم الآن
-        history = (lambda a: exposure(self.records, a.skill, a.name)) if kind == 'evidence' else None
+        # تاريخ التعرّض من السجلات، لا من كائن النشاط: يبقى بعد إسقاط النشاط وإنشاء غيره (R19-01). لدليل الفهم وافتتاح الدرس
+        history = (lambda a: exposure(self.records, a.skill, a.name)) if kind in ('evidence', 'opening') else None
         gen = drive_steps(act, self.source, recs, pause=self.tick if self.cap is not None else None, history=history)
         try:
             req = next(gen)

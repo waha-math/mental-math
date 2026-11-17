@@ -639,6 +639,58 @@ function caseFirstItem() {
   return bad;
 }
 
+// القاعدة (R18-01 في افتتاح الدرس): إعادة البند للتعليم غير استعماله دليلًا لقرار.
+// افتتاح 1-4-2 في S7: «جرّب أولًا» tryfirst/03 ثم tryfirst/04، ثم الموجَّهة opening/03 و04 و05.
+// الطفل هنا يخطئ قبل الدرس، ثم يعرف المهارة بعد التعليق (كأنه تعلّمها خارج التطبيق)، ليظهر أثر البند المعاد
+function caseOpeningVoid() {
+  const bad = [];
+  const finish = (e, sc, st, kid) => {
+    kid.known.add('1-4-2');
+    const out = [];
+    while (st.pending !== null) {
+      const [item, w] = st.pending;
+      if (w.activity === 'opening' && item.skill === '1-4-2') out.push([item.id.slice(6), w.reshown, Boolean(w.repeated)]);
+      for (const ev of kid.events(item, w)) st.event(st.seq, ev);
+    }
+    const res = e.s.log.filter((x) => x.type === 'lesson_opening_result' && x.skill === '1-4-2').map((x) => x.outcome);
+    const marked = sc.records.filter((r) => r.repeated_after_void).map((r) => r.item.slice(6));
+    return [out, res, marked];
+  };
+  const run = (n, evs, mode) => {
+    let { e, sc, st, kid } = at(n);
+    const first = st.pending[0].id;
+    for (const ev of evs) st.event(st.seq, ev);
+    e.apply({ id: 't1', type: 'invalidate_session', target: 'S6' });
+    if (mode !== 'قبل التوقف') st.event(st.seq, ['end']);
+    if (mode !== 'متصل') {
+      ({ e, sc } = reopen('young', st.snapshot()));
+      st = new Stepper(e, sc);
+      st.open(sc.g_run(14));
+    }
+    return [first.slice(6), ...finish(e, sc, st, kid)];
+  };
+  const GUIDED = [['opening/03', 0, false], ['opening/04', 0, false], ['opening/05', 0, false]];
+  const EXPOSED = [['confirm', 999], ['support', 'hint']];
+  for (const mode of ['متصل', 'قبل التوقف', 'بعد التوقف']) {
+    // أ) أول بند «جرّب أولًا» مستهلك: لا يُعرض ثانية ولا بديل له. الثاني يُعرض ويصح، ولا يُتخطى الشرح بهما: تأتي
+    //    الموجَّهة الثلاث، وتصح كلها فينتهي الدرس مبكرًا بها (skip)، لا بالبند المستهلك
+    expect(bad, `أ، ${mode}`, run(28, EXPOSED, mode), ['tryfirst/03', [['tryfirst/04', 0, false], ...GUIDED], ['skip'], []]);
+    // ب) ثاني بند «جرّب أولًا» مستهلك (والأول أُجيب خطأً قبل التعليق): لا يُعرض ثانية، ثم الموجَّهة الثلاث
+    expect(bad, `ب، ${mode}`, run(29, EXPOSED, mode), ['tryfirst/04', GUIDED, ['skip'], []]);
+    // ج) أول بند موجَّه مستهلك: يُعاد عرضه للتعليم موسومًا بأنه مكرر، ونجاحه لا ينهي الدرس مبكرًا ولا يُسجَّل تعثّر:
+    //    الدرس كاملًا (full_help)، ولا تُعرض بقية الموجَّهة
+    expect(bad, `ج، ${mode}`, run(30, EXPOSED, mode), ['opening/03', [['opening/03', 1, true]], ['full_help'], ['opening/03']]);
+  }
+  // د) بند موجَّه عُرض ولم تُقبل فيه إجابة في محاولة صالحة: يُعاد عرضه موسومًا بالإعادة، ويُحتسب كغيره
+  const { e, sc, st, kid } = at(30);
+  st.show(st.seq);
+  e.apply({ id: 't1', type: 'invalidate_session', target: 'S6' });
+  st.event(st.seq, ['end']);
+  const [out, res] = finish(e, sc, st, kid);
+  expect(bad, 'د: المعروض بلا إجابة مقبولة', [out, res], [[['opening/03', 1, false], ...GUIDED.slice(1)], ['skip']]);
+  return bad;
+}
+
 const RESULTS = ['pass', 'fail', 'help'];
 const VARIANTS = { gate: [...RESULTS, 'interrupted'].map((result) => ({ result })), short: [{ ok: true }, { ok: false }],
   opening: ['skip', 'full_error', 'full_help'].map((outcome) => ({ outcome })), evidence: [{}],
@@ -838,7 +890,11 @@ for (const [title, fn] of [
   ['19. التعليق أثناء أول بند في دليل الفهم (R19-01): النشاط يُسقط ثم يُنشأ من جديد، وتاريخ التعرّض باقٍ في السجلات. '
     + 'طلب دعم فقط، أو إجابة مؤكدة: البند لا يعود ويحل محله بديله. العرض وحده: يُعاد عرضه موسومًا. كلٌّ في المسار '
     + 'المتصل، ومع حفظ واستعادة قبل التوقف وبعده، وبمحتوى بلا بدائل، إلى ما بعد رفع التعليق وإصدار الدليل',
-    caseFirstItem]]) {
+    caseFirstItem],
+  ['20. افتتاح الدرس بعد بند مستهلك (R18-01): بند «جرّب أولًا» المستهلك لا يُعرض ثانية ولا يتخطى الشرح ولا يُعدّ '
+    + 'خطأ. والبند الموجَّه المستهلك يُعاد للتعليم موسومًا بأنه مكرر، ونجاحه لا ينهي الدرس مبكرًا ولا يُسجَّل تعثّر. '
+    + 'في المسار المتصل ومع حفظ واستعادة قبل التوقف وبعده. والمعروض بلا إجابة مقبولة يُعاد موسومًا ويُحتسب',
+    caseOpeningVoid]]) {
   let bad;
   try { bad = fn(); } catch (x) { bad = ['استثناء: ' + (x.stack || x).toString().split('\n').slice(0, 2).join(' ')]; }
   check(title, bad);

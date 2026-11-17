@@ -862,6 +862,68 @@ def case_first_item():
     return bad
 
 
+def case_opening_void():
+    # القاعدة (R18-01 في افتتاح الدرس): إعادة البند للتعليم غير استعماله دليلًا لقرار.
+    # افتتاح 1-4-2 في S7: «جرّب أولًا» tryfirst/03 ثم tryfirst/04، ثم الموجَّهة opening/03 و04 و05.
+    # الطفل هنا يخطئ قبل الدرس، ثم يعرف المهارة بعد التعليق (كأنه تعلّمها خارج التطبيق)، ليظهر أثر البند المعاد
+    bad = []
+
+    def run(n, evs, mode):
+        e, sc, st, kid = at(n)
+        first = st.pending[0]['id']
+        for ev in evs:
+            st.event(st.seq, ev)
+        e.apply(dict(id='t1', type='invalidate_session', target='S6'))
+        if mode != 'قبل التوقف':
+            st.event(st.seq, ('end',))
+        if mode != 'متصل':
+            e, sc, _ = reopen('young', st.snapshot())
+            st = Stepper(e, sc)
+            st.open(sc.g_run(14))
+        kid.known.add('1-4-2')
+        out = []
+        while st.pending is not None:
+            item, w = st.pending
+            if w['activity'] == 'opening' and item['skill'] == '1-4-2':
+                out.append((item['id'][6:], w['reshown'], bool(w.get('repeated'))))
+            for ev in kid.events(item, w):
+                st.event(st.seq, ev)
+        res = [x['outcome'] for x in e.s['log'] if x['type'] == 'lesson_opening_result' and x['skill'] == '1-4-2']
+        marked = [r['item'][6:] for r in sc.records if r.get('repeated_after_void')]
+        return first[6:], out, res, marked
+
+    GUIDED = [('opening/03', 0, False), ('opening/04', 0, False), ('opening/05', 0, False)]
+    EXPOSED = [('confirm', 999), ('support', 'hint')]
+    for mode in ('متصل', 'قبل التوقف', 'بعد التوقف'):
+        # أ) أول بند «جرّب أولًا» مستهلك: لا يُعرض ثانية ولا بديل له. الثاني يُعرض ويصح، ولا يُتخطى الشرح بهما:
+        #    تأتي الموجَّهة الثلاث، وتصح كلها فينتهي الدرس مبكرًا بها (skip)، لا بالبند المستهلك
+        got = run(28, EXPOSED, mode)
+        expect(bad, 'أ، %s' % mode, got, ('tryfirst/03', [('tryfirst/04', 0, False)] + GUIDED, ['skip'], []))
+        # ب) ثاني بند «جرّب أولًا» مستهلك (والأول أُجيب خطأً قبل التعليق): لا يُعرض ثانية، ثم الموجَّهة الثلاث
+        got = run(29, EXPOSED, mode)
+        expect(bad, 'ب، %s' % mode, got, ('tryfirst/04', GUIDED, ['skip'], []))
+        # ج) أول بند موجَّه مستهلك: يُعاد عرضه للتعليم موسومًا بأنه مكرر، ونجاحه لا ينهي الدرس مبكرًا ولا يُسجَّل تعثّر:
+        #    الدرس كاملًا (full_help)، ولا تُعرض بقية الموجَّهة
+        got = run(30, EXPOSED, mode)
+        expect(bad, 'ج، %s' % mode, got, ('opening/03', [('opening/03', 1, True)], ['full_help'], ['opening/03']))
+        # د) بند موجَّه عُرض ولم تُقبل فيه إجابة في محاولة صالحة: يُعاد عرضه موسومًا بالإعادة، ويُحتسب كغيره
+    e, sc, st, kid = at(30)
+    st.show(st.seq)
+    e.apply(dict(id='t1', type='invalidate_session', target='S6'))
+    st.event(st.seq, ('end',))
+    kid.known.add('1-4-2')
+    out = []
+    while st.pending is not None:
+        item, w = st.pending
+        if w['activity'] == 'opening' and item['skill'] == '1-4-2':
+            out.append((item['id'][6:], w['reshown'], bool(w.get('repeated'))))
+        for ev in kid.events(item, w):
+            st.event(st.seq, ev)
+    res = [x['outcome'] for x in e.s['log'] if x['type'] == 'lesson_opening_result' and x['skill'] == '1-4-2']
+    expect(bad, 'د: المعروض بلا إجابة مقبولة', [out, res], [[('opening/03', 1, False)] + GUIDED[1:], ['skip']])
+    return bad
+
+
 print('ب) حالات بنتائج مكتوبة يدويًا')
 for title, fn in (
         ('1. إغلاق عند عرض البند (الخانة 2 من الفحص): يُختم «غير محسوم» منقطعًا، والجلسة S4 نفسها تُكمَل بوقتها (60 ثانية) '
@@ -904,7 +966,11 @@ for title, fn in (
         ('19. التعليق أثناء أول بند في دليل الفهم (R19-01): النشاط يُسقط ثم يُنشأ من جديد، وتاريخ التعرّض باقٍ في السجلات. '
          'طلب دعم فقط، أو إجابة مؤكدة: البند لا يعود ويحل محله بديله. العرض وحده: يُعاد عرضه موسومًا. كلٌّ في المسار '
          'المتصل، ومع حفظ واستعادة قبل التوقف وبعده، وبمحتوى بلا بدائل، إلى ما بعد رفع التعليق وإصدار الدليل',
-         case_first_item)):
+         case_first_item),
+        ('20. افتتاح الدرس بعد بند مستهلك (R18-01): بند «جرّب أولًا» المستهلك لا يُعرض ثانية ولا يتخطى الشرح ولا يُعدّ '
+         'خطأ. والبند الموجَّه المستهلك يُعاد للتعليم موسومًا بأنه مكرر، ونجاحه لا ينهي الدرس مبكرًا ولا يُسجَّل تعثّر. '
+         'في المسار المتصل ومع حفظ واستعادة قبل التوقف وبعده. والمعروض بلا إجابة مقبولة يُعاد موسومًا ويُحتسب',
+         case_opening_void)):
     try:
         bad = fn()
     except Exception as x:                                   # noqa: BLE001

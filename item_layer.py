@@ -156,7 +156,8 @@ class Activity:
 
     def voided(self, item_id, exposed):
         """البند المعروض استُبعد لتغيّر صلاحية النشاط (R17-01). exposed: هل أُجيب عنه أو طُلب فيه دعم قبل التغيّر؟
-        الاستبعاد من التقييم لا يمحو التعرّض (R18-01). الأنشطة التي يغيّر التعرّض بندها التالي تعيد تعريفها."""
+        الاستبعاد من التقييم لا يمحو التعرّض (R18-01). الأنشطة التي يغيّر التعرّض بندها التالي تعيد تعريفها.
+        تعيد صحيحًا إن كان البند لا يُعرض ثانية (يُطلب غيره)، وغير ذلك إن جاز عرضه."""
 
     def to_dict(self):
         return json.loads(json.dumps(dict(self.__dict__, _class=type(self).__name__), ensure_ascii=False))
@@ -275,7 +276,11 @@ class OpeningRun(Activity):
     خطأ في أجوبة البنود الموجَّهة دليل تعثّر، وطلب الدعم فيها ليس دليلًا.
     try_errors_count=True يحاكي المحاكاة القديمة: خطأ في «جرّب أولًا» يُعدّ دليل تعثّر. للمقارنة فقط.
     تفسير: البند المنقطع في الافتتاح يُعاد عرضه، لأن الافتتاح تعليم لا تقييم.
-    وتفسير: البند المدعوم في الموجَّهة ليس «صحيحًا مستقلًا» ولا خطأ، فيمضي الدرس كاملًا بلا دليل كطلب الدعم."""
+    وتفسير: البند المدعوم في الموجَّهة ليس «صحيحًا مستقلًا» ولا خطأ، فيمضي الدرس كاملًا بلا دليل كطلب الدعم.
+    البند المستهلك (أُجيب عنه أو طُلب فيه دعم ثم استُبعد لتغيّر الصلاحية، R18-01): إعادته للتعليم غير استعماله دليلًا
+    لقرار. بند «جرّب أولًا» المستهلك لا بديل له، فلا يُعرض ثانية ونتيجته void: لا يتخطى الشرح ولا يُعدّ خطأ. والبند
+    الموجَّه المستهلك يُعاد عرضه للتعليم موسومًا بأنه مكرر، ونتيجته أيًّا كانت لا تُستعمل: لا ينهي الدرس مبكرًا ولا
+    يُسجَّل تعثّرًا، فيمضي الدرس كاملًا (full_help). الحقلان spent و taint لا يُنشآن إلا عند الاستبعاد."""
     name = 'opening'
 
     def __init__(self, skill, types, try_types=None, try_errors_count=False, typed=False):
@@ -298,6 +303,28 @@ class OpeningRun(Activity):
             w.update(typed=True, type_index=self.try_types[:self.pos].count(t))
         return w
 
+    def voided(self, item_id, exposed):
+        if not exposed:
+            self.reshown += 1
+            return False
+        if self.stage == 'guided':
+            self.__dict__['taint'] = item_id
+            return False
+        spent = self.__dict__.setdefault('spent', [])
+        if item_id not in spent:
+            spent.append(item_id)
+            self.try_out.append('void')
+            self.reshown = 0
+            self._after_try()
+        return True
+
+    def _after_try(self):
+        self.pos += 1
+        if self.pos == 2:
+            if all(o == 'correct' for o in self.try_out):
+                return self._finish('skip')
+            self.stage, self.pos = 'guided', 0
+
     def feed(self, outcome):
         assert not self.done
         self.shown['try' if self.stage == 'try' else 'lesson'] += 1
@@ -305,14 +332,11 @@ class OpeningRun(Activity):
             self.reshown += 1
             return
         self.reshown = 0
+        if self.stage == 'guided' and self.__dict__.pop('taint', None):
+            return self._finish('full_help')        # بند مكرر عُرض للتعليم: نتيجته ليست دليلًا لقرار
         if self.stage == 'try':
             self.try_out.append(outcome)
-            self.pos += 1
-            if self.pos == 2:
-                if all(o == 'correct' for o in self.try_out):
-                    return self._finish('skip')
-                self.stage, self.pos = 'guided', 0
-            return
+            return self._after_try()
         if outcome == 'correct':
             self.pos += 1
             if self.pos == 3:
@@ -366,14 +390,15 @@ class EvidenceRun(Activity):
     def voided(self, item_id, exposed):
         if not exposed:
             self.reshown += 1
-            return
+            return False
         swap, spent = self.__dict__.setdefault('swap', {}), self.__dict__.setdefault('spent', [])
         if item_id in spent:                        # سُجّل عند التوقف، ثم وجده تاريخ السجلات عند الاستئناف: مرة واحدة
-            return
+            return True
         spent.append(item_id)
         t = self._current()
         swap[self._key()] = dict(n=1 + sum(1 for k in swap if k.split('/')[0] == t), item=item_id)
         self.reshown = 0
+        return True
 
     def feed(self, outcome):
         assert not self.done
@@ -531,11 +556,12 @@ def drive_steps(act, source, records=None, pause=None, history=None):
         # history(act): تاريخ التعرّض لبنود هذا النشاط (exposure). بند استُهلك من قبل لا يُعرض ثانية ولو أُنشئ النشاط
         # من جديد: يُطلب بديله. وبند عُرض ولم تُقبل فيه إجابة في محاولة صالحة يُعاد عرضه موسومًا بالإعادة (R19-01)
         h = history(act).get(item.get('id')) if history and isinstance(item, dict) else None
-        if h and h['exposed']:
-            act.voided(item['id'], True)
+        if h and h['exposed'] and act.voided(item['id'], True):
             continue
-        if h:
+        if h:                                               # يُعرض ثانية: موسوم بالإعادة، وبأنه مكرر إن كان مستهلكًا
             w = dict(w, reshown=max(w.get('reshown', 0), h['n']))
+            if h['exposed']:
+                w['repeated'] = True
         got = yield item, w
         if isinstance(got, str):
             act.feed(got)
@@ -549,6 +575,8 @@ def drive_steps(act, source, records=None, pause=None, history=None):
                      item=item.get('id') if isinstance(item, dict) else None)
             if isinstance(item, dict) and item.get('reshown_same_fact'):
                 r['reshown_after_interrupt'] = True        # 3.6: «أُعيد عرضه بعد انقطاع»
+            if w.get('repeated'):                           # بند مستهلك أُعيد للتعليم، لا دليلًا لقرار
+                r['repeated_after_void'] = True
             if w.get('replaces'):                           # R18-01: بديل بند استُهلك، ووصف التعرّض السابق لحقيقته (3.5)
                 r['replaces'] = w['replaces']
                 r['fact_seen_before'] = bool(isinstance(item, dict) and item.get('fact_seen_before'))

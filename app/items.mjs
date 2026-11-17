@@ -147,8 +147,9 @@ export class Activity {
   }
 
   // البند المعروض استُبعد لتغيّر صلاحية النشاط (R17-01). exposed: هل أُجيب عنه أو طُلب فيه دعم قبل التغيّر؟ الاستبعاد من
-  // التقييم لا يمحو التعرّض (R18-01). الأنشطة التي يغيّر التعرّض بندها التالي تعيد تعريفها
-  voided(_itemId, _exposed) {}
+  // التقييم لا يمحو التعرّض (R18-01). الأنشطة التي يغيّر التعرّض بندها التالي تعيد تعريفها. تعيد صحيحًا إن كان البند لا
+  // يُعرض ثانية (يُطلب غيره)، وغير ذلك إن جاز عرضه
+  voided(_itemId, _exposed) { return false; }
 
   toDict() {
     return clone({ ...this, _class: this.constructor.pyName });
@@ -308,6 +309,39 @@ export class OpeningRun extends Activity {
     return w;
   }
 
+  // البند المستهلك (أُجيب عنه أو طُلب فيه دعم ثم استُبعد لتغيّر الصلاحية، R18-01): إعادته للتعليم غير استعماله دليلًا
+  // لقرار. بند «جرّب أولًا» المستهلك لا بديل له، فلا يُعرض ثانية ونتيجته void: لا يتخطى الشرح ولا يُعدّ خطأ. والبند
+  // الموجَّه المستهلك يُعاد عرضه للتعليم موسومًا بأنه مكرر، ونتيجته أيًّا كانت لا تُستعمل: لا ينهي الدرس مبكرًا ولا
+  // يُسجَّل تعثّرًا، فيمضي الدرس كاملًا (full_help). الحقلان spent و taint لا يُنشآن إلا عند الاستبعاد
+  voided(itemId, exposed) {
+    if (!exposed) {
+      this.reshown += 1;
+      return false;
+    }
+    if (this.stage === 'guided') {
+      this.taint = itemId;
+      return false;
+    }
+    if (this.spent === undefined) this.spent = [];
+    if (!this.spent.includes(itemId)) {
+      this.spent.push(itemId);
+      this.try_out.push('void');
+      this.reshown = 0;
+      this._afterTry();
+    }
+    return true;
+  }
+
+  _afterTry() {
+    this.pos += 1;
+    if (this.pos === 2) {
+      if (this.try_out.every((o) => o === 'correct')) return this._finish('skip');
+      this.stage = 'guided';
+      this.pos = 0;
+    }
+    return undefined;
+  }
+
   feed(outcome) {
     if (this.done) throw new Error('النشاط انتهى');
     this._count(this.stage === 'try' ? 'try' : 'lesson');
@@ -316,15 +350,13 @@ export class OpeningRun extends Activity {
       return undefined;
     }
     this.reshown = 0;
+    if (this.stage === 'guided' && this.taint !== undefined) {
+      delete this.taint;
+      return this._finish('full_help');          // بند مكرر عُرض للتعليم: نتيجته ليست دليلًا لقرار
+    }
     if (this.stage === 'try') {
       this.try_out.push(outcome);
-      this.pos += 1;
-      if (this.pos === 2) {
-        if (this.try_out.every((o) => o === 'correct')) return this._finish('skip');
-        this.stage = 'guided';
-        this.pos = 0;
-      }
-      return undefined;
+      return this._afterTry();
     }
     if (outcome === 'correct') {
       this.pos += 1;
@@ -391,15 +423,16 @@ export class EvidenceRun extends Activity {
   voided(itemId, exposed) {
     if (!exposed) {
       this.reshown += 1;
-      return;
+      return false;
     }
     if (this.swap === undefined) this.swap = {};
     if (this.spent === undefined) this.spent = [];
-    if (this.spent.includes(itemId)) return;      // سُجّل عند التوقف، ثم وجده تاريخ السجلات عند الاستئناف: مرة واحدة
+    if (this.spent.includes(itemId)) return true; // سُجّل عند التوقف، ثم وجده تاريخ السجلات عند الاستئناف: مرة واحدة
     this.spent.push(itemId);
     const t = this._current();
     this.swap[this._key()] = { n: 1 + Object.keys(this.swap).filter((k) => k.split('/')[0] === t).length, item: itemId };
     this.reshown = 0;
+    return true;
   }
 
   feed(outcome) {
@@ -587,11 +620,11 @@ export function* driveSteps(act, source, records = null, pause = null, history =
     // history(act): تاريخ التعرّض لبنود هذا النشاط (exposure). بند استُهلك من قبل لا يُعرض ثانية ولو أُنشئ النشاط من
     // جديد: يُطلب بديله. وبند عُرض ولم تُقبل فيه إجابة في محاولة صالحة يُعاد عرضه موسومًا بالإعادة (R19-01)
     const known = history && typeof item === 'object' && !Array.isArray(item) ? history(act)[item.id] : undefined;
-    if (known && known.exposed) {
-      act.voided(item.id, true);
-      continue;
+    if (known && known.exposed && act.voided(item.id, true)) continue;
+    if (known) {                                  // يُعرض ثانية: موسوم بالإعادة، وبأنه مكرر إن كان مستهلكًا
+      w = { ...w, reshown: Math.max(w.reshown ?? 0, known.n) };
+      if (known.exposed) w.repeated = true;
     }
-    if (known) w = { ...w, reshown: Math.max(w.reshown ?? 0, known.n) };
     const got = yield [item, w];
     if (typeof got === 'string') {
       act.feed(got);
@@ -602,6 +635,7 @@ export function* driveSteps(act, source, records = null, pause = null, history =
         const isObj = item !== null && typeof item === 'object' && !Array.isArray(item);
         const r = { ...rec, skill: act.skill, activity: act.name, role: w.role, item: isObj ? (item.id ?? null) : null };
         if (isObj && item.reshown_same_fact) r.reshown_after_interrupt = true;   // 3.6: «أُعيد عرضه بعد انقطاع»
+        if (w.repeated) r.repeated_after_void = true;   // بند مستهلك أُعيد للتعليم، لا دليلًا لقرار
         if (w.replaces) {                         // R18-01: بديل بند استُهلك، ووصف التعرّض السابق لحقيقته (3.5)
           r.replaces = w.replaces;
           r.fact_seen_before = Boolean(isObj && item.fact_seen_before);

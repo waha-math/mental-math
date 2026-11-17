@@ -348,8 +348,8 @@ export class Scheduler {
       if (this.records !== null) this.records.push(...recs.slice(done));
       done = recs.length;
     };
-    // تاريخ التعرّض من السجلات، لا من كائن النشاط: يبقى بعد إسقاط النشاط وإنشاء غيره (R19-01). لدليل الفهم الآن
-    const history = kind === 'evidence' ? (a) => exposure(this.records, a.skill, a.name) : null;
+    // تاريخ التعرّض من السجلات، لا من كائن النشاط: يبقى بعد إسقاط النشاط وإنشاء غيره (R19-01). لدليل الفهم وافتتاح الدرس
+    const history = kind === 'evidence' || kind === 'opening' ? (a) => exposure(this.records, a.skill, a.name) : null;
     const gen = driveSteps(act, this.source, recs, this.cap !== null ? (w) => this.tick(w) : null, history);
     // الصلاحية تُفحص قبل عرض البند، ومرة أخرى قبل تطبيق الإجابة (R16-01). قرار يقع بينهما يوقف النشاط
     const guard = (req, got = undefined) => {
