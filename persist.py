@@ -222,6 +222,8 @@ def restore(record, net, types, source, answer, item_seconds=None, records=None,
     if cur:                                                 # النشاط الجاري يُضم إلى المخزن قبل التسوية والفحص
         if cur['kind'] == 'show':
             entry = dict(kind='show', skill=cur['skill'], activity=cur['activity'], pos=cur['pos'], items=[])
+            if cur.get('consolidate'):                      # عرض التثبيت بعد طلب مساعدة في فحص احتفاظ (ت3)
+                entry['consolidate'] = True
         else:
             act = Activity.from_dict(cur['act'])
             items = list(cur['items'])

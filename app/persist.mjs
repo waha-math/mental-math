@@ -181,6 +181,7 @@ export function restore(record, { types, source, answer, item_seconds = null, re
     let entry;
     if (cur.kind === 'show') {
       entry = { kind: 'show', skill: cur.skill, activity: cur.activity, pos: cur.pos, items: [] };
+      if (cur.consolidate) entry.consolidate = true;   // عرض التثبيت بعد طلب مساعدة في فحص احتفاظ (ت3)
     } else {
       const act = Activity.fromDict(cur.act);
       const items = [...cur.items];

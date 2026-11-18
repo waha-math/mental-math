@@ -47,7 +47,8 @@ TEACH_KINDS = ('opening', 'evidence', 'show', 'check')     # أنشطة الحص
 # أسباب رفض استئناف نشاط محفوظ (المراجعة 11، الملاحظة الأولى). النهائية وحدها تُسقطه: لم يعد في المحرك ما يُستأنف.
 # الخاصة بالجلسة تُبقيه في saved حتى جلسة فيها الحصة وتاريخها مؤكد، ولا يُعلَّم فيها غيره. وما سواها مؤقت يخص
 # المهارة (توقيت الفحص، تعليق الدرس): يُركن النشاط بتقدّمه في parked، وتمضي الجلسة، ويُستأنف أول جلسة يُقبل فيها
-FINAL_REFUSALS = ('check_state', 'no_check', 'version_unavailable', 'already_satisfied', 'unknown_skill', 'bad_event')
+FINAL_REFUSALS = ('check_state', 'no_check', 'version_unavailable', 'already_satisfied', 'unknown_skill', 'bad_event',
+                  'no_consolidation', 'not_met')
 SESSION_REFUSALS = ('date_unconfirmed', 'no_session')
 
 
@@ -135,7 +136,8 @@ class Scheduler:
         if payload['type'] in ('gate_result', 'short_check_result', 'open_lesson', 'resume_lesson',
                                'lesson_opening_result', 'understanding_proved', 'check_started',
                                'independence_result', 'check_resumed', 'check_held', 'recheck_result',
-                               'retention_result', 'session_end'):
+                               'retention_result', 'retention_help', 'retention_referred', 'consolidation_started',
+                               'consolidation_done', 'session_end'):
             ev.setdefault('session', self.cur)
         r = self.e.apply(ev)
         if not r['ok']:
@@ -258,7 +260,7 @@ class Scheduler:
         if v is None:
             return None
         if v['kind'] == 'show':
-            return self.invalid('show', v['skill'])
+            return self.invalid('consolidate' if v.get('consolidate') else 'show', v['skill'])
         return self.invalid(v['kind'], v['act'].skill, getattr(v['act'], 'check_id', None))
 
     def stamp(self):
@@ -306,7 +308,7 @@ class Scheduler:
         نفسها فلا حصة جديدة: صلاحية استمراره الآن. سبق الإذن ليس إذنًا دائمًا (R16-01)."""
         if need:
             return self.e.preflight(dict(need, id='ask', session=self.cur))
-        return self.e.may_continue(c['kind'], self.cur, c['skill'],
+        return self.e.may_continue('consolidate' if c.get('consolidate') else c['kind'], self.cur, c['skill'],
                                    c['act']['check_id'] if c['kind'] == 'check' else None)
 
     def resume_need(self, c):
@@ -317,6 +319,8 @@ class Scheduler:
             if ch and self.cur in ch['sessions']:           # المحاولة بدأت أو استؤنفت في هذه الجلسة نفسها
                 return None
             return dict(type='check_resumed', skill=s, check_id=c['act']['check_id'])
+        if c.get('consolidate'):                            # تثبيت بعد طلب مساعدة في فحص احتفاظ (ت3)
+            return None if self.e.consolidating(s) == self.cur else dict(type='consolidation_started', skill=s)
         return None if self.e.s['opened'][s]['active'] == self.cur else dict(type='resume_lesson', skill=s)
 
     def cut(self, act, kind, items):
@@ -471,31 +475,47 @@ class Scheduler:
             return None
         return (yield from self.g_opening(s))
 
-    def g_show(self, s, activity, k=0):
-        """بنود الدرس أو التدريب: تُعرض ولا تصنع حدثًا للمحرك. مصدر المحاكاة المجرد لا يعيد منها شيئًا."""
+    def g_show(self, s, activity, k=0, consolidate=False, shown=None):
+        """بنود الدرس أو التدريب: تُعرض ولا تصنع حدثًا للمحرك. مصدر المحاكاة المجرد لا يعيد منها شيئًا.
+        consolidate: العرض تثبيت بعد طلب مساعدة في فحص احتفاظ (ت3)، فصلاحيته صلاحية التثبيت الجاري في المحرك لا الدرس
+        النشط. الحقل لا يدخل النشاط المحفوظ ولا المعروض إلا حينها. shown: تُجمع فيها معرّفات ما عُرض."""
+        mark = dict(consolidate=True) if consolidate else {}
+        kind = 'consolidate' if consolidate else 'show'
         while True:
             if self.over():                                 # السقف: يُستأنف العرض من موضعه في جلسة لاحقة
-                self.save(dict(kind='show', skill=s, activity=activity, pos=k, items=[]))
+                self.save(dict(kind='show', skill=s, activity=activity, pos=k, items=[], **mark))
                 self.log.append((self.sessions, 'capped', s))
                 raise Capped()
             w = dict(activity=activity, pos=k, role=activity)
             item = self.source(s, dict(activity=activity, pos=k))
             if item is None:
                 return k
-            self.live = dict(kind='show', skill=s, activity=activity, pos=k)
-            entry = dict(kind='show', skill=s, activity=activity, pos=k, items=[])
-            code = self.invalid('show', s)                  # قبل العرض (R16-01)
+            self.live = dict(kind='show', skill=s, activity=activity, pos=k, **mark)
+            entry = dict(kind='show', skill=s, activity=activity, pos=k, items=[], **mark)
+            code = self.invalid(kind, s)                    # قبل العرض (R16-01)
             if code is not None:
                 self.halt(code, entry, True, False)
             got = yield item, w                             # الإجابة تأتي من الغلاف المتزامن أو من الواجهة
-            code = self.invalid('show', s)                  # وقبل احتساب البند معروضًا
+            code = self.invalid(kind, s)                    # وقبل احتساب البند معروضًا
             if code is not None:
                 self.halt(code, entry, True, not (isinstance(got, Void) and not got.answered))
             self.live = None
             self.n[activity] += 1
             self.elapsed += self.item_seconds(w)
             self.seen(s, activity, item)
+            if shown is not None and isinstance(item, dict) and item.get('id'):
+                shown.append(item['id'])
             k += 1
+
+    def g_consolidate(self, s, k=0):
+        """التثبيت بعد طلب مساعدة في فحص احتفاظ (ت3، بقرار الأب: نشاط يقرّه المحرك): تدريب المهارة، وهي مستوفاة.
+        يُستدعى بعد قبول consolidation_started في هذه الجلسة. اكتماله حدث consolidation_done، وبعده تعود الجولة مستحقة
+        من اليوم التالي. بنود ما عُرض قبل انقطاع لا تُرفق بحدث الاكتمال: هي في سجل العرض لا في المحرك."""
+        shown = []
+        (yield from self.g_show(s, 'practice', k, consolidate=True, shown=shown))
+        self.send(dict(type='consolidation_done', skill=s, items=shown) if shown
+                  else dict(type='consolidation_done', skill=s))
+        self.log.append((self.sessions, 'consolidated', s))
 
     def g_lesson_body(self, s, k=0):
         (yield from self.g_show(s, 'lesson', k))
@@ -535,10 +555,11 @@ class Scheduler:
                 return None
         elif not self.ask(dict(type='retention_result', skill=s, correct=0)):
             return None
-        act = self.take('retention', s) or RetentionRun(s, rnd)
+        act = self.take('retention', s) or RetentionRun(s, rnd, attempt=self.e.retention_attempt(s))
         (yield from self.g_run_act(act, 'retention'))
         self.emit(act)
-        self.log.append((self.sessions, 'retention_%s' % (act.correct if act.result else 'cut'), s))
+        tag = {None: 'cut', 'done': act.correct}.get(act.result, act.result)
+        self.log.append((self.sessions, 'retention_%s' % tag, s))
         return act.result
 
     def g_recall(self):
@@ -796,6 +817,11 @@ class Scheduler:
             if r is not None:
                 return r
         teaching = any(c['kind'] in TEACH_KINDS for c in self.saved)
+        for s in self.e.consolidation_owed() if not teaching else ():
+            # طُلبت مساعدة في فحص احتفاظ: التثبيت يسبق غيره في الحصة، فالطفل طلب العون ولا يُؤخَّر عنه (ت3)
+            if self.entry('show', s) is None and self.send(dict(type='consolidation_started', skill=s))['ok']:
+                (yield from self.g_consolidate(s))
+                return True
         for s in list(self.parked) if not teaching else ():   # نشاط رُكن: يُستأنف أول جلسة يُقبل فيها
             c = self.parked[s]
             need = self.resume_need(c)
@@ -876,7 +902,9 @@ class Scheduler:
             (yield from self.g_evidence(s))
         else:
             self.unsave(c)
-            if c['activity'] == 'lesson':
+            if c.get('consolidate'):
+                (yield from self.g_consolidate(s, c['pos']))
+            elif c['activity'] == 'lesson':
                 (yield from self.g_lesson_body(s, c['pos']))
             else:
                 (yield from self.g_show(s, 'practice', c['pos']))
@@ -954,6 +982,8 @@ class Scheduler:
         if c['kind'] == 'check':
             ch = self.e.s['checks'].get(c['act']['check_id'])
             return bool(ch) and self.cur in ch['sessions']
+        if c.get('consolidate'):
+            return self.e.consolidating(c['skill']) == self.cur
         o = self.e.s['opened'].get(c['skill'])
         return bool(o) and o['active'] == self.cur
 
@@ -986,7 +1016,7 @@ class Scheduler:
 # سلسلة الاستدعاء التي تعرض بنودًا مولّدات (g_*): تعطي (البند، المطلوب) وتستقبل ما كانت answer تعيده. والدوال
 # بأسمائها السابقة أغلفة متزامنة تشغّل المولّد بـ self.answer، فلا يتغير شيء لمن يستدعيها. والواجهة تشغّل المولّد
 # نفسه خطوة خطوة. حالة المولّد ليست مصدر الاستعادة: المتابعة بعد الإغلاق تُبنى من الحالة المحفوظة.
-STEPPED = ('run_act', 'show', 'lesson_body', 'open_lesson', 'gate', 'short', 'opening', 'evidence', 'check', 'retention_check', 'recall', 'search', 'working_point', 'start_session', 'follow', 'teach', 'resume', 'run', 'follow_learning', 'resume_mine')
+STEPPED = ('run_act', 'show', 'consolidate', 'lesson_body', 'open_lesson', 'gate', 'short', 'opening', 'evidence', 'check', 'retention_check', 'recall', 'search', 'working_point', 'start_session', 'follow', 'teach', 'resume', 'run', 'follow_learning', 'resume_mine')
 
 
 def _sync(name):

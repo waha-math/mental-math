@@ -115,8 +115,8 @@ class ContentSource:
                 # لا عدد آخر يحقق شرط الخانة: تُعاد الحقيقة نفسها بقرار الأب، أو لا بديل في النص السابق للقرار
                 it = dict(it, reshown_same_fact=True) if self.allow_same_fact else None
         elif a == 'retention':                              # 3.7: خمسة بنود جديدة لكل جولة
-            it = self._at([i for i in self.by[(skill, 'deferred', 'deferred_check')] if i['slot'] == w['round']],
-                          w['pos'])
+            it = self._at([i for i in self.by[(skill, 'deferred', w.get('role', 'deferred_check'))]
+                           if i['slot'] == w['round'] and i.get('set', 0) == w.get('alternate', 0)], w['pos'])
         else:
             raise ValueError('نشاط غير معروف: %r' % (a,))
         if it is not None:

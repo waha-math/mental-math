@@ -624,38 +624,60 @@ class CheckRun(Activity):
 
 class RetentionRun(Activity):
     """فحص الاحتفاظ (3.7): 5 بنود جديدة بلا تمهيد وبلا تغذية راجعة، ويُعدّ منها «الصحيح المستقل».
-    تفسيران: البند المدعوم أو المنتهي بطلب دعم لا يُحسب صحيحًا ويمضي الفحص؛ والانقطاع ينهيه بلا نتيجة ولا حدث،
+    طلب المساعدة ينهي الجولة بلا حكم احتفاظ ولا يُعدّ إخفاقًا (قرار الأب في 18 نوفمبر، ت3 في مراجعة 04e0168): النتيجة
+    help وحدثها retention_help، لا retention_result. كان النص هنا «يمضي الفحص»، فدعمٌ ثم أربع إجابات صحيحة يعطي 4 من 5.
+    attempt: 1 لبنود الجولة الأصلية، وما فوقه لبنود بديلة بعد طلب مساعدة. الحقل لا يُنشأ إلا لما فوق 1. وإن لم تتوفر
+    بدائل: النتيجة no_alternate وحدثها retention_referred، إحالة إلى البالغ بلا إخفاق.
+    والانقطاع ينهيه بلا نتيجة ولا حدث،
     كالتحقق القصير، فيُعاد في جلسة لاحقة."""
     name = 'retention'
 
-    def __init__(self, skill, round, size=5):
+    def __init__(self, skill, round, size=5, attempt=1):
         super().__init__(skill)
         self.round, self.size, self.pos, self.correct = round, size, 0, 0
+        if attempt != 1:
+            self.attempt = attempt
+
+    def _w(self, q):
+        a = getattr(self, 'attempt', 1) - 1
+        return dict(activity=self.name, role='deferred_check.alternate' if a else 'deferred_check', round=self.round,
+                    pos=q, alternate=a)
 
     def want(self):
         if self.done:
             return None
-        return dict(activity=self.name, role='deferred_check', round=self.round, pos=self._at(str(self.pos), self.pos),
-                    alternate=0)
+        return self._w(self._at(str(self.pos), self.pos))
 
     def repeated(self, item_id, fact_at=None):
-        def w(q):
-            return dict(activity=self.name, role='deferred_check', round=self.round, pos=q, alternate=0)
+        w = self._w
         return self._defer(self.pos, self.size - 1, str, w, lambda q: [w(q + 1)] if q < self.size - 1 else [],
                            fact_at)
+
+    def unavailable(self):
+        if getattr(self, 'attempt', 1) == 1:
+            raise RuntimeError('%s: لا بنود لجولة الاحتفاظ %r' % (self.name, self.round))
+        self._finish('no_alternate')                # لا بدائل مناسبة: يُحال القرار إلى البالغ، بلا إخفاق
 
     def feed(self, outcome):
         assert not self.done
         self.shown['retention'] += 1
         if outcome == 'interrupted':
             return self._finish(None)
+        if outcome in ('help', 'supported'):
+            return self._finish('help')
         self.correct += outcome == 'correct'
         self.pos += 1
         if self.pos == self.size:
             self._finish('done')
 
     def events(self):
-        return [] if self.result is None else [dict(type='retention_result', skill=self.skill, correct=self.correct)]
+        if self.result == 'done':
+            return [dict(type='retention_result', skill=self.skill, correct=self.correct)]
+        if self.result == 'help':
+            return [dict(type='retention_help', skill=self.skill, round=self.round)]
+        if self.result == 'no_alternate':
+            return [dict(type='retention_referred', skill=self.skill, round=self.round)]
+        return []
 
 
 CLASSES = {c.__name__: c for c in (GateRun, ShortCheckRun, OpeningRun, EvidenceRun, CheckRun, RetentionRun)}

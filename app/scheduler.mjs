@@ -28,7 +28,7 @@ export const TEACH_KINDS = ['opening', 'evidence', 'show', 'check'];   // أنش
 // أسباب رفض استئناف نشاط محفوظ (المراجعة 11): النهائية وحدها تُسقطه، والخاصة بالجلسة تُبقيه في saved، وما سواها
 // مؤقت يخص المهارة فيُركن بتقدّمه في parked
 export const FINAL_REFUSALS = ['check_state', 'no_check', 'version_unavailable', 'already_satisfied', 'unknown_skill',
-  'bad_event'];
+  'bad_event', 'no_consolidation', 'not_met'];
 export const SESSION_REFUSALS = ['date_unconfirmed', 'no_session'];
 
 export function refusalKind(code) {
@@ -154,7 +154,8 @@ export class Scheduler {
     const ev = { ...payload, id: 'e' + this._next++ };
     if (['gate_result', 'short_check_result', 'open_lesson', 'resume_lesson', 'lesson_opening_result',
       'understanding_proved', 'check_started', 'independence_result', 'check_resumed', 'check_held',
-      'recheck_result', 'retention_result', 'session_end'].includes(payload.type) && !('session' in ev)) {
+      'recheck_result', 'retention_result', 'retention_help', 'retention_referred', 'consolidation_started',
+      'consolidation_done', 'session_end'].includes(payload.type) && !('session' in ev)) {
       ev.session = this.cur;
     }
     const r = this.e.apply(ev);
@@ -294,7 +295,7 @@ export class Scheduler {
   live_invalid() {
     const v = this.live;
     if (v === null) return null;
-    if (v.kind === 'show') return this.invalid('show', v.skill);
+    if (v.kind === 'show') return this.invalid(v.consolidate ? 'consolidate' : 'show', v.skill);
     return this.invalid(v.kind, v.act.skill, v.act.check_id ?? null);
   }
 
@@ -345,7 +346,8 @@ export class Scheduler {
   // فلا حصة جديدة: صلاحية استمراره الآن. سبق الإذن ليس إذنًا دائمًا (R16-01)
   resume_verdict(c, need) {
     if (need) return this.e.preflight({ ...need, id: 'ask', session: this.cur });
-    return this.e.may_continue(c.kind, this.cur, c.skill, c.kind === 'check' ? c.act.check_id : null);
+    return this.e.may_continue(c.consolidate ? 'consolidate' : c.kind, this.cur, c.skill,
+      c.kind === 'check' ? c.act.check_id : null);
   }
 
   resume_need(c) {
@@ -354,6 +356,9 @@ export class Scheduler {
       const ch = this.e.s.checks[c.act.check_id];
       if (ch && ch.sessions.includes(this.cur)) return null;   // المحاولة بدأت أو استؤنفت في هذه الجلسة نفسها
       return { type: 'check_resumed', skill: s, check_id: c.act.check_id };
+    }
+    if (c.consolidate) {                        // تثبيت بعد طلب مساعدة في فحص احتفاظ (ت3)
+      return this.e.consolidating(s) === this.cur ? null : { type: 'consolidation_started', skill: s };
     }
     return this.e.s.opened[s].active === this.cur ? null : { type: 'resume_lesson', skill: s };
   }
@@ -518,30 +523,46 @@ export class Scheduler {
     return (yield* this.g_opening(s));
   }
 
-  // بنود الدرس أو التدريب: تُعرض ولا تصنع حدثًا للمحرك
-  *g_show(s, activity, k = 0) {
+  // بنود الدرس أو التدريب: تُعرض ولا تصنع حدثًا للمحرك.
+  // consolidate: العرض تثبيت بعد طلب مساعدة في فحص احتفاظ (ت3)، فصلاحيته صلاحية التثبيت الجاري في المحرك لا الدرس
+  // النشط. الحقل لا يدخل النشاط المحفوظ ولا المعروض إلا حينها. shown: تُجمع فيها معرّفات ما عُرض
+  *g_show(s, activity, k = 0, consolidate = false, shown = null) {
+    const mark = consolidate ? { consolidate: true } : {};
+    const kind = consolidate ? 'consolidate' : 'show';
     for (;;) {
       if (this.over()) {                         // السقف: يُستأنف العرض من موضعه في جلسة لاحقة
-        this.save({ kind: 'show', skill: s, activity, pos: k, items: [] });
+        this.save({ kind: 'show', skill: s, activity, pos: k, items: [], ...mark });
         this.log.push([this.sessions, 'capped', s]);
         throw new Capped();
       }
       const w = { activity, pos: k, role: activity };
       const item = this.source(s, { activity, pos: k });
       if (isNone(item)) return k;
-      this.live = { kind: 'show', skill: s, activity, pos: k };
-      const entry = { kind: 'show', skill: s, activity, pos: k, items: [] };
-      let code = this.invalid('show', s);        // قبل العرض (R16-01)
+      this.live = { kind: 'show', skill: s, activity, pos: k, ...mark };
+      const entry = { kind: 'show', skill: s, activity, pos: k, items: [], ...mark };
+      let code = this.invalid(kind, s);          // قبل العرض (R16-01)
       if (code !== null) this.halt(code, entry, true, false);
       const got = yield [item, w];        // الإجابة تأتي من الغلاف المتزامن أو من الواجهة
-      code = this.invalid('show', s);            // وقبل احتساب البند معروضًا
+      code = this.invalid(kind, s);              // وقبل احتساب البند معروضًا
       if (code !== null) this.halt(code, entry, true, !(got instanceof Void && !got.answered));
       this.live = null;
       this.n[activity] = get(this.n, activity) + 1;
       this.elapsed += this.item_seconds(w);
       this.seen(s, activity, item);
+      if (shown !== null && item !== null && typeof item === 'object' && !Array.isArray(item) && item.id) shown.push(item.id);
       k += 1;
     }
+  }
+
+  // التثبيت بعد طلب مساعدة في فحص احتفاظ (ت3، بقرار الأب: نشاط يقرّه المحرك): تدريب المهارة، وهي مستوفاة. يُستدعى
+  // بعد قبول consolidation_started في هذه الجلسة. اكتماله حدث consolidation_done، وبعده تعود الجولة مستحقة من اليوم
+  // التالي. بنود ما عُرض قبل انقطاع لا تُرفق بحدث الاكتمال: هي في سجل العرض لا في المحرك
+  *g_consolidate(s, k = 0) {
+    const shown = [];
+    (yield* this.g_show(s, 'practice', k, true, shown));
+    this.send(shown.length ? { type: 'consolidation_done', skill: s, items: shown }
+      : { type: 'consolidation_done', skill: s });
+    this.log.push([this.sessions, 'consolidated', s]);
   }
 
   *g_lesson_body(s, k = 0) {
@@ -584,10 +605,12 @@ export class Scheduler {
     } else if (!this.ask({ type: 'retention_result', skill: s, correct: 0 })) {
       return null;
     }
-    const act = this.take('retention', s) || new RetentionRun({ skill: s, round: rnd });
+    const act = this.take('retention', s)
+      || new RetentionRun({ skill: s, round: rnd, attempt: this.e.retentionAttempt(s) });
     (yield* this.g_run_act(act, 'retention'));
     this.emit(act);
-    this.log.push([this.sessions, 'retention_' + (act.result ? act.correct : 'cut'), s]);
+    const tag = act.result === null ? 'cut' : act.result === 'done' ? act.correct : act.result;
+    this.log.push([this.sessions, 'retention_' + tag, s]);
     return act.result;
   }
 
@@ -875,6 +898,13 @@ export class Scheduler {
       if (r !== null) return r;
     }
     const teaching = this.saved.some((x) => TEACH_KINDS.includes(x.kind));
+    for (const s of teaching ? [] : this.e.consolidationOwed()) {
+      // طُلبت مساعدة في فحص احتفاظ: التثبيت يسبق غيره في الحصة، فالطفل طلب العون ولا يُؤخَّر عنه (ت3)
+      if (this.entry('show', s) === null && this.send({ type: 'consolidation_started', skill: s }).ok) {
+        (yield* this.g_consolidate(s));
+        return true;
+      }
+    }
     for (const s of teaching ? [] : Object.keys(this.parked)) {   // نشاط رُكن: أول جلسة يُقبل فيها
       const c = this.parked[s];
       const need = this.resume_need(c);
@@ -953,7 +983,8 @@ export class Scheduler {
       (yield* this.g_evidence(s));
     } else {
       this.unsave(c);
-      if (c.activity === 'lesson') (yield* this.g_lesson_body(s, c.pos));
+      if (c.consolidate) (yield* this.g_consolidate(s, c.pos));
+      else if (c.activity === 'lesson') (yield* this.g_lesson_body(s, c.pos));
       else (yield* this.g_show(s, 'practice', c.pos));
     }
     return true;
@@ -1043,6 +1074,7 @@ export class Scheduler {
       const ch = this.e.s.checks[c.act.check_id];
       return Boolean(ch) && ch.sessions.includes(this.cur);
     }
+    if (c.consolidate) return this.e.consolidating(c.skill) === this.cur;
     const o = this.e.s.opened[c.skill];
     return Boolean(o) && o.active === this.cur;
   }
@@ -1078,7 +1110,7 @@ export class Scheduler {
 // سلسلة الاستدعاء التي تعرض بنودًا مولّدات (g_*): تعطي [البند، المطلوب] وتستقبل ما كانت answer تعيده. والدوال
 // بأسمائها السابقة أغلفة متزامنة تشغّل المولّد بـ this.answer، فلا يتغير شيء لمن يستدعيها. والواجهة تشغّل المولّد
 // نفسه خطوة خطوة. حالة المولّد ليست مصدر الاستعادة: المتابعة بعد الإغلاق تُبنى من الحالة المحفوظة.
-export const STEPPED = ['run_act', 'show', 'lesson_body', 'open_lesson', 'gate', 'short', 'opening', 'evidence', 'check', 'retention_check', 'recall', 'search', 'working_point', 'start_session', 'follow', 'teach', 'resume', 'run', 'follow_learning', 'resume_mine'];
+export const STEPPED = ['run_act', 'show', 'consolidate', 'lesson_body', 'open_lesson', 'gate', 'short', 'opening', 'evidence', 'check', 'retention_check', 'recall', 'search', 'working_point', 'start_session', 'follow', 'teach', 'resume', 'run', 'follow_learning', 'resume_mine'];
 for (const name of STEPPED) {
   Scheduler.prototype[name] = function sync(...args) {
     return runSync(this['g_' + name](...args), (item, w) => this.answer(item, w));

@@ -829,7 +829,7 @@ function caseContract() {
 }
 
 // مستوى البند وحده (3.1 بقرار 17 نوفمبر): الطلب ينهي بند فحص الاحتفاظ منقطعًا ومعه الطلب. أثره على الجولة (تنتهي بلا
-// نتيجة وتُعاد في يوم لاحق ببنود بديلة) قرار معتمد لم يُنفَّذ بعد، ولا تفحصه هذه الحالة
+// نتيجة، ثم تثبيت، ثم جولة في يوم لاحق ببنود بديلة) نُفّذ في ت3 وتفحصه tests/test_retention_help
 function caseHelpRetention() {
   const { e, sc } = build('retention');
   const st = new Stepper(e, sc), kid = new Kid();

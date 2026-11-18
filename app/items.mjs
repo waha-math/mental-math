@@ -684,12 +684,16 @@ export class RetentionRun extends Activity {
   static pyName = 'RetentionRun';
   get name() { return 'retention'; }
 
-  constructor({ skill, round, size = 5 }) {
+  // طلب المساعدة ينهي الجولة بلا حكم احتفاظ ولا يُعدّ إخفاقًا (قرار الأب في 18 نوفمبر، ت3): النتيجة help وحدثها
+  // retention_help، لا retention_result. attempt: 1 لبنود الجولة الأصلية، وما فوقه لبنود بديلة بعد طلب مساعدة، والحقل
+  // لا يُنشأ إلا لما فوق 1. وإن لم تتوفر بدائل: النتيجة no_alternate وحدثها retention_referred، إحالة بلا إخفاق
+  constructor({ skill, round, size = 5, attempt = 1 }) {
     super(skill);
     this.round = round;
     this.size = size;
     this.pos = 0;
     this.correct = 0;
+    if (attempt !== 1) this.attempt = attempt;
   }
 
   want() {
@@ -697,7 +701,16 @@ export class RetentionRun extends Activity {
     return this._w(this._at(String(this.pos), this.pos));
   }
 
-  _w(q) { return { activity: this.name, role: 'deferred_check', round: this.round, pos: q, alternate: 0 }; }
+  _w(q) {
+    const a = (this.attempt ?? 1) - 1;
+    return { activity: this.name, role: a ? 'deferred_check.alternate' : 'deferred_check', round: this.round, pos: q,
+      alternate: a };
+  }
+
+  unavailable() {
+    if ((this.attempt ?? 1) === 1) throw new Error(`${this.name}: لا بنود لجولة الاحتفاظ ${this.round}`);
+    this._finish('no_alternate');               // لا بدائل مناسبة: يُحال القرار إلى البالغ، بلا إخفاق
+  }
 
   repeated(_itemId, factAt = null) {
     const last = this.size - 1;
@@ -708,6 +721,7 @@ export class RetentionRun extends Activity {
     if (this.done) throw new Error('النشاط انتهى');
     this._count('retention');
     if (outcome === 'interrupted') return this._finish(null);
+    if (outcome === 'help' || outcome === 'supported') return this._finish('help');
     if (outcome === 'correct') this.correct += 1;
     this.pos += 1;
     if (this.pos === this.size) this._finish('done');
@@ -715,7 +729,10 @@ export class RetentionRun extends Activity {
   }
 
   events() {
-    return this.result === null ? [] : [{ type: 'retention_result', skill: this.skill, correct: this.correct }];
+    if (this.result === 'done') return [{ type: 'retention_result', skill: this.skill, correct: this.correct }];
+    if (this.result === 'help') return [{ type: 'retention_help', skill: this.skill, round: this.round }];
+    if (this.result === 'no_alternate') return [{ type: 'retention_referred', skill: this.skill, round: this.round }];
+    return [];
   }
 }
 
@@ -896,7 +913,8 @@ export class ContentSource {
         it = this.allowSameFact ? { ...it, reshown_same_fact: true } : null;
       }
     } else if (a === 'retention') {               // 3.7: خمسة بنود جديدة لكل جولة
-      it = at(this._list(skill, 'deferred', 'deferred_check').filter((i) => i.slot === w.round), w.pos);
+      it = at(this._list(skill, 'deferred', w.role ?? 'deferred_check')
+        .filter((i) => i.slot === w.round && (i.set ?? 0) === (w.alternate ?? 0)), w.pos);
     } else {
       throw new Error('نشاط غير معروف: ' + a);
     }

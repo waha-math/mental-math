@@ -37,7 +37,8 @@ export function canonical(x) {
 
 // حدث ختام كل نشاط: قاعدة قبوله هي قاعدة استمرار النشاط (may_continue)
 const CONTINUE = { gate: 'gate_result', short: 'short_check_result', opening: 'lesson_opening_result',
-  evidence: 'understanding_proved', check: 'independence_result', retention: 'retention_result' };
+  evidence: 'understanding_proved', check: 'independence_result', retention: 'retention_result',
+  consolidate: 'consolidation_done' };
 const ok = (extra = {}) => ({ ok: true, ...extra });
 const no = (code, missing = null) => ({ ok: false, code, reason: REASONS[code], missing });
 
@@ -66,7 +67,7 @@ export class Engine {
     this.s = {
       group, regate, seq: 0, log: [], applied: {}, evidence: [], decisions: [], attempts: [], sessions: {},
       order: [], current: null, opened: {}, queue: [], gates: {}, checked: [], checks: {}, suspended: {},
-      history: [], retention: [], migration: MIGRATION,
+      history: [], retention: [], retention_notes: [], migration: MIGRATION,
     };
   }
 
@@ -88,6 +89,7 @@ export class Engine {
     const e = new Engine(net, { group: st.group, regate: st.regate, versions: contentVersions });
     e.s = st;
     if (!has(st, 'retention')) st.retention = [];
+    if (!has(st, 'retention_notes')) st.retention_notes = [];   // حالة حُفظت قبل طلب المساعدة والإحالة فيها (ت3)
     if ((st.migration ?? 0) < MIGRATION) {
       e._migrateChecks();
       st.migration = MIGRATION;
@@ -818,7 +820,7 @@ export class Engine {
     for (const [cid, c] of Object.entries(this.s.checks)) {   // محاولة فحص أسهمت فيها الجلسة
       if (c.sessions.includes(ev.target)) this._taintCheck(cid, ev.target, 'session_invalidated');
     }
-    for (const r of this.s.retention) {       // فحص الاحتفاظ في الجلسة المبطلة لا يُعدّ، ويبقى في السجل
+    for (const r of [...this.s.retention, ...this.s.retention_notes]) {   // ما وقع في الجلسة المبطلة لا يُعدّ، ويبقى في السجل
       if (r.session === ev.target && r.valid) {
         r.valid = false;
         this.s.history.push({ seq: this.s.seq, what: 'retention_invalidated', retention: r.id });
@@ -844,7 +846,69 @@ export class Engine {
     if (done.length >= RETENTION_GAPS.length) return null;
     const ref = (done.length ? done[done.length - 1] : ind).session;
     const day = this.s.sessions[ref].day;
-    return [done.length + 1, day + RETENTION_GAPS[done.length], day, ref];
+    const rnd = done.length + 1;
+    let due = day + RETENTION_GAPS[done.length];
+    const notes = this._retentionNotes(skill, rnd, ind.seq);
+    // أُحيلت إلى البالغ: لا تُطلب حتى يقرر (ت3)
+    if (notes.length && notes[notes.length - 1].what === 'referred') return null;
+    if (Engine._owed(notes)) return null;      // طُلبت مساعدة ولم يكتمل التثبيت: لا تُطلب الجولة قبله
+    const after = notes.filter((n) => n.what === 'help' || n.what === 'consolidated').map((n) => n.day);
+    if (after.length) due = Math.max(due, Math.max(...after) + 1);   // ثم في يوم لاحق ليوم الطلب وليوم التثبيت
+    return [rnd, due, day, ref];
+  }
+
+  // هل على الجولة تثبيت لم يكتمل؟ آخر طلب مساعدة فيها لم يتبعه تثبيت مكتمل ولا إحالة ولا قرار بالغ
+  static _owed(notes) {
+    for (let i = notes.length - 1; i >= 0; i--) {
+      if (['consolidated', 'referred', 'released'].includes(notes[i].what)) return false;
+      if (notes[i].what === 'help') return true;
+    }
+    return false;
+  }
+
+  // المهارات التي طُلبت مساعدة في جولة احتفاظها التالية ولم يكتمل تثبيتها، بترتيب الشبكة
+  consolidationOwed() {
+    const out = [];
+    for (const s of this.ids) {
+      const r = this._retentionRound(s);
+      if (r && Engine._owed(this._retentionNotes(s, r[0], r[1]))) out.push(s);
+    }
+    return out;
+  }
+
+  // جلسة التثبيت الجاري للمهارة (بدأ ولم يكتمل)، أو null
+  consolidating(skill) {
+    const r = this._retentionRound(skill);
+    const notes = r ? this._retentionNotes(skill, r[0], r[1]) : [];
+    return notes.length && notes[notes.length - 1].what === 'consolidating' ? notes[notes.length - 1].session : null;
+  }
+
+  // ما سُجّل على جولة احتفاظ دون أن يكون نتيجة: طلب مساعدة، أو تثبيت، أو إحالة، أو قرار البالغ. الصالح منها، بترتيبه
+  _retentionNotes(skill, rnd, after) {
+    return this.s.retention_notes.filter((n) => n.skill === skill && n.round === rnd && n.valid && n.seq > after);
+  }
+
+  // رقم محاولة الجولة التالية: 1 لبنودها الأصلية، ويزيد واحدًا بكل طلب مساعدة فيها (بنود بديلة). قرار البالغ بعد
+  // الإحالة يعيدها إلى بنودها الأصلية
+  retentionAttempt(skill) {
+    if (this.direct(skill) !== 'met') return 1;
+    const inds = this.validEvidence(skill, INDEPENDENT);
+    const ind = inds[inds.length - 1];
+    const done = this.s.retention.filter((r) => r.skill === skill && r.valid && r.seq > ind.seq);
+    let n = 1;
+    for (const x of this._retentionNotes(skill, done.length + 1, ind.seq)) {
+      n = x.what === 'released' ? 1 : n + (x.what === 'help' ? 1 : 0);
+    }
+    return n;
+  }
+
+  // الجولة التالية ولو كانت محالة: [الجولة، بصمة دليل الاستقلال الساري]، أو null إن لم تبقَ جولة
+  _retentionRound(skill) {
+    if (this.direct(skill) !== 'met') return null;
+    const inds = this.validEvidence(skill, INDEPENDENT);
+    const ind = inds[inds.length - 1];
+    const done = this.s.retention.filter((r) => r.skill === skill && r.valid && r.seq > ind.seq);
+    return done.length >= RETENTION_GAPS.length ? null : [done.length + 1, ind.seq];
   }
 
   // ما استحق من فحوص الاحتفاظ حتى هذا اليوم، الأقدم استحقاقًا أولًا
@@ -858,7 +922,8 @@ export class Engine {
   }
 
   retentionPending() {
-    return this.ids.filter((s) => this.retentionNext(s));
+    const owed = new Set(this.consolidationOwed());   // تثبيت مستحق يُبقي الجولة منتظرة، فلا يُعدّ المسار منتهيًا
+    return this.ids.filter((s) => owed.has(s) || this.retentionNext(s));
   }
 
   can_retention_result(ev) {
@@ -866,20 +931,91 @@ export class Engine {
     if (bad) return bad;
     if (!(ev.correct >= 0 && ev.correct <= RETENTION_ITEMS)) return { ...no('bad_event'), field: 'correct' };
     if (this.direct(ev.skill) !== 'met') return no('not_met');
+    return this._retentionOpen(ev);
+  }
+
+  _retentionOpen(ev) {
     const nxt = this.retentionNext(ev.skill);
-    if (nxt === null) return no('retention_done');
+    if (nxt === null) {
+      const r = this._retentionRound(ev.skill);
+      if (r === null) return no('retention_done');
+      // الجولة باقية ولا تُطلب: تنتظر تثبيتًا لم يكتمل، أو قرار البالغ بعد الإحالة
+      return no(Engine._owed(this._retentionNotes(ev.skill, r[0], r[1])) ? 'consolidation_first' : 'retention_referred');
+    }
     const ses = this.s.sessions[ev.session];
     if (ses.clock) return no('date_unconfirmed');
     return ses.day >= nxt[1] ? ok() : no('retention_early');
   }
+
+  _canRetentionNote(ev) {
+    const bad = this._need(ev);
+    if (bad) return bad;
+    if (this.direct(ev.skill) !== 'met') return no('not_met');
+    const v = this._retentionOpen(ev);
+    if (!v.ok) return v;
+    return ev.round === this.retentionNext(ev.skill)[0] ? ok() : no('retention_round');
+  }
+
+  _retentionNote(ev, what) {
+    const [rnd] = this._retentionRound(ev.skill);
+    const ses = has(ev, 'session') ? ev.session : null;
+    this.s.retention_notes.push({
+      id: 'N' + (this.s.retention_notes.length + 1), skill: ev.skill, round: rnd, what, session: ses,
+      day: ses === null ? null : this.s.sessions[ses].day, valid: true, seq: this.s.seq,
+      items: [...this._items], reason: has(ev, 'reason') ? ev.reason : null,
+    });
+    this.s.history.push({ seq: this.s.seq, what: 'retention_' + what, skill: ev.skill, round: rnd });
+  }
+
+  can_retention_help(ev) { return this._canRetentionNote(ev); }
+
+  do_retention_help(ev) { this._retentionNote(ev, 'help'); }
+
+  can_retention_referred(ev) { return this._canRetentionNote(ev); }
+
+  do_retention_referred(ev) { this._retentionNote(ev, 'referred'); }
+
+  can_consolidation_started(ev) {
+    const bad = this._need(ev, 'teach');
+    if (bad) return bad;
+    if (this.direct(ev.skill) !== 'met') return no('not_met');
+    // تثبيت بدأ في هذه الجلسة نفسها لا يُبدأ ثانية: حصتها مستهلكة به، فالرفض quota_teach قبل أن يُبلغ هذا السطر
+    return this.consolidationOwed().includes(ev.skill) ? ok() : no('no_consolidation');
+  }
+
+  do_consolidation_started(ev) {
+    this.s.sessions[ev.session].teach += 1;
+    this._retentionNote(ev, 'consolidating');
+  }
+
+  can_consolidation_done(ev) {
+    const bad = this._need(ev);
+    if (bad) return bad;
+    if (this.direct(ev.skill) !== 'met') return no('not_met');
+    return this.consolidating(ev.skill) === ev.session ? ok() : no('no_consolidation');
+  }
+
+  do_consolidation_done(ev) { this._retentionNote(ev, 'consolidated'); }
+
+  can_retention_release(ev) {
+    if (!has(this.idx, ev.skill)) return no('unknown_skill');   // سبب فارغ يرفضه المخطط قبل هذا (bad_event)
+    const nxt = this._retentionRound(ev.skill);
+    const notes = nxt ? this._retentionNotes(ev.skill, nxt[0], nxt[1]) : [];
+    return notes.length && notes[notes.length - 1].what === 'referred' ? ok() : no('not_referred');
+  }
+
+  do_retention_release(ev) { this._retentionNote(ev, 'released'); }
 
   do_retention_result(ev) {
     const skill = ev.skill;
     const [rnd, due, refDay, ref] = this.retentionNext(skill);
     const day = this.s.sessions[ev.session].day, at = this.s.order.indexOf(ref);
     const o = this.s.opened[skill];
+    const inds = this.validEvidence(skill, INDEPENDENT);
+    // طُلبت مساعدة في هذه الجولة من قبل، أو أعادها البالغ ببنودها: ليست احتفاظًا مستقلًا جديدًا (ت3)
     const practised = (has(ev, 'exposed') ? ev.exposed : false)
-      || Boolean(o && o.taught.some((x) => this.s.order.indexOf(x) > at));
+      || Boolean(o && o.taught.some((x) => this.s.order.indexOf(x) > at))
+      || this._retentionNotes(skill, rnd, inds[inds.length - 1].seq).length > 0;
     const low = ev.correct < RETENTION_OK;
     this.s.retention.push({
       id: 'R' + (this.s.retention.length + 1), skill, round: rnd, session: ev.session, day, due_day: due,

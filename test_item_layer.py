@@ -499,7 +499,7 @@ check('السقف يسع 5 بنود: الدرس يُقطع بعد خامس بن�
 
 # ك) فحوص الاحتفاظ في المسار (3.7، بقرار الأب في ك8)، بجلسة كل يوم
 def deferred(rnd):
-    return [i['id'] for i in ITEMS if i['skill'] == '1-4-1' and i['group'] == 'deferred' and i['slot'] == rnd]
+    return [i['id'] for i in ITEMS if i['skill'] == '1-4-1' and i['role'] == 'deferred_check' and i['slot'] == rnd]
 
 
 def rows(e):

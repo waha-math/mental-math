@@ -1,6 +1,6 @@
 {
- "version": 3,
- "digest": "43d211ccad55501a542c9932703eb00170fc2108b887dc0fa415480f1cdc4a00",
+ "version": 4,
+ "digest": "cb780a22bd349ca5e061975cda9835b7280d16f50e4fa001810e7eefe6214440",
  "seed": 20261111,
  "texts": {
   "frame_empty": {
@@ -4044,27 +4044,25 @@
    "evidence": "ف3",
    "performance": "make_ten",
    "numbers": {
-    "n": 7
+    "n": 5
    },
    "resource": "بلا نموذج",
    "answer_type": "ج1",
-   "answer": 3,
-   "text_ar": "7 وكم تصير 10؟",
-   "text_en": "7 and how many make 10?",
-   "audio_ar": "7 وكم تصير 10؟",
-   "audio_en": "7 and how many make 10?",
-   "wrong": {
-    "7": "given_back"
-   },
+   "answer": 5,
+   "text_ar": "5 وكم تصير 10؟",
+   "text_en": "5 and how many make 10?",
+   "audio_ar": "5 وكم تصير 10؟",
+   "audio_en": "5 and how many make 10?",
+   "wrong": {},
    "slot": 3,
    "alt_of": null,
    "graded": true,
    "fact": [
-    3,
-    7
+    5,
+    5
    ],
    "fact_seen_before": true,
-   "v": "26f057f620acab18"
+   "v": "14b08610492d1abe"
   },
   {
    "id": "1-4-1/deferred/12",
@@ -4667,6 +4665,467 @@
    ],
    "fact_seen_before": true,
    "v": "2e8e528977100a36"
+  },
+  {
+   "id": "1-4-1/deferred/16",
+   "skill": "1-4-1",
+   "group": "deferred",
+   "role": "deferred_check.alternate",
+   "evidence": "ف3",
+   "performance": "make_ten",
+   "numbers": {
+    "n": 5
+   },
+   "resource": "بلا نموذج",
+   "answer_type": "ج1",
+   "answer": 5,
+   "text_ar": "5 وكم تصير 10؟",
+   "text_en": "5 and how many make 10?",
+   "audio_ar": "5 وكم تصير 10؟",
+   "audio_en": "5 and how many make 10?",
+   "wrong": {},
+   "slot": 1,
+   "alt_of": null,
+   "graded": true,
+   "set": 1,
+   "fact": [
+    5,
+    5
+   ],
+   "fact_seen_before": true,
+   "v": "e973f1398240cf3d"
+  },
+  {
+   "id": "1-4-1/deferred/17",
+   "skill": "1-4-1",
+   "group": "deferred",
+   "role": "deferred_check.alternate",
+   "evidence": "ف3",
+   "performance": "make_ten",
+   "numbers": {
+    "n": 9
+   },
+   "resource": "بلا نموذج",
+   "answer_type": "ج1",
+   "answer": 1,
+   "text_ar": "9 وكم تصير 10؟",
+   "text_en": "9 and how many make 10?",
+   "audio_ar": "9 وكم تصير 10؟",
+   "audio_en": "9 and how many make 10?",
+   "wrong": {
+    "9": "given_back"
+   },
+   "slot": 1,
+   "alt_of": null,
+   "graded": true,
+   "set": 1,
+   "fact": [
+    1,
+    9
+   ],
+   "fact_seen_before": true,
+   "v": "0b50ffa681468982"
+  },
+  {
+   "id": "1-4-1/deferred/18",
+   "skill": "1-4-1",
+   "group": "deferred",
+   "role": "deferred_check.alternate",
+   "evidence": "ف3",
+   "performance": "make_ten",
+   "numbers": {
+    "n": 2
+   },
+   "resource": "بلا نموذج",
+   "answer_type": "ج1",
+   "answer": 8,
+   "text_ar": "2 وكم تصير 10؟",
+   "text_en": "2 and how many make 10?",
+   "audio_ar": "2 وكم تصير 10؟",
+   "audio_en": "2 and how many make 10?",
+   "wrong": {
+    "2": "given_back"
+   },
+   "slot": 1,
+   "alt_of": null,
+   "graded": true,
+   "set": 1,
+   "fact": [
+    2,
+    8
+   ],
+   "fact_seen_before": true,
+   "v": "d3c4f976b6529ff4"
+  },
+  {
+   "id": "1-4-1/deferred/19",
+   "skill": "1-4-1",
+   "group": "deferred",
+   "role": "deferred_check.alternate",
+   "evidence": "ف3",
+   "performance": "make_ten",
+   "numbers": {
+    "n": 7
+   },
+   "resource": "بلا نموذج",
+   "answer_type": "ج1",
+   "answer": 3,
+   "text_ar": "7 وكم تصير 10؟",
+   "text_en": "7 and how many make 10?",
+   "audio_ar": "7 وكم تصير 10؟",
+   "audio_en": "7 and how many make 10?",
+   "wrong": {
+    "7": "given_back"
+   },
+   "slot": 1,
+   "alt_of": null,
+   "graded": true,
+   "set": 1,
+   "fact": [
+    3,
+    7
+   ],
+   "fact_seen_before": true,
+   "v": "b09c04775b3392fd"
+  },
+  {
+   "id": "1-4-1/deferred/20",
+   "skill": "1-4-1",
+   "group": "deferred",
+   "role": "deferred_check.alternate",
+   "evidence": "ف3",
+   "performance": "make_ten",
+   "numbers": {
+    "n": 4
+   },
+   "resource": "بلا نموذج",
+   "answer_type": "ج1",
+   "answer": 6,
+   "text_ar": "4 وكم تصير 10؟",
+   "text_en": "4 and how many make 10?",
+   "audio_ar": "4 وكم تصير 10؟",
+   "audio_en": "4 and how many make 10?",
+   "wrong": {
+    "4": "given_back"
+   },
+   "slot": 1,
+   "alt_of": null,
+   "graded": true,
+   "set": 1,
+   "fact": [
+    4,
+    6
+   ],
+   "fact_seen_before": true,
+   "v": "e925de33cdaebcc4"
+  },
+  {
+   "id": "1-4-1/deferred/21",
+   "skill": "1-4-1",
+   "group": "deferred",
+   "role": "deferred_check.alternate",
+   "evidence": "ف3",
+   "performance": "make_ten",
+   "numbers": {
+    "n": 6
+   },
+   "resource": "بلا نموذج",
+   "answer_type": "ج1",
+   "answer": 4,
+   "text_ar": "6 وكم تصير 10؟",
+   "text_en": "6 and how many make 10?",
+   "audio_ar": "6 وكم تصير 10؟",
+   "audio_en": "6 and how many make 10?",
+   "wrong": {
+    "6": "given_back"
+   },
+   "slot": 2,
+   "alt_of": null,
+   "graded": true,
+   "set": 1,
+   "fact": [
+    4,
+    6
+   ],
+   "fact_seen_before": true,
+   "v": "7e047b4496356c9d"
+  },
+  {
+   "id": "1-4-1/deferred/22",
+   "skill": "1-4-1",
+   "group": "deferred",
+   "role": "deferred_check.alternate",
+   "evidence": "ف3",
+   "performance": "make_ten",
+   "numbers": {
+    "n": 3
+   },
+   "resource": "بلا نموذج",
+   "answer_type": "ج1",
+   "answer": 7,
+   "text_ar": "3 وكم تصير 10؟",
+   "text_en": "3 and how many make 10?",
+   "audio_ar": "3 وكم تصير 10؟",
+   "audio_en": "3 and how many make 10?",
+   "wrong": {
+    "3": "given_back"
+   },
+   "slot": 2,
+   "alt_of": null,
+   "graded": true,
+   "set": 1,
+   "fact": [
+    3,
+    7
+   ],
+   "fact_seen_before": true,
+   "v": "de925a8d996296bb"
+  },
+  {
+   "id": "1-4-1/deferred/23",
+   "skill": "1-4-1",
+   "group": "deferred",
+   "role": "deferred_check.alternate",
+   "evidence": "ف3",
+   "performance": "make_ten",
+   "numbers": {
+    "n": 8
+   },
+   "resource": "بلا نموذج",
+   "answer_type": "ج1",
+   "answer": 2,
+   "text_ar": "8 وكم تصير 10؟",
+   "text_en": "8 and how many make 10?",
+   "audio_ar": "8 وكم تصير 10؟",
+   "audio_en": "8 and how many make 10?",
+   "wrong": {
+    "8": "given_back"
+   },
+   "slot": 2,
+   "alt_of": null,
+   "graded": true,
+   "set": 1,
+   "fact": [
+    2,
+    8
+   ],
+   "fact_seen_before": true,
+   "v": "d823d677990172de"
+  },
+  {
+   "id": "1-4-1/deferred/24",
+   "skill": "1-4-1",
+   "group": "deferred",
+   "role": "deferred_check.alternate",
+   "evidence": "ف3",
+   "performance": "make_ten",
+   "numbers": {
+    "n": 1
+   },
+   "resource": "بلا نموذج",
+   "answer_type": "ج1",
+   "answer": 9,
+   "text_ar": "1 وكم تصير 10؟",
+   "text_en": "1 and how many make 10?",
+   "audio_ar": "1 وكم تصير 10؟",
+   "audio_en": "1 and how many make 10?",
+   "wrong": {
+    "1": "given_back"
+   },
+   "slot": 2,
+   "alt_of": null,
+   "graded": true,
+   "set": 1,
+   "fact": [
+    1,
+    9
+   ],
+   "fact_seen_before": true,
+   "v": "30fc8ffaebf84f48"
+  },
+  {
+   "id": "1-4-1/deferred/25",
+   "skill": "1-4-1",
+   "group": "deferred",
+   "role": "deferred_check.alternate",
+   "evidence": "ف3",
+   "performance": "make_ten",
+   "numbers": {
+    "n": 5
+   },
+   "resource": "بلا نموذج",
+   "answer_type": "ج1",
+   "answer": 5,
+   "text_ar": "5 وكم تصير 10؟",
+   "text_en": "5 and how many make 10?",
+   "audio_ar": "5 وكم تصير 10؟",
+   "audio_en": "5 and how many make 10?",
+   "wrong": {},
+   "slot": 2,
+   "alt_of": null,
+   "graded": true,
+   "set": 1,
+   "fact": [
+    5,
+    5
+   ],
+   "fact_seen_before": true,
+   "v": "00c7ef2ce040a1da"
+  },
+  {
+   "id": "1-4-1/deferred/26",
+   "skill": "1-4-1",
+   "group": "deferred",
+   "role": "deferred_check.alternate",
+   "evidence": "ف3",
+   "performance": "make_ten",
+   "numbers": {
+    "n": 9
+   },
+   "resource": "بلا نموذج",
+   "answer_type": "ج1",
+   "answer": 1,
+   "text_ar": "9 وكم تصير 10؟",
+   "text_en": "9 and how many make 10?",
+   "audio_ar": "9 وكم تصير 10؟",
+   "audio_en": "9 and how many make 10?",
+   "wrong": {
+    "9": "given_back"
+   },
+   "slot": 3,
+   "alt_of": null,
+   "graded": true,
+   "set": 1,
+   "fact": [
+    1,
+    9
+   ],
+   "fact_seen_before": true,
+   "v": "38d020b69e0656ee"
+  },
+  {
+   "id": "1-4-1/deferred/27",
+   "skill": "1-4-1",
+   "group": "deferred",
+   "role": "deferred_check.alternate",
+   "evidence": "ف3",
+   "performance": "make_ten",
+   "numbers": {
+    "n": 2
+   },
+   "resource": "بلا نموذج",
+   "answer_type": "ج1",
+   "answer": 8,
+   "text_ar": "2 وكم تصير 10؟",
+   "text_en": "2 and how many make 10?",
+   "audio_ar": "2 وكم تصير 10؟",
+   "audio_en": "2 and how many make 10?",
+   "wrong": {
+    "2": "given_back"
+   },
+   "slot": 3,
+   "alt_of": null,
+   "graded": true,
+   "set": 1,
+   "fact": [
+    2,
+    8
+   ],
+   "fact_seen_before": true,
+   "v": "4b848399dc673b46"
+  },
+  {
+   "id": "1-4-1/deferred/28",
+   "skill": "1-4-1",
+   "group": "deferred",
+   "role": "deferred_check.alternate",
+   "evidence": "ف3",
+   "performance": "make_ten",
+   "numbers": {
+    "n": 7
+   },
+   "resource": "بلا نموذج",
+   "answer_type": "ج1",
+   "answer": 3,
+   "text_ar": "7 وكم تصير 10؟",
+   "text_en": "7 and how many make 10?",
+   "audio_ar": "7 وكم تصير 10؟",
+   "audio_en": "7 and how many make 10?",
+   "wrong": {
+    "7": "given_back"
+   },
+   "slot": 3,
+   "alt_of": null,
+   "graded": true,
+   "set": 1,
+   "fact": [
+    3,
+    7
+   ],
+   "fact_seen_before": true,
+   "v": "a836b8004169f54d"
+  },
+  {
+   "id": "1-4-1/deferred/29",
+   "skill": "1-4-1",
+   "group": "deferred",
+   "role": "deferred_check.alternate",
+   "evidence": "ف3",
+   "performance": "make_ten",
+   "numbers": {
+    "n": 4
+   },
+   "resource": "بلا نموذج",
+   "answer_type": "ج1",
+   "answer": 6,
+   "text_ar": "4 وكم تصير 10؟",
+   "text_en": "4 and how many make 10?",
+   "audio_ar": "4 وكم تصير 10؟",
+   "audio_en": "4 and how many make 10?",
+   "wrong": {
+    "4": "given_back"
+   },
+   "slot": 3,
+   "alt_of": null,
+   "graded": true,
+   "set": 1,
+   "fact": [
+    4,
+    6
+   ],
+   "fact_seen_before": true,
+   "v": "5c11513c4c1c9de3"
+  },
+  {
+   "id": "1-4-1/deferred/30",
+   "skill": "1-4-1",
+   "group": "deferred",
+   "role": "deferred_check.alternate",
+   "evidence": "ف3",
+   "performance": "make_ten",
+   "numbers": {
+    "n": 9
+   },
+   "resource": "بلا نموذج",
+   "answer_type": "ج1",
+   "answer": 1,
+   "text_ar": "9 وكم تصير 10؟",
+   "text_en": "9 and how many make 10?",
+   "audio_ar": "9 وكم تصير 10؟",
+   "audio_en": "9 and how many make 10?",
+   "wrong": {
+    "9": "given_back"
+   },
+   "slot": 3,
+   "alt_of": null,
+   "graded": true,
+   "set": 1,
+   "fact": [
+    1,
+    9
+   ],
+   "fact_seen_before": true,
+   "v": "1bead6f217bab19e"
   },
   {
    "id": "1-4-2/lesson/01",
@@ -9873,6 +10332,467 @@
    ],
    "fact_seen_before": true,
    "v": "8496b754d1389075"
+  },
+  {
+   "id": "1-4-2/deferred/16",
+   "skill": "1-4-2",
+   "group": "deferred",
+   "role": "deferred_check.alternate",
+   "evidence": "ف3",
+   "performance": "missing_second",
+   "numbers": {
+    "n": 5
+   },
+   "resource": "بلا نموذج",
+   "answer_type": "ج1",
+   "answer": 5,
+   "text_ar": "ما العدد الناقص؟ ⁦ 5 + ▢ = 10 ⁩",
+   "text_en": "What number is missing? ⁦ 5 + ▢ = 10 ⁩",
+   "audio_ar": "ما العدد الناقص؟ ⁦ 5 + ▢ = 10 ⁩",
+   "audio_en": "What number is missing? ⁦ 5 + ▢ = 10 ⁩",
+   "wrong": {},
+   "slot": 1,
+   "alt_of": null,
+   "graded": true,
+   "set": 1,
+   "fact": [
+    5,
+    5
+   ],
+   "fact_seen_before": true,
+   "v": "2d4e1f0dc5c830ab"
+  },
+  {
+   "id": "1-4-2/deferred/17",
+   "skill": "1-4-2",
+   "group": "deferred",
+   "role": "deferred_check.alternate",
+   "evidence": "ف3",
+   "performance": "missing_first",
+   "numbers": {
+    "n": 9
+   },
+   "resource": "بلا نموذج",
+   "answer_type": "ج1",
+   "answer": 1,
+   "text_ar": "ما العدد الناقص؟ ⁦ ▢ + 9 = 10 ⁩",
+   "text_en": "What number is missing? ⁦ ▢ + 9 = 10 ⁩",
+   "audio_ar": "ما العدد الناقص؟ ⁦ ▢ + 9 = 10 ⁩",
+   "audio_en": "What number is missing? ⁦ ▢ + 9 = 10 ⁩",
+   "wrong": {
+    "9": "given_back"
+   },
+   "slot": 1,
+   "alt_of": null,
+   "graded": true,
+   "set": 1,
+   "fact": [
+    1,
+    9
+   ],
+   "fact_seen_before": true,
+   "v": "391f055e234422eb"
+  },
+  {
+   "id": "1-4-2/deferred/18",
+   "skill": "1-4-2",
+   "group": "deferred",
+   "role": "deferred_check.alternate",
+   "evidence": "ف3",
+   "performance": "subtract",
+   "numbers": {
+    "n": 2
+   },
+   "resource": "بلا نموذج",
+   "answer_type": "ج1",
+   "answer": 8,
+   "text_ar": "ما العدد الناقص؟ ⁦ 10 − 2 = ▢ ⁩",
+   "text_en": "What number is missing? ⁦ 10 − 2 = ▢ ⁩",
+   "audio_ar": "ما العدد الناقص؟ ⁦ 10 − 2 = ▢ ⁩",
+   "audio_en": "What number is missing? ⁦ 10 − 2 = ▢ ⁩",
+   "wrong": {
+    "2": "given_back"
+   },
+   "slot": 1,
+   "alt_of": null,
+   "graded": true,
+   "set": 1,
+   "fact": [
+    2,
+    8
+   ],
+   "fact_seen_before": true,
+   "v": "024e36851930e7aa"
+  },
+  {
+   "id": "1-4-2/deferred/19",
+   "skill": "1-4-2",
+   "group": "deferred",
+   "role": "deferred_check.alternate",
+   "evidence": "ف3",
+   "performance": "missing_second",
+   "numbers": {
+    "n": 7
+   },
+   "resource": "بلا نموذج",
+   "answer_type": "ج1",
+   "answer": 3,
+   "text_ar": "ما العدد الناقص؟ ⁦ 7 + ▢ = 10 ⁩",
+   "text_en": "What number is missing? ⁦ 7 + ▢ = 10 ⁩",
+   "audio_ar": "ما العدد الناقص؟ ⁦ 7 + ▢ = 10 ⁩",
+   "audio_en": "What number is missing? ⁦ 7 + ▢ = 10 ⁩",
+   "wrong": {
+    "7": "given_back"
+   },
+   "slot": 1,
+   "alt_of": null,
+   "graded": true,
+   "set": 1,
+   "fact": [
+    3,
+    7
+   ],
+   "fact_seen_before": true,
+   "v": "5118319a5aa00652"
+  },
+  {
+   "id": "1-4-2/deferred/20",
+   "skill": "1-4-2",
+   "group": "deferred",
+   "role": "deferred_check.alternate",
+   "evidence": "ف3",
+   "performance": "missing_first",
+   "numbers": {
+    "n": 4
+   },
+   "resource": "بلا نموذج",
+   "answer_type": "ج1",
+   "answer": 6,
+   "text_ar": "ما العدد الناقص؟ ⁦ ▢ + 4 = 10 ⁩",
+   "text_en": "What number is missing? ⁦ ▢ + 4 = 10 ⁩",
+   "audio_ar": "ما العدد الناقص؟ ⁦ ▢ + 4 = 10 ⁩",
+   "audio_en": "What number is missing? ⁦ ▢ + 4 = 10 ⁩",
+   "wrong": {
+    "4": "given_back"
+   },
+   "slot": 1,
+   "alt_of": null,
+   "graded": true,
+   "set": 1,
+   "fact": [
+    4,
+    6
+   ],
+   "fact_seen_before": true,
+   "v": "c8efc28acc5c7413"
+  },
+  {
+   "id": "1-4-2/deferred/21",
+   "skill": "1-4-2",
+   "group": "deferred",
+   "role": "deferred_check.alternate",
+   "evidence": "ف3",
+   "performance": "subtract",
+   "numbers": {
+    "n": 6
+   },
+   "resource": "بلا نموذج",
+   "answer_type": "ج1",
+   "answer": 4,
+   "text_ar": "ما العدد الناقص؟ ⁦ 10 − 6 = ▢ ⁩",
+   "text_en": "What number is missing? ⁦ 10 − 6 = ▢ ⁩",
+   "audio_ar": "ما العدد الناقص؟ ⁦ 10 − 6 = ▢ ⁩",
+   "audio_en": "What number is missing? ⁦ 10 − 6 = ▢ ⁩",
+   "wrong": {
+    "6": "given_back"
+   },
+   "slot": 2,
+   "alt_of": null,
+   "graded": true,
+   "set": 1,
+   "fact": [
+    4,
+    6
+   ],
+   "fact_seen_before": true,
+   "v": "3cd4d800e7cb9ed6"
+  },
+  {
+   "id": "1-4-2/deferred/22",
+   "skill": "1-4-2",
+   "group": "deferred",
+   "role": "deferred_check.alternate",
+   "evidence": "ف3",
+   "performance": "missing_second",
+   "numbers": {
+    "n": 3
+   },
+   "resource": "بلا نموذج",
+   "answer_type": "ج1",
+   "answer": 7,
+   "text_ar": "ما العدد الناقص؟ ⁦ 3 + ▢ = 10 ⁩",
+   "text_en": "What number is missing? ⁦ 3 + ▢ = 10 ⁩",
+   "audio_ar": "ما العدد الناقص؟ ⁦ 3 + ▢ = 10 ⁩",
+   "audio_en": "What number is missing? ⁦ 3 + ▢ = 10 ⁩",
+   "wrong": {
+    "3": "given_back"
+   },
+   "slot": 2,
+   "alt_of": null,
+   "graded": true,
+   "set": 1,
+   "fact": [
+    3,
+    7
+   ],
+   "fact_seen_before": true,
+   "v": "2bc1542ffa78127f"
+  },
+  {
+   "id": "1-4-2/deferred/23",
+   "skill": "1-4-2",
+   "group": "deferred",
+   "role": "deferred_check.alternate",
+   "evidence": "ف3",
+   "performance": "missing_first",
+   "numbers": {
+    "n": 8
+   },
+   "resource": "بلا نموذج",
+   "answer_type": "ج1",
+   "answer": 2,
+   "text_ar": "ما العدد الناقص؟ ⁦ ▢ + 8 = 10 ⁩",
+   "text_en": "What number is missing? ⁦ ▢ + 8 = 10 ⁩",
+   "audio_ar": "ما العدد الناقص؟ ⁦ ▢ + 8 = 10 ⁩",
+   "audio_en": "What number is missing? ⁦ ▢ + 8 = 10 ⁩",
+   "wrong": {
+    "8": "given_back"
+   },
+   "slot": 2,
+   "alt_of": null,
+   "graded": true,
+   "set": 1,
+   "fact": [
+    2,
+    8
+   ],
+   "fact_seen_before": true,
+   "v": "25a692ee76802388"
+  },
+  {
+   "id": "1-4-2/deferred/24",
+   "skill": "1-4-2",
+   "group": "deferred",
+   "role": "deferred_check.alternate",
+   "evidence": "ف3",
+   "performance": "subtract",
+   "numbers": {
+    "n": 1
+   },
+   "resource": "بلا نموذج",
+   "answer_type": "ج1",
+   "answer": 9,
+   "text_ar": "ما العدد الناقص؟ ⁦ 10 − 1 = ▢ ⁩",
+   "text_en": "What number is missing? ⁦ 10 − 1 = ▢ ⁩",
+   "audio_ar": "ما العدد الناقص؟ ⁦ 10 − 1 = ▢ ⁩",
+   "audio_en": "What number is missing? ⁦ 10 − 1 = ▢ ⁩",
+   "wrong": {
+    "1": "given_back"
+   },
+   "slot": 2,
+   "alt_of": null,
+   "graded": true,
+   "set": 1,
+   "fact": [
+    1,
+    9
+   ],
+   "fact_seen_before": true,
+   "v": "6704579f199a773a"
+  },
+  {
+   "id": "1-4-2/deferred/25",
+   "skill": "1-4-2",
+   "group": "deferred",
+   "role": "deferred_check.alternate",
+   "evidence": "ف3",
+   "performance": "missing_second",
+   "numbers": {
+    "n": 5
+   },
+   "resource": "بلا نموذج",
+   "answer_type": "ج1",
+   "answer": 5,
+   "text_ar": "ما العدد الناقص؟ ⁦ 5 + ▢ = 10 ⁩",
+   "text_en": "What number is missing? ⁦ 5 + ▢ = 10 ⁩",
+   "audio_ar": "ما العدد الناقص؟ ⁦ 5 + ▢ = 10 ⁩",
+   "audio_en": "What number is missing? ⁦ 5 + ▢ = 10 ⁩",
+   "wrong": {},
+   "slot": 2,
+   "alt_of": null,
+   "graded": true,
+   "set": 1,
+   "fact": [
+    5,
+    5
+   ],
+   "fact_seen_before": true,
+   "v": "944bf612150d73d6"
+  },
+  {
+   "id": "1-4-2/deferred/26",
+   "skill": "1-4-2",
+   "group": "deferred",
+   "role": "deferred_check.alternate",
+   "evidence": "ف3",
+   "performance": "missing_first",
+   "numbers": {
+    "n": 9
+   },
+   "resource": "بلا نموذج",
+   "answer_type": "ج1",
+   "answer": 1,
+   "text_ar": "ما العدد الناقص؟ ⁦ ▢ + 9 = 10 ⁩",
+   "text_en": "What number is missing? ⁦ ▢ + 9 = 10 ⁩",
+   "audio_ar": "ما العدد الناقص؟ ⁦ ▢ + 9 = 10 ⁩",
+   "audio_en": "What number is missing? ⁦ ▢ + 9 = 10 ⁩",
+   "wrong": {
+    "9": "given_back"
+   },
+   "slot": 3,
+   "alt_of": null,
+   "graded": true,
+   "set": 1,
+   "fact": [
+    1,
+    9
+   ],
+   "fact_seen_before": true,
+   "v": "36dfeb6a8e1e595f"
+  },
+  {
+   "id": "1-4-2/deferred/27",
+   "skill": "1-4-2",
+   "group": "deferred",
+   "role": "deferred_check.alternate",
+   "evidence": "ف3",
+   "performance": "subtract",
+   "numbers": {
+    "n": 2
+   },
+   "resource": "بلا نموذج",
+   "answer_type": "ج1",
+   "answer": 8,
+   "text_ar": "ما العدد الناقص؟ ⁦ 10 − 2 = ▢ ⁩",
+   "text_en": "What number is missing? ⁦ 10 − 2 = ▢ ⁩",
+   "audio_ar": "ما العدد الناقص؟ ⁦ 10 − 2 = ▢ ⁩",
+   "audio_en": "What number is missing? ⁦ 10 − 2 = ▢ ⁩",
+   "wrong": {
+    "2": "given_back"
+   },
+   "slot": 3,
+   "alt_of": null,
+   "graded": true,
+   "set": 1,
+   "fact": [
+    2,
+    8
+   ],
+   "fact_seen_before": true,
+   "v": "011e797b7f6def53"
+  },
+  {
+   "id": "1-4-2/deferred/28",
+   "skill": "1-4-2",
+   "group": "deferred",
+   "role": "deferred_check.alternate",
+   "evidence": "ف3",
+   "performance": "missing_second",
+   "numbers": {
+    "n": 7
+   },
+   "resource": "بلا نموذج",
+   "answer_type": "ج1",
+   "answer": 3,
+   "text_ar": "ما العدد الناقص؟ ⁦ 7 + ▢ = 10 ⁩",
+   "text_en": "What number is missing? ⁦ 7 + ▢ = 10 ⁩",
+   "audio_ar": "ما العدد الناقص؟ ⁦ 7 + ▢ = 10 ⁩",
+   "audio_en": "What number is missing? ⁦ 7 + ▢ = 10 ⁩",
+   "wrong": {
+    "7": "given_back"
+   },
+   "slot": 3,
+   "alt_of": null,
+   "graded": true,
+   "set": 1,
+   "fact": [
+    3,
+    7
+   ],
+   "fact_seen_before": true,
+   "v": "1077a17462fb364b"
+  },
+  {
+   "id": "1-4-2/deferred/29",
+   "skill": "1-4-2",
+   "group": "deferred",
+   "role": "deferred_check.alternate",
+   "evidence": "ف3",
+   "performance": "missing_first",
+   "numbers": {
+    "n": 4
+   },
+   "resource": "بلا نموذج",
+   "answer_type": "ج1",
+   "answer": 6,
+   "text_ar": "ما العدد الناقص؟ ⁦ ▢ + 4 = 10 ⁩",
+   "text_en": "What number is missing? ⁦ ▢ + 4 = 10 ⁩",
+   "audio_ar": "ما العدد الناقص؟ ⁦ ▢ + 4 = 10 ⁩",
+   "audio_en": "What number is missing? ⁦ ▢ + 4 = 10 ⁩",
+   "wrong": {
+    "4": "given_back"
+   },
+   "slot": 3,
+   "alt_of": null,
+   "graded": true,
+   "set": 1,
+   "fact": [
+    4,
+    6
+   ],
+   "fact_seen_before": true,
+   "v": "1775c993613bfcda"
+  },
+  {
+   "id": "1-4-2/deferred/30",
+   "skill": "1-4-2",
+   "group": "deferred",
+   "role": "deferred_check.alternate",
+   "evidence": "ف3",
+   "performance": "subtract",
+   "numbers": {
+    "n": 9
+   },
+   "resource": "بلا نموذج",
+   "answer_type": "ج1",
+   "answer": 1,
+   "text_ar": "ما العدد الناقص؟ ⁦ 10 − 9 = ▢ ⁩",
+   "text_en": "What number is missing? ⁦ 10 − 9 = ▢ ⁩",
+   "audio_ar": "ما العدد الناقص؟ ⁦ 10 − 9 = ▢ ⁩",
+   "audio_en": "What number is missing? ⁦ 10 − 9 = ▢ ⁩",
+   "wrong": {
+    "9": "given_back"
+   },
+   "slot": 3,
+   "alt_of": null,
+   "graded": true,
+   "set": 1,
+   "fact": [
+    1,
+    9
+   ],
+   "fact_seen_before": true,
+   "v": "b9d8381bc58210fc"
   },
   {
    "id": "3-5-1/lesson/01",
@@ -25985,6 +26905,1496 @@
    ],
    "fact_seen_before": false,
    "v": "78b79ff85472008e"
+  },
+  {
+   "id": "3-5-1/deferred/16",
+   "skill": "3-5-1",
+   "group": "deferred",
+   "role": "deferred_check.alternate",
+   "evidence": "ف3",
+   "performance": "solve",
+   "numbers": {
+    "a": 82,
+    "b": 18
+   },
+   "resource": "بلا نموذج",
+   "answer_type": "ج1",
+   "answer": 64,
+   "text_ar": "احسب: ⁦ 82 − 18 = ▢ ⁩",
+   "text_en": "Work out: ⁦ 82 − 18 = ▢ ⁩",
+   "audio_ar": "احسب: ⁦ 82 − 18 = ▢ ⁩",
+   "audio_en": "Work out: ⁦ 82 − 18 = ▢ ⁩",
+   "wrong": {
+    "76": "digitwise",
+    "46": "reversed",
+    "100": "sum"
+   },
+   "slot": 1,
+   "alt_of": null,
+   "graded": true,
+   "set": 1,
+   "fact": [
+    82,
+    18
+   ],
+   "fact_seen_before": false,
+   "v": "d172b4033a25484f"
+  },
+  {
+   "id": "3-5-1/deferred/17",
+   "skill": "3-5-1",
+   "group": "deferred",
+   "role": "deferred_check.alternate",
+   "evidence": "ف3",
+   "performance": "solve",
+   "numbers": {
+    "a": 94,
+    "b": 37
+   },
+   "resource": "بلا نموذج",
+   "answer_type": "ج1",
+   "answer": 57,
+   "text_ar": "احسب: ⁦ 94 − 37 = ▢ ⁩",
+   "text_en": "Work out: ⁦ 94 − 37 = ▢ ⁩",
+   "audio_ar": "احسب: ⁦ 94 − 37 = ▢ ⁩",
+   "audio_en": "Work out: ⁦ 94 − 37 = ▢ ⁩",
+   "wrong": {
+    "63": "digitwise",
+    "75": "reversed",
+    "131": "sum"
+   },
+   "slot": 1,
+   "alt_of": null,
+   "graded": true,
+   "set": 1,
+   "fact": [
+    94,
+    37
+   ],
+   "fact_seen_before": false,
+   "v": "a4759a97df84550c"
+  },
+  {
+   "id": "3-5-1/deferred/18",
+   "skill": "3-5-1",
+   "group": "deferred",
+   "role": "deferred_check.alternate",
+   "evidence": "ف3",
+   "performance": "solve",
+   "numbers": {
+    "a": 50,
+    "b": 19
+   },
+   "resource": "بلا نموذج",
+   "answer_type": "ج1",
+   "answer": 31,
+   "text_ar": "احسب: ⁦ 50 − 19 = ▢ ⁩",
+   "text_en": "Work out: ⁦ 50 − 19 = ▢ ⁩",
+   "audio_ar": "احسب: ⁦ 50 − 19 = ▢ ⁩",
+   "audio_en": "Work out: ⁦ 50 − 19 = ▢ ⁩",
+   "wrong": {
+    "49": "digitwise",
+    "13": "reversed",
+    "69": "sum"
+   },
+   "slot": 1,
+   "alt_of": null,
+   "graded": true,
+   "set": 1,
+   "fact": [
+    50,
+    19
+   ],
+   "fact_seen_before": false,
+   "v": "f684e028dbcd6af7"
+  },
+  {
+   "id": "3-5-1/deferred/19",
+   "skill": "3-5-1",
+   "group": "deferred",
+   "role": "deferred_check.alternate",
+   "evidence": "ف3",
+   "performance": "solve",
+   "numbers": {
+    "a": 61,
+    "b": 58
+   },
+   "resource": "بلا نموذج",
+   "answer_type": "ج1",
+   "answer": 3,
+   "text_ar": "احسب: ⁦ 61 − 58 = ▢ ⁩",
+   "text_en": "Work out: ⁦ 61 − 58 = ▢ ⁩",
+   "audio_ar": "احسب: ⁦ 61 − 58 = ▢ ⁩",
+   "audio_en": "Work out: ⁦ 61 − 58 = ▢ ⁩",
+   "wrong": {
+    "17": "digitwise",
+    "119": "sum"
+   },
+   "slot": 1,
+   "alt_of": null,
+   "graded": true,
+   "set": 1,
+   "fact": [
+    61,
+    58
+   ],
+   "fact_seen_before": false,
+   "v": "ea51ba9df6871271"
+  },
+  {
+   "id": "3-5-1/deferred/20",
+   "skill": "3-5-1",
+   "group": "deferred",
+   "role": "deferred_check.alternate",
+   "evidence": "ف3",
+   "performance": "solve",
+   "numbers": {
+    "a": 83,
+    "b": 51
+   },
+   "resource": "بلا نموذج",
+   "answer_type": "ج1",
+   "answer": 32,
+   "text_ar": "احسب: ⁦ 83 − 51 = ▢ ⁩",
+   "text_en": "Work out: ⁦ 83 − 51 = ▢ ⁩",
+   "audio_ar": "احسب: ⁦ 83 − 51 = ▢ ⁩",
+   "audio_en": "Work out: ⁦ 83 − 51 = ▢ ⁩",
+   "wrong": {
+    "23": "reversed",
+    "134": "sum"
+   },
+   "slot": 1,
+   "alt_of": null,
+   "graded": true,
+   "set": 1,
+   "fact": [
+    83,
+    51
+   ],
+   "fact_seen_before": false,
+   "v": "94a036fe31284998"
+  },
+  {
+   "id": "3-5-1/deferred/21",
+   "skill": "3-5-1",
+   "group": "deferred",
+   "role": "deferred_check.alternate",
+   "evidence": "ف3",
+   "performance": "solve",
+   "numbers": {
+    "a": 57,
+    "b": 19
+   },
+   "resource": "بلا نموذج",
+   "answer_type": "ج1",
+   "answer": 38,
+   "text_ar": "احسب: ⁦ 57 − 19 = ▢ ⁩",
+   "text_en": "Work out: ⁦ 57 − 19 = ▢ ⁩",
+   "audio_ar": "احسب: ⁦ 57 − 19 = ▢ ⁩",
+   "audio_en": "Work out: ⁦ 57 − 19 = ▢ ⁩",
+   "wrong": {
+    "42": "digitwise",
+    "83": "reversed",
+    "76": "sum"
+   },
+   "slot": 2,
+   "alt_of": null,
+   "graded": true,
+   "set": 1,
+   "fact": [
+    57,
+    19
+   ],
+   "fact_seen_before": false,
+   "v": "6a65022b682b2512"
+  },
+  {
+   "id": "3-5-1/deferred/22",
+   "skill": "3-5-1",
+   "group": "deferred",
+   "role": "deferred_check.alternate",
+   "evidence": "ف3",
+   "performance": "solve",
+   "numbers": {
+    "a": 92,
+    "b": 54
+   },
+   "resource": "بلا نموذج",
+   "answer_type": "ج1",
+   "answer": 38,
+   "text_ar": "احسب: ⁦ 92 − 54 = ▢ ⁩",
+   "text_en": "Work out: ⁦ 92 − 54 = ▢ ⁩",
+   "audio_ar": "احسب: ⁦ 92 − 54 = ▢ ⁩",
+   "audio_en": "Work out: ⁦ 92 − 54 = ▢ ⁩",
+   "wrong": {
+    "42": "digitwise",
+    "83": "reversed",
+    "146": "sum"
+   },
+   "slot": 2,
+   "alt_of": null,
+   "graded": true,
+   "set": 1,
+   "fact": [
+    92,
+    54
+   ],
+   "fact_seen_before": false,
+   "v": "e599e30223982976"
+  },
+  {
+   "id": "3-5-1/deferred/23",
+   "skill": "3-5-1",
+   "group": "deferred",
+   "role": "deferred_check.alternate",
+   "evidence": "ف3",
+   "performance": "solve",
+   "numbers": {
+    "a": 90,
+    "b": 29
+   },
+   "resource": "بلا نموذج",
+   "answer_type": "ج1",
+   "answer": 61,
+   "text_ar": "احسب: ⁦ 90 − 29 = ▢ ⁩",
+   "text_en": "Work out: ⁦ 90 − 29 = ▢ ⁩",
+   "audio_ar": "احسب: ⁦ 90 − 29 = ▢ ⁩",
+   "audio_en": "Work out: ⁦ 90 − 29 = ▢ ⁩",
+   "wrong": {
+    "79": "digitwise",
+    "16": "reversed",
+    "119": "sum"
+   },
+   "slot": 2,
+   "alt_of": null,
+   "graded": true,
+   "set": 1,
+   "fact": [
+    90,
+    29
+   ],
+   "fact_seen_before": false,
+   "v": "fa2036dd690225b8"
+  },
+  {
+   "id": "3-5-1/deferred/24",
+   "skill": "3-5-1",
+   "group": "deferred",
+   "role": "deferred_check.alternate",
+   "evidence": "ف3",
+   "performance": "solve",
+   "numbers": {
+    "a": 84,
+    "b": 78
+   },
+   "resource": "بلا نموذج",
+   "answer_type": "ج1",
+   "answer": 6,
+   "text_ar": "احسب: ⁦ 84 − 78 = ▢ ⁩",
+   "text_en": "Work out: ⁦ 84 − 78 = ▢ ⁩",
+   "audio_ar": "احسب: ⁦ 84 − 78 = ▢ ⁩",
+   "audio_en": "Work out: ⁦ 84 − 78 = ▢ ⁩",
+   "wrong": {
+    "14": "digitwise",
+    "162": "sum"
+   },
+   "slot": 2,
+   "alt_of": null,
+   "graded": true,
+   "set": 1,
+   "fact": [
+    84,
+    78
+   ],
+   "fact_seen_before": false,
+   "v": "f44e10cbea8df49f"
+  },
+  {
+   "id": "3-5-1/deferred/25",
+   "skill": "3-5-1",
+   "group": "deferred",
+   "role": "deferred_check.alternate",
+   "evidence": "ف3",
+   "performance": "solve",
+   "numbers": {
+    "a": 88,
+    "b": 54
+   },
+   "resource": "بلا نموذج",
+   "answer_type": "ج1",
+   "answer": 34,
+   "text_ar": "احسب: ⁦ 88 − 54 = ▢ ⁩",
+   "text_en": "Work out: ⁦ 88 − 54 = ▢ ⁩",
+   "audio_ar": "احسب: ⁦ 88 − 54 = ▢ ⁩",
+   "audio_en": "Work out: ⁦ 88 − 54 = ▢ ⁩",
+   "wrong": {
+    "43": "reversed",
+    "142": "sum"
+   },
+   "slot": 2,
+   "alt_of": null,
+   "graded": true,
+   "set": 1,
+   "fact": [
+    88,
+    54
+   ],
+   "fact_seen_before": false,
+   "v": "5737c636f9139e38"
+  },
+  {
+   "id": "3-5-1/deferred/26",
+   "skill": "3-5-1",
+   "group": "deferred",
+   "role": "deferred_check.alternate",
+   "evidence": "ف3",
+   "performance": "solve",
+   "numbers": {
+    "a": 64,
+    "b": 15
+   },
+   "resource": "بلا نموذج",
+   "answer_type": "ج1",
+   "answer": 49,
+   "text_ar": "احسب: ⁦ 64 − 15 = ▢ ⁩",
+   "text_en": "Work out: ⁦ 64 − 15 = ▢ ⁩",
+   "audio_ar": "احسب: ⁦ 64 − 15 = ▢ ⁩",
+   "audio_en": "Work out: ⁦ 64 − 15 = ▢ ⁩",
+   "wrong": {
+    "51": "digitwise",
+    "94": "reversed",
+    "79": "sum"
+   },
+   "slot": 3,
+   "alt_of": null,
+   "graded": true,
+   "set": 1,
+   "fact": [
+    64,
+    15
+   ],
+   "fact_seen_before": false,
+   "v": "b8f501a2e66b4adf"
+  },
+  {
+   "id": "3-5-1/deferred/27",
+   "skill": "3-5-1",
+   "group": "deferred",
+   "role": "deferred_check.alternate",
+   "evidence": "ف3",
+   "performance": "solve",
+   "numbers": {
+    "a": 53,
+    "b": 34
+   },
+   "resource": "بلا نموذج",
+   "answer_type": "ج1",
+   "answer": 19,
+   "text_ar": "احسب: ⁦ 53 − 34 = ▢ ⁩",
+   "text_en": "Work out: ⁦ 53 − 34 = ▢ ⁩",
+   "audio_ar": "احسب: ⁦ 53 − 34 = ▢ ⁩",
+   "audio_en": "Work out: ⁦ 53 − 34 = ▢ ⁩",
+   "wrong": {
+    "21": "digitwise",
+    "91": "reversed",
+    "87": "sum"
+   },
+   "slot": 3,
+   "alt_of": null,
+   "graded": true,
+   "set": 1,
+   "fact": [
+    53,
+    34
+   ],
+   "fact_seen_before": false,
+   "v": "7a0dccaa00e7d63c"
+  },
+  {
+   "id": "3-5-1/deferred/28",
+   "skill": "3-5-1",
+   "group": "deferred",
+   "role": "deferred_check.alternate",
+   "evidence": "ف3",
+   "performance": "solve",
+   "numbers": {
+    "a": 80,
+    "b": 47
+   },
+   "resource": "بلا نموذج",
+   "answer_type": "ج1",
+   "answer": 33,
+   "text_ar": "احسب: ⁦ 80 − 47 = ▢ ⁩",
+   "text_en": "Work out: ⁦ 80 − 47 = ▢ ⁩",
+   "audio_ar": "احسب: ⁦ 80 − 47 = ▢ ⁩",
+   "audio_en": "Work out: ⁦ 80 − 47 = ▢ ⁩",
+   "wrong": {
+    "47": "digitwise",
+    "127": "sum"
+   },
+   "slot": 3,
+   "alt_of": null,
+   "graded": true,
+   "set": 1,
+   "fact": [
+    80,
+    47
+   ],
+   "fact_seen_before": false,
+   "v": "76558175be557dfe"
+  },
+  {
+   "id": "3-5-1/deferred/29",
+   "skill": "3-5-1",
+   "group": "deferred",
+   "role": "deferred_check.alternate",
+   "evidence": "ف3",
+   "performance": "solve",
+   "numbers": {
+    "a": 23,
+    "b": 18
+   },
+   "resource": "بلا نموذج",
+   "answer_type": "ج1",
+   "answer": 5,
+   "text_ar": "احسب: ⁦ 23 − 18 = ▢ ⁩",
+   "text_en": "Work out: ⁦ 23 − 18 = ▢ ⁩",
+   "audio_ar": "احسب: ⁦ 23 − 18 = ▢ ⁩",
+   "audio_en": "Work out: ⁦ 23 − 18 = ▢ ⁩",
+   "wrong": {
+    "15": "digitwise",
+    "41": "sum"
+   },
+   "slot": 3,
+   "alt_of": null,
+   "graded": true,
+   "set": 1,
+   "fact": [
+    23,
+    18
+   ],
+   "fact_seen_before": false,
+   "v": "fce0a2e6c7f536a1"
+  },
+  {
+   "id": "3-5-1/deferred/30",
+   "skill": "3-5-1",
+   "group": "deferred",
+   "role": "deferred_check.alternate",
+   "evidence": "ف3",
+   "performance": "solve",
+   "numbers": {
+    "a": 86,
+    "b": 43
+   },
+   "resource": "بلا نموذج",
+   "answer_type": "ج1",
+   "answer": 43,
+   "text_ar": "احسب: ⁦ 86 − 43 = ▢ ⁩",
+   "text_en": "Work out: ⁦ 86 − 43 = ▢ ⁩",
+   "audio_ar": "احسب: ⁦ 86 − 43 = ▢ ⁩",
+   "audio_en": "Work out: ⁦ 86 − 43 = ▢ ⁩",
+   "wrong": {
+    "34": "reversed",
+    "129": "sum"
+   },
+   "slot": 3,
+   "alt_of": null,
+   "graded": true,
+   "set": 1,
+   "fact": [
+    86,
+    43
+   ],
+   "fact_seen_before": false,
+   "v": "1d206025284c60cc"
+  },
+  {
+   "id": "3-5-2/deferred/16",
+   "skill": "3-5-2",
+   "group": "deferred",
+   "role": "deferred_check.alternate",
+   "evidence": "ف3",
+   "performance": "solve",
+   "numbers": {
+    "a": 88,
+    "b": 66
+   },
+   "resource": "بلا نموذج",
+   "answer_type": "ج1",
+   "answer": 22,
+   "text_ar": "احسب: ⁦ 88 − 66 = ▢ ⁩",
+   "text_en": "Work out: ⁦ 88 − 66 = ▢ ⁩",
+   "audio_ar": "احسب: ⁦ 88 − 66 = ▢ ⁩",
+   "audio_en": "Work out: ⁦ 88 − 66 = ▢ ⁩",
+   "wrong": {
+    "154": "sum"
+   },
+   "slot": 1,
+   "alt_of": null,
+   "graded": true,
+   "set": 1,
+   "fact": [
+    88,
+    66
+   ],
+   "fact_seen_before": false,
+   "v": "8b456edeb6111b6b"
+  },
+  {
+   "id": "3-5-2/deferred/17",
+   "skill": "3-5-2",
+   "group": "deferred",
+   "role": "deferred_check.alternate",
+   "evidence": "ف3",
+   "performance": "solve",
+   "numbers": {
+    "a": 83,
+    "b": 53
+   },
+   "resource": "بلا نموذج",
+   "answer_type": "ج1",
+   "answer": 30,
+   "text_ar": "احسب: ⁦ 83 − 53 = ▢ ⁩",
+   "text_en": "Work out: ⁦ 83 − 53 = ▢ ⁩",
+   "audio_ar": "احسب: ⁦ 83 − 53 = ▢ ⁩",
+   "audio_en": "Work out: ⁦ 83 − 53 = ▢ ⁩",
+   "wrong": {
+    "136": "sum"
+   },
+   "slot": 1,
+   "alt_of": null,
+   "graded": true,
+   "set": 1,
+   "fact": [
+    83,
+    53
+   ],
+   "fact_seen_before": false,
+   "v": "be8a1c59737d3afd"
+  },
+  {
+   "id": "3-5-2/deferred/18",
+   "skill": "3-5-2",
+   "group": "deferred",
+   "role": "deferred_check.alternate",
+   "evidence": "ف3",
+   "performance": "solve",
+   "numbers": {
+    "a": 90,
+    "b": 81
+   },
+   "resource": "بلا نموذج",
+   "answer_type": "ج1",
+   "answer": 9,
+   "text_ar": "احسب: ⁦ 90 − 81 = ▢ ⁩",
+   "text_en": "Work out: ⁦ 90 − 81 = ▢ ⁩",
+   "audio_ar": "احسب: ⁦ 90 − 81 = ▢ ⁩",
+   "audio_en": "Work out: ⁦ 90 − 81 = ▢ ⁩",
+   "wrong": {
+    "11": "digitwise",
+    "171": "sum"
+   },
+   "slot": 1,
+   "alt_of": null,
+   "graded": true,
+   "set": 1,
+   "fact": [
+    90,
+    81
+   ],
+   "fact_seen_before": false,
+   "v": "bcac07d560ef78cc"
+  },
+  {
+   "id": "3-5-2/deferred/19",
+   "skill": "3-5-2",
+   "group": "deferred",
+   "role": "deferred_check.alternate",
+   "evidence": "ف3",
+   "performance": "solve",
+   "numbers": {
+    "a": 86,
+    "b": 25
+   },
+   "resource": "بلا نموذج",
+   "answer_type": "ج1",
+   "answer": 61,
+   "text_ar": "احسب: ⁦ 86 − 25 = ▢ ⁩",
+   "text_en": "Work out: ⁦ 86 − 25 = ▢ ⁩",
+   "audio_ar": "احسب: ⁦ 86 − 25 = ▢ ⁩",
+   "audio_en": "Work out: ⁦ 86 − 25 = ▢ ⁩",
+   "wrong": {
+    "16": "reversed",
+    "111": "sum"
+   },
+   "slot": 1,
+   "alt_of": null,
+   "graded": true,
+   "set": 1,
+   "fact": [
+    86,
+    25
+   ],
+   "fact_seen_before": false,
+   "v": "f2da8a1710deef4f"
+  },
+  {
+   "id": "3-5-2/deferred/20",
+   "skill": "3-5-2",
+   "group": "deferred",
+   "role": "deferred_check.alternate",
+   "evidence": "ف3",
+   "performance": "solve",
+   "numbers": {
+    "a": 32,
+    "b": 21
+   },
+   "resource": "بلا نموذج",
+   "answer_type": "ج1",
+   "answer": 11,
+   "text_ar": "احسب: ⁦ 32 − 21 = ▢ ⁩",
+   "text_en": "Work out: ⁦ 32 − 21 = ▢ ⁩",
+   "audio_ar": "احسب: ⁦ 32 − 21 = ▢ ⁩",
+   "audio_en": "Work out: ⁦ 32 − 21 = ▢ ⁩",
+   "wrong": {
+    "53": "sum"
+   },
+   "slot": 1,
+   "alt_of": null,
+   "graded": true,
+   "set": 1,
+   "fact": [
+    32,
+    21
+   ],
+   "fact_seen_before": false,
+   "v": "f633e1c32fd9c805"
+  },
+  {
+   "id": "3-5-2/deferred/21",
+   "skill": "3-5-2",
+   "group": "deferred",
+   "role": "deferred_check.alternate",
+   "evidence": "ف3",
+   "performance": "solve",
+   "numbers": {
+    "a": 92,
+    "b": 71
+   },
+   "resource": "بلا نموذج",
+   "answer_type": "ج1",
+   "answer": 21,
+   "text_ar": "احسب: ⁦ 92 − 71 = ▢ ⁩",
+   "text_en": "Work out: ⁦ 92 − 71 = ▢ ⁩",
+   "audio_ar": "احسب: ⁦ 92 − 71 = ▢ ⁩",
+   "audio_en": "Work out: ⁦ 92 − 71 = ▢ ⁩",
+   "wrong": {
+    "12": "reversed",
+    "163": "sum"
+   },
+   "slot": 2,
+   "alt_of": null,
+   "graded": true,
+   "set": 1,
+   "fact": [
+    92,
+    71
+   ],
+   "fact_seen_before": false,
+   "v": "5b0a45e13b3c0cc0"
+  },
+  {
+   "id": "3-5-2/deferred/22",
+   "skill": "3-5-2",
+   "group": "deferred",
+   "role": "deferred_check.alternate",
+   "evidence": "ف3",
+   "performance": "solve",
+   "numbers": {
+    "a": 98,
+    "b": 69
+   },
+   "resource": "بلا نموذج",
+   "answer_type": "ج1",
+   "answer": 29,
+   "text_ar": "احسب: ⁦ 98 − 69 = ▢ ⁩",
+   "text_en": "Work out: ⁦ 98 − 69 = ▢ ⁩",
+   "audio_ar": "احسب: ⁦ 98 − 69 = ▢ ⁩",
+   "audio_en": "Work out: ⁦ 98 − 69 = ▢ ⁩",
+   "wrong": {
+    "31": "digitwise",
+    "92": "reversed",
+    "167": "sum"
+   },
+   "slot": 2,
+   "alt_of": null,
+   "graded": true,
+   "set": 1,
+   "fact": [
+    98,
+    69
+   ],
+   "fact_seen_before": false,
+   "v": "59e675ecc1b1f257"
+  },
+  {
+   "id": "3-5-2/deferred/23",
+   "skill": "3-5-2",
+   "group": "deferred",
+   "role": "deferred_check.alternate",
+   "evidence": "ف3",
+   "performance": "solve",
+   "numbers": {
+    "a": 50,
+    "b": 22
+   },
+   "resource": "بلا نموذج",
+   "answer_type": "ج1",
+   "answer": 28,
+   "text_ar": "احسب: ⁦ 50 − 22 = ▢ ⁩",
+   "text_en": "Work out: ⁦ 50 − 22 = ▢ ⁩",
+   "audio_ar": "احسب: ⁦ 50 − 22 = ▢ ⁩",
+   "audio_en": "Work out: ⁦ 50 − 22 = ▢ ⁩",
+   "wrong": {
+    "32": "digitwise",
+    "82": "reversed",
+    "72": "sum"
+   },
+   "slot": 2,
+   "alt_of": null,
+   "graded": true,
+   "set": 1,
+   "fact": [
+    50,
+    22
+   ],
+   "fact_seen_before": false,
+   "v": "948cdc2af7af0a75"
+  },
+  {
+   "id": "3-5-2/deferred/24",
+   "skill": "3-5-2",
+   "group": "deferred",
+   "role": "deferred_check.alternate",
+   "evidence": "ف3",
+   "performance": "solve",
+   "numbers": {
+    "a": 98,
+    "b": 31
+   },
+   "resource": "بلا نموذج",
+   "answer_type": "ج1",
+   "answer": 67,
+   "text_ar": "احسب: ⁦ 98 − 31 = ▢ ⁩",
+   "text_en": "Work out: ⁦ 98 − 31 = ▢ ⁩",
+   "audio_ar": "احسب: ⁦ 98 − 31 = ▢ ⁩",
+   "audio_en": "Work out: ⁦ 98 − 31 = ▢ ⁩",
+   "wrong": {
+    "76": "reversed",
+    "129": "sum"
+   },
+   "slot": 2,
+   "alt_of": null,
+   "graded": true,
+   "set": 1,
+   "fact": [
+    98,
+    31
+   ],
+   "fact_seen_before": false,
+   "v": "f5e27f38c68b854f"
+  },
+  {
+   "id": "3-5-2/deferred/25",
+   "skill": "3-5-2",
+   "group": "deferred",
+   "role": "deferred_check.alternate",
+   "evidence": "ف3",
+   "performance": "solve",
+   "numbers": {
+    "a": 37,
+    "b": 27
+   },
+   "resource": "بلا نموذج",
+   "answer_type": "ج1",
+   "answer": 10,
+   "text_ar": "احسب: ⁦ 37 − 27 = ▢ ⁩",
+   "text_en": "Work out: ⁦ 37 − 27 = ▢ ⁩",
+   "audio_ar": "احسب: ⁦ 37 − 27 = ▢ ⁩",
+   "audio_en": "Work out: ⁦ 37 − 27 = ▢ ⁩",
+   "wrong": {
+    "64": "sum"
+   },
+   "slot": 2,
+   "alt_of": null,
+   "graded": true,
+   "set": 1,
+   "fact": [
+    37,
+    27
+   ],
+   "fact_seen_before": false,
+   "v": "afe363c25e88a610"
+  },
+  {
+   "id": "3-5-2/deferred/26",
+   "skill": "3-5-2",
+   "group": "deferred",
+   "role": "deferred_check.alternate",
+   "evidence": "ف3",
+   "performance": "solve",
+   "numbers": {
+    "a": 59,
+    "b": 36
+   },
+   "resource": "بلا نموذج",
+   "answer_type": "ج1",
+   "answer": 23,
+   "text_ar": "احسب: ⁦ 59 − 36 = ▢ ⁩",
+   "text_en": "Work out: ⁦ 59 − 36 = ▢ ⁩",
+   "audio_ar": "احسب: ⁦ 59 − 36 = ▢ ⁩",
+   "audio_en": "Work out: ⁦ 59 − 36 = ▢ ⁩",
+   "wrong": {
+    "32": "reversed",
+    "95": "sum"
+   },
+   "slot": 3,
+   "alt_of": null,
+   "graded": true,
+   "set": 1,
+   "fact": [
+    59,
+    36
+   ],
+   "fact_seen_before": false,
+   "v": "4303ef71a08a4c35"
+  },
+  {
+   "id": "3-5-2/deferred/27",
+   "skill": "3-5-2",
+   "group": "deferred",
+   "role": "deferred_check.alternate",
+   "evidence": "ف3",
+   "performance": "solve",
+   "numbers": {
+    "a": 52,
+    "b": 25
+   },
+   "resource": "بلا نموذج",
+   "answer_type": "ج1",
+   "answer": 27,
+   "text_ar": "احسب: ⁦ 52 − 25 = ▢ ⁩",
+   "text_en": "Work out: ⁦ 52 − 25 = ▢ ⁩",
+   "audio_ar": "احسب: ⁦ 52 − 25 = ▢ ⁩",
+   "audio_en": "Work out: ⁦ 52 − 25 = ▢ ⁩",
+   "wrong": {
+    "33": "digitwise",
+    "72": "reversed",
+    "77": "sum"
+   },
+   "slot": 3,
+   "alt_of": null,
+   "graded": true,
+   "set": 1,
+   "fact": [
+    52,
+    25
+   ],
+   "fact_seen_before": false,
+   "v": "39e2261b63d93c5b"
+  },
+  {
+   "id": "3-5-2/deferred/28",
+   "skill": "3-5-2",
+   "group": "deferred",
+   "role": "deferred_check.alternate",
+   "evidence": "ف3",
+   "performance": "solve",
+   "numbers": {
+    "a": 90,
+    "b": 63
+   },
+   "resource": "بلا نموذج",
+   "answer_type": "ج1",
+   "answer": 27,
+   "text_ar": "احسب: ⁦ 90 − 63 = ▢ ⁩",
+   "text_en": "Work out: ⁦ 90 − 63 = ▢ ⁩",
+   "audio_ar": "احسب: ⁦ 90 − 63 = ▢ ⁩",
+   "audio_en": "Work out: ⁦ 90 − 63 = ▢ ⁩",
+   "wrong": {
+    "33": "digitwise",
+    "72": "reversed",
+    "153": "sum"
+   },
+   "slot": 3,
+   "alt_of": null,
+   "graded": true,
+   "set": 1,
+   "fact": [
+    90,
+    63
+   ],
+   "fact_seen_before": false,
+   "v": "9d0f447a3d60467b"
+  },
+  {
+   "id": "3-5-2/deferred/29",
+   "skill": "3-5-2",
+   "group": "deferred",
+   "role": "deferred_check.alternate",
+   "evidence": "ف3",
+   "performance": "solve",
+   "numbers": {
+    "a": 94,
+    "b": 44
+   },
+   "resource": "بلا نموذج",
+   "answer_type": "ج1",
+   "answer": 50,
+   "text_ar": "احسب: ⁦ 94 − 44 = ▢ ⁩",
+   "text_en": "Work out: ⁦ 94 − 44 = ▢ ⁩",
+   "audio_ar": "احسب: ⁦ 94 − 44 = ▢ ⁩",
+   "audio_en": "Work out: ⁦ 94 − 44 = ▢ ⁩",
+   "wrong": {
+    "138": "sum"
+   },
+   "slot": 3,
+   "alt_of": null,
+   "graded": true,
+   "set": 1,
+   "fact": [
+    94,
+    44
+   ],
+   "fact_seen_before": false,
+   "v": "f4d01bcd24aa0738"
+  },
+  {
+   "id": "3-5-2/deferred/30",
+   "skill": "3-5-2",
+   "group": "deferred",
+   "role": "deferred_check.alternate",
+   "evidence": "ف3",
+   "performance": "solve",
+   "numbers": {
+    "a": 67,
+    "b": 56
+   },
+   "resource": "بلا نموذج",
+   "answer_type": "ج1",
+   "answer": 11,
+   "text_ar": "احسب: ⁦ 67 − 56 = ▢ ⁩",
+   "text_en": "Work out: ⁦ 67 − 56 = ▢ ⁩",
+   "audio_ar": "احسب: ⁦ 67 − 56 = ▢ ⁩",
+   "audio_en": "Work out: ⁦ 67 − 56 = ▢ ⁩",
+   "wrong": {
+    "123": "sum"
+   },
+   "slot": 3,
+   "alt_of": null,
+   "graded": true,
+   "set": 1,
+   "fact": [
+    67,
+    56
+   ],
+   "fact_seen_before": false,
+   "v": "780b694c8c08d85e"
+  },
+  {
+   "id": "3-5-3/deferred/16",
+   "skill": "3-5-3",
+   "group": "deferred",
+   "role": "deferred_check.alternate",
+   "evidence": "ف3",
+   "performance": "solve",
+   "numbers": {
+    "a": 66,
+    "b": 14
+   },
+   "resource": "بلا نموذج",
+   "answer_type": "ج1",
+   "answer": 52,
+   "text_ar": "احسب: ⁦ 66 − 14 = ▢ ⁩",
+   "text_en": "Work out: ⁦ 66 − 14 = ▢ ⁩",
+   "audio_ar": "احسب: ⁦ 66 − 14 = ▢ ⁩",
+   "audio_en": "Work out: ⁦ 66 − 14 = ▢ ⁩",
+   "wrong": {
+    "25": "reversed",
+    "80": "sum"
+   },
+   "slot": 1,
+   "alt_of": null,
+   "graded": true,
+   "set": 1,
+   "fact": [
+    66,
+    14
+   ],
+   "fact_seen_before": false,
+   "v": "02f6285c4b87122c"
+  },
+  {
+   "id": "3-5-3/deferred/17",
+   "skill": "3-5-3",
+   "group": "deferred",
+   "role": "deferred_check.alternate",
+   "evidence": "ف3",
+   "performance": "solve",
+   "numbers": {
+    "a": 74,
+    "b": 26
+   },
+   "resource": "بلا نموذج",
+   "answer_type": "ج1",
+   "answer": 48,
+   "text_ar": "احسب: ⁦ 74 − 26 = ▢ ⁩",
+   "text_en": "Work out: ⁦ 74 − 26 = ▢ ⁩",
+   "audio_ar": "احسب: ⁦ 74 − 26 = ▢ ⁩",
+   "audio_en": "Work out: ⁦ 74 − 26 = ▢ ⁩",
+   "wrong": {
+    "52": "digitwise",
+    "84": "reversed",
+    "100": "sum"
+   },
+   "slot": 1,
+   "alt_of": null,
+   "graded": true,
+   "set": 1,
+   "fact": [
+    74,
+    26
+   ],
+   "fact_seen_before": false,
+   "v": "9b40912806c6358c"
+  },
+  {
+   "id": "3-5-3/deferred/18",
+   "skill": "3-5-3",
+   "group": "deferred",
+   "role": "deferred_check.alternate",
+   "evidence": "ف3",
+   "performance": "solve",
+   "numbers": {
+    "a": 49,
+    "b": 44
+   },
+   "resource": "بلا نموذج",
+   "answer_type": "ج1",
+   "answer": 5,
+   "text_ar": "احسب: ⁦ 49 − 44 = ▢ ⁩",
+   "text_en": "Work out: ⁦ 49 − 44 = ▢ ⁩",
+   "audio_ar": "احسب: ⁦ 49 − 44 = ▢ ⁩",
+   "audio_en": "Work out: ⁦ 49 − 44 = ▢ ⁩",
+   "wrong": {
+    "93": "sum"
+   },
+   "slot": 1,
+   "alt_of": null,
+   "graded": true,
+   "set": 1,
+   "fact": [
+    49,
+    44
+   ],
+   "fact_seen_before": false,
+   "v": "145915a43837366c"
+  },
+  {
+   "id": "3-5-3/deferred/19",
+   "skill": "3-5-3",
+   "group": "deferred",
+   "role": "deferred_check.alternate",
+   "evidence": "ف3",
+   "performance": "solve",
+   "numbers": {
+    "a": 34,
+    "b": 11
+   },
+   "resource": "بلا نموذج",
+   "answer_type": "ج1",
+   "answer": 23,
+   "text_ar": "احسب: ⁦ 34 − 11 = ▢ ⁩",
+   "text_en": "Work out: ⁦ 34 − 11 = ▢ ⁩",
+   "audio_ar": "احسب: ⁦ 34 − 11 = ▢ ⁩",
+   "audio_en": "Work out: ⁦ 34 − 11 = ▢ ⁩",
+   "wrong": {
+    "32": "reversed",
+    "45": "sum"
+   },
+   "slot": 1,
+   "alt_of": null,
+   "graded": true,
+   "set": 1,
+   "fact": [
+    34,
+    11
+   ],
+   "fact_seen_before": false,
+   "v": "0c9b48607dff3545"
+  },
+  {
+   "id": "3-5-3/deferred/20",
+   "skill": "3-5-3",
+   "group": "deferred",
+   "role": "deferred_check.alternate",
+   "evidence": "ف3",
+   "performance": "solve",
+   "numbers": {
+    "a": 65,
+    "b": 29
+   },
+   "resource": "بلا نموذج",
+   "answer_type": "ج1",
+   "answer": 36,
+   "text_ar": "احسب: ⁦ 65 − 29 = ▢ ⁩",
+   "text_en": "Work out: ⁦ 65 − 29 = ▢ ⁩",
+   "audio_ar": "احسب: ⁦ 65 − 29 = ▢ ⁩",
+   "audio_en": "Work out: ⁦ 65 − 29 = ▢ ⁩",
+   "wrong": {
+    "44": "digitwise",
+    "63": "reversed",
+    "94": "sum"
+   },
+   "slot": 1,
+   "alt_of": null,
+   "graded": true,
+   "set": 1,
+   "fact": [
+    65,
+    29
+   ],
+   "fact_seen_before": false,
+   "v": "5f306bad934ab370"
+  },
+  {
+   "id": "3-5-3/deferred/21",
+   "skill": "3-5-3",
+   "group": "deferred",
+   "role": "deferred_check.alternate",
+   "evidence": "ف3",
+   "performance": "solve",
+   "numbers": {
+    "a": 58,
+    "b": 53
+   },
+   "resource": "بلا نموذج",
+   "answer_type": "ج1",
+   "answer": 5,
+   "text_ar": "احسب: ⁦ 58 − 53 = ▢ ⁩",
+   "text_en": "Work out: ⁦ 58 − 53 = ▢ ⁩",
+   "audio_ar": "احسب: ⁦ 58 − 53 = ▢ ⁩",
+   "audio_en": "Work out: ⁦ 58 − 53 = ▢ ⁩",
+   "wrong": {
+    "111": "sum"
+   },
+   "slot": 2,
+   "alt_of": null,
+   "graded": true,
+   "set": 1,
+   "fact": [
+    58,
+    53
+   ],
+   "fact_seen_before": false,
+   "v": "d3d5d61546144620"
+  },
+  {
+   "id": "3-5-3/deferred/22",
+   "skill": "3-5-3",
+   "group": "deferred",
+   "role": "deferred_check.alternate",
+   "evidence": "ف3",
+   "performance": "solve",
+   "numbers": {
+    "a": 97,
+    "b": 12
+   },
+   "resource": "بلا نموذج",
+   "answer_type": "ج1",
+   "answer": 85,
+   "text_ar": "احسب: ⁦ 97 − 12 = ▢ ⁩",
+   "text_en": "Work out: ⁦ 97 − 12 = ▢ ⁩",
+   "audio_ar": "احسب: ⁦ 97 − 12 = ▢ ⁩",
+   "audio_en": "Work out: ⁦ 97 − 12 = ▢ ⁩",
+   "wrong": {
+    "58": "reversed",
+    "109": "sum"
+   },
+   "slot": 2,
+   "alt_of": null,
+   "graded": true,
+   "set": 1,
+   "fact": [
+    97,
+    12
+   ],
+   "fact_seen_before": false,
+   "v": "88f442b3665078fb"
+  },
+  {
+   "id": "3-5-3/deferred/23",
+   "skill": "3-5-3",
+   "group": "deferred",
+   "role": "deferred_check.alternate",
+   "evidence": "ف3",
+   "performance": "solve",
+   "numbers": {
+    "a": 92,
+    "b": 57
+   },
+   "resource": "بلا نموذج",
+   "answer_type": "ج1",
+   "answer": 35,
+   "text_ar": "احسب: ⁦ 92 − 57 = ▢ ⁩",
+   "text_en": "Work out: ⁦ 92 − 57 = ▢ ⁩",
+   "audio_ar": "احسب: ⁦ 92 − 57 = ▢ ⁩",
+   "audio_en": "Work out: ⁦ 92 − 57 = ▢ ⁩",
+   "wrong": {
+    "45": "digitwise",
+    "53": "reversed",
+    "149": "sum"
+   },
+   "slot": 2,
+   "alt_of": null,
+   "graded": true,
+   "set": 1,
+   "fact": [
+    92,
+    57
+   ],
+   "fact_seen_before": false,
+   "v": "b28a8bbd8d314739"
+  },
+  {
+   "id": "3-5-3/deferred/24",
+   "skill": "3-5-3",
+   "group": "deferred",
+   "role": "deferred_check.alternate",
+   "evidence": "ف3",
+   "performance": "solve",
+   "numbers": {
+    "a": 96,
+    "b": 92
+   },
+   "resource": "بلا نموذج",
+   "answer_type": "ج1",
+   "answer": 4,
+   "text_ar": "احسب: ⁦ 96 − 92 = ▢ ⁩",
+   "text_en": "Work out: ⁦ 96 − 92 = ▢ ⁩",
+   "audio_ar": "احسب: ⁦ 96 − 92 = ▢ ⁩",
+   "audio_en": "Work out: ⁦ 96 − 92 = ▢ ⁩",
+   "wrong": {
+    "188": "sum"
+   },
+   "slot": 2,
+   "alt_of": null,
+   "graded": true,
+   "set": 1,
+   "fact": [
+    96,
+    92
+   ],
+   "fact_seen_before": false,
+   "v": "64918675e90cd498"
+  },
+  {
+   "id": "3-5-3/deferred/25",
+   "skill": "3-5-3",
+   "group": "deferred",
+   "role": "deferred_check.alternate",
+   "evidence": "ف3",
+   "performance": "solve",
+   "numbers": {
+    "a": 29,
+    "b": 17
+   },
+   "resource": "بلا نموذج",
+   "answer_type": "ج1",
+   "answer": 12,
+   "text_ar": "احسب: ⁦ 29 − 17 = ▢ ⁩",
+   "text_en": "Work out: ⁦ 29 − 17 = ▢ ⁩",
+   "audio_ar": "احسب: ⁦ 29 − 17 = ▢ ⁩",
+   "audio_en": "Work out: ⁦ 29 − 17 = ▢ ⁩",
+   "wrong": {
+    "21": "reversed",
+    "46": "sum"
+   },
+   "slot": 2,
+   "alt_of": null,
+   "graded": true,
+   "set": 1,
+   "fact": [
+    29,
+    17
+   ],
+   "fact_seen_before": false,
+   "v": "914e05c70671ad54"
+  },
+  {
+   "id": "3-5-3/deferred/26",
+   "skill": "3-5-3",
+   "group": "deferred",
+   "role": "deferred_check.alternate",
+   "evidence": "ف3",
+   "performance": "solve",
+   "numbers": {
+    "a": 93,
+    "b": 58
+   },
+   "resource": "بلا نموذج",
+   "answer_type": "ج1",
+   "answer": 35,
+   "text_ar": "احسب: ⁦ 93 − 58 = ▢ ⁩",
+   "text_en": "Work out: ⁦ 93 − 58 = ▢ ⁩",
+   "audio_ar": "احسب: ⁦ 93 − 58 = ▢ ⁩",
+   "audio_en": "Work out: ⁦ 93 − 58 = ▢ ⁩",
+   "wrong": {
+    "45": "digitwise",
+    "53": "reversed",
+    "151": "sum"
+   },
+   "slot": 3,
+   "alt_of": null,
+   "graded": true,
+   "set": 1,
+   "fact": [
+    93,
+    58
+   ],
+   "fact_seen_before": false,
+   "v": "dc44c402ad51d98c"
+  },
+  {
+   "id": "3-5-3/deferred/27",
+   "skill": "3-5-3",
+   "group": "deferred",
+   "role": "deferred_check.alternate",
+   "evidence": "ف3",
+   "performance": "solve",
+   "numbers": {
+    "a": 98,
+    "b": 97
+   },
+   "resource": "بلا نموذج",
+   "answer_type": "ج1",
+   "answer": 1,
+   "text_ar": "احسب: ⁦ 98 − 97 = ▢ ⁩",
+   "text_en": "Work out: ⁦ 98 − 97 = ▢ ⁩",
+   "audio_ar": "احسب: ⁦ 98 − 97 = ▢ ⁩",
+   "audio_en": "Work out: ⁦ 98 − 97 = ▢ ⁩",
+   "wrong": {
+    "195": "sum"
+   },
+   "slot": 3,
+   "alt_of": null,
+   "graded": true,
+   "set": 1,
+   "fact": [
+    98,
+    97
+   ],
+   "fact_seen_before": false,
+   "v": "2f334a673a399731"
+  },
+  {
+   "id": "3-5-3/deferred/28",
+   "skill": "3-5-3",
+   "group": "deferred",
+   "role": "deferred_check.alternate",
+   "evidence": "ف3",
+   "performance": "solve",
+   "numbers": {
+    "a": 57,
+    "b": 13
+   },
+   "resource": "بلا نموذج",
+   "answer_type": "ج1",
+   "answer": 44,
+   "text_ar": "احسب: ⁦ 57 − 13 = ▢ ⁩",
+   "text_en": "Work out: ⁦ 57 − 13 = ▢ ⁩",
+   "audio_ar": "احسب: ⁦ 57 − 13 = ▢ ⁩",
+   "audio_en": "Work out: ⁦ 57 − 13 = ▢ ⁩",
+   "wrong": {
+    "70": "sum"
+   },
+   "slot": 3,
+   "alt_of": null,
+   "graded": true,
+   "set": 1,
+   "fact": [
+    57,
+    13
+   ],
+   "fact_seen_before": false,
+   "v": "396c223abac4ba49"
+  },
+  {
+   "id": "3-5-3/deferred/29",
+   "skill": "3-5-3",
+   "group": "deferred",
+   "role": "deferred_check.alternate",
+   "evidence": "ف3",
+   "performance": "solve",
+   "numbers": {
+    "a": 51,
+    "b": 39
+   },
+   "resource": "بلا نموذج",
+   "answer_type": "ج1",
+   "answer": 12,
+   "text_ar": "احسب: ⁦ 51 − 39 = ▢ ⁩",
+   "text_en": "Work out: ⁦ 51 − 39 = ▢ ⁩",
+   "audio_ar": "احسب: ⁦ 51 − 39 = ▢ ⁩",
+   "audio_en": "Work out: ⁦ 51 − 39 = ▢ ⁩",
+   "wrong": {
+    "28": "digitwise",
+    "21": "reversed",
+    "90": "sum"
+   },
+   "slot": 3,
+   "alt_of": null,
+   "graded": true,
+   "set": 1,
+   "fact": [
+    51,
+    39
+   ],
+   "fact_seen_before": false,
+   "v": "e0ad70a3c6d3adc6"
+  },
+  {
+   "id": "3-5-3/deferred/30",
+   "skill": "3-5-3",
+   "group": "deferred",
+   "role": "deferred_check.alternate",
+   "evidence": "ف3",
+   "performance": "solve",
+   "numbers": {
+    "a": 68,
+    "b": 62
+   },
+   "resource": "بلا نموذج",
+   "answer_type": "ج1",
+   "answer": 6,
+   "text_ar": "احسب: ⁦ 68 − 62 = ▢ ⁩",
+   "text_en": "Work out: ⁦ 68 − 62 = ▢ ⁩",
+   "audio_ar": "احسب: ⁦ 68 − 62 = ▢ ⁩",
+   "audio_en": "Work out: ⁦ 68 − 62 = ▢ ⁩",
+   "wrong": {
+    "130": "sum"
+   },
+   "slot": 3,
+   "alt_of": null,
+   "graded": true,
+   "set": 1,
+   "fact": [
+    68,
+    62
+   ],
+   "fact_seen_before": false,
+   "v": "b5c014cdddf2ec67"
   }
  ]
 }

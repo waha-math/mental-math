@@ -946,6 +946,111 @@ check('جلسة بتنبيه تاريخ لا تقبل فحص الاحتفاظ ح
       'الاجتياز: لا فحص احتفاظ. درس نشط داخل الفاصل: «أداء مؤجل». وحالة محفوظة قبل هذه الإضافة تُقرأ',
       a and b and c and d)
 
+# 31) طلب المساعدة في فحص الاحتفاظ (ت3 في مراجعة 04e0168، بقرار الأب في 18 نوفمبر): ينهي الجولة بلا حكم، ويُستحق
+#     تثبيت يقرّه المحرك في الحصة التعليمية، ولا تُقبل الجولة قبل اكتماله ولا في يومه ولا في يوم الطلب. ثم إحالة إلى
+#     البالغ حين لا بدائل، وقراره يعيدها ببنودها
+def note(e, type_, sid, **kw):
+    return ev(e, type_, session=sid, skill='1-1-1', **kw)
+
+
+def notes(e):
+    return [(n['what'], n['session'], n['day'], n['valid']) for n in e.s['retention_notes']]
+
+
+e = met_on(2)
+start(e, 'S3', 'follow', day=9)
+a = (refused(e, 'consolidation_started', 'no_consolidation', None, session='S3', skill='1-1-1')
+     and refused(e, 'consolidation_done', 'no_consolidation', None, session='S3', skill='1-1-1')
+     and refused(e, 'retention_help', 'retention_round', None, session='S3', skill='1-1-1', round=2)
+     and refused(e, 'retention_help', 'not_met', None, session='S3', skill='1-1-2', round=1)
+     and refused(e, 'retention_release', 'not_referred', None, skill='1-1-1', reason='بلا إحالة')
+     and note(e, 'retention_help', 'S3', round=1, items=['1-1-1/deferred/01'])['ok']
+     and e.retention_next('1-1-1') is None and e.consolidation_owed() == ['1-1-1']
+     and e.retention_pending() == ['1-1-1'] and e.s['retention'] == []
+     and refused(e, 'retention_result', 'consolidation_first', None, session='S3', skill='1-1-1', correct=5)
+     and refused(e, 'retention_help', 'consolidation_first', None, session='S3', skill='1-1-1', round=1)
+     and refused(e, 'retention_referred', 'consolidation_first', None, session='S3', skill='1-1-1', round=1)
+     and refused(e, 'consolidation_done', 'no_consolidation', None, session='S3', skill='1-1-1')
+     and not e.may_continue('consolidate', 'S3', '1-1-1')['ok'])
+b = (note(e, 'consolidation_started', 'S3')['ok'] and e.s['sessions']['S3']['teach'] == 1
+     and e.consolidating('1-1-1') == 'S3' and e.may_continue('consolidate', 'S3', '1-1-1')['ok']
+     and e.may_continue('show', 'S3', '1-1-1')['code'] == 'lesson_idle'
+     and refused(e, 'consolidation_started', 'quota_teach', None, session='S3', skill='1-1-1')
+     and refused(e, 'open_lesson', 'quota_teach', None, session='S3', skill='1-1-2')
+     and e.derive()['1-1-1'] == 'met' and e.s['opened']['1-1-1']['taught'] == ['S1'])
+end(e, 'S3')                                                  # الجلسة خُتمت والتثبيت لم يكتمل
+start(e, 'S4', 'follow', day=9)
+c = (e.consolidation_owed() == ['1-1-1']
+     and refused(e, 'consolidation_done', 'no_consolidation', None, session='S4', skill='1-1-1')
+     and not e.may_continue('consolidate', 'S4', '1-1-1')['ok']
+     and note(e, 'consolidation_started', 'S4')['ok']
+     and note(e, 'consolidation_done', 'S4', items=['1-1-1/practice/01'])['ok']
+     and refused(e, 'consolidation_done', 'no_consolidation', None, session='S4', skill='1-1-1')
+     and e.consolidation_owed() == [] and e.consolidating('1-1-1') is None
+     and e.retention_next('1-1-1') == (1, 10, 2, 'S2') and e.retention_attempt('1-1-1') == 2
+     and refused(e, 'retention_result', 'retention_early', None, session='S4', skill='1-1-1', correct=5))
+end(e, 'S4')
+start(e, 'S5', 'follow', day=10)
+d = (refused(e, 'consolidation_started', 'no_consolidation', None, session='S5', skill='1-1-1')
+     and note(e, 'retention_referred', 'S5', round=1)['ok']
+     and e.retention_next('1-1-1') is None and e.retention_pending() == [] and e.consolidation_owed() == []
+     and refused(e, 'retention_result', 'retention_referred', None, session='S5', skill='1-1-1', correct=5)
+     and refused(e, 'retention_help', 'retention_referred', None, session='S5', skill='1-1-1', round=1)
+     and refused(e, 'retention_referred', 'retention_referred', None, session='S5', skill='1-1-1', round=1)
+     and refused(e, 'retention_release', 'bad_event', None, skill='1-1-1', reason='')   # توقعتُ bad_decision: المخطط يسبق
+     and refused(e, 'retention_release', 'unknown_skill', None, skill='9-9-9', reason='x')
+     and ev(e, 'retention_release', skill='1-1-1', reason='يعيدها البالغ ببنودها')['ok']
+     and refused(e, 'retention_release', 'not_referred', None, skill='1-1-1', reason='مرة ثانية')
+     and e.retention_attempt('1-1-1') == 1 and e.retention_next('1-1-1') == (1, 10, 2, 'S2')
+     and ret(e, 'S5', correct=5)['ok']
+     and [(x['round'], x['day'], x['correct'], x['label']) for x in e.s['retention']] == [(1, 10, 5, 'deferred_performance')]
+     and e.retention_next('1-1-1')[:2] == (2, 31))
+end(e, 'S5')
+f = (notes(e) == [('help', 'S3', 9, True), ('consolidating', 'S3', 9, True), ('consolidating', 'S4', 9, True),
+                  ('consolidated', 'S4', 9, True), ('referred', 'S5', 10, True), ('released', None, None, True)]
+     and e.s['retention_notes'][0]['items'] == ['1-1-1/deferred/01']
+     and e.s['retention_notes'][3]['items'] == ['1-1-1/practice/01']
+     and Engine.restore(NET, e.dump(), content_versions=[1]).s['retention_notes'] == e.s['retention_notes']
+     and Engine.replay(NET, e.s['log']).dump() == e.dump())
+check('طلب المساعدة في فحص الاحتفاظ: يُحفظ بلا نتيجة، ولا تُقبل الجولة ولا طلب ثانٍ ولا إحالة قبل التثبيت. التثبيت يستهلك '
+      'حصة الجلسة والمهارة باقية مستوفاة ودرسها لم يُستأنف. تثبيت قُطع يُبدأ في جلسة لاحقة ويكتمل فيها. بعده الجولة في '
+      'اليوم التالي بمحاولة ثانية. الإحالة توقف الجولة حتى قرار البالغ، وقراره يعيدها بمحاولتها الأولى ونتيجتها «أداء '
+      'مؤجل». ويبقى كله بعد الحفظ وإعادة تشغيل السجل', a and b and c and d and f)
+
+# 32) التثبيت بعد يوم الطلب، والإبطال، وسقوط الاستيفاء، وحالة محفوظة قبل الإضافة
+e = met_on(2)
+start(e, 'S3', 'follow', day=9)
+note(e, 'retention_help', 'S3', round=1)
+end(e, 'S3')
+start(e, 'S4', 'follow', day=12)
+a = (note(e, 'consolidation_started', 'S4')['ok'] and note(e, 'consolidation_done', 'S4')['ok']
+     and e.retention_next('1-1-1') == (1, 13, 2, 'S2'))       # اليوم التالي ليوم التثبيت، لا ليوم الطلب
+end(e, 'S4')
+ev(e, 'invalidate_session', target='S4')                      # التثبيت أُبطل: يعود مستحقًا
+b = (e.consolidation_owed() == ['1-1-1'] and e.retention_next('1-1-1') is None
+     and [n[3] for n in notes(e)] == [True, False, False])
+ev(e, 'invalidate_session', target='S3')                      # والطلب أُبطل: الجولة كما كانت قبله
+c = (e.consolidation_owed() == [] and e.retention_next('1-1-1') == (1, 9, 2, 'S2') and e.retention_attempt('1-1-1') == 1
+     and [n[3] for n in notes(e)] == [False, False, False]
+     and len([h for h in e.s['history'] if h['what'] == 'retention_invalidated']) == 3)
+e2 = met_on(2)
+start(e2, 'S3', 'follow', day=9)
+note(e2, 'retention_help', 'S3', round=1)
+end(e2, 'S3')
+ev(e2, 'invalidate_session', target='S2')                     # سقط الاستيفاء: لا جولة ولا تثبيت
+start(e2, 'S4', 'follow', day=10)
+d = (e2.consolidation_owed() == [] and e2.retention_pending() == [] and e2.retention_attempt('1-1-1') == 1
+     and refused(e2, 'consolidation_started', 'not_met', None, session='S4', skill='1-1-1')
+     and refused(e2, 'consolidation_done', 'not_met', None, session='S4', skill='1-1-1')
+     and refused(e2, 'consolidation_started', 'no_session', None, session='S9', skill='1-1-1')
+     and refused(e2, 'consolidation_done', 'unknown_skill', None, session='S4', skill='9-9-9'))
+old = Engine(NET)
+text = old.dump().replace(', "retention_notes": []', '')
+f = '"retention_notes"' not in text and Engine.restore(NET, text).s['retention_notes'] == []
+check('تثبيت بعد يوم الطلب: الجولة في اليوم التالي له. إبطال جلسة التثبيت يعيده مستحقًا، وإبطال جلسة الطلب يعيد الجولة كما '
+      'كانت بمحاولتها الأولى، والثلاثة باقية في السجل غير صالحة. وسقوط الاستيفاء: لا جولة ولا تثبيت. وحالة محفوظة قبل هذه '
+      'الإضافة تُقرأ', a and b and c and d and f)
+
 if not all(results):
     print('أخفق اختبار.')
     sys.exit(1)

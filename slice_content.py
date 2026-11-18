@@ -468,6 +468,13 @@ def build_big(bank, rng, used):
             it['numbers'].update(a=a, b=b)
             rerender(it)
             it['note'] = 'استُبدلت أعداده: كانت قفزته الثانية صفرًا'
+    # بدائل جولات الفحص المؤجل (ت3 في مراجعة 04e0168): طلب المساعدة ينهي الجولة بلا حكم، والجولة اللاحقة ببنود بديلة.
+    # مجموعة بديلة واحدة (set=1) لكل جولة، بأزواج أعداد لم تُستعمل. بعد كل ما سبق، فلا تتغير أعداد بند آخر
+    for skill in ('3-5-1', '3-5-2', '3-5-3'):
+        put = maker(skill)
+        for rnd in (1, 2, 3):
+            for _ in range(5):
+                put('deferred', 'deferred_check.alternate', 'ف3', 'solve', slot=rnd)['set'] = 1
 
 
 # ---------------------------------------------------------------- توليد وحدة 1-4
@@ -533,8 +540,8 @@ def respace_small(items):
         # آخر مرحلته لا موضع له إلا آخرها، فلا يحمل حقيقة آخرها: بهذا يبقى بلا موضع آخرُ كل مرحلة وحده
         stages = [[i for i in items if i['skill'] == skill and i['group'] == g and i['role'] == r]
                   for g, r in (('gate', 'gate'), ('regate', 'gate'), ('short', 'short_check'))]
-        stages += [[i for i in items if i['skill'] == skill and i['role'] == 'deferred_check' and i['slot'] == rnd]
-                   for rnd in (1, 2, 3)]
+        stages += [[i for i in items if i['skill'] == skill and i['role'] == role and i['slot'] == rnd]
+                   for role in ('deferred_check', 'deferred_check.alternate') for rnd in (1, 2, 3)]
         for lst in stages:
             if len(lst) >= 3:
                 near[lst[-3]['id']].add(lst[-1]['id'])
@@ -688,6 +695,11 @@ def build_small(bank, rng):
                 taken = {frozenset((i['numbers']['n'], 10 - i['numbers']['n'])) for i in group}
                 free = [n for n in order if frozenset((n, 10 - n)) not in taken]
                 put('evidence', 'evidence.alternate', t, P[t], force=free[0])['round'] = rnd
+        # بدائل جولات الفحص المؤجل (ت3): مجموعة بديلة واحدة (set=1) لكل جولة. حقائق هذه الوحدة خمس، فالبنود البديلة
+        # بنود أخرى لا حقائق أخرى: لا تخلو الجولة البديلة من حقيقة وردت في الأصلية. بعد كل ما سبق
+        for rnd in (1, 2, 3):
+            for _ in range(5):
+                put('deferred', 'deferred_check.alternate', 'ف3', P['ف3'], slot=rnd)['set'] = 1
 
 
 # ---------------------------------------------------------------- التحقق المستقل
@@ -797,8 +809,13 @@ def validate(items):
             bad['لا بديلان لنوع في البوابة'] += int(
                 sum(1 for i in by[(skill, 'gate')] if i['role'] == 'gate.alternate' and i['evidence'] == t) != 2)
         bad['قفزة قيمتها صفر في تسلسل الحل المعروض'] += sum(1 for i in items if i['skill'] == skill and zero_step(i))
-        rounds = Counter(i['slot'] for i in by[(skill, 'deferred')])
-        bad['الفحص المؤجل ليس 3 جولات من 5 بنود'] += int(rounds != Counter({1: 5, 2: 5, 3: 5}))
+        for role, sets in (('deferred_check', (0,)), ('deferred_check.alternate', (1,))):
+            rounds = Counter((i.get('set', 0), i['slot']) for i in by[(skill, 'deferred')] if i['role'] == role)
+            bad['الفحص المؤجل ليس 3 جولات من 5 بنود، أو بدائله ليست مجموعة من 5 لكل جولة'] += int(
+                rounds != Counter({(k, r): 5 for k in sets for r in (1, 2, 3)}))
+        ids = lambda role, r: {i['id'] for i in by[(skill, 'deferred')] if i['role'] == role and i['slot'] == r}
+        bad['بند بديل في الفحص المؤجل هو بند من جولته الأصلية'] += sum(
+            len(ids('deferred_check', r) & ids('deferred_check.alternate', r)) for r in (1, 2, 3))
     return bad
 
 
@@ -866,7 +883,8 @@ def markdown(items, bad, cases, accepted):
                           'بديل واحد لكل نوع في كل جولة، لبند استُبعد بعد أن أُجيب عنه أو طُلب فيه دعم (R18-01)'),
              ('gate', 'البوابة، بنود الحساب أولًا، ثم بندا تعويض وبديلان لكل نوع'),
              ('regate', 'إعادة البوابة الوحيدة، ببنود جديدة وبالبنية نفسها'), ('short', 'التحقق القصير'),
-             ('deferred', 'الفحص المؤجل: ثلاث جولات من 5 بنود بعد 7 و21 و60 يومًا'),
+             ('deferred', 'الفحص المؤجل: ثلاث جولات من 5 بنود بعد 7 و21 و60 يومًا. ثم مجموعة بديلة من 5 لكل جولة، لجولة '
+                          'لاحقة بعد طلب مساعدة أنهى الجولة بلا حكم (ت3)'),
              ('compare', 'الفحص الوصفي للمقارنة')]
     for skill in GATE_LEN:
         out += ['### %s' % skill, '']

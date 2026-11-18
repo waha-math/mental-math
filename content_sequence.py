@@ -188,6 +188,8 @@ def collect(items, types, stuck=None):
                 'فحص الاستقلال، المحاولة %s' % attempt)
         for rnd in (1, 2, 3):
             run(RetentionRun(skill, rnd), ASSESS, 'فحص الاحتفاظ، الجولة %d' % rnd)
+            if src(skill, dict(RetentionRun(skill, rnd, attempt=2).want(), peek=True)) is not None:
+                run(RetentionRun(skill, rnd, attempt=2), ASSESS, 'فحص الاحتفاظ، الجولة %d ببنودها البديلة' % rnd)
         if lesson:
             pairs.update((a, lesson[0], 'junction', 'آخر الافتتاح ثم أول الدرس') for a in open_last)
             pairs.update((lesson[-1], b, 'junction', 'آخر الدرس ثم أول دليل الفهم') for b in ev_first)
