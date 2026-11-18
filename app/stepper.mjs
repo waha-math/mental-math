@@ -156,6 +156,8 @@ export class Stepper {
     const journal = this.shown
       ? { item: item.id ?? null, want: w, answer: item.answer, assess: this.assess(), raw: this.raw.map((x) => [...x]) }
       : null;
+    // للاستعادة: تحدّث به آخر بند عُرض حين تختم هذا البند (R23-01)
+    if (journal !== null && item.fact !== undefined && item.fact !== null) journal.fact = [...item.fact];
     return { kind: live.kind, skill: live.act.skill, act: live.act.toDict(), items, journal };
   }
 

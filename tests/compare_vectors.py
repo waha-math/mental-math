@@ -64,6 +64,23 @@ with tempfile.TemporaryDirectory() as tmp:
             continue
         if f != 'scheduler_vectors.json':
             continue
+        # حقول أُضيفت إلى تصوير الحالة بعد الالتزام المقارَن: تُذكر، ثم تُقارن بقية الحالة من دونها ومن دون البصمة h
+        # (البصمة تُحسب من الحالة كلها فتختلف باختلاف الحقول). ما يُحذف من المقارنة مذكور في المخرجات.
+        added = sorted({k for x, y in zip(new['traces'], was['traces']) for p, q in zip(x['ops'], y['ops'])
+                        for k in p.get('post', {}) if k not in q.get('post', {})})
+        if added:
+            filled = Counter(k for x in new['traces'] for p in x['ops'] for k in added if p.get('post', {}).get(k) is not None)
+            print('    حقول حالة جديدة ليست في الالتزام المقارَن: %s. عدد العمليات التي قيمتها فيها غير فارغة: %s' % (
+                '، '.join(added), dict(filled) or 'صفر'))
+            print('    المقارنة التالية تحذف هذه الحقول والبصمة h من الطرفين.')
+            for side in (new, was):
+                for x in side['traces']:
+                    for p in x['ops']:
+                        p.pop('h', None)
+                        for k in added:
+                            p.get('post', {}).pop(k, None)
+                            if isinstance(p.get('pre'), dict):       # الحالة المطبَّقة قبل العملية تحمل الحقول نفسها
+                                p['pre'].pop(k, None)
         top = [k for k in new if k != 'traces' and new[k] != was[k]]
         parts = Counter(k for x, y in zip(new['traces'], was['traces']) if x != y for k in x if x[k] != y.get(k))
         print('    خارج المسارات، المختلف: %s. وفي المسارات المختلفة، الحقول: %s' % (top or 'لا شيء', dict(parts)))
@@ -81,7 +98,7 @@ with tempfile.TemporaryDirectory() as tmp:
                     print('    المسار %d: أول اختلاف في العملية %d (%s). قرارات خارجية قبلها: %s' % (
                         i, j, p['op'], ['%s %s' % (e['type'], e.get('target', e.get('check_id', ''))) for e in before]))
                     print('      حقول الحالة المختلفة: %s' % '، '.join(keys))
-                    print('      آخر سجل المجدول، الآن: %s' % json.dumps(p['post']['log']['last'][-1], ensure_ascii=False))
-                    print('      آخر سجل المجدول، قبل: %s' % json.dumps(q['post']['log']['last'][-1], ensure_ascii=False))
+                    print('      آخر سجل المجدول، الآن: %s' % json.dumps(p['post']['log']['last'][-1:], ensure_ascii=False))
+                    print('      آخر سجل المجدول، قبل: %s' % json.dumps(q['post']['log']['last'][-1:], ensure_ascii=False))
                     print('      اقتراحات رفضها المحرك، الآن %d وقبل %d' % (p['post']['refused']['n'], q['post']['refused']['n']))
                     break

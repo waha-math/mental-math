@@ -140,6 +140,11 @@ export function restore(record, { types, source, answer, item_seconds = null, re
           notes.push(['void_item', act.skill, j.item ?? null, v.code]);
         }
         if (sc.records !== null) sc.records.push({ ...rec, ...more });
+        // البند خُتم هنا، فهو آخر بند عُرض في الجلسة (R23-01)، بقاعدة التعرّض نفسها في Scheduler.seen: خُتم بانقطاع،
+        // فيُحتسب تعرّضًا إن أُكدت فيه إجابة أو طُلب فيه دعم. لقطة قديمة بلا حقيقة البند: لا يُعرف
+        st.last = j.fact === undefined || j.fact === null || st.cur === null ? null
+          : { session: st.cur, skill: act.skill, activity: act.name, item: j.item ?? null, fact: [...j.fact],
+            counts: exposed(j.raw) };
       }
       entry = { kind: cur.kind, skill: act.skill, act: act.toDict(), items };
     }
@@ -150,7 +155,7 @@ export function restore(record, { types, source, answer, item_seconds = null, re
   const bad = checkConsistent(e, st);
   if (bad.length) throw new Inconsistent(bad.join('؛ '));
   for (const k of STATE) sc[k] = st[k];
-  sc.last = st.cur !== null && st.last !== undefined ? st.last : null;
+  sc.last = st.cur !== null && st.last !== undefined && st.last !== null ? st.last : null;
   sc._next = st.next_id;
   // الجلسة التعليمية غير فتح التطبيق: إغلاقه لا يختمها، فتُكمَل بهويتها ووقتها وحصصها (المرحلة 0ج). تُختم هنا
   // فقط إن انتقل يوم الأسرة: today يوم الأسرة عند الفتح، وبلا قيمة تبقى الجلسة مفتوحة
@@ -160,6 +165,7 @@ export function restore(record, { types, source, answer, item_seconds = null, re
     if (!r.ok) throw new Inconsistent(`تعذر ختم الجلسة ${ses}: ${r.code}`);
     sc.cur = null;
     sc.stage = null;
+    sc.last = null;                               // الجلسة خُتمت: لا «آخر بند» لها بعد (R23-01)
     notes.push(['session_closed', ses]);
   }
   if (records !== null && local !== null) {     // نجحت الاستعادة: تُحدَّث مصفوفة المستدعي بهويتها

@@ -183,6 +183,11 @@ def restore(record, net, types, source, answer, item_seconds=None, records=None,
                     notes.append(('void_item', act.skill, j.get('item'), v['code']))
                 if sc.records is not None:
                     sc.records.append(dict(rec, **more))
+                # البند خُتم هنا، فهو آخر بند عُرض في الجلسة (R23-01)، بقاعدة التعرّض نفسها في Scheduler.seen: خُتم
+                # بانقطاع، فيُحتسب تعرّضًا إن أُكدت فيه إجابة أو طُلب فيه دعم. لقطة قديمة بلا حقيقة البند: لا يُعرف
+                st['last'] = None if j.get('fact') is None or st['cur'] is None else dict(
+                    session=st['cur'], skill=act.skill, activity=act.name, item=j.get('item'), fact=list(j['fact']),
+                    counts=exposed(j['raw']))
             entry = dict(kind=cur['kind'], skill=act.skill, act=act.to_dict(), items=items)
         st['saved'].append(entry)
         notes.append(('current_saved', cur['kind'], cur['skill']))
@@ -204,7 +209,7 @@ def restore(record, net, types, source, answer, item_seconds=None, records=None,
         r = e.apply(dict(id='restore-end-%s' % ses, type='session_end', session=ses))
         if not r['ok']:
             raise Inconsistent('تعذر ختم الجلسة %s: %s' % (ses, r.get('code')))
-        sc.cur = sc.stage = None
+        sc.cur = sc.stage = sc.last = None                  # الجلسة خُتمت: لا «آخر بند» لها بعد (R23-01)
         notes.append(('session_closed', ses))
     if records is not None and local is not None:          # نجحت الاستعادة: تُحدَّث مصفوفة المستدعي بهويتها
         records[:] = local

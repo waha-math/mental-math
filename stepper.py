@@ -155,6 +155,8 @@ class Stepper:
         if self.shown:
             j = dict(item=item.get('id'), want=w, answer=item['answer'], assess=self.assess(),
                      raw=[list(x) for x in self.raw])
+            if item.get('fact') is not None:                # للاستعادة: تحدّث به آخر بند عُرض حين تختم هذا البند (R23-01)
+                j['fact'] = list(item['fact'])
         return dict(kind=live['kind'], skill=live['act'].skill, act=live['act'].to_dict(), items=items, journal=j)
 
     def snapshot(self, child=''):

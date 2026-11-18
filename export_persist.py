@@ -95,6 +95,8 @@ def make_current(rng, sc, src):
             if not assess and rng.random() < 0.5:
                 raw.append(['confirm', it['answer'] + rng.choice([0, 1])])
             journal = dict(item=it['id'], want=w, answer=it['answer'], assess=assess, raw=raw)
+            if it.get('fact') is not None:                  # كما تكتبه طبقة الخطوات (R23-01)
+                journal['fact'] = list(it['fact'])
     return dict(kind=c['kind'], skill=c['skill'], act=act.to_dict(), items=items, journal=journal)
 
 

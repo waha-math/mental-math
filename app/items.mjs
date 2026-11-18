@@ -347,8 +347,8 @@ export class OpeningRun extends Activity {
       return false;
     }
     const t = this.try_types[this.pos];
-    if (this.flip === undefined) this.flip = {};
-    if (this.typed && !this.flip[t] && this.try_types.slice(0, this.pos).filter((x) => x === t).length === 0) {
+    if (this.typed && !(this.flip ?? {})[t] && this.try_types.slice(0, this.pos).filter((x) => x === t).length === 0) {
+      if (this.flip === undefined) this.flip = {};
       this.flip[t] = true;
       return true;
     }

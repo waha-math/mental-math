@@ -320,9 +320,8 @@ class OpeningRun(Activity):
             self.__dict__['taint'] = item_id
             return False
         t = self.try_types[self.pos]
-        flip = self.__dict__.setdefault('flip', {})
-        if self.typed and not flip.get(t) and self.try_types[:self.pos].count(t) == 0:
-            flip[t] = True
+        if self.typed and not getattr(self, 'flip', {}).get(t) and self.try_types[:self.pos].count(t) == 0:
+            self.__dict__.setdefault('flip', {})[t] = True
             return True
         self.try_out.append('void')
         self.reshown = 0

@@ -82,7 +82,7 @@ function run(closeAt = null) {
       break;
     }
     out.push({ session: eng.s.current, skill: item.skill, activity: w.activity, item: item.id, fact: fact(item),
-      just_seen: w.fact_just_seen ?? null });
+      just_seen: w.fact_just_seen ?? null, last: sc.last ?? null });
     for (const ev of TAPE[k].events) st.event(st.seq, ev);
   }
   if (err === null && out.length !== TAPE.length) err = `انتهى التشغيل عند ${out.length} والشريط ${TAPE.length}`;
@@ -92,6 +92,11 @@ const { out, err } = run();
 
 console.log('=== المراجعة 22، بلغة JavaScript');
 expect('1. الشريط يُعاد كله: البنود المعروضة هي بنود الشريط', [err, out.length], [null, TAPE.length]);
+// R23-02: آخر بند عُرض (last) عند كل بند من الشريط، كما كتبه المرجع في الشريط
+const off = [];
+out.forEach((x, k) => { if (!same(x.last, TAPE[k].last ?? null)) off.push(k); });
+expect(`1ب. آخر بند عُرض عند كل بند يطابق ما في الشريط (${TAPE.length} بندًا، منها ${TAPE.filter((t) => t.last).length} لها آخر بند)`,
+  off.slice(0, 3), []);
 expect('2. الجلسة 10: بعد gate/03 يُبدأ «جرّب أولًا» بالبند الآخر من نوعه، لا بالذي يكرر الحقيقة',
   out.filter((x) => x.session === 'S10' && x.skill === '1-4-2').slice(0, 5).map((x) => x.item),
   ['1-4-2/gate/01', '1-4-2/gate/02', '1-4-2/gate/03', '1-4-2/tryfirst/04', '1-4-2/tryfirst/03']);
@@ -106,6 +111,84 @@ expect('3. في المسار كله: لا بندان متتاليان بالحق
 const again = run('1-4-2/tryfirst/04');
 expect('9. إغلاق وبند «جرّب أولًا» الأول مطلوب لم يُعرض، ثم استعادة: الشريط يُكمَل بالبنود نفسها',
   [again.err, same(again.out.map((x) => x.item), out.map((x) => x.item))], [null, true]);
+
+// R23-01: الاستعادة تختم البند الجاري وتتقدم به، فيجب أن يتحدث معها آخر بند عُرض، بقواعد التعرّض نفسها (كما في
+// tests/test_r22.py)
+function afterFirstTry(events, close, today = null) {
+  let sc = new Scheduler(e0(), TYPES, pick, null, { group: 'young', scope: ['1-4-1', '1-4-2'],
+    learning: true, cap: 240, item_seconds: secs, records: [], retention: false });
+  let st = new Stepper(sc.e, sc);
+  st.open(sc.g_run(20));
+  let k = 0;
+  while (st.pending[0].id !== '1-4-2/tryfirst/04') {
+    for (const ev of TAPE[k].events) st.event(st.seq, ev);
+    k += 1;
+  }
+  if (events === null) st.show(st.seq);
+  for (const ev of events || []) st.event(st.seq, ev);
+  if (close) {
+    const r = persist.restore(JSON.parse(JSON.stringify(st.snapshot())), { types: TYPES, source: pick, answer: null,
+      item_seconds: secs, records: [], today });
+    if (today !== null) {                         // يوم جديد: الاستعادة تختم الجلسة، فلا «آخر بند» لها
+      const again = JSON.parse(JSON.stringify(persist.snapshot(r.engine, r.scheduler)));
+      const r2 = persist.restore(JSON.parse(JSON.stringify(again)), { types: TYPES, source: pick, answer: null,
+        item_seconds: secs, records: [], today });
+      return [r.scheduler.cur, r.scheduler.last, same(JSON.parse(JSON.stringify(persist.snapshot(r2.engine, r2.scheduler))), again)];
+    }
+    sc = r.scheduler;
+    st = new Stepper(r.engine, sc);
+    st.open(sc.g_run(20));
+  } else {
+    st.event(st.seq, ['end']);                    // في التشغيل المتصل ينتهي بند التعليم بـend بعد إجابة مؤكدة
+  }
+  const [item, w] = st.pending;
+  return [item.id.slice(6), w.reshown, ((sc.last || {}).item || '').slice(6), (sc.last || {}).counts ?? null];
+}
+const want = ['tryfirst/03', 0, 'tryfirst/04', true];
+expect('10. إجابة مؤكدة صحيحة ثم إغلاق قبل end واستعادة: البند التالي وآخر بند عُرض كما لو أُنهي البند بلا إغلاق',
+  [afterFirstTry([['confirm', 4]], true), afterFirstTry([['confirm', 4]], false)], [want, want]);
+expect('11. طلب دعم ثم إغلاق واستعادة: البند يُحتسب تعرّضًا، والتالي البند الآخر',
+  afterFirstTry([['support', 'hint']], true), want);
+expect('12. العرض وحده ثم إغلاق واستعادة: يُعاد البند نفسه موسومًا، وآخر بند عُرض هو لكنه لا يُحتسب تعرّضًا',
+  afterFirstTry(null, true), ['tryfirst/04', 1, 'tryfirst/04', false]);
+
+expect('13. إجابة مؤكدة ثم إغلاق واستعادة في يوم جديد: الجلسة تُختم ولا «آخر بند» لها، وحفظ المستعاد واستعادته لا يغيّره',
+  afterFirstTry([['confirm', 4]], true, 10 ** 6), [null, null, true]);
+
+// المسار 319 من متجهات المجدول (try_from_gate: false): بعد البوابة يأتي الافتتاح بالبندين الثابتين. الشريط
+// tests/r22_tape_fixed.json، والمشهد وزرع التصادم كما في tests/test_r22.py
+{
+  const TAPE2 = JSON.parse(readFileSync(new URL('r22_tape_fixed.json', import.meta.url), 'utf8'));
+  const box = {};
+  const pick2 = (s, w) => {
+    const it = src.pick(s, w);
+    const x = box.sc.last;
+    if (it && it.id.endsWith('/opening/01') && x && x.activity === 'gate' && x.skill === it.skill
+      && x.session === box.sc.cur && x.counts) return { ...it, fact: [...x.fact] };
+    return it;
+  };
+  const sc = new Scheduler(e0(), TYPES, pick2, null, { group: 'young', scope: ['1-4-1', '1-4-2'], learning: true,
+    cap: 240, item_seconds: secs, records: [], retention: false, try_from_gate: false });
+  box.sc = sc;
+  const st = new Stepper(sc.e, sc);
+  st.open(sc.g_run(20));
+  const ids = [];
+  let err2 = null;
+  while (st.pending !== null) {
+    const [item] = st.pending;
+    const k = ids.length;
+    if (k >= TAPE2.length || TAPE2[k].item !== item.id) {
+      err2 = `البند رقم ${k}: ${item.id}، وفي الشريط ${k < TAPE2.length ? TAPE2[k].item : 'لا شيء'}`;
+      break;
+    }
+    ids.push(item.id);
+    for (const ev of TAPE2[k].events) st.event(st.seq, ev);
+  }
+  const at = ids.indexOf('1-4-2/gate/04');
+  expect('14. بعد البوابة والبندان الثابتان (المسار 319): الأول يكرر حقيقة آخر بند فيها فلا يُعرض ولا سجل له، ويُعرض الثاني',
+    [err2, ids.length === TAPE2.length, ids.slice(at, at + 3), sc.records.filter((r) => r.item === '1-4-2/opening/01').length],
+    [null, true, ['1-4-2/gate/04', '1-4-2/opening/02', '1-4-2/opening/03'], 0]);
+}
 
 // علاج كل نشاط عند دخوله ببند يكرر حقيقة آخر ما عُرض من نشاط آخر، على طبقة البنود مباشرة
 const { OpeningRun, EvidenceRun, GateRun, driveSteps } = await load('items.mjs');

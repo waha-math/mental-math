@@ -39,7 +39,7 @@ NET = te.load_network(MAP)
 OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'app', 'scheduler_vectors.json')
 STATE = ('saved', 'parked', 'carried_items', 'intent', 'pending', 'proven', 'attempt', 'ev_round', 'last_items', 'n',
          'gates_run', 'searches', 'sessions', 'day', 'cur', 'log', 'refused', 'stalled', 'elapsed', 'start_at',
-         'items_before', 'start_w', 'start_what')
+         'items_before', 'start_w', 'start_what', 'stage', 'last')     # stage و last: حالة الجلسة المفتوحة (R23-02)
 traces, tables = [], dict(types=[], items=[])
 
 

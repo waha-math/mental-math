@@ -10,6 +10,8 @@
    ولا يحوي سطر النجاح، ولا تُشغَّل بعده أي مطابقة.
 3. مصدِّر يخرج بصفر دون أن يكتب ملفه: إخفاق كذلك.
 4. اختبار مطابقة يطبع سطرًا أخيرًا ليس سطر نجاح ويخرج بصفر: إخفاق كذلك.
+5 إلى 7 (R23-02). «آخر بند عُرض» يُغيَّر عمدًا في التطبيق وحده: في التشغيل (تكشفه مطابقة المجدول)، وعند ختم البند في
+   الاستعادة (تكشفه مطابقة الاستعادة)، وتغيير لا يغيّر قرارًا (يكشفه شريط المراجعة 22 الذي يحمل last عند كل بند).
 """
 import os
 import subprocess
@@ -70,6 +72,39 @@ with tempfile.TemporaryDirectory() as tmp:
     code, out = check(tree)
     expect('4. اختبار يخرج بصفر وسطره الأخير ليس سطر نجاح: فشل',
            [code != 0, 'أخفق التحقق عند: مطابقة محرك التطبيق' in out, 'نجح التحقق' in out], [True, True, False])
+
+    # R23-02: اختلاف «آخر بند عُرض» (last) بين المرجع والتطبيق يجب أن تكشفه المطابقة. يُغيَّر عمدًا في التطبيق وحده
+    def swap(path, old, new):
+        s = open(path, encoding='utf-8').read()
+        if s.count(old) != 1:
+            raise AssertionError('لم أجد الموضع المراد تغييره في %s' % path)
+        open(path, 'w', encoding='utf-8').write(s.replace(old, new))
+        return s
+
+    conf = os.path.join(tree, 'app', 'test_conformance.mjs')
+    edit(conf, lambda s: s.replace("console.log('أخفق 1');\nprocess.exit(0);\n", '', 1))     # يعود اختبار المطابقة سليمًا
+    js_sched = os.path.join(tree, 'app', 'scheduler.mjs')
+    keep = swap(js_sched, 'fact: [...item.fact], counts };', 'fact: [...item.fact], counts: !counts };')
+    code, out = check(tree)
+    expect('5. التطبيق يكتب «هل يُحتسب تعرّضًا» معكوسًا في التشغيل: مطابقة المجدول تُخفق',
+           [code != 0, 'أخفق التحقق عند: مطابقة المجدول' in out, 'نجح التحقق' in out], [True, True, False])
+    open(js_sched, 'w', encoding='utf-8').write(keep)
+
+    js_persist = os.path.join(tree, 'app', 'persist.mjs')
+    keep = swap(js_persist, 'counts: exposed(j.raw) };', 'counts: !exposed(j.raw) };')
+    code, out = check(tree)
+    expect('6. التطبيق يكتبه معكوسًا عند ختم البند في الاستعادة: مطابقة الاستعادة تُخفق',
+           [code != 0, 'أخفق التحقق عند: مطابقة الاستعادة' in out, 'نجح التحقق' in out], [True, True, False])
+    open(js_persist, 'w', encoding='utf-8').write(keep)
+
+    # تغيير لا يغيّر قرارًا: معرّف آخر بند. شريط المراجعة 22 يحمل last عند كل بند، فيكشفه اختباره على التطبيق
+    keep = swap(js_sched, 'this.last = { session: this.cur, skill, activity, item: item.id ?? null,',
+                'this.last = { session: this.cur, skill, activity, item: null,')
+    r = subprocess.run(['node', os.path.join(HERE, 'test_r22.mjs'), os.path.join(tree, 'app')],
+                       stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+    expect('7. التطبيق يكتب معرّف آخر بند خطأً ولا يتغير قرار: اختبار الشريط يُخفق عند مقارنة آخر بند',
+           [r.returncode != 0, any(l.strip().startswith('أخفق  1ب.') for l in r.stdout.split('\n'))], [True, True])
+    open(js_sched, 'w', encoding='utf-8').write(keep)
 
 print('النتيجة: نجح %d من %d' % (sum(results), len(results)))
 sys.exit(0 if all(results) else 1)
