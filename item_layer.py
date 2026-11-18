@@ -121,7 +121,9 @@ def indicators(records, invalid=()):
     return dict(
         first_answer=dict(rate(sum(1 for r in complete if r['first']), len(complete)),
                           after_support=sum(1 for r in complete if r['support_before'])),
-        independent=rate(sum(1 for r in complete if correct_independent(r)), len(complete)),
+        # «أداء بعد تعرض مباشر» (ت2) إجابة أولى صحيحة، وليس صحيحًا مستقلًا
+        independent=rate(sum(1 for r in complete if correct_independent(r) and not r.get('after_exposure')),
+                         len(complete)),
         assisted=dict(rate(sum(1 for r in reached if r['final'] == 'correct'), len(reached)),
                       supported_unfinished=len(unfinished)),
         interrupted=dict(count=len(cut), with_support=sum(1 for r in cut if r['support_before'])))
@@ -288,11 +290,14 @@ class GateRun(Activity):
         assert not self.done
         k = self._key()
         self.shown['gate' if self.stage == 'main' else 'comp'] += 1
-        if outcome == 'interrupted':                 # يُستبدل ببديل من نوعه
-            self.cuts[k] = self.cuts.get(k, 0) + 1
-            self.total_cuts += 1
-            if self.cuts[k] >= 2 or self.total_cuts >= 3:
-                return self._finish('interrupted')  # تُعلَّق للمراجعة بلا نتيجة
+        if outcome in ('interrupted', 'exposed'):   # يُستبدل ببديل من نوعه
+            # exposed (ت2): إجابة صحيحة عن حقيقة عُرضت للتو. أداء بعد تعرض مباشر، لا دليل: تُستكمل الخانة ببديل نوعها.
+            # ليست انقطاعًا، فلا تدخل عدّ الانقطاعات. ونفاد البدائل يعلّق البوابة بلا نتيجة (unavailable)، لا إخفاق
+            if outcome == 'interrupted':
+                self.cuts[k] = self.cuts.get(k, 0) + 1
+                self.total_cuts += 1
+                if self.cuts[k] >= 2 or self.total_cuts >= 3:
+                    return self._finish('interrupted')  # تُعلَّق للمراجعة بلا نتيجة
             t = self._type()
             self.alt[k] = self.alt.get(k, 0) + 1
             self.alt_index[k] = self.alt_used.get(t, 0)
@@ -346,7 +351,7 @@ class ShortCheckRun(Activity):
     def feed(self, outcome):
         assert not self.done
         self.shown['short'] += 1
-        if outcome == 'interrupted':
+        if outcome in ('interrupted', 'exposed'):   # exposed (ت2): لا بدائل هنا، فبلا نتيجة ويُعاد في جلسة لاحقة
             return self._finish(None)
         if outcome != 'correct':
             self.failed = True
@@ -589,6 +594,11 @@ class CheckRun(Activity):
         assert not self.done
         self.shown['check'] += 1
         k = self._k()
+        if outcome == 'exposed':                    # ت2: تُستكمل الخانة ببديلها، بلا عدّ انقطاع. ولا بديل: تعليق للمراجعة
+            if self.alt.get(k, 0):                  # للخانة بديل واحد وقد عُرض: لا يُعاد عرضه، ولا يُعدّ إخفاقًا
+                return self._hold('no_alternate')
+            self.alt[k] = 1
+            return
         if outcome == 'interrupted':
             self.cuts[k] = self.cuts.get(k, 0) + 1
             self.total_cuts += 1
@@ -661,7 +671,7 @@ class RetentionRun(Activity):
     def feed(self, outcome):
         assert not self.done
         self.shown['retention'] += 1
-        if outcome == 'interrupted':
+        if outcome in ('interrupted', 'exposed'):   # exposed (ت2): بلا نتيجة، وتُعاد الجولة في جلسة لاحقة
             return self._finish(None)
         if outcome in ('help', 'supported'):
             return self._finish('help')
@@ -754,8 +764,12 @@ def drive_steps(act, source, records=None, pause=None, history=None, prev=None):
             inner = (item['id'], item['fact']) if counts else None
         else:
             inner = None
+        # ت2 (قرار الأب في 18 نوفمبر): الإجابة الصحيحة عن حقيقة عُرضت للتو أداءٌ بعد تعرض مباشر. في أنشطة التقييم لا
+        # تُعطى للنشاط دليلًا: نتيجتها exposed، فيستكمل النشاط خانتها ببند مستقل لاحق أو ينتهي بلا حكم. الخطأ وطلب
+        # الدعم كما هما. وفي أنشطة التعليم للبند الموسوم علاجه (taint في الافتتاح)
+        weak = bool(w.get('fact_just_seen')) and act.name in ASSESSING
         if isinstance(got, str):
-            act.feed(got)
+            act.feed('exposed' if weak and got == 'correct' else got)
             if pause and pause(w) and not act.done:
                 return act
             continue
@@ -771,6 +785,8 @@ def drive_steps(act, source, records=None, pause=None, history=None, prev=None):
                 r['reshown_after_interrupt'] = True        # 3.6: «أُعيد عرضه بعد انقطاع»
             if w.get('fact_just_seen'):                     # حقيقته حقيقة آخر بند عُرض من نشاط آخر، ولا علاج له
                 r['fact_just_seen'] = w['fact_just_seen']
+                if weak and classify(rec) == 'correct':     # ت2: يُحفظ «أداء بعد تعرض مباشر»، ولا يُعدّ صحيحًا مستقلًا
+                    r['after_exposure'] = True
             if w.get('ahead_of'):                           # عُرض قبل بنود أُخّرت لأنها تكرر حقيقة ما سبقها
                 r['ahead_of'] = list(w['ahead_of'])
             if w.get('repeated'):                           # بند مستهلك أُعيد للتعليم، لا دليلًا لقرار
@@ -779,7 +795,8 @@ def drive_steps(act, source, records=None, pause=None, history=None, prev=None):
                 r['replaces'] = w['replaces']
                 r['fact_seen_before'] = bool(isinstance(item, dict) and item.get('fact_seen_before'))
             records.append(r)
-        act.feed(classify(rec))
+        out = classify(rec)
+        act.feed('exposed' if weak and out == 'correct' else out)
         if pause and pause(w) and not act.done:
             return act
 

@@ -69,6 +69,20 @@ def live_defer(d):
     return out
 
 
+def live_alt(d):
+    """ما بقي فاعلًا من بدائل الخانات وانقطاعاتها في لقطة بوابة أو فحص استقلال: ما يخص الخانة الجارية وحدها. الخانة التي
+    طُلب لها بديل تبقى الجارية حتى تُحسم (البديل لا يُؤخَّر)، فمدخل خانة أخرى في alt و alt_index و cuts خانة انتهت، ولا
+    يقرؤها النشاط بعدها: want و feed يسألان عن الخانة الجارية، والباقي في alt_used و total_cuts وهما في المفتاح."""
+    if d.get('_class') not in ('GateRun', 'CheckRun') or d.get('done'):
+        return {}
+    a = Activity.from_dict(d)
+    cur = a._key() if d['_class'] == 'GateRun' else a._k()
+    return {f: {k: v for k, v in (d.get(f) or {}).items() if k == cur} for f in ('alt', 'alt_index', 'cuts') if f in d}
+
+
+EXPOSED_ENTRY = True                                    # للمقارنة وحدها: False يعطّل فرع «الصحيح عند دخول موسوم»
+
+
 def explore(act, source, outcomes, label, pairs, firsts, lasts, stuck=None):
     """كل فروع النشاط. pairs: (السابق، التالي، كيف انتهى السابق، الوصف). firsts: أول بند ممكن. lasts: (آخر بند ممكن،
     نتيجة النشاط عنده)."""
@@ -78,13 +92,14 @@ def explore(act, source, outcomes, label, pairs, firsts, lasts, stuck=None):
         # ما لا يغيّر البند التالي (عدّ الصحيح، والأجوبة المحفوظة، وعدّ المعروض) لا يدخل مفتاح الحالة
         # ولا ما انتهى من تأخير البنود: يبقى في المفتاح ما هو فاعل منه وحده (live_defer)
         live = live_defer(d)
-        key = (json.dumps(dict({k: v for k, v in d.items() if k not in SCORE_ONLY}, defer=live), sort_keys=True,
-                          ensure_ascii=False), prev)
+        key = (json.dumps(dict({k: v for k, v in d.items() if k not in SCORE_ONLY}, defer=live, **live_alt(d)),
+                          sort_keys=True, ensure_ascii=False), prev)
         if key in seen:
             continue
         seen.add(key)
         a = Activity.from_dict(d)
         while True:
+            weak = False                                    # البند يُعرض موسومًا: الصحيح فيه exposed لا correct (ت2)
             w = a.want()
             if w is None:
                 if prev is not None and prev != ENTRY:
@@ -102,8 +117,11 @@ def explore(act, source, outcomes, label, pairs, firsts, lasts, stuck=None):
                 if b.repeated(item['id'], lambda q: peek_fact(source, a.skill, q)):
                     queue.append((b.to_dict(), prev, how))
                     break
-                if live:                                    # لا موضع يُؤخَّر إليه بعد تأخير سابق: يُعرض موسومًا
+                # لا موضع يُؤخَّر إليه بعد تأخير سابق: يُعرض موسومًا. وكذلك بديل جاء بعد «أداء بعد تعرض مباشر» بحقيقة
+                # ما قبله (ت2): يوسَم هو أيضًا ويُستكمل ببديل تالٍ أو ينتهي النشاط بلا حكم
+                if live or how == 'exposed':
                     how += MARKED
+                    weak = True
             if prev is None:
                 firsts.add(item['id'])
             elif prev != ENTRY:
@@ -114,9 +132,16 @@ def explore(act, source, outcomes, label, pairs, firsts, lasts, stuck=None):
             b = Activity.from_dict(a.to_dict())
             if b.repeated(item['id'], lambda q: peek_fact(source, a.skill, q)):
                 queue.append((b.to_dict(), ENTRY, None))
-            elif stuck is not None and not live:
-                stuck.add((item['id'], w['role'], label))   # لا علاج عند هذا البند: يُعرض موسومًا
+            elif outcomes is ASSESS and not live:
+                if stuck is not None:
+                    stuck.add((item['id'], w['role'], label))   # لا علاج عند هذا البند: يُعرض موسومًا
+                if EXPOSED_ENTRY:
+                    c = Activity.from_dict(a.to_dict())     # والصحيح فيه بعد هذا الدخول exposed (ت2)
+                    c.feed('exposed')
+                    queue.append((c.to_dict(), item['id'], 'exposed'))
             for o in outcomes:
+                if weak and o == 'correct':
+                    o = 'exposed'
                 b = Activity.from_dict(a.to_dict())
                 if o == 'void_exposed':
                     b.voided(item['id'], True)

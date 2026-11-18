@@ -161,8 +161,14 @@ expect('13. إجابة مؤكدة ثم إغلاق واستعادة في يوم �
   const TAPE2 = JSON.parse(readFileSync(new URL('r22_tape_fixed.json', import.meta.url), 'utf8'));
   const box = {};
   const pick2 = (s, w) => {
-    const it = src.pick(s, w);
+    let it = src.pick(s, w);
     const x = box.sc.last;
+    // بنود بوابة المشهد الأربعة مثبتة بأعدادها في الحزمة 4 (انظر نسخة بايثون)
+    const GATE4 = { '1-4-2/gate/01': 7, '1-4-2/gate/02': 6, '1-4-2/gate/03': 8, '1-4-2/gate/04': 1 };
+    if (it && it.id in GATE4) {
+      const n = GATE4[it.id];
+      it = { ...it, numbers: { n }, answer: 10 - n, fact: [n, 10 - n].sort((p, q) => p - q) };
+    }
     if (it && it.id.endsWith('/opening/01') && x && x.activity === 'gate' && x.skill === it.skill
       && x.session === box.sc.cur && x.counts) return { ...it, fact: [...x.fact] };
     return it;

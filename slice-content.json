@@ -1,6 +1,6 @@
 {
- "version": 4,
- "digest": "cb780a22bd349ca5e061975cda9835b7280d16f50e4fa001810e7eefe6214440",
+ "version": 5,
+ "digest": "724437e3c73434cbd3f9cc35f6dc8fe2d2f2d0e16f70ae12d0c3928a7c2f5298",
  "seed": 20261111,
  "texts": {
   "frame_empty": {
@@ -1015,35 +1015,6 @@
    "evidence": "ف3",
    "performance": "make_ten",
    "numbers": {
-    "n": 3
-   },
-   "resource": "بلا نموذج",
-   "answer_type": "ج1",
-   "answer": 7,
-   "text_ar": "3 وكم تصير 10؟",
-   "text_en": "3 and how many make 10?",
-   "audio_ar": "3 وكم تصير 10؟",
-   "audio_en": "3 and how many make 10?",
-   "wrong": {
-    "3": "given_back"
-   },
-   "slot": null,
-   "alt_of": null,
-   "graded": true,
-   "fact": [
-    3,
-    7
-   ],
-   "v": "2957d00f48bc027c"
-  },
-  {
-   "id": "1-4-1/gate/02",
-   "skill": "1-4-1",
-   "group": "gate",
-   "role": "gate",
-   "evidence": "ف3",
-   "performance": "make_ten",
-   "numbers": {
     "n": 6
    },
    "resource": "بلا نموذج",
@@ -1063,7 +1034,36 @@
     4,
     6
    ],
-   "v": "e9488d49dde5b079"
+   "v": "df5fa9aa54bbb3c6"
+  },
+  {
+   "id": "1-4-1/gate/02",
+   "skill": "1-4-1",
+   "group": "gate",
+   "role": "gate",
+   "evidence": "ف3",
+   "performance": "make_ten",
+   "numbers": {
+    "n": 1
+   },
+   "resource": "بلا نموذج",
+   "answer_type": "ج1",
+   "answer": 9,
+   "text_ar": "1 وكم تصير 10؟",
+   "text_en": "1 and how many make 10?",
+   "audio_ar": "1 وكم تصير 10؟",
+   "audio_en": "1 and how many make 10?",
+   "wrong": {
+    "1": "given_back"
+   },
+   "slot": null,
+   "alt_of": null,
+   "graded": true,
+   "fact": [
+    1,
+    9
+   ],
+   "v": "5ec86ab5eb93b756"
   },
   {
    "id": "1-4-1/gate/03",
@@ -1158,26 +1158,26 @@
    "evidence": "ف1",
    "performance": "frame_empty",
    "numbers": {
-    "n": 9
+    "n": 8
    },
    "resource": "إطار العشرة وعليه الأقراص",
    "answer_type": "ج1",
-   "answer": 1,
+   "answer": 2,
    "text_ar": "كم خانة فارغة في الإطار؟",
    "text_en": "How many boxes in the frame are empty?",
    "audio_ar": "كم خانة فارغة في الإطار؟",
    "audio_en": "How many boxes in the frame are empty?",
    "wrong": {
-    "9": "given_back"
+    "8": "given_back"
    },
    "slot": null,
    "alt_of": null,
    "graded": true,
    "fact": [
-    1,
-    9
+    2,
+    8
    ],
-   "v": "b19f5b13c08d300c"
+   "v": "5c0e4862eed04b45"
   },
   {
    "id": "1-4-1/gate/07",
@@ -1216,26 +1216,26 @@
    "evidence": "ف1",
    "performance": "frame_empty",
    "numbers": {
-    "n": 8
+    "n": 6
    },
    "resource": "إطار العشرة وعليه الأقراص",
    "answer_type": "ج1",
-   "answer": 2,
+   "answer": 4,
    "text_ar": "كم خانة فارغة في الإطار؟",
    "text_en": "How many boxes in the frame are empty?",
    "audio_ar": "كم خانة فارغة في الإطار؟",
    "audio_en": "How many boxes in the frame are empty?",
    "wrong": {
-    "8": "given_back"
+    "6": "given_back"
    },
    "slot": null,
    "alt_of": null,
    "graded": true,
    "fact": [
-    2,
-    8
+    4,
+    6
    ],
-   "v": "e46c4c16eea2a120"
+   "v": "850b0cba45c87957"
   },
   {
    "id": "1-4-1/gate/09",
@@ -1359,26 +1359,26 @@
    "evidence": "ف1",
    "performance": "frame_empty",
    "numbers": {
-    "n": 4
+    "n": 2
    },
    "resource": "إطار العشرة وعليه الأقراص",
    "answer_type": "ج1",
-   "answer": 6,
+   "answer": 8,
    "text_ar": "كم خانة فارغة في الإطار؟",
    "text_en": "How many boxes in the frame are empty?",
    "audio_ar": "كم خانة فارغة في الإطار؟",
    "audio_en": "How many boxes in the frame are empty?",
    "wrong": {
-    "4": "given_back"
+    "2": "given_back"
    },
    "slot": null,
    "alt_of": null,
    "graded": true,
    "fact": [
-    4,
-    6
+    2,
+    8
    ],
-   "v": "74f3c6293e6d748c"
+   "v": "bf8aac6941818b63"
   },
   {
    "id": "1-4-1/gate/14",
@@ -1473,35 +1473,6 @@
    "evidence": "ف3",
    "performance": "make_ten",
    "numbers": {
-    "n": 9
-   },
-   "resource": "بلا نموذج",
-   "answer_type": "ج1",
-   "answer": 1,
-   "text_ar": "9 وكم تصير 10؟",
-   "text_en": "9 and how many make 10?",
-   "audio_ar": "9 وكم تصير 10؟",
-   "audio_en": "9 and how many make 10?",
-   "wrong": {
-    "9": "given_back"
-   },
-   "slot": null,
-   "alt_of": null,
-   "graded": true,
-   "fact": [
-    1,
-    9
-   ],
-   "v": "6bde67487d813612"
-  },
-  {
-   "id": "1-4-1/regate/03",
-   "skill": "1-4-1",
-   "group": "regate",
-   "role": "gate",
-   "evidence": "ف3",
-   "performance": "make_ten",
-   "numbers": {
     "n": 3
    },
    "resource": "بلا نموذج",
@@ -1521,10 +1492,10 @@
     3,
     7
    ],
-   "v": "b8ba98b5875260e9"
+   "v": "29453ac5fbfb9b73"
   },
   {
-   "id": "1-4-1/regate/04",
+   "id": "1-4-1/regate/03",
    "skill": "1-4-1",
    "group": "regate",
    "role": "gate",
@@ -1548,7 +1519,36 @@
     5,
     5
    ],
-   "v": "52eedeeb721f18d8"
+   "v": "0c5cf2a4940ed820"
+  },
+  {
+   "id": "1-4-1/regate/04",
+   "skill": "1-4-1",
+   "group": "regate",
+   "role": "gate",
+   "evidence": "ف3",
+   "performance": "make_ten",
+   "numbers": {
+    "n": 7
+   },
+   "resource": "بلا نموذج",
+   "answer_type": "ج1",
+   "answer": 3,
+   "text_ar": "7 وكم تصير 10؟",
+   "text_en": "7 and how many make 10?",
+   "audio_ar": "7 وكم تصير 10؟",
+   "audio_en": "7 and how many make 10?",
+   "wrong": {
+    "7": "given_back"
+   },
+   "slot": null,
+   "alt_of": null,
+   "graded": true,
+   "fact": [
+    3,
+    7
+   ],
+   "v": "d3e383814aba133f"
   },
   {
    "id": "1-4-1/regate/05",
@@ -1587,24 +1587,26 @@
    "evidence": "ف1",
    "performance": "frame_empty",
    "numbers": {
-    "n": 5
+    "n": 7
    },
    "resource": "إطار العشرة وعليه الأقراص",
    "answer_type": "ج1",
-   "answer": 5,
+   "answer": 3,
    "text_ar": "كم خانة فارغة في الإطار؟",
    "text_en": "How many boxes in the frame are empty?",
    "audio_ar": "كم خانة فارغة في الإطار؟",
    "audio_en": "How many boxes in the frame are empty?",
-   "wrong": {},
+   "wrong": {
+    "7": "given_back"
+   },
    "slot": null,
    "alt_of": null,
    "graded": true,
    "fact": [
-    5,
-    5
+    3,
+    7
    ],
-   "v": "13fc6a0d22c3d4e4"
+   "v": "59577b457ab74679"
   },
   {
    "id": "1-4-1/regate/07",
@@ -1643,26 +1645,26 @@
    "evidence": "ف1",
    "performance": "frame_empty",
    "numbers": {
-    "n": 2
+    "n": 3
    },
    "resource": "إطار العشرة وعليه الأقراص",
    "answer_type": "ج1",
-   "answer": 8,
+   "answer": 7,
    "text_ar": "كم خانة فارغة في الإطار؟",
    "text_en": "How many boxes in the frame are empty?",
    "audio_ar": "كم خانة فارغة في الإطار؟",
    "audio_en": "How many boxes in the frame are empty?",
    "wrong": {
-    "2": "given_back"
+    "3": "given_back"
    },
    "slot": null,
    "alt_of": null,
    "graded": true,
    "fact": [
-    2,
-    8
+    3,
+    7
    ],
-   "v": "c60c46d23b25a68e"
+   "v": "ebdc3caa8c7546dd"
   },
   {
    "id": "1-4-1/regate/09",
@@ -1759,26 +1761,24 @@
    "evidence": "ف1",
    "performance": "frame_empty",
    "numbers": {
-    "n": 7
+    "n": 5
    },
    "resource": "إطار العشرة وعليه الأقراص",
    "answer_type": "ج1",
-   "answer": 3,
+   "answer": 5,
    "text_ar": "كم خانة فارغة في الإطار؟",
    "text_en": "How many boxes in the frame are empty?",
    "audio_ar": "كم خانة فارغة في الإطار؟",
    "audio_en": "How many boxes in the frame are empty?",
-   "wrong": {
-    "7": "given_back"
-   },
+   "wrong": {},
    "slot": null,
    "alt_of": null,
    "graded": true,
    "fact": [
-    3,
-    7
+    5,
+    5
    ],
-   "v": "b57c2f401e072662"
+   "v": "9411eca302e16303"
   },
   {
    "id": "1-4-1/regate/13",
@@ -1788,26 +1788,26 @@
    "evidence": "ف1",
    "performance": "frame_empty",
    "numbers": {
-    "n": 3
+    "n": 2
    },
    "resource": "إطار العشرة وعليه الأقراص",
    "answer_type": "ج1",
-   "answer": 7,
+   "answer": 8,
    "text_ar": "كم خانة فارغة في الإطار؟",
    "text_en": "How many boxes in the frame are empty?",
    "audio_ar": "كم خانة فارغة في الإطار؟",
    "audio_en": "How many boxes in the frame are empty?",
    "wrong": {
-    "3": "given_back"
+    "2": "given_back"
    },
    "slot": null,
    "alt_of": null,
    "graded": true,
    "fact": [
-    3,
-    7
+    2,
+    8
    ],
-   "v": "a5da6459c8b089ff"
+   "v": "e495f31a5b8f40dc"
   },
   {
    "id": "1-4-1/regate/14",
@@ -6043,44 +6043,15 @@
    "evidence": "ف3",
    "performance": "missing_first",
    "numbers": {
-    "n": 7
-   },
-   "resource": "بلا نموذج",
-   "answer_type": "ج1",
-   "answer": 3,
-   "text_ar": "ما العدد الناقص؟ ⁦ ▢ + 7 = 10 ⁩",
-   "text_en": "What number is missing? ⁦ ▢ + 7 = 10 ⁩",
-   "audio_ar": "ما العدد الناقص؟ ⁦ ▢ + 7 = 10 ⁩",
-   "audio_en": "What number is missing? ⁦ ▢ + 7 = 10 ⁩",
-   "wrong": {
-    "7": "given_back"
-   },
-   "slot": null,
-   "alt_of": null,
-   "graded": true,
-   "fact": [
-    3,
-    7
-   ],
-   "v": "c63627707360ba44"
-  },
-  {
-   "id": "1-4-2/gate/02",
-   "skill": "1-4-2",
-   "group": "gate",
-   "role": "gate",
-   "evidence": "ف3",
-   "performance": "subtract",
-   "numbers": {
     "n": 6
    },
    "resource": "بلا نموذج",
    "answer_type": "ج1",
    "answer": 4,
-   "text_ar": "ما العدد الناقص؟ ⁦ 10 − 6 = ▢ ⁩",
-   "text_en": "What number is missing? ⁦ 10 − 6 = ▢ ⁩",
-   "audio_ar": "ما العدد الناقص؟ ⁦ 10 − 6 = ▢ ⁩",
-   "audio_en": "What number is missing? ⁦ 10 − 6 = ▢ ⁩",
+   "text_ar": "ما العدد الناقص؟ ⁦ ▢ + 6 = 10 ⁩",
+   "text_en": "What number is missing? ⁦ ▢ + 6 = 10 ⁩",
+   "audio_ar": "ما العدد الناقص؟ ⁦ ▢ + 6 = 10 ⁩",
+   "audio_en": "What number is missing? ⁦ ▢ + 6 = 10 ⁩",
    "wrong": {
     "6": "given_back"
    },
@@ -6091,25 +6062,25 @@
     4,
     6
    ],
-   "v": "d6ee6073e8b9d8a3"
+   "v": "60a83d11762fdf73"
   },
   {
-   "id": "1-4-2/gate/03",
+   "id": "1-4-2/gate/02",
    "skill": "1-4-2",
    "group": "gate",
    "role": "gate",
    "evidence": "ف3",
-   "performance": "missing_second",
+   "performance": "subtract",
    "numbers": {
     "n": 8
    },
    "resource": "بلا نموذج",
    "answer_type": "ج1",
    "answer": 2,
-   "text_ar": "ما العدد الناقص؟ ⁦ 8 + ▢ = 10 ⁩",
-   "text_en": "What number is missing? ⁦ 8 + ▢ = 10 ⁩",
-   "audio_ar": "ما العدد الناقص؟ ⁦ 8 + ▢ = 10 ⁩",
-   "audio_en": "What number is missing? ⁦ 8 + ▢ = 10 ⁩",
+   "text_ar": "ما العدد الناقص؟ ⁦ 10 − 8 = ▢ ⁩",
+   "text_en": "What number is missing? ⁦ 10 − 8 = ▢ ⁩",
+   "audio_ar": "ما العدد الناقص؟ ⁦ 10 − 8 = ▢ ⁩",
+   "audio_en": "What number is missing? ⁦ 10 − 8 = ▢ ⁩",
    "wrong": {
     "8": "given_back"
    },
@@ -6120,25 +6091,25 @@
     2,
     8
    ],
-   "v": "c906ba45fe78a770"
+   "v": "db3adfdeda43055b"
   },
   {
-   "id": "1-4-2/gate/04",
+   "id": "1-4-2/gate/03",
    "skill": "1-4-2",
    "group": "gate",
    "role": "gate",
    "evidence": "ف3",
-   "performance": "missing_first",
+   "performance": "missing_second",
    "numbers": {
     "n": 1
    },
    "resource": "بلا نموذج",
    "answer_type": "ج1",
    "answer": 9,
-   "text_ar": "ما العدد الناقص؟ ⁦ ▢ + 1 = 10 ⁩",
-   "text_en": "What number is missing? ⁦ ▢ + 1 = 10 ⁩",
-   "audio_ar": "ما العدد الناقص؟ ⁦ ▢ + 1 = 10 ⁩",
-   "audio_en": "What number is missing? ⁦ ▢ + 1 = 10 ⁩",
+   "text_ar": "ما العدد الناقص؟ ⁦ 1 + ▢ = 10 ⁩",
+   "text_en": "What number is missing? ⁦ 1 + ▢ = 10 ⁩",
+   "audio_ar": "ما العدد الناقص؟ ⁦ 1 + ▢ = 10 ⁩",
+   "audio_en": "What number is missing? ⁦ 1 + ▢ = 10 ⁩",
    "wrong": {
     "1": "given_back"
    },
@@ -6149,7 +6120,36 @@
     1,
     9
    ],
-   "v": "c122f0281a1bb061"
+   "v": "ec0c4b4c7fcf50b2"
+  },
+  {
+   "id": "1-4-2/gate/04",
+   "skill": "1-4-2",
+   "group": "gate",
+   "role": "gate",
+   "evidence": "ف3",
+   "performance": "missing_first",
+   "numbers": {
+    "n": 2
+   },
+   "resource": "بلا نموذج",
+   "answer_type": "ج1",
+   "answer": 8,
+   "text_ar": "ما العدد الناقص؟ ⁦ ▢ + 2 = 10 ⁩",
+   "text_en": "What number is missing? ⁦ ▢ + 2 = 10 ⁩",
+   "audio_ar": "ما العدد الناقص؟ ⁦ ▢ + 2 = 10 ⁩",
+   "audio_en": "What number is missing? ⁦ ▢ + 2 = 10 ⁩",
+   "wrong": {
+    "2": "given_back"
+   },
+   "slot": null,
+   "alt_of": null,
+   "graded": true,
+   "fact": [
+    2,
+    8
+   ],
+   "v": "2fc6f099af6c3825"
   },
   {
    "id": "1-4-2/gate/05",
@@ -6186,18 +6186,18 @@
    "evidence": "ف4",
    "performance": "context10",
    "numbers": {
-    "n": 9,
+    "n": 1,
     "ctx": "ctx_bus"
    },
    "resource": "صورة الموقف، والنص منطوق",
    "answer_type": "ج1",
-   "answer": 1,
-   "text_ar": "في الحافلة الصغيرة 10 مقاعد. عدد الركاب 9. كم مقعدًا بقي فارغًا؟",
-   "text_en": "The minibus has 10 seats. Passengers: 9. How many seats are still empty?",
-   "audio_ar": "في الحافلة الصغيرة 10 مقاعد. عدد الركاب 9. كم مقعدًا بقي فارغًا؟",
-   "audio_en": "The minibus has 10 seats. Passengers: 9. How many seats are still empty?",
+   "answer": 9,
+   "text_ar": "في الحافلة الصغيرة 10 مقاعد. عدد الركاب 1. كم مقعدًا بقي فارغًا؟",
+   "text_en": "The minibus has 10 seats. Passengers: 1. How many seats are still empty?",
+   "audio_ar": "في الحافلة الصغيرة 10 مقاعد. عدد الركاب 1. كم مقعدًا بقي فارغًا؟",
+   "audio_en": "The minibus has 10 seats. Passengers: 1. How many seats are still empty?",
    "wrong": {
-    "9": "given_back"
+    "1": "given_back"
    },
    "slot": null,
    "alt_of": null,
@@ -6206,7 +6206,7 @@
     1,
     9
    ],
-   "v": "36f34e09afb94a4e"
+   "v": "7f1c37653d00edf1"
   },
   {
    "id": "1-4-2/gate/07",
@@ -6216,45 +6216,16 @@
    "evidence": "ف4",
    "performance": "context10",
    "numbers": {
-    "n": 6,
+    "n": 2,
     "ctx": "ctx_balloons"
    },
    "resource": "صورة الموقف، والنص منطوق",
    "answer_type": "ج1",
-   "answer": 4,
-   "text_ar": "كان مع عمر 10 بالونات. عدد ما طار منها 6. كم بالونًا بقي؟",
-   "text_en": "Omar had 10 balloons. Balloons that flew away: 6. How many are left?",
-   "audio_ar": "كان مع عمر 10 بالونات. عدد ما طار منها 6. كم بالونًا بقي؟",
-   "audio_en": "Omar had 10 balloons. Balloons that flew away: 6. How many are left?",
-   "wrong": {
-    "6": "given_back"
-   },
-   "slot": null,
-   "alt_of": null,
-   "graded": true,
-   "fact": [
-    4,
-    6
-   ],
-   "v": "6502eacff8c964d3"
-  },
-  {
-   "id": "1-4-2/gate/08",
-   "skill": "1-4-2",
-   "group": "gate",
-   "role": "gate",
-   "evidence": "ف2",
-   "performance": "step_pair",
-   "numbers": {
-    "n": 2
-   },
-   "resource": "هيكل الإطار الشفاف",
-   "answer_type": "ج1",
    "answer": 8,
-   "text_ar": "⁦ 10 − 2 = ▢ ⁩ لأن ⁦ 2 + ▢ = 10 ⁩. ما العدد الذي يكمل الاثنتين؟",
-   "text_en": "⁦ 10 − 2 = ▢ ⁩ because ⁦ 2 + ▢ = 10 ⁩. What number completes both?",
-   "audio_ar": "⁦ 10 − 2 = ▢ ⁩ لأن ⁦ 2 + ▢ = 10 ⁩. ما العدد الذي يكمل الاثنتين؟",
-   "audio_en": "⁦ 10 − 2 = ▢ ⁩ because ⁦ 2 + ▢ = 10 ⁩. What number completes both?",
+   "text_ar": "كان مع عمر 10 بالونات. عدد ما طار منها 2. كم بالونًا بقي؟",
+   "text_en": "Omar had 10 balloons. Balloons that flew away: 2. How many are left?",
+   "audio_ar": "كان مع عمر 10 بالونات. عدد ما طار منها 2. كم بالونًا بقي؟",
+   "audio_en": "Omar had 10 balloons. Balloons that flew away: 2. How many are left?",
    "wrong": {
     "2": "given_back"
    },
@@ -6265,7 +6236,36 @@
     2,
     8
    ],
-   "v": "367201cb247dd9ad"
+   "v": "8b5099742f3db081"
+  },
+  {
+   "id": "1-4-2/gate/08",
+   "skill": "1-4-2",
+   "group": "gate",
+   "role": "gate",
+   "evidence": "ف2",
+   "performance": "step_pair",
+   "numbers": {
+    "n": 6
+   },
+   "resource": "هيكل الإطار الشفاف",
+   "answer_type": "ج1",
+   "answer": 4,
+   "text_ar": "⁦ 10 − 6 = ▢ ⁩ لأن ⁦ 6 + ▢ = 10 ⁩. ما العدد الذي يكمل الاثنتين؟",
+   "text_en": "⁦ 10 − 6 = ▢ ⁩ because ⁦ 6 + ▢ = 10 ⁩. What number completes both?",
+   "audio_ar": "⁦ 10 − 6 = ▢ ⁩ لأن ⁦ 6 + ▢ = 10 ⁩. ما العدد الذي يكمل الاثنتين؟",
+   "audio_en": "⁦ 10 − 6 = ▢ ⁩ because ⁦ 6 + ▢ = 10 ⁩. What number completes both?",
+   "wrong": {
+    "6": "given_back"
+   },
+   "slot": null,
+   "alt_of": null,
+   "graded": true,
+   "fact": [
+    4,
+    6
+   ],
+   "v": "c8b14d2755651fbc"
   },
   {
    "id": "1-4-2/gate/09",
@@ -6450,27 +6450,27 @@
    "evidence": "ف4",
    "performance": "context10",
    "numbers": {
-    "n": 1,
+    "n": 3,
     "ctx": "ctx_eggs"
    },
    "resource": "صورة الموقف، والنص منطوق",
    "answer_type": "ج1",
-   "answer": 9,
-   "text_ar": "في العلبة 10 أماكن للبيض. عدد البيض فيها 1. كم مكانًا فارغًا؟",
-   "text_en": "The box has 10 places for eggs. Eggs in it: 1. How many places are empty?",
-   "audio_ar": "في العلبة 10 أماكن للبيض. عدد البيض فيها 1. كم مكانًا فارغًا؟",
-   "audio_en": "The box has 10 places for eggs. Eggs in it: 1. How many places are empty?",
+   "answer": 7,
+   "text_ar": "في العلبة 10 أماكن للبيض. عدد البيض فيها 3. كم مكانًا فارغًا؟",
+   "text_en": "The box has 10 places for eggs. Eggs in it: 3. How many places are empty?",
+   "audio_ar": "في العلبة 10 أماكن للبيض. عدد البيض فيها 3. كم مكانًا فارغًا؟",
+   "audio_en": "The box has 10 places for eggs. Eggs in it: 3. How many places are empty?",
    "wrong": {
-    "1": "given_back"
+    "3": "given_back"
    },
    "slot": null,
    "alt_of": null,
    "graded": true,
    "fact": [
-    1,
-    9
+    3,
+    7
    ],
-   "v": "e582cb08f2d73134"
+   "v": "32f58e722baf2795"
   },
   {
    "id": "1-4-2/gate/16",
@@ -6507,17 +6507,17 @@
    "evidence": "ف2",
    "performance": "step_pair",
    "numbers": {
-    "n": 4
+    "n": 6
    },
    "resource": "هيكل الإطار الشفاف",
    "answer_type": "ج1",
-   "answer": 6,
-   "text_ar": "⁦ 10 − 4 = ▢ ⁩ لأن ⁦ 4 + ▢ = 10 ⁩. ما العدد الذي يكمل الاثنتين؟",
-   "text_en": "⁦ 10 − 4 = ▢ ⁩ because ⁦ 4 + ▢ = 10 ⁩. What number completes both?",
-   "audio_ar": "⁦ 10 − 4 = ▢ ⁩ لأن ⁦ 4 + ▢ = 10 ⁩. ما العدد الذي يكمل الاثنتين؟",
-   "audio_en": "⁦ 10 − 4 = ▢ ⁩ because ⁦ 4 + ▢ = 10 ⁩. What number completes both?",
+   "answer": 4,
+   "text_ar": "⁦ 10 − 6 = ▢ ⁩ لأن ⁦ 6 + ▢ = 10 ⁩. ما العدد الذي يكمل الاثنتين؟",
+   "text_en": "⁦ 10 − 6 = ▢ ⁩ because ⁦ 6 + ▢ = 10 ⁩. What number completes both?",
+   "audio_ar": "⁦ 10 − 6 = ▢ ⁩ لأن ⁦ 6 + ▢ = 10 ⁩. ما العدد الذي يكمل الاثنتين؟",
+   "audio_en": "⁦ 10 − 6 = ▢ ⁩ because ⁦ 6 + ▢ = 10 ⁩. What number completes both?",
    "wrong": {
-    "4": "given_back"
+    "6": "given_back"
    },
    "slot": null,
    "alt_of": null,
@@ -6526,7 +6526,7 @@
     4,
     6
    ],
-   "v": "2be311c4e2fc6121"
+   "v": "921bfd0a07b6c4ed"
   },
   {
    "id": "1-4-2/gate/18",
@@ -6622,27 +6622,27 @@
    "evidence": "ف4",
    "performance": "context10",
    "numbers": {
-    "n": 3,
+    "n": 9,
     "ctx": "ctx_balloons"
    },
    "resource": "صورة الموقف، والنص منطوق",
    "answer_type": "ج1",
-   "answer": 7,
-   "text_ar": "كان مع عمر 10 بالونات. عدد ما طار منها 3. كم بالونًا بقي؟",
-   "text_en": "Omar had 10 balloons. Balloons that flew away: 3. How many are left?",
-   "audio_ar": "كان مع عمر 10 بالونات. عدد ما طار منها 3. كم بالونًا بقي؟",
-   "audio_en": "Omar had 10 balloons. Balloons that flew away: 3. How many are left?",
+   "answer": 1,
+   "text_ar": "كان مع عمر 10 بالونات. عدد ما طار منها 9. كم بالونًا بقي؟",
+   "text_en": "Omar had 10 balloons. Balloons that flew away: 9. How many are left?",
+   "audio_ar": "كان مع عمر 10 بالونات. عدد ما طار منها 9. كم بالونًا بقي؟",
+   "audio_en": "Omar had 10 balloons. Balloons that flew away: 9. How many are left?",
    "wrong": {
-    "3": "given_back"
+    "9": "given_back"
    },
    "slot": null,
    "alt_of": null,
    "graded": true,
    "fact": [
-    3,
-    7
+    1,
+    9
    ],
-   "v": "70b7312d5cac8543"
+   "v": "6bf6970ebcbf46c4"
   },
   {
    "id": "1-4-2/regate/01",
@@ -6679,26 +6679,26 @@
    "evidence": "ف3",
    "performance": "subtract",
    "numbers": {
-    "n": 9
+    "n": 6
    },
    "resource": "بلا نموذج",
    "answer_type": "ج1",
-   "answer": 1,
-   "text_ar": "ما العدد الناقص؟ ⁦ 10 − 9 = ▢ ⁩",
-   "text_en": "What number is missing? ⁦ 10 − 9 = ▢ ⁩",
-   "audio_ar": "ما العدد الناقص؟ ⁦ 10 − 9 = ▢ ⁩",
-   "audio_en": "What number is missing? ⁦ 10 − 9 = ▢ ⁩",
+   "answer": 4,
+   "text_ar": "ما العدد الناقص؟ ⁦ 10 − 6 = ▢ ⁩",
+   "text_en": "What number is missing? ⁦ 10 − 6 = ▢ ⁩",
+   "audio_ar": "ما العدد الناقص؟ ⁦ 10 − 6 = ▢ ⁩",
+   "audio_en": "What number is missing? ⁦ 10 − 6 = ▢ ⁩",
    "wrong": {
-    "9": "given_back"
+    "6": "given_back"
    },
    "slot": null,
    "alt_of": null,
    "graded": true,
    "fact": [
-    1,
-    9
+    4,
+    6
    ],
-   "v": "b2b33a465b7499fd"
+   "v": "a2a2f4e2180ef3d6"
   },
   {
    "id": "1-4-2/regate/03",
@@ -6737,24 +6737,26 @@
    "evidence": "ف3",
    "performance": "missing_first",
    "numbers": {
-    "n": 5
+    "n": 6
    },
    "resource": "بلا نموذج",
    "answer_type": "ج1",
-   "answer": 5,
-   "text_ar": "ما العدد الناقص؟ ⁦ ▢ + 5 = 10 ⁩",
-   "text_en": "What number is missing? ⁦ ▢ + 5 = 10 ⁩",
-   "audio_ar": "ما العدد الناقص؟ ⁦ ▢ + 5 = 10 ⁩",
-   "audio_en": "What number is missing? ⁦ ▢ + 5 = 10 ⁩",
-   "wrong": {},
+   "answer": 4,
+   "text_ar": "ما العدد الناقص؟ ⁦ ▢ + 6 = 10 ⁩",
+   "text_en": "What number is missing? ⁦ ▢ + 6 = 10 ⁩",
+   "audio_ar": "ما العدد الناقص؟ ⁦ ▢ + 6 = 10 ⁩",
+   "audio_en": "What number is missing? ⁦ ▢ + 6 = 10 ⁩",
+   "wrong": {
+    "6": "given_back"
+   },
    "slot": null,
    "alt_of": null,
    "graded": true,
    "fact": [
-    5,
-    5
+    4,
+    6
    ],
-   "v": "1f9e85efdbd380df"
+   "v": "bdf488d9432ae378"
   },
   {
    "id": "1-4-2/regate/05",
@@ -6764,26 +6766,26 @@
    "evidence": "ف3",
    "performance": "subtract",
    "numbers": {
-    "n": 4
+    "n": 7
    },
    "resource": "بلا نموذج",
    "answer_type": "ج1",
-   "answer": 6,
-   "text_ar": "ما العدد الناقص؟ ⁦ 10 − 4 = ▢ ⁩",
-   "text_en": "What number is missing? ⁦ 10 − 4 = ▢ ⁩",
-   "audio_ar": "ما العدد الناقص؟ ⁦ 10 − 4 = ▢ ⁩",
-   "audio_en": "What number is missing? ⁦ 10 − 4 = ▢ ⁩",
+   "answer": 3,
+   "text_ar": "ما العدد الناقص؟ ⁦ 10 − 7 = ▢ ⁩",
+   "text_en": "What number is missing? ⁦ 10 − 7 = ▢ ⁩",
+   "audio_ar": "ما العدد الناقص؟ ⁦ 10 − 7 = ▢ ⁩",
+   "audio_en": "What number is missing? ⁦ 10 − 7 = ▢ ⁩",
    "wrong": {
-    "4": "given_back"
+    "7": "given_back"
    },
    "slot": null,
    "alt_of": null,
    "graded": true,
    "fact": [
-    4,
-    6
+    3,
+    7
    ],
-   "v": "559c75a2601a6d59"
+   "v": "2d5695dfac12c4c5"
   },
   {
    "id": "1-4-2/regate/06",
@@ -6821,27 +6823,27 @@
    "evidence": "ف4",
    "performance": "context10",
    "numbers": {
-    "n": 2,
+    "n": 3,
     "ctx": "ctx_balloons"
    },
    "resource": "صورة الموقف، والنص منطوق",
    "answer_type": "ج1",
-   "answer": 8,
-   "text_ar": "كان مع عمر 10 بالونات. عدد ما طار منها 2. كم بالونًا بقي؟",
-   "text_en": "Omar had 10 balloons. Balloons that flew away: 2. How many are left?",
-   "audio_ar": "كان مع عمر 10 بالونات. عدد ما طار منها 2. كم بالونًا بقي؟",
-   "audio_en": "Omar had 10 balloons. Balloons that flew away: 2. How many are left?",
+   "answer": 7,
+   "text_ar": "كان مع عمر 10 بالونات. عدد ما طار منها 3. كم بالونًا بقي؟",
+   "text_en": "Omar had 10 balloons. Balloons that flew away: 3. How many are left?",
+   "audio_ar": "كان مع عمر 10 بالونات. عدد ما طار منها 3. كم بالونًا بقي؟",
+   "audio_en": "Omar had 10 balloons. Balloons that flew away: 3. How many are left?",
    "wrong": {
-    "2": "given_back"
+    "3": "given_back"
    },
    "slot": null,
    "alt_of": null,
    "graded": true,
    "fact": [
-    2,
-    8
+    3,
+    7
    ],
-   "v": "ea4d0c82e0ccd488"
+   "v": "c0271d00765cd6d8"
   },
   {
    "id": "1-4-2/regate/08",
@@ -6994,17 +6996,17 @@
    "evidence": "ف3",
    "performance": "missing_first",
    "numbers": {
-    "n": 6
+    "n": 4
    },
    "resource": "بلا نموذج",
    "answer_type": "ج1",
-   "answer": 4,
-   "text_ar": "ما العدد الناقص؟ ⁦ ▢ + 6 = 10 ⁩",
-   "text_en": "What number is missing? ⁦ ▢ + 6 = 10 ⁩",
-   "audio_ar": "ما العدد الناقص؟ ⁦ ▢ + 6 = 10 ⁩",
-   "audio_en": "What number is missing? ⁦ ▢ + 6 = 10 ⁩",
+   "answer": 6,
+   "text_ar": "ما العدد الناقص؟ ⁦ ▢ + 4 = 10 ⁩",
+   "text_en": "What number is missing? ⁦ ▢ + 4 = 10 ⁩",
+   "audio_ar": "ما العدد الناقص؟ ⁦ ▢ + 4 = 10 ⁩",
+   "audio_en": "What number is missing? ⁦ ▢ + 4 = 10 ⁩",
    "wrong": {
-    "6": "given_back"
+    "4": "given_back"
    },
    "slot": null,
    "alt_of": null,
@@ -7013,7 +7015,7 @@
     4,
     6
    ],
-   "v": "c61de0821e20d72a"
+   "v": "029a3c1a4a080504"
   },
   {
    "id": "1-4-2/regate/14",
@@ -7112,26 +7114,24 @@
    "evidence": "ف2",
    "performance": "step_pair",
    "numbers": {
-    "n": 6
+    "n": 5
    },
    "resource": "هيكل الإطار الشفاف",
    "answer_type": "ج1",
-   "answer": 4,
-   "text_ar": "⁦ 10 − 6 = ▢ ⁩ لأن ⁦ 6 + ▢ = 10 ⁩. ما العدد الذي يكمل الاثنتين؟",
-   "text_en": "⁦ 10 − 6 = ▢ ⁩ because ⁦ 6 + ▢ = 10 ⁩. What number completes both?",
-   "audio_ar": "⁦ 10 − 6 = ▢ ⁩ لأن ⁦ 6 + ▢ = 10 ⁩. ما العدد الذي يكمل الاثنتين؟",
-   "audio_en": "⁦ 10 − 6 = ▢ ⁩ because ⁦ 6 + ▢ = 10 ⁩. What number completes both?",
-   "wrong": {
-    "6": "given_back"
-   },
+   "answer": 5,
+   "text_ar": "⁦ 10 − 5 = ▢ ⁩ لأن ⁦ 5 + ▢ = 10 ⁩. ما العدد الذي يكمل الاثنتين؟",
+   "text_en": "⁦ 10 − 5 = ▢ ⁩ because ⁦ 5 + ▢ = 10 ⁩. What number completes both?",
+   "audio_ar": "⁦ 10 − 5 = ▢ ⁩ لأن ⁦ 5 + ▢ = 10 ⁩. ما العدد الذي يكمل الاثنتين؟",
+   "audio_en": "⁦ 10 − 5 = ▢ ⁩ because ⁦ 5 + ▢ = 10 ⁩. What number completes both?",
+   "wrong": {},
    "slot": null,
    "alt_of": null,
    "graded": true,
    "fact": [
-    4,
-    6
+    5,
+    5
    ],
-   "v": "f63f6d4fb8baf40a"
+   "v": "7817983f454e71af"
   },
   {
    "id": "1-4-2/regate/18",
@@ -7229,27 +7229,27 @@
    "evidence": "ف4",
    "performance": "context10",
    "numbers": {
-    "n": 6,
+    "n": 9,
     "ctx": "ctx_balloons"
    },
    "resource": "صورة الموقف، والنص منطوق",
    "answer_type": "ج1",
-   "answer": 4,
-   "text_ar": "كان مع عمر 10 بالونات. عدد ما طار منها 6. كم بالونًا بقي؟",
-   "text_en": "Omar had 10 balloons. Balloons that flew away: 6. How many are left?",
-   "audio_ar": "كان مع عمر 10 بالونات. عدد ما طار منها 6. كم بالونًا بقي؟",
-   "audio_en": "Omar had 10 balloons. Balloons that flew away: 6. How many are left?",
+   "answer": 1,
+   "text_ar": "كان مع عمر 10 بالونات. عدد ما طار منها 9. كم بالونًا بقي؟",
+   "text_en": "Omar had 10 balloons. Balloons that flew away: 9. How many are left?",
+   "audio_ar": "كان مع عمر 10 بالونات. عدد ما طار منها 9. كم بالونًا بقي؟",
+   "audio_en": "Omar had 10 balloons. Balloons that flew away: 9. How many are left?",
    "wrong": {
-    "6": "given_back"
+    "9": "given_back"
    },
    "slot": null,
    "alt_of": null,
    "graded": true,
    "fact": [
-    4,
-    6
+    1,
+    9
    ],
-   "v": "a4eed1e7dcec66c0"
+   "v": "44566e2a6d82c059"
   },
   {
    "id": "1-4-2/short/01",

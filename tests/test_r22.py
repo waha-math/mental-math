@@ -179,6 +179,9 @@ expect('13. إجابة مؤكدة ثم إغلاق واستعادة في يوم �
 TAPE2 = os.path.join(HERE, 'r22_tape_fixed.json')
 
 
+GATE4 = {'1-4-2/gate/01': 7, '1-4-2/gate/02': 6, '1-4-2/gate/03': 8, '1-4-2/gate/04': 1}
+
+
 def run_fixed(tape2=None):
     e, sc = g['build']('young')
     sc.try_from_gate = False
@@ -186,6 +189,11 @@ def run_fixed(tape2=None):
 
     def source(skill, w):
         it, x = inner(skill, w), sc.last
+        # بنود بوابة المشهد الأربعة مثبتة بأعدادها في الحزمة 4: في الحزمة 5 تغيّرت، فصار آخرها يكرر حقيقة opening/02
+        # أيضًا، فلم يُعرض الثاني كذلك وزال المشهد (القاعدة نفسها، ومشهد آخر). الاختبار الثابت يثبّت بنود مشهده
+        if it is not None and it['id'] in GATE4:
+            n = GATE4[it['id']]
+            it = dict(it, numbers={'n': n}, answer=10 - n, fact=sorted((n, 10 - n)))
         if (it is not None and it['id'].endswith('/opening/01') and x and x['activity'] == 'gate'
                 and x['skill'] == it['skill'] and x['session'] == sc.cur and x['counts']):
             return dict(it, fact=list(x['fact']))

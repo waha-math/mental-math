@@ -100,15 +100,29 @@ def run_case(c):
         out['correct'] = act.correct
     out['records'] = [r['item'] for r in recs]
     out['ahead'] = {r['item']: r['ahead_of'] for r in recs if r.get('ahead_of')}
+    if 'weak' in c:                                         # ت2: سجلات «أداء بعد تعرض مباشر»
+        out['weak'] = [r['item'] for r in recs if r.get('after_exposure')]
     return out
 
 
 print('=== تأخير بند التقييم، بلغة بايثون')
 CASES = json.load(open(os.path.join(HERE, 'defer_cases.json'), encoding='utf-8'))['cases']
 for c in CASES:
-    want = {k: c[k] for k in ('shown', 'marked', 'result', 'defer', 'errors', 'answers', 'correct', 'ahead') if k in c}
+    want = {k: c[k] for k in ('shown', 'marked', 'result', 'defer', 'errors', 'answers', 'correct', 'ahead', 'weak')
+            if k in c}
     want['records'] = c['shown']                            # سجل لكل بند معروض، بترتيب العرض
     expect(c['name'], run_case(c), want)
+
+# ت2 على النشاط مباشرة: نتيجة exposed (إجابة صحيحة عن حقيقة عُرضت للتو) في فحص الاستقلال وفحص الاحتفاظ
+for c in json.load(open(os.path.join(HERE, 'defer_cases.json'), encoding='utf-8'))['feeds']:
+    act = make(c)
+    for o in c['feeds']:
+        act.feed(o)
+    w = act.want()
+    got = dict(result=act.result, slot=getattr(act, 'slot', None), total_cuts=getattr(act, 'total_cuts', None),
+               correct=act.correct, hold=getattr(act, 'hold', None), role=w['role'] if w else None,
+               events=[e['type'] for e in act.events()] if act.done else [], done=act.done)
+    expect(c['name'], {k: got[k] for k in c['want']}, c['want'])
 
 
 # 3) هل يغيّر التأخير الحكم؟ (ت1 في مراجعة 04e0168)
@@ -121,8 +135,8 @@ RAW = {'c': [('confirm', 1)], 'w': [('confirm', 2)], 'h': [('support', 'requeste
 
 
 def verdict(act):
-    if isinstance(act, RetentionRun):
-        return 'done:%d' % act.correct
+    if isinstance(act, RetentionRun):           # بعد ت3 طلب المساعدة ينهي الجولة بلا عدّ: الحكم help لا عدد الصحيح قبله
+        return 'done:%d' % act.correct if act.result == 'done' else act.result
     if isinstance(act, GateRun) and act.result == 'fail':       # أنواع الأخطاء تحدد علاج التعثّر في المحرك
         return 'fail[%s]' % '+'.join(sorted(act.errors))
     return {True: 'pass', False: 'fail'}.get(act.result, act.result)
@@ -189,7 +203,14 @@ SCENE = {'1-4-2/gate/01': dict(numbers={'n': 7}, answer=3, fact=[3, 7]),
          '1-4-2/gate/02': dict(numbers={'n': 4}, answer=6, fact=[4, 6]),
          '1-4-2/gate/03': dict(numbers={'n': 8}, answer=2, fact=[2, 8]),
          '1-4-2/gate/18': dict(numbers={'n': 5}, answer=5, fact=[5, 5]),
-         '1-4-2/gate/19': dict(numbers={'n': 9}, answer=1, fact=[1, 9])}
+         '1-4-2/gate/19': dict(numbers={'n': 9}, answer=1, fact=[1, 9]),
+         # بقية بنود البوابة مثبتة بأعدادها في الحزمة 4: المشهد البوابة كلها، وتغيّر عدد gate/04 في الحزمة 5 أدخل فيه تأخيرًا
+         '1-4-2/gate/04': dict(numbers={'n': 1}, answer=9, fact=[1, 9]),
+         '1-4-2/gate/05': dict(numbers={'n': 5}, answer=5, fact=[5, 5]),
+         '1-4-2/gate/06': dict(numbers={'n': 9, 'ctx': 'ctx_bus'}, answer=1, fact=[1, 9]),
+         '1-4-2/gate/07': dict(numbers={'n': 6, 'ctx': 'ctx_balloons'}, answer=4, fact=[4, 6]),
+         '1-4-2/gate/08': dict(numbers={'n': 2}, answer=8, fact=[2, 8]),
+         '1-4-2/gate/09': dict(numbers={'n': 3}, answer=7, fact=[3, 7])}
 ORDER = ['1-4-2/gate/02', '1-4-2/gate/01'] + ['1-4-2/gate/%02d' % k for k in range(3, 10)]
 PLAIN = ['1-4-2/gate/%02d' % k for k in range(1, 10)]
 
@@ -250,7 +271,8 @@ expect('م4. إغلاق والبند المؤجَّل مطلوب لم يُعرض
 # وسوم الطلب تبقى في السجل حين تختم الاستعادةُ البند لا الجلسة: البند عُرض ثم أُغلق التطبيق. الأول عُرض قبل بند أُخّر
 # (ahead_of)، والثاني لا موضع يُؤخَّر إليه (كل بنود البوابة بحقيقته) فعُرض موسومًا (fact_just_seen)
 def settled(pins, target):
-    keep = dict(SCENE)
+    pins = dict(pins)                                       # نسخة: pins قد تكون SCENE نفسها، وكان clear يفرغها معها فيجري
+    keep = dict(SCENE)                                      # المشهد بلا تثبيت، ونجح قبل الحزمة 5 لأن عدد gate/01 فيها وافق
     SCENE.clear()
     SCENE.update(pins)
     try:
@@ -340,6 +362,62 @@ expect('ث5. ما بعد البوابة يختلف (مقيس، كُتب بعد �
        'افتتاحه ببنود «جرّب أولًا»، وعلاج التعثّر regular',
        [list(t_plain['after']), list(t_defer['after']), t_plain['treatment'], t_defer['treatment']],
        [['1-4-2/opening', 'opening'], ['1-4-2/tryfirst', 'opening'], [], ['regular']])
+
+# 5) ت2 على المجدول: «أداء بعد تعرض مباشر» في بوابة 1-4-2 بمحتوى الشريحة. بنود البوابة التسعة مثبتة بحيث يجاور كل موضع
+# حقيقة أولها (3 و7)، فأولها بعد الحقن لا موضع يُؤخَّر إليه ويُعرض موسومًا. والطفل يجيب صحيحًا عن كل بند.
+# المتوقع من القاعدة: إجابته عن الأول لا تُحتسب. يُطلب بديل نوعه (gate/18، مثبت بحقيقة أخرى)، ثم تمضي البوابة ببنودها
+# المستقلة وتُجتاز، فالمهارة معفاة بها لا به. وبمحتوى حُجبت بدائله: تُعلَّق البوابة بلا نتيجة، ولا تعثّر
+P2 = {'1-4-2/gate/%02d' % (k + 1): dict(numbers={'n': n}, answer=10 - n, fact=sorted((n, 10 - n)))
+      for k, n in enumerate([7, 4, 7, 8, 7, 9, 7, 5, 7])}
+P2.update({'1-4-2/gate/18': dict(numbers={'n': 9}, answer=1, fact=[1, 9])})
+
+
+def scene_t2(no_alts):
+    keep = dict(SCENE)
+    SCENE.clear()
+    SCENE.update(P2)
+    try:
+        e, sc = g['build']('young')
+        wire(sc, True)
+        if no_alts:
+            inner = sc.source
+            sc.source = lambda skill, w: None if w.get('activity') == 'gate' and w.get('alternate') else inner(skill, w)
+        st = g['Stepper'](e, sc)
+        st.open(sc.g_run(20))
+        shown, n = [], 0
+
+        def tries():
+            return [a['result'] for a in e.s['attempts'] if a['skill'] == '1-4-2' and a['what'] == 'gate']
+        while st.pending is not None and n < 400 and not tries():
+            item, w = st.pending
+            n += 1
+            if item['id'].startswith('1-4-2/gate/'):
+                shown.append((item['id'], bool(w.get('fact_just_seen'))))
+            for ev in ([('end',)] if w['activity'] in ('lesson', 'practice') else [('confirm', item['answer'])] + (
+                    [] if w['activity'] in ('gate', 'short', 'check', 'retention') else [('end',)])):
+                st.event(st.seq, ev)
+        return dict(shown=[i for i, _m in shown], marked=[i for i, m in shown if m],
+                    weak=[r['item'] for r in sc.records if r.get('after_exposure')], attempts=tries(),
+                    status=e.derive().get('1-4-2'),
+                    stumbles=len([x for x in e.s['evidence'] if x['skill'] == '1-4-2' and x['kind'] == 'stumble']),
+                    independent=sc.indicators()['independent']['num'] - len([r for r in sc.records
+                                                                             if r['status'] == 'complete' and r['first']
+                                                                             and not r['support_before']]))
+    finally:
+        SCENE.clear()
+        SCENE.update(keep)
+
+
+G18 = '1-4-2/gate/18'
+expect('ع11 (ت2). على المجدول: الأول موسوم وإجابته الصحيحة «أداء بعد تعرض مباشر» لا تدخل عدّ الصحيح المستقل. يُطلب بديل نوعه، '
+       'وتُجتاز البوابة بالبنود المستقلة، فالمهارة معفاة',
+       scene_t2(False),
+       dict(shown=['1-4-2/gate/01', G18] + ['1-4-2/gate/%02d' % k for k in range(2, 10)], marked=['1-4-2/gate/01'],
+            weak=['1-4-2/gate/01'], attempts=['pass'], status='exempt', stumbles=0, independent=-1))
+expect('ع12 (ت2). والبدائل محجوبة: البوابة تُعلَّق بلا نتيجة بعد بندها الأول. لا إعفاء ولا تعثّر: نقص البدائل ليس إخفاقًا',
+       scene_t2(True),
+       dict(shown=['1-4-2/gate/01'], marked=['1-4-2/gate/01'], weak=['1-4-2/gate/01'], attempts=['interrupted'],
+            status=None, stumbles=0, independent=-1))
 
 print('النتيجة: نجح %d من %d' % (sum(results), len(results)))
 sys.exit(0 if all(results) else 1)

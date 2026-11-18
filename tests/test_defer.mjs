@@ -78,14 +78,27 @@ function runCase(c) {
   if ('errors' in c) out.errors = act.errors;
   if ('answers' in c) out.answers = Object.fromEntries(Object.keys(c.answers).map((k) => [k, act.answers[k]]));
   if ('correct' in c) out.correct = act.correct;
+  if ('weak' in c) out.weak = recs.filter((x) => x.after_exposure).map((x) => x.item);   // ت2
   return out;
 }
 
 console.log('=== تأخير بند التقييم، بلغة JavaScript');
 for (const c of CASES) {
   const want = { records: c.shown };
-  for (const k of ['shown', 'marked', 'result', 'defer', 'errors', 'answers', 'correct', 'ahead']) if (k in c) want[k] = c[k];
+  for (const k of ['shown', 'marked', 'result', 'defer', 'errors', 'answers', 'correct', 'ahead', 'weak']) {
+    if (k in c) want[k] = c[k];
+  }
   expect(c.name, runCase(c), want);
+}
+
+// ت2 على النشاط مباشرة: نتيجة exposed في فحص الاستقلال وفحص الاحتفاظ
+for (const c of JSON.parse(readFileSync(new URL('defer_cases.json', import.meta.url), 'utf8')).feeds) {
+  const act = make(c);
+  for (const o of c.feeds) act.feed(o);
+  const w = act.want();
+  const got = { result: act.result, slot: act.slot ?? null, total_cuts: act.total_cuts ?? null, correct: act.correct,
+    hold: act.hold ?? null, role: w ? w.role : null, events: act.done ? act.events().map((e) => e.type) : [], done: act.done };
+  expect(c.name, Object.fromEntries(Object.keys(c.want).map((k) => [k, got[k]])), c.want);
 }
 
 // 2) على المجدول وطبقة الخطوات والحفظ
@@ -93,7 +106,14 @@ const SCENE = { '1-4-2/gate/01': { numbers: { n: 7 }, answer: 3, fact: [3, 7] },
   '1-4-2/gate/02': { numbers: { n: 4 }, answer: 6, fact: [4, 6] },
   '1-4-2/gate/03': { numbers: { n: 8 }, answer: 2, fact: [2, 8] },
   '1-4-2/gate/18': { numbers: { n: 5 }, answer: 5, fact: [5, 5] },
-  '1-4-2/gate/19': { numbers: { n: 9 }, answer: 1, fact: [1, 9] } };
+  '1-4-2/gate/19': { numbers: { n: 9 }, answer: 1, fact: [1, 9] },
+  // بقية بنود البوابة مثبتة بأعدادها في الحزمة 4 (انظر نسخة بايثون)
+  '1-4-2/gate/04': { numbers: {n: 1}, answer: 9, fact: [1, 9] },
+  '1-4-2/gate/05': { numbers: {n: 5}, answer: 5, fact: [5, 5] },
+  '1-4-2/gate/06': { numbers: {n: 9, ctx: 'ctx_bus'}, answer: 1, fact: [1, 9] },
+  '1-4-2/gate/07': { numbers: {n: 6, ctx: 'ctx_balloons'}, answer: 4, fact: [4, 6] },
+  '1-4-2/gate/08': { numbers: {n: 2}, answer: 8, fact: [2, 8] },
+  '1-4-2/gate/09': { numbers: {n: 3}, answer: 7, fact: [3, 7] } };
 const num = (k) => `1-4-2/gate/${String(k).padStart(2, '0')}`;
 const PLAIN = [1, 2, 3, 4, 5, 6, 7, 8, 9].map(num);
 const ORDER = [2, 1, 3, 4, 5, 6, 7, 8, 9].map(num);
@@ -256,5 +276,59 @@ expect('ث4. بالحقن: يُعرض gate/02 ثم gate/03، ومحاولة ال
 expect('ث5. ما بعد البوابة يختلف (مقيس): بعد طلب الدعم افتتاح الدرس ببنوده الثابتة، وبعد الإخفاق ببنود «جرّب أولًا»، وعلاج التعثّر regular',
   [tPlain.after, tDefer.after, tPlain.treatment, tDefer.treatment],
   [['1-4-2/opening', 'opening'], ['1-4-2/tryfirst', 'opening'], [], ['regular']]);
+// 5) ت2 على المجدول: المشهدان ع11 وع12 في tests/test_defer.py، بالتثبيت نفسه والمتوقع نفسه
+{
+  const P2 = Object.fromEntries([7, 4, 7, 8, 7, 9, 7, 5, 7].map((n, k) => [num(k + 1),
+    { numbers: { n }, answer: 10 - n, fact: [n, 10 - n].sort((x, y) => x - y) }]));
+  P2[num(18)] = { numbers: { n: 9 }, answer: 1, fact: [1, 9] };
+  const sceneT2 = (noAlts) => {
+    const src = new ContentSource(ITEMS);
+    const box = { sc: null, done: false };
+    const pick = (s, w) => {
+      if (noAlts && w.activity === 'gate' && w.alternate) return null;
+      let it = src.pick(s, w);
+      if (it && P2[it.id]) it = { ...it, ...P2[it.id] };
+      if (!box.done && !w.peek && it && it.id === num(1)) {
+        box.done = true;
+        box.sc.last = { session: box.sc.cur, skill: '1-4-2', activity: 'lesson', item: '1-4-2/lesson/x', fact: [3, 7],
+          counts: true };
+      }
+      return it;
+    };
+    const eng = new Engine(undefined, { group: 'young' });
+    eng.apply({ id: 'd0', type: 'teacher_open', skill: '1-4-1', bypass: ['1-3-3'], reason: 'قرار الشريحة في 10.2' });
+    const sc = new Scheduler(eng, TYPES, pick, null, { group: 'young', scope: ['1-4-1', '1-4-2'], learning: true,
+      cap: 240, item_seconds: secs, records: [], retention: false });
+    box.sc = sc;
+    const st = new Stepper(eng, sc);
+    st.open(sc.g_run(20));
+    const shown = [];
+    const tries = () => eng.s.attempts.filter((a) => a.skill === '1-4-2' && a.what === 'gate').map((a) => a.result);
+    let n = 0;
+    while (st.pending !== null && n < 400 && !tries().length) {
+      const [item, w] = st.pending;
+      n += 1;
+      if (item.id.startsWith('1-4-2/gate/')) shown.push([item.id, Boolean(w.fact_just_seen)]);
+      const evs = ['lesson', 'practice'].includes(w.activity) ? [['end']]
+        : [['confirm', item.answer], ...(ASSESS.includes(w.activity) ? [] : [['end']])];
+      for (const ev of evs) st.event(st.seq, ev);
+    }
+    const plain = sc.records.filter((r) => r.status === 'complete' && r.first && !r.support_before.length).length;
+    return { shown: shown.map((x) => x[0]), marked: shown.filter((x) => x[1]).map((x) => x[0]),
+      weak: sc.records.filter((r) => r.after_exposure).map((r) => r.item), attempts: tries(),
+      status: eng.derive()['1-4-2'] ?? null,
+      stumbles: eng.s.evidence.filter((x) => x.skill === '1-4-2' && x.kind === 'stumble').length,
+      independent: sc.indicators().independent.num - plain };
+  };
+  expect('ع11 (ت2). على المجدول: الأول موسوم وإجابته الصحيحة «أداء بعد تعرض مباشر» لا تدخل عدّ الصحيح المستقل. يُطلب بديل نوعه، '
+    + 'وتُجتاز البوابة بالبنود المستقلة، فالمهارة معفاة', sceneT2(false),
+  { shown: [num(1), num(18), ...[2, 3, 4, 5, 6, 7, 8, 9].map(num)], marked: [num(1)], weak: [num(1)], attempts: ['pass'],
+    status: 'exempt', stumbles: 0, independent: -1 });
+  expect('ع12 (ت2). والبدائل محجوبة: البوابة تُعلَّق بلا نتيجة بعد بندها الأول. لا إعفاء ولا تعثّر: نقص البدائل ليس إخفاقًا',
+    sceneT2(true),
+    { shown: [num(1)], marked: [num(1)], weak: [num(1)], attempts: ['interrupted'], status: null, stumbles: 0,
+      independent: -1 });
+}
+
 console.log(`النتيجة: نجح ${results.filter(Boolean).length} من ${results.length}`);
 process.exit(results.every(Boolean) ? 0 : 1);

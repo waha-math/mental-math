@@ -350,7 +350,11 @@ for _ in range(3000):
         elif r < .10:
             a = il.Activity.from_dict(a.to_dict())
         else:
-            a.feed('correct' if easy and rng.random() < .8 else rng.choice(OUTCOMES))
+            o = 'correct' if easy and rng.random() < .8 else rng.choice(OUTCOMES)
+            # ت2: «أداء بعد تعرض مباشر» نتيجة تصدرها drive_steps لأنشطة التقييم وحدها، فتُعطى لها هنا لتُطابَق في اللغتين
+            if a.name in il.ASSESSING and rng.random() < .06:
+                o = 'exposed'
+            a.feed(o)
     a.events()
     if isinstance(a, il.CheckRun):
         a.start_event()

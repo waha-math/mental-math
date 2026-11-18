@@ -116,7 +116,8 @@ export function indicators(all, invalid = []) {
   return {
     first_answer: { ...rate(count(complete, (r) => r.first), complete.length),
       after_support: count(complete, (r) => r.support_before.length) },
-    independent: rate(count(complete, correctIndependent), complete.length),
+    // «أداء بعد تعرض مباشر» (ت2) إجابة أولى صحيحة، وليس صحيحًا مستقلًا
+    independent: rate(count(complete, (r) => correctIndependent(r) && !r.after_exposure), complete.length),
     assisted: { ...rate(count(reached, (r) => r.final === 'correct'), reached.length),
       supported_unfinished: unfinished.length },
     interrupted: { count: cut.length, with_support: count(cut, (r) => r.support_before.length) },
@@ -280,10 +281,14 @@ export class GateRun extends Activity {
     if (this.done) throw new Error('النشاط انتهى');
     const k = this._key();
     this._count(this.stage === 'main' ? 'gate' : 'comp');
-    if (outcome === 'interrupted') {              // يُستبدل ببديل من نوعه
-      this.cuts[k] = get(this.cuts, k, 0) + 1;
-      this.total_cuts += 1;
-      if (this.cuts[k] >= 2 || this.total_cuts >= 3) return this._finish('interrupted');   // تُعلَّق بلا نتيجة
+    if (outcome === 'interrupted' || outcome === 'exposed') {   // يُستبدل ببديل من نوعه
+      // exposed (ت2): إجابة صحيحة عن حقيقة عُرضت للتو. أداء بعد تعرض مباشر، لا دليل: تُستكمل الخانة ببديل نوعها. ليست
+      // انقطاعًا، فلا تدخل عدّ الانقطاعات. ونفاد البدائل يعلّق البوابة بلا نتيجة (unavailable)، لا إخفاق
+      if (outcome === 'interrupted') {
+        this.cuts[k] = get(this.cuts, k, 0) + 1;
+        this.total_cuts += 1;
+        if (this.cuts[k] >= 2 || this.total_cuts >= 3) return this._finish('interrupted');   // تُعلَّق بلا نتيجة
+      }
       const t = this._type();
       this.alt[k] = get(this.alt, k, 0) + 1;
       this.alt_index[k] = get(this.alt_used, t, 0);
@@ -347,7 +352,8 @@ export class ShortCheckRun extends Activity {
   feed(outcome) {
     if (this.done) throw new Error('النشاط انتهى');
     this._count('short');
-    if (outcome === 'interrupted') return this._finish(null);
+    // exposed (ت2): لا بدائل هنا، فبلا نتيجة ويُعاد في جلسة لاحقة
+    if (outcome === 'interrupted' || outcome === 'exposed') return this._finish(null);
     if (outcome !== 'correct') {
       this.failed = true;
       if (this.stop_early) return this._finish(false);
@@ -638,6 +644,12 @@ export class CheckRun extends Activity {
     if (this.done) throw new Error('النشاط انتهى');
     this._count('check');
     const k = this._k();
+    if (outcome === 'exposed') {                  // ت2: تُستكمل الخانة ببديلها، بلا عدّ انقطاع. ولا بديل: تعليق للمراجعة
+      // للخانة بديل واحد وقد عُرض: لا يُعاد عرضه، ولا يُعدّ إخفاقًا
+      if (get(this.alt, k, 0)) return this._hold('no_alternate');
+      this.alt[k] = 1;
+      return undefined;
+    }
     if (outcome === 'interrupted') {
       this.cuts[k] = get(this.cuts, k, 0) + 1;
       this.total_cuts += 1;
@@ -720,7 +732,8 @@ export class RetentionRun extends Activity {
   feed(outcome) {
     if (this.done) throw new Error('النشاط انتهى');
     this._count('retention');
-    if (outcome === 'interrupted') return this._finish(null);
+    // exposed (ت2): بلا نتيجة، وتُعاد الجولة في جلسة لاحقة
+    if (outcome === 'interrupted' || outcome === 'exposed') return this._finish(null);
     if (outcome === 'help' || outcome === 'supported') return this._finish('help');
     if (outcome === 'correct') this.correct += 1;
     this.pos += 1;
@@ -817,8 +830,11 @@ export function* driveSteps(act, source, records = null, pause = null, history =
     } else {
       inner = null;
     }
+    // ت2 (قرار الأب في 18 نوفمبر): الإجابة الصحيحة عن حقيقة عُرضت للتو أداءٌ بعد تعرض مباشر. في أنشطة التقييم لا تُعطى
+    // للنشاط دليلًا: نتيجتها exposed، فيستكمل النشاط خانتها ببند مستقل لاحق أو ينتهي بلا حكم. الخطأ وطلب الدعم كما هما
+    const weak = Boolean(w.fact_just_seen) && ASSESSING.includes(act.name);
     if (typeof got === 'string') {
-      act.feed(got);
+      act.feed(weak && got === 'correct' ? 'exposed' : got);
     } else {
       const [raw, correct, assess] = got;
       const rec = foldItem(raw, correct, assess);
@@ -828,7 +844,10 @@ export function* driveSteps(act, source, records = null, pause = null, history =
           ...evidence(raw, correct, isObj ? (item.v ?? null) : null) };
         if (got.length > 3 && got[3]) Object.assign(r, got[3]);   // ما تعرفه الواجهة وحدها عن الحدث: وقته
         if (isObj && item.reshown_same_fact) r.reshown_after_interrupt = true;   // 3.6: «أُعيد عرضه بعد انقطاع»
-        if (w.fact_just_seen) r.fact_just_seen = w.fact_just_seen;   // حقيقته حقيقة آخر بند عُرض من نشاط آخر، ولا علاج له
+        if (w.fact_just_seen) {                   // حقيقته حقيقة آخر بند عُرض من نشاط آخر، ولا علاج له
+          r.fact_just_seen = w.fact_just_seen;
+          if (weak && classify(rec) === 'correct') r.after_exposure = true;   // ت2: «أداء بعد تعرض مباشر»
+        }
         if (w.ahead_of) r.ahead_of = [...w.ahead_of];   // عُرض قبل بنود أُخّرت لأنها تكرر حقيقة ما سبقها
         if (w.repeated) r.repeated_after_void = true;   // بند مستهلك أُعيد للتعليم، لا دليلًا لقرار
         if (w.replaces) {                         // R18-01: بديل بند استُهلك، ووصف التعرّض السابق لحقيقته (3.5)
@@ -837,7 +856,8 @@ export function* driveSteps(act, source, records = null, pause = null, history =
         }
         records.push(r);
       }
-      act.feed(classify(rec));
+      const out = classify(rec);
+      act.feed(weak && out === 'correct' ? 'exposed' : out);
     }
     if (pause && pause(w) && !act.done) return act;
   }
