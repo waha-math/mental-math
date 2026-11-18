@@ -93,8 +93,13 @@ def old_types(types):
 class Scheduler:
     def __init__(self, engine, types, source, answer, group='older', start=None, scope=None, learning=False,
                  tolerant=True, compat=False, content_version=1, records=None, no_short=(), try_from_gate=True,
-                 cap=None, item_seconds=None, retention=False):
+                 cap=None, item_seconds=None, retention=False, content=None):
         self.e, self.types, self.source, self.answer = engine, types, source, answer
+        # هوية حزمة المحتوى التي تُربط بها المحاولة (ك1): dict(version, digest). تُحفظ مع اللقطة، ولا يُستأنف نشاط جارٍ
+        # ببنك آخر بصمت (persist.restore). وبها يصير content_version رقم الحزمة، فتحمله محاولات الفحص في المحرك
+        self.content = None if content is None else dict(version=content['version'], digest=content['digest'])
+        if self.content is not None:
+            content_version = self.content['version']
         self.group, self.start, self.learning, self.tolerant, self.compat = group, start, learning, tolerant, compat
         self.ids = [s for s in engine.ids if scope is None or s in scope]
         self.inscope = set(self.ids)

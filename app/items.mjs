@@ -822,7 +822,8 @@ export function drive(act, source, answer, records = null, pause = null) {
 const LESSON_ROLES = ['lesson.watch', 'lesson.model', 'lesson.fade', 'lesson.nomodel'];
 
 export class ContentSource {
-  constructor(items, allowSameFact = true) {
+  constructor(items, allowSameFact = true, content = null) {
+    this.content = content;                       // هوية الحزمة التي منها البنود: {version, digest}، إن عُرفت
     this.by = new Map();
     for (const it of items) {
       const k = it.skill + '|' + it.group + '|' + it.role;

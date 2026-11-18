@@ -158,6 +158,7 @@ export class Stepper {
       : null;
     // للاستعادة: تحدّث به آخر بند عُرض حين تختم هذا البند (R23-01)
     if (journal !== null && item.fact !== undefined && item.fact !== null) journal.fact = [...item.fact];
+    if (journal !== null && item.v !== undefined && item.v !== null) journal.v = item.v;   // بصمة تعريف البند المعروض (ك1)
     return { kind: live.kind, skill: live.act.skill, act: live.act.toDict(), items, journal };
   }
 

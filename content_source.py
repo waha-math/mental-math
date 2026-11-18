@@ -7,6 +7,7 @@ allow_same_fact لبدائل المجال الصغير التي لا عدد آخ
 reshown_same_fact، فيُسجَّل «أُعيد عرضه بعد انقطاع». False يعيد النص السابق للقرار (لا بديل، فيُعلَّق الفحص
 للمراجعة)، وهو للمقارنة وحدها.
 """
+import hashlib
 import json
 from collections import defaultdict
 
@@ -17,8 +18,57 @@ def load_items(path='slice-content.json'):
     return json.load(open(path, encoding='utf-8'))['items']
 
 
+# ---------------------------------------------------------------- هوية المحتوى (ك1 في مراجعة 04e0168)
+# معرّف البند لا يكفي لمعرفة ما رآه الطفل: أعداد البند وجوابه قد تتغير والمعرّف باقٍ. لكل بند بصمة تعريفه (v)، ولكل
+# حزمة رقم إصدار لا يُعاد استعماله وبصمة (digest). المحاولة تُربط بالحزمة التي بدأت بها (persist)، ولا يُستأنف نشاط
+# جارٍ ببنك آخر بصمت.
+PACK_PARTS = ('texts', 'ui', 'cards', 'describe', 'items')   # ما يراه الطفل ويُحكم به: يدخل بصمة الحزمة
+
+
+def canon(x):
+    return json.dumps(x, ensure_ascii=False, sort_keys=True, separators=(',', ':'))
+
+
+def item_digest(item):
+    """بصمة تعريف البند: كل حقوله عدا البصمة نفسها. أي تغيير في أعداده أو جوابه أو دوره أو نوعه يغيّرها."""
+    return hashlib.sha256(canon({k: v for k, v in item.items() if k != 'v'}).encode('utf-8')).hexdigest()[:16]
+
+
+def pack_digest(pack):
+    """بصمة الحزمة: نصوصها وبنودها كما تُحفظ. لا يدخلها رقم الإصدار ولا البصمة."""
+    return hashlib.sha256(canon({k: pack[k] for k in PACK_PARTS if k in pack}).encode('utf-8')).hexdigest()
+
+
+def identity(pack):
+    """هوية الحزمة التي تُربط بها المحاولة."""
+    return dict(version=pack['version'], digest=pack['digest'])
+
+
+def next_version(ledger, digest):
+    """رقم إصدار حزمة بصمتها digest، وفق سجل الإصدارات ledger (قائمة مداخل فيها version و digest، بترتيبها). بصمة آخر
+    مدخل: رقمه. بصمة جديدة: الرقم التالي، ولا يُعاد رقم سبق. بصمة سبقت وليست الأخيرة: خطأ، فالرجوع إلى محتوى قديم
+    إصدار جديد يُكتب صراحةً لا استعادة لرقم."""
+    if ledger and ledger[-1]['digest'] == digest:
+        return ledger[-1]['version']
+    if any(x['digest'] == digest for x in ledger):
+        raise ValueError('بصمة محتوى سبقت في سجل الإصدارات وليست الأخيرة: %s' % digest[:12])
+    return (ledger[-1]['version'] if ledger else 0) + 1
+
+
+def load_pack(path='slice-content.json'):
+    """الحزمة كما حُفظت، بعد التحقق من أن بصماتها بصمات محتواها. تُرفض حزمة عُدّل بند فيها ولم تتغير هويتها."""
+    pack = json.load(open(path, encoding='utf-8'))
+    bad = [i['id'] for i in pack['items'] if i.get('v') != item_digest(i)]
+    if bad:
+        raise ValueError('بنود لا توافق بصمتُها تعريفَها: %s' % '، '.join(bad[:5]))
+    if pack.get('digest') != pack_digest(pack):
+        raise ValueError('بصمة الحزمة لا توافق محتواها')
+    return pack
+
+
 class ContentSource:
-    def __init__(self, items, allow_same_fact=True):
+    def __init__(self, items, allow_same_fact=True, content=None):
+        self.content = content                              # هوية الحزمة التي منها البنود: dict(version, digest)، إن عُرفت
         self.by = defaultdict(list)
         for it in items:
             self.by[(it['skill'], it['group'], it['role'])].append(it)

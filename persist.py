@@ -31,13 +31,25 @@ import json
 from item_layer import Activity, fold_item, classify
 from scheduler import Scheduler, exposed
 
-SCHEMA = 3                    # 2: سجل محاولات البنود (المراجعة 14). 3: موضع الجلسة الجارية (المرحلة 0)
+SCHEMA = 4                    # 2: سجل محاولات البنود (المراجعة 14). 3: موضع الجلسة الجارية (المرحلة 0). 4: هوية المحتوى (ك1)
 OPTS = ('group', 'start', 'scope', 'learning', 'tolerant', 'compat', 'content_version', 'no_short', 'try_from_gate',
-        'cap', 'retention')
+        'cap', 'retention', 'content')
 STATE = ('saved', 'parked', 'carried_items', 'intent', 'pending', 'proven', 'attempt', 'ev_round', 'last_items', 'n',
          'gates_run', 'searches', 'sessions', 'day', 'cur', 'log', 'refused', 'stalled', 'elapsed', 'start_at',
          'items_before', 'start_w', 'start_what', 'stage')
 TERMINAL = ('end', 'interrupt')
+
+
+class ContentChanged(Exception):
+    """اللقطة فيها نشاط جارٍ بدأ بحزمة محتوى غير المتاحة الآن (ك1). لا يُستأنف ببنك آخر بصمت: إما أن تُتاح الحزمة
+    القديمة (packs)، أو يُطلب إعادة بدء صريحة (restart=True) تحفظ ما وقع وتُسقط الأنشطة الجارية.
+    bound: هوية الحزمة التي رُبطت بها المحاولة. offered: هوية المتاحة. pending: (النوع، المهارة) لكل نشاط جارٍ."""
+    def __init__(self, bound, offered, pending):
+        Exception.__init__(self, 'نشاط جارٍ بدأ بإصدار المحتوى %s، والمتاح %s: %s' % (
+            None if bound is None else '%s (%s)' % (bound['version'], bound['digest'][:12]),
+            '%s (%s)' % (offered['version'], offered['digest'][:12]),
+            '، '.join('%s %s' % x for x in pending)))
+        self.bound, self.offered, self.pending = bound, offered, pending
 
 
 class Inconsistent(Exception):
@@ -52,6 +64,7 @@ def plain(x):
 def options(sc):
     o = dict(group=sc.group, start=sc.start, scope=None if len(sc.ids) == len(sc.e.ids) else list(sc.ids),
              learning=sc.learning, tolerant=sc.tolerant, compat=sc.compat, content_version=sc.content_version,
+             content=plain(sc.content),
              no_short=sorted(sc.no_short), try_from_gate=sc.try_from_gate, cap=sc.cap, retention=sc.retention)
     return o
 
@@ -136,14 +149,44 @@ def check_consistent(engine, st):
     return bad
 
 
-def restore(record, net, types, source, answer, item_seconds=None, records=None, content_versions=None, today=None):
-    """يعيد (المحرك، المجدول، ملاحظات). يرفع Inconsistent إن خالف المجدولُ المحرك."""
+def restore(record, net, types, source, answer, item_seconds=None, records=None, content_versions=None, today=None,
+            content=None, packs=None, restart=False):
+    """يعيد (المحرك، المجدول، ملاحظات). يرفع Inconsistent إن خالف المجدولُ المحرك.
+
+    هوية المحتوى (ك1). content: هوية الحزمة التي منها source، dict(version, digest). إن أُعطيت قورنت بالهوية
+    المحفوظة في اللقطة:
+    - واحدة: لا شيء.
+    - مختلفة ولا نشاط جارٍ: تُربط المحاولة بالحزمة المتاحة (ملاحظة content_upgraded).
+    - مختلفة وفي اللقطة نشاط جارٍ (بند معروض، أو نشاط محفوظ أو مركون):
+      - packs فيها مصدر الحزمة القديمة ببصمتها: يُستأنف منها، بتعريفات بنودها كما كانت، وتبقى المحاولة مربوطة بها.
+      - وإلا يُرفع ContentChanged ولا يتغير شيء. وبـrestart=True تُعاد البداية صراحةً: البند المعروض يُكتب سجله
+        مستبعدًا بسبب content_changed (أحداثه تبقى)، والأنشطة الجارية تُسقط بمدخل في سجل المجدول، ومحاولات الفحص
+        المعلّقة بالإصدار القديم تصير needs_restart في المحرك، وتُربط المحاولة بالحزمة المتاحة.
+    بلا content لا مقارنة: المستدعي لا يعرف هوية محتواه (المحاكاة والاختبارات المجردة)."""
     from transition_engine import Engine
     if record.get('schema') != SCHEMA:
         raise Inconsistent('نسخة سجل غير معروفة: %r' % record.get('schema'))
-    e = Engine.restore(net, record['engine'], content_versions)
     o = dict(record['scheduler']['opts'])
     o['scope'] = None if o['scope'] is None else set(o['scope'])
+    bound, fresh = o.get('content'), False
+    if content is not None:
+        content = dict(version=content['version'], digest=content['digest'])
+        stx = record['scheduler']['state']
+        pending = ([(record['current']['kind'], record['current']['skill'])] if record.get('current') else []) + [
+            (c['kind'], c['skill']) for c in list(stx['saved']) + list(stx['parked'].values())]
+        if bound == content:
+            pass
+        elif not pending:
+            o['content'], o['content_version'] = content, content['version']
+        elif bound is not None and packs and bound['digest'] in packs:
+            source = packs[bound['digest']]                 # الحزمة التي بدأ بها النشاط: تعريفات بنودها كما كانت
+        elif restart:
+            fresh = True
+            o['content'], o['content_version'] = content, content['version']
+            content_versions = {content['version']}         # فحص معلّق بإصدار آخر: needs_restart في المحرك
+        else:
+            raise ContentChanged(bound, content, pending)
+    e = Engine.restore(net, record['engine'], content_versions)
     # الحالة المرشحة تُبنى في نسخ مستقلة، ولا يتغير شيء مما مرّره المستدعي إلا بعد نجاح كل المراحل (R15-01)
     if record.get('records') is not None:                  # سجل محاولات البنود كما حُفظ
         local = copy.deepcopy(record['records'])
@@ -152,7 +195,23 @@ def restore(record, net, types, source, answer, item_seconds=None, records=None,
     sc = Scheduler(e, types, source, answer, records=local, item_seconds=item_seconds, **o)
     st = copy.deepcopy(record['scheduler']['state'])
     notes = []
+    if content is not None and bound != content and o['content'] == content and not fresh:
+        notes.append(('content_upgraded', None if bound is None else bound['version'], content['version']))
     cur = copy.deepcopy(record.get('current'))
+    if fresh:                                               # إعادة بدء صريحة بعد تغيّر المحتوى (ك1)
+        if cur and cur['kind'] != 'show' and cur.get('journal'):
+            j = cur['journal']                              # ما وقع في البند المعروض يبقى، مستبعدًا من التقييم
+            rec = fold_item([tuple(ev) for ev in j['raw']] + [('interrupt',)], j['answer'], j['assess'])
+            if sc.records is not None:
+                sc.records.append(dict(rec, skill=cur['skill'], activity=Activity.from_dict(cur['act']).name,
+                                       role=j['want'].get('role'),
+                                       item=j.get('item'), unsettled=True, void='content_changed'))
+            notes.append(('void_item', cur['skill'], j.get('item'), 'content_changed'))
+        for c in ([cur] if cur else []) + list(st['saved']) + list(st['parked'].values()):
+            st['log'].append([st['sessions'], 'carry_dropped:content_changed', c['skill']])
+            notes.append(('content_restart', c['kind'], c['skill']))
+        st['saved'], st['parked'], st['carried_items'], cur = [], {}, [], None
+        notes.append(('content_changed', None if bound is None else bound['version'], content['version']))
     if cur:                                                 # النشاط الجاري يُضم إلى المخزن قبل التسوية والفحص
         if cur['kind'] == 'show':
             entry = dict(kind='show', skill=cur['skill'], activity=cur['activity'], pos=cur['pos'], items=[])

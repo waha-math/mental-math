@@ -128,5 +128,15 @@ with tempfile.TemporaryDirectory() as tmp:
            [code != 0, 'أخفق التحقق عند: مطابقة المجدول' in out, 'نجح التحقق' in out], [True, True, False])
     open(js_items, 'w', encoding='utf-8').write(keep)
 
+    # ك1: التطبيق يستأنف نشاطًا جاريًا ببنك تغيّر بدل أن يرفض. لا متجه مطابقة يحمل هوية محتوى، فالكاشف اختبار المشهد
+    js_persist = os.path.join(tree, 'app', 'persist.mjs')
+    keep = swap(js_persist, 'throw new ContentChanged(bound, content, pending);', 'o.content = content;')
+    r = subprocess.run(['node', os.path.join(HERE, 'test_content_identity.mjs'), os.path.join(tree, 'app')],
+                       stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+    expect('11. التطبيق يستأنف ببنك تغيّر بصمت بدل الرفض: حالة الرفض في اختبار هوية المحتوى تُخفق',
+           [r.returncode != 0, sorted(l.strip().split()[1] for l in r.stdout.split('\n') if l.strip().startswith('أخفق'))],
+           [True, ['8.']])
+    open(js_persist, 'w', encoding='utf-8').write(keep)
+
 print('النتيجة: نجح %d من %d' % (sum(results), len(results)))
 sys.exit(0 if all(results) else 1)

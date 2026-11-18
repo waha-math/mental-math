@@ -13,11 +13,24 @@ import { Engine } from './engine.mjs';
 import { Activity, foldItem, classify } from './items.mjs';
 import { Scheduler, exposed } from './scheduler.mjs';
 
-export const SCHEMA = 3;                // 2: سجل محاولات البنود (المراجعة 14). 3: موضع الجلسة الجارية (المرحلة 0)
+export const SCHEMA = 4;                // 2: سجل محاولات البنود (المراجعة 14). 3: موضع الجلسة الجارية (المرحلة 0). 4: هوية المحتوى (ك1)
 export const STATE = ['saved', 'parked', 'carried_items', 'intent', 'pending', 'proven', 'attempt', 'ev_round',
   'last_items', 'n', 'gates_run', 'searches', 'sessions', 'day', 'cur', 'log', 'refused', 'stalled', 'elapsed',
   'start_at', 'items_before', 'start_w', 'start_what', 'stage'];
 const TERMINAL = ['end', 'interrupt'];
+
+// اللقطة فيها نشاط جارٍ بدأ بحزمة محتوى غير المتاحة الآن (ك1). لا يُستأنف ببنك آخر بصمت: إما أن تُتاح الحزمة القديمة
+// (packs)، أو تُطلب إعادة بدء صريحة (restart) تحفظ ما وقع وتُسقط الأنشطة الجارية.
+// bound: هوية الحزمة التي رُبطت بها المحاولة. offered: هوية المتاحة. pending: [النوع، المهارة] لكل نشاط جارٍ
+export class ContentChanged extends Error {
+  constructor(bound, offered, pending) {
+    super(`نشاط جارٍ بدأ بإصدار المحتوى ${bound === null ? null : bound.version}، والمتاح ${offered.version}`);
+    this.name = 'ContentChanged';
+    this.bound = bound;
+    this.offered = offered;
+    this.pending = pending;
+  }
+}
 
 export class Inconsistent extends Error {
   constructor(msg) {
@@ -31,7 +44,8 @@ const clone = (x) => JSON.parse(JSON.stringify(x, (k, v) => (v instanceof Set ? 
 export function options(sc) {
   return { group: sc.group, start: sc.start, scope: sc.ids.length === sc.e.ids.length ? null : [...sc.ids],
     learning: sc.learning, tolerant: sc.tolerant, compat: sc.compat, content_version: sc.content_version,
-    no_short: [...sc.no_short].sort(), try_from_gate: sc.try_from_gate, cap: sc.cap, retention: sc.retention };
+    no_short: [...sc.no_short].sort(), try_from_gate: sc.try_from_gate, cap: sc.cap, retention: sc.retention,
+    content: sc.content === null ? null : { ...sc.content } };
 }
 
 export function stateOf(sc) {
@@ -98,17 +112,67 @@ export function checkConsistent(engine, st) {
 
 // يعيد { engine, scheduler, notes }. يرفع Inconsistent إن خالف المجدولُ المحرك
 export function restore(record, { types, source, answer, item_seconds = null, records = null, contentVersions = null,
-  net = undefined, today = null } = {}) {
+  net = undefined, today = null, content = null, packs = null, restart = false } = {}) {
   if (record.schema !== SCHEMA) throw new Inconsistent(`نسخة سجل غير معروفة: ${record.schema}`);
-  const e = Engine.restore(net, record.engine, contentVersions);
   const o = { ...record.scheduler.opts };
+  // هوية المحتوى (ك1)، كما في persist.restore المرجعي: content هوية الحزمة التي منها source. واحدة: لا شيء. مختلفة
+  // ولا نشاط جارٍ: تُربط المحاولة بالمتاحة. مختلفة ونشاط جارٍ: يُستأنف من الحزمة القديمة إن كانت في packs ببصمتها،
+  // وإلا يُرفع ContentChanged، وبـrestart تُعاد البداية صراحةً
+  const bound = o.content ?? null;
+  const sameId = (a, b) => a !== null && b !== null && a.version === b.version && a.digest === b.digest;
+  let fresh = false;
+  if (content !== null) {
+    content = { version: content.version, digest: content.digest };
+    const stx = record.scheduler.state;
+    const pending = [...(record.current ? [[record.current.kind, record.current.skill]] : []),
+      ...[...stx.saved, ...Object.values(stx.parked)].map((c) => [c.kind, c.skill])];
+    if (sameId(bound, content)) {
+      // لا شيء
+    } else if (!pending.length) {
+      o.content = content;
+      o.content_version = content.version;
+    } else if (bound !== null && packs && Object.prototype.hasOwnProperty.call(packs, bound.digest)) {
+      source = packs[bound.digest];               // الحزمة التي بدأ بها النشاط: تعريفات بنودها كما كانت
+    } else if (restart) {
+      fresh = true;
+      o.content = content;
+      o.content_version = content.version;
+      contentVersions = [content.version];        // فحص معلّق بإصدار آخر: needs_restart في المحرك
+    } else {
+      throw new ContentChanged(bound, content, pending);
+    }
+  }
+  const e = Engine.restore(net, record.engine, contentVersions);
   // الحالة المرشحة تُبنى في نسخ مستقلة، ولا يتغير شيء مما مرّره المستدعي إلا بعد نجاح كل المراحل (R15-01)
   const local = (record.records !== null && record.records !== undefined) ? clone(record.records)   // كما حُفظ
     : (records === null ? null : clone(records));
   const sc = new Scheduler(e, types, source, answer, { ...o, records: local, item_seconds });
   const st = clone(record.scheduler.state);
   const notes = [];
-  const cur = record.current ? clone(record.current) : null;
+  if (content !== null && !sameId(bound, content) && sameId(o.content ?? null, content) && !fresh) {
+    notes.push(['content_upgraded', bound === null ? null : bound.version, content.version]);
+  }
+  let cur = record.current ? clone(record.current) : null;
+  if (fresh) {                                  // إعادة بدء صريحة بعد تغيّر المحتوى (ك1)
+    if (cur && cur.kind !== 'show' && cur.journal) {
+      const j = cur.journal;                    // ما وقع في البند المعروض يبقى، مستبعدًا من التقييم
+      const rec = foldItem([...j.raw, ['interrupt']], j.answer, j.assess);
+      if (sc.records !== null) {
+        sc.records.push({ ...rec, skill: cur.skill, activity: Activity.fromDict(cur.act).name, role: j.want.role ?? null,
+          item: j.item ?? null, unsettled: true, void: 'content_changed' });
+      }
+      notes.push(['void_item', cur.skill, j.item ?? null, 'content_changed']);
+    }
+    for (const c of [...(cur ? [cur] : []), ...st.saved, ...Object.values(st.parked)]) {
+      st.log.push([st.sessions, 'carry_dropped:content_changed', c.skill]);
+      notes.push(['content_restart', c.kind, c.skill]);
+    }
+    st.saved = [];
+    st.parked = {};
+    st.carried_items = [];
+    cur = null;
+    notes.push(['content_changed', bound === null ? null : bound.version, content.version]);
+  }
   if (cur) {                                    // النشاط الجاري يُضم إلى المخزن قبل التسوية والفحص
     let entry;
     if (cur.kind === 'show') {

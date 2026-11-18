@@ -89,7 +89,7 @@ export class Scheduler {
   constructor(engine, types, source, answer, {
     group = 'older', start = null, scope = null, learning = false, tolerant = true, compat = false,
     content_version = 1, records = null, no_short = [], try_from_gate = true, cap = null, item_seconds = null,
-    retention = false,
+    retention = false, content = null,
   } = {}) {
     this.e = engine;
     this.types = types;
@@ -105,7 +105,10 @@ export class Scheduler {
     this.pre = engine.pre;
     this.anc = engine.anc;
     this.idx = engine.idx;
-    this.content_version = content_version;
+    // هوية حزمة المحتوى التي تُربط بها المحاولة (ك1): {version, digest}. تُحفظ مع اللقطة، ولا يُستأنف نشاط جارٍ ببنك
+    // آخر بصمت (persist.restore). وبها يصير content_version رقم الحزمة، فتحمله محاولات الفحص في المحرك
+    this.content = content === null || content === undefined ? null : { version: content.version, digest: content.digest };
+    this.content_version = this.content !== null ? this.content.version : content_version;
     this.records = records;
     this.no_short = new Set(no_short);  // 6.2: قرار المعلم بالتأجيل يُسقط التحقق القصير أيضًا، للمقارنة
     this.try_from_gate = try_from_gate; // 6.2 بقرار الأب (ك4)

@@ -14,6 +14,7 @@ from collections import Counter, defaultdict
 
 LRI, PDI, MINUS, BOX = '⁦', '⁩', '−', '▢'
 SEED = 20261111
+LEDGER = 'content-ledger.json'                         # سجل إصدارات المحتوى: رقم وبصمة لكل حزمة صدرت
 
 
 def eq(s):
@@ -991,11 +992,25 @@ if __name__ == '__main__':
     cases, accepted = rejected_examples()
     for it in bank.items:
         it['wrong'] = {str(k): v for k, v in it['wrong'].items()}
-    json.dump(dict(version=2, seed=SEED, texts={k: dict(ar=v[0], en=v[1]) for k, v in T.items()},
-                   ui={k: dict(ar=v[0], en=v[1]) for k, v in UI.items()},
-                   cards={g: {k: dict(ar=v[0], en=v[1]) for k, v in d.items()} for g, d in CARDS.items()},
-                   describe={k: dict(ar=v[0], en=v[1], ask_ar=v[2], ask_en=v[3]) for k, v in DESCRIBE.items()},
-                   items=bank.items),
+    # هوية المحتوى (ك1): بصمة لكل بند، وبصمة للحزمة، ورقم إصدار من سجل الإصدارات لا يُعاد استعماله. تغيّر أي بند
+    # أو نص يغيّر البصمة فيأخذ الرقم التالي ويُكتب في السجل. الرقمان 1 و2 سبقا السجل، والرقم 2 استُعمل لمحتويين
+    from content_source import item_digest, pack_digest, next_version
+    for it in bank.items:
+        it.pop('v', None)
+        it['v'] = item_digest(it)
+    pack = dict(texts={k: dict(ar=v[0], en=v[1]) for k, v in T.items()},
+                ui={k: dict(ar=v[0], en=v[1]) for k, v in UI.items()},
+                cards={g: {k: dict(ar=v[0], en=v[1]) for k, v in d.items()} for g, d in CARDS.items()},
+                describe={k: dict(ar=v[0], en=v[1], ask_ar=v[2], ask_en=v[3]) for k, v in DESCRIBE.items()},
+                items=bank.items)
+    digest = pack_digest(pack)
+    book = json.load(open(LEDGER, encoding='utf-8'))
+    version = next_version(book['packs'], digest)
+    if not book['packs'] or book['packs'][-1]['version'] != version:
+        book['packs'].append(dict(version=version, digest=digest, items=len(bank.items)))
+        json.dump(book, open(LEDGER, 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
+        print('إصدار محتوى جديد: %d (%s)' % (version, digest[:12]))
+    json.dump(dict(version=version, digest=digest, seed=SEED, **pack),
               open('slice-content.json', 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
     open('slice-content.md', 'w', encoding='utf-8').write(markdown(bank.items, bad, cases, accepted))
     print('البنود: %d' % len(bank.items))

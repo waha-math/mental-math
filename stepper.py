@@ -157,6 +157,8 @@ class Stepper:
                      raw=[list(x) for x in self.raw])
             if item.get('fact') is not None:                # للاستعادة: تحدّث به آخر بند عُرض حين تختم هذا البند (R23-01)
                 j['fact'] = list(item['fact'])
+            if item.get('v') is not None:                   # بصمة تعريف البند المعروض (ك1)
+                j['v'] = item['v']
         return dict(kind=live['kind'], skill=live['act'].skill, act=live['act'].to_dict(), items=items, journal=j)
 
     def snapshot(self, child=''):
