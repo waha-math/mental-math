@@ -153,7 +153,38 @@ export class Activity {
 
   // أول بند يُطلب للنشاط حقيقته حقيقة آخر بند عُرض للمهارة نفسها في الجلسة نفسها من نشاط آخر (R22-01). تعيد صحيحًا إن
   // غيّر النشاط ما يطلبه (فيُطلب من جديد)، وغير ذلك إن عُرض البند كما هو، فيوسَم بأن حقيقته عُرضت للتو
-  repeated(_itemId) { return false; }
+  // factAt(want): حقيقة البند الذي يُعرض لطلب، دون عرضه
+  repeated(_itemId, _factAt = null) { return false; }
+
+  // علاج أنشطة التقييم (قرار الأب، 18 نوفمبر): البند الذي يكرر حقيقة ما عُرض قبله يُؤخَّر، ولا يُستبدل. تُعرض البنود
+  // التي تليه في مرحلته، ثم يُعرض هو عند أقرب موضع لا تجاور فيه حقيقتُه حقيقةَ بند الموضع الذي قبله ولا ما بعده:
+  // البنود نفسها والحكم نفسه، بترتيب آخر. pos موضع الترتيب الجاري و last آخر موضع في مرحلته، و key(q) مفتاح الموضع،
+  // و plain(q) ما يُطلب لبند موضع بلا بديل، و after(q) ما قد يُعرض بعد موضع q. alts(q): بدائل بند موضع عند الانقطاع:
+  // بديل المؤجَّل، إن انقطع في موضعه الجديد، لا تجاور حقيقتُه ما بعده. والبند المؤجَّل قد يُؤخَّر ثانية، فالفحص يجري
+  // قبل كل بند تقييم (driveSteps). تعيد غير صحيح إن لم يوجد موضع، أو كان موضع لاحق طرفًا في تأخير سابق: يُعرض البند
+  // موسومًا. الحقل defer لا يُنشأ إلا عند التأخير: مفاتيحه مواضع الترتيب، وقيمه مواضع البنود التي تُعرض فيها
+  _defer(pos, last, key, plain, after, factAt, alts = null) {
+    if (!factAt || pos >= last) return false;
+    const d = this.defer ?? {};
+    const cur = get(d, key(pos), pos);            // موضع البند المعروض الآن: قد يكون مؤجَّلًا من قبل
+    const same = (f, g) => f !== null && g !== null && JSON.stringify(f) === JSON.stringify(g);
+    const fact = factAt(plain(cur));
+    if (fact === null) return false;
+    for (let q = pos + 1; q <= last; q += 1) if (key(q) in d) return false;
+    if (same(factAt(plain(pos + 1)), fact)) return false;
+    const mine = [fact, ...(alts ? alts(cur).map((w) => factAt(w)).filter((f) => f !== null) : [])];
+    for (let j = 1; j <= last - pos; j += 1) {
+      if (same(factAt(plain(pos + j)), fact)) continue;
+      if (after(pos + j).some((w) => { const f = factAt(w); return mine.some((m) => same(m, f)); })) continue;
+      if (this.defer === undefined) this.defer = {};
+      for (let i = 0; i < j; i += 1) this.defer[key(pos + i)] = pos + i + 1;
+      this.defer[key(pos + j)] = cur;
+      return true;
+    }
+    return false;
+  }
+
+  _at(key, pos) { return get(this.defer ?? {}, key, pos); }
 
   toDict() {
     return clone({ ...this, _class: this.constructor.pyName });
@@ -188,16 +219,38 @@ export class GateRun extends Activity {
     this.alt_index = {};                          // وبديل كل موضع من بدائل نوعه
   }
 
-  _key() { return this.stage + this.pos; }
+  // موضع البند المعروض الآن: موضع الترتيب، إلا إن أُخّر بند (defer)
+  _p() { return this._at(this.stage + this.pos, this.pos); }
 
-  _type() { return this.stage === 'main' ? this.plan[this.pos] : this.errors[0]; }
+  _key() { return this.stage + this._p(); }
+
+  _type() { return this.stage === 'main' ? this.plan[this._p()] : this.errors[0]; }
+
+  // ما يُطلب لموضع في المرحلة الجارية بلا بديل
+  _plain(q) {
+    return {
+      activity: this.name, role: this.stage === 'main' ? 'gate' : 'gate.compensation',
+      type: this.stage === 'main' ? this.plan[q] : this.errors[0], pos: q, alternate: 0, alt_index: null,
+      attempt: this.attempt,
+    };
+  }
+
+  repeated(_itemId, factAt = null) {
+    if (get(this.alt, this._key(), 0)) return false;   // بديل بند منقطع: ليس بند موضعه، فلا يُؤخَّر
+    const last = this.stage === 'main' ? this.plan.length - 1 : 1;
+    // ما بعد آخر المرحلة (أول التعويضية) يُفحص عند عرضه، لا هنا
+    const after = (q) => (q < last ? [this._plain(q + 1)] : []);
+    const alts = (q) => Array.from({ length: ALT_PEEK }, (_, k) => (
+      { ...this._plain(q), role: 'gate.alternate', alternate: 1, alt_index: k }));
+    return this._defer(this.pos, last, (q) => this.stage + q, (q) => this._plain(q), after, factAt, alts);
+  }
 
   want() {
     if (this.done) return null;
     const k = this._key();
     return {
       activity: this.name, role: this.stage === 'main' ? 'gate' : 'gate.compensation', type: this._type(),
-      pos: this.pos, alternate: get(this.alt, k, 0), alt_index: get(this.alt_index, k, null), attempt: this.attempt,
+      pos: this._p(), alternate: get(this.alt, k, 0), alt_index: get(this.alt_index, k, null), attempt: this.attempt,
     };
   }
 
@@ -260,7 +313,13 @@ export class ShortCheckRun extends Activity {
 
   want() {
     if (this.done) return null;
-    return { activity: this.name, role: 'short_check', type: this.types[this.pos], pos: this.pos, alternate: 0 };
+    return this._w(this._at(String(this.pos), this.pos));
+  }
+
+  _w(q) { return { activity: this.name, role: 'short_check', type: this.types[q], pos: q, alternate: 0 }; }
+
+  repeated(_itemId, factAt = null) {
+    return this._defer(this.pos, 2, String, (q) => this._w(q), (q) => (q < 2 ? [this._w(q + 1)] : []), factAt);
   }
 
   feed(outcome) {
@@ -341,7 +400,7 @@ export class OpeningRun extends Activity {
   // R22-01: بند الافتتاح الأول يكرر حقيقة آخر بند عُرض (آخر بند في البوابة مثلًا). في «جرّب أولًا» بنوعي الخطأ يُبدأ
   // بالبند الآخر من نوعه. وإن لم يكن له آخر، أو كرر الآخر الحقيقة أيضًا، لا يُعرض ونتيجته void: لا يُتخذ منه قرار
   // اختصار ولا يُعدّ خطأ. والبند الموجَّه يُعرض للتعليم ولا تُستعمل نتيجته
-  repeated(itemId) {
+  repeated(itemId, _factAt = null) {
     if (this.stage === 'guided') {
       this.taint = itemId;
       return false;
@@ -445,7 +504,7 @@ export class EvidenceRun extends Activity {
 
   // R22-01: أول بند يُطلب عند دخول دليل الفهم يكرر حقيقة آخر بند عُرض من نشاط آخر: لا يُعرض الآن، ويُطلب لموضعه بديل
   // نوعه في الجولة. وإن لم يوجد بديل، أو كرر الحقيقة هو أيضًا، انتهت الجولة no_alternate بلا حكم
-  repeated(itemId) {
+  repeated(itemId, _factAt = null) {
     if (this.swap === undefined) this.swap = {};
     const t = this._current();
     this.swap[this._key()] = { n: 1 + Object.keys(this.swap).filter((k) => k.split('/')[0] === t).length, item: itemId };
@@ -538,15 +597,25 @@ export class CheckRun extends Activity {
 
   want() {
     if (this.done) return null;
-    const a = get(this.alt, String(this.slot), 0);
-    return { activity: this.name, role: a === 0 ? 'check' : 'check.alternate', slot: this.slot, alternate: a,
+    const a = get(this.alt, this._k(), 0);
+    return { activity: this.name, role: a === 0 ? 'check' : 'check.alternate', slot: Number(this._k()), alternate: a,
       attempt: this.attempt };
+  }
+
+  // خانة البند المعروض الآن: خانة الترتيب، إلا إن أُخّر بند (defer)
+  _k() { return String(this._at(String(this.slot), this.slot)); }
+
+  repeated(_itemId, factAt = null) {
+    if (get(this.alt, this._k(), 0)) return false;   // بديل بند منقطع: ليس بند خانته، فلا يُؤخَّر
+    const w = (q) => ({ activity: this.name, role: 'check', slot: q, alternate: 0, attempt: this.attempt });
+    return this._defer(this.slot, this.slots, String, w, (q) => (q < this.slots ? [w(q + 1)] : []), factAt,
+      (q) => [{ ...w(q), role: 'check.alternate', alternate: 1 }]);
   }
 
   feed(outcome) {
     if (this.done) throw new Error('النشاط انتهى');
     this._count('check');
-    const k = String(this.slot);
+    const k = this._k();
     if (outcome === 'interrupted') {
       this.cuts[k] = get(this.cuts, k, 0) + 1;
       this.total_cuts += 1;
@@ -571,7 +640,7 @@ export class CheckRun extends Activity {
   }
 
   unavailable() {
-    this._hold(get(this.alt, String(this.slot), 0) ? 'no_alternate' : 'no_items');   // لا بنود لهذه المحاولة
+    this._hold(get(this.alt, this._k(), 0) ? 'no_alternate' : 'no_items');   // لا بنود لهذه المحاولة
   }
 
   startEvent() {
@@ -603,7 +672,14 @@ export class RetentionRun extends Activity {
 
   want() {
     if (this.done) return null;
-    return { activity: this.name, role: 'deferred_check', round: this.round, pos: this.pos, alternate: 0 };
+    return this._w(this._at(String(this.pos), this.pos));
+  }
+
+  _w(q) { return { activity: this.name, role: 'deferred_check', round: this.round, pos: q, alternate: 0 }; }
+
+  repeated(_itemId, factAt = null) {
+    const last = this.size - 1;
+    return this._defer(this.pos, last, String, (q) => this._w(q), (q) => (q < last ? [this._w(q + 1)] : []), factAt);
   }
 
   feed(outcome) {
@@ -622,6 +698,8 @@ export class RetentionRun extends Activity {
 }
 
 export const CLASSES = { GateRun, ShortCheckRun, OpeningRun, EvidenceRun, CheckRun, RetentionRun };
+export const ASSESSING = ['gate', 'short', 'check', 'retention'];   // أنشطة التقييم: علاج تكرار الحقيقة فيها تأخير البند
+export const ALT_PEEK = 8;                        // أقصى عدد بدائل يُسأل عنها لنوع عند تأخير بند
 
 // ---------------------------------------------------------------- التشغيل
 // مولّد يعرض بنود النشاط حتى ينتهي. source(skill, want) يعيد البند أو null. يعطي [البند، المطلوب] ويستقبل
@@ -643,8 +721,16 @@ export function exposure(records, skill, activity) {
   return out;
 }
 
+// حقيقة البند الذي يعرضه المصدر لطلب، دون عرضه: الطلب يحمل peek فلا يُعدّ البند معروضًا
+export function peekFact(source, skill, want) {
+  const it = source(skill, { ...want, peek: true });
+  const ok = it !== null && it !== undefined && typeof it === 'object' && !Array.isArray(it);
+  return ok && it.fact !== undefined && it.fact !== null ? [...it.fact] : null;
+}
+
 export function* driveSteps(act, source, records = null, pause = null, history = null, prev = null) {
   let entry = true;                               // أول بند يُعرض في هذا الدخول إلى النشاط
+  let inner = null;                               // آخر بند عُرض من هذا النشاط في هذا الدخول، إن احتُسب تعرّضًا
   for (;;) {
     let w = act.want();
     if (w === null) return act;
@@ -665,13 +751,25 @@ export function* driveSteps(act, source, records = null, pause = null, history =
     // نفسها لا تُعرض في بندين متتاليين (3.5) ولو كانا من نشاطين (R22-01): النشاط يغيّر ما يطلبه إن كان له علاج، وإلا
     // عُرض البند موسومًا بأن حقيقته عُرضت للتو. داخل النشاط الواحد يضمن المحتوى ذلك (content_sequence)
     const isItem = item !== null && typeof item === 'object' && !Array.isArray(item);
-    const p = entry && prev && isItem && item.fact !== undefined && item.fact !== null ? prev() : null;
+    // وفي أنشطة التقييم العلاج تأخير البند، والتأخير يغيّر الترتيب الذي ضمنه المحتوى، فيُفحص كل بند فيها مع البند
+    // الذي عُرض قبله من النشاط نفسه أيضًا (بديل بند انقطع قد يجاور بندًا مؤجَّلًا)
+    const facted = isItem && item.fact !== undefined && item.fact !== null;
+    const p = entry && prev && facted ? prev() : (facted && ASSESSING.includes(act.name) ? inner : null);
     if (p && p[0] !== item.id && JSON.stringify(p[1]) === JSON.stringify(item.fact)) {
-      if (act.repeated(item.id)) continue;
+      if (act.repeated(item.id, (q) => peekFact(source, act.skill, q))) continue;
       w = { ...w, fact_just_seen: p[0] };
     }
     entry = false;
     const got = yield [item, w];
+    if (facted) {                                 // قاعدة Scheduler.seen نفسها: المنقطع بلا إجابة ولا دعم لا يُحتسب
+      const raw = typeof got === 'string' ? null : got[0];
+      const counts = raw === null ? got !== 'interrupted'
+        : raw.some((ev) => ev[0] === 'confirm' || ev[0] === 'support')
+          || !(raw.length && raw[raw.length - 1][0] === 'interrupt');
+      inner = counts ? [item.id, item.fact] : null;
+    } else {
+      inner = null;
+    }
     if (typeof got === 'string') {
       act.feed(got);
     } else {
@@ -772,7 +870,7 @@ export class ContentSource {
       if ('type' in w && it.evidence !== w.type && a !== 'lesson' && a !== 'practice') {
         throw new Error(`المحتوى يخالف الطبقة: ${it.id} يُطلب ${w.type} والبند ${it.evidence}`);
       }
-      this.served.push(it.id);
+      if (!w.peek) this.served.push(it.id);         // سؤال عن بند دون عرضه (تأخير بند التقييم)
     }
     return it;
   }

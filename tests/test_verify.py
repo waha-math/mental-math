@@ -106,5 +106,27 @@ with tempfile.TemporaryDirectory() as tmp:
            [r.returncode != 0, any(l.strip().startswith('أخفق  1ب.') for l in r.stdout.split('\n'))], [True, True])
     open(js_sched, 'w', encoding='utf-8').write(keep)
 
+    # تأخير بند التقييم: مطابقة اللغتين فيه بحالات مشتركة tests/defer_cases.json متوقَّعها واحد، وبأربعة مسارات في
+    # متجهات المجدول بتصادم مفروض. انحراف في التطبيق وحده يجب أن يُخفق اختباره هناك
+    def failing():
+        r = subprocess.run(['node', os.path.join(HERE, 'test_defer.mjs'), os.path.join(tree, 'app')],
+                           stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+        return [r.returncode != 0, sorted(l.strip().split()[1] for l in r.stdout.split('\n') if l.strip().startswith('أخفق'))]
+
+    js_items = os.path.join(tree, 'app', 'items.mjs')
+    keep = swap(js_items, 'this.defer[key(pos + j)] = cur;', 'this.defer[key(pos + j)] = pos;')
+    expect('8. التطبيق يضع في الموضع الجديد بند الترتيب لا البند المؤجَّل من قبل: حالة التأخير الثاني تُخفق وحدها',
+           failing(), [True, ['ب4.']])
+    open(js_items, 'w', encoding='utf-8').write(keep)
+    keep = swap(js_items, 'return mine.some((m) => same(m, f)); })) continue;', 'return same(fact, f); })) continue;')
+    expect('9. التطبيق لا ينظر في بديل المؤجَّل: حالتا البديل تُخفقان وحدهما', failing(), [True, ['ب6.', 'ف2.']])
+    open(js_items, 'w', encoding='utf-8').write(keep)
+    # انحراف يغيّر ترتيب العرض: التطبيق يتخطى أقرب موضع. مسارات التصادم المفروض في متجهات المجدول تكشفه
+    keep = swap(js_items, 'for (let j = 1; j <= last - pos; j += 1) {', 'for (let j = 2; j <= last - pos; j += 1) {')
+    code, out = check(tree)
+    expect('10. التطبيق يتخطى أقرب موضع للتأخير: مطابقة المجدول تُخفق',
+           [code != 0, 'أخفق التحقق عند: مطابقة المجدول' in out, 'نجح التحقق' in out], [True, True, False])
+    open(js_items, 'w', encoding='utf-8').write(keep)
+
 print('النتيجة: نجح %d من %d' % (sum(results), len(results)))
 sys.exit(0 if all(results) else 1)

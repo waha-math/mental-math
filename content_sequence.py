@@ -18,8 +18,10 @@
 
 ما لا يضمنه المحتوى، ويعالجه التشغيل (R22-01): دخول نشاط بعد بند من نشاط آخر للمهارة نفسها في الجلسة نفسها، كالبوابة ثم
 افتتاح الدرس، وإعادة التحقق ثم دليل الفهم. المجدول يحفظ آخر بند عُرض، والنشاط يطلب بندًا آخر أو بديلًا إن كرر
-أول بنوده الحقيقة. دخول بنود الدرس والتدريب مسموح فيه التكرار: عرض تعليمي لا يصنع دليلًا ولا قرارًا. ودخول نشاط
-تقييم لا علاج له بعد: يوسَم البند fact_just_seen. tests/test_content_sequence.py يصنّف كل انتقال فعلي ويُخفق بما لا صنف له.
+أول بنوده الحقيقة. دخول بنود الدرس والتدريب مسموح فيه التكرار: عرض تعليمي لا يصنع دليلًا ولا قرارًا. وفي أنشطة
+التقييم يُؤخَّر البند الذي يكرر حقيقة ما عُرض قبله إلى أقرب موضع لا يجاور فيه حقيقته (Activity._defer)، ويُستكشف
+هنا الدخول عند كل موضع وبعد كل تأخير سابق. ما لا موضع له يوسَم fact_just_seen: marked() تعدّ ما يبقى من ذلك بعد
+تأخير. tests/test_content_sequence.py يصنّف كل انتقال فعلي ويُخفق بما لا صنف له.
 
 ما لا يغطيه شيء: التتابع بين مهارتين مختلفتين، وبين جلستين.
 
@@ -38,11 +40,12 @@ from collections import Counter, deque
 ROOT = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, ROOT)
 from item_layer import (Activity, GateRun, ShortCheckRun, OpeningRun, EvidenceRun, CheckRun,  # noqa: E402
-                        RetentionRun)
+                        RetentionRun, peek_fact)
 from content_source import ContentSource  # noqa: E402
 
 TEACH = ('correct', 'wrong', 'supported', 'help', 'interrupted', 'void_exposed', 'void_shown')
 ASSESS = ('correct', 'wrong', 'supported', 'help', 'interrupted')
+MARKED = '|marked'                                      # زوج يكرر الحقيقة بعد تأخير، ولا علاج له: البند يوسَم
 ENTRY = '*'                                             # ما قبل هذا البند من نشاط آخر
 SCORE_ONLY = ('answers', 'correct', 'shown', 'reshown', 'spent')
 
@@ -55,14 +58,28 @@ def fact(it):
     return tuple(sorted((v, 10 - v)))
 
 
-def explore(act, source, outcomes, label, pairs, firsts, lasts):
+def live_defer(d):
+    """ما بقي فاعلًا من تأخير بنود التقييم في لقطة نشاط: مواضع المرحلة الجارية من الموضع الجاري فصاعدًا. ما قبلها
+    عُرض وانتهى، ولا يقرؤه النشاط بعدها (Activity._defer و _at يسألان عن الموضع الجاري وما بعده فقط)."""
+    pos, stage = d.get('slot', d.get('pos', 0)), d.get('stage', '') if d.get('_class') == 'GateRun' else ''
+    out = {}
+    for k, v in (d.get('defer') or {}).items():
+        if k.startswith(stage) and k[len(stage):].isdigit() and int(k[len(stage):]) >= pos:
+            out[k] = v
+    return out
+
+
+def explore(act, source, outcomes, label, pairs, firsts, lasts, stuck=None):
     """كل فروع النشاط. pairs: (السابق، التالي، كيف انتهى السابق، الوصف). firsts: أول بند ممكن. lasts: (آخر بند ممكن،
     نتيجة النشاط عنده)."""
-    queue, seen = deque([(act.to_dict(), None, None)]), set()
+    queue, seen, facts = deque([(act.to_dict(), None, None)]), set(), {}
     while queue:
         d, prev, how = queue.popleft()
         # ما لا يغيّر البند التالي (عدّ الصحيح، والأجوبة المحفوظة، وعدّ المعروض) لا يدخل مفتاح الحالة
-        key = (json.dumps({k: v for k, v in d.items() if k not in SCORE_ONLY}, sort_keys=True, ensure_ascii=False), prev)
+        # ولا ما انتهى من تأخير البنود: يبقى في المفتاح ما هو فاعل منه وحده (live_defer)
+        live = live_defer(d)
+        key = (json.dumps(dict({k: v for k, v in d.items() if k not in SCORE_ONLY}, defer=live), sort_keys=True,
+                          ensure_ascii=False), prev)
         if key in seen:
             continue
         seen.add(key)
@@ -77,15 +94,28 @@ def explore(act, source, outcomes, label, pairs, firsts, lasts):
             if item is None:
                 a.unavailable()
                 continue
+            facts[item['id']] = item.get('fact')
+            # أنشطة التقييم تفحص كل بند مع ما عُرض قبله منها (drive_steps): إن كرر الحقيقة أُخّر وطُلب غيره
+            if (outcomes is ASSESS and prev not in (None, ENTRY, item['id']) and how != 'interrupted'
+                    and facts.get(prev) is not None and facts[prev] == item.get('fact')):
+                b = Activity.from_dict(a.to_dict())
+                if b.repeated(item['id'], lambda q: peek_fact(source, a.skill, q)):
+                    queue.append((b.to_dict(), prev, how))
+                    break
+                if live:                                    # لا موضع يُؤخَّر إليه بعد تأخير سابق: يُعرض موسومًا
+                    how += MARKED
             if prev is None:
                 firsts.add(item['id'])
             elif prev != ENTRY:
                 pairs.add((prev, item['id'], how, label))
             # دخول النشاط عند هذا البند بعد بند من نشاط آخر بالحقيقة نفسها (R22-01): النشاط يطلب غيره إن كان له علاج.
             # ما قبل البند التالي عندئذ من نشاط آخر، فلا زوج له هنا، لكن ما بعده يُستكشف
+            # في أنشطة التقييم العلاج تأخير البند (defer)، ويُستكشف الدخول عند كل موضع وبعد كل تأخير سابق
             b = Activity.from_dict(a.to_dict())
-            if b.repeated(item['id']):
+            if b.repeated(item['id'], lambda q: peek_fact(source, a.skill, q)):
                 queue.append((b.to_dict(), ENTRY, None))
+            elif stuck is not None and not live:
+                stuck.add((item['id'], w['role'], label))   # لا علاج عند هذا البند: يُعرض موسومًا
             for o in outcomes:
                 b = Activity.from_dict(a.to_dict())
                 if o == 'void_exposed':
@@ -105,8 +135,9 @@ def subsets(xs):
     return out
 
 
-def collect(items, types):
-    """types: أنواع دليل كل مهارة. يعيد الأزواج الممكنة أثناء التشغيل، وعدد الأنشطة المستكشفة."""
+def collect(items, types, stuck=None):
+    """types: أنواع دليل كل مهارة. يعيد الأزواج الممكنة أثناء التشغيل، وعدد الأنشطة المستكشفة. stuck: تُجمع فيه
+    بنود أنشطة التقييم التي لا يجد التأخير لها موضعًا إن كررت حقيقة ما قبلها عند الدخول (بند، دوره، الوصف)."""
     by_id = {i['id']: i for i in items}
     pairs, explored = set(), 0
     for skill, ts in types.items():
@@ -116,7 +147,7 @@ def collect(items, types):
             nonlocal explored
             explored += 1
             f, l = set(), set()
-            explore(act, src, outcomes, label, pairs, f, l)
+            explore(act, src, outcomes, label, pairs, f, l, stuck=stuck if outcomes is ASSESS else None)
             return f, l
 
         def shown(activity):
@@ -163,7 +194,7 @@ def collect(items, types):
     return pairs, by_id, explored
 
 
-def violations(pairs, by_id):
+def violations(pairs, by_id, marked=False):
     out = []
     for a, b, how, label in sorted(pairs):
         x, y = by_id[a], by_id[b]
@@ -171,8 +202,17 @@ def violations(pairs, by_id):
             continue                                        # البند نفسه أُعيد عرضه، أو حقيقتان مختلفتان
         if how == 'interrupted':
             continue                                        # انقطاع بلا إجابة مقبولة ولا دعم قبله (help غير interrupted)
+        if how.endswith(MARKED) != marked:
+            continue
         out.append((a, b, how, label, list(fact(x))))
     return out
+
+
+def marked(pairs, by_id):
+    """ما بقي بلا علاج في أنشطة التقييم: بعد تأخير بند، ينقطع البند الذي قبل المؤجَّل ويأتي بديله بحقيقة المؤجَّل،
+    والمؤجَّل في آخر مرحلته فلا موضع يُؤخَّر إليه. يُعرض موسومًا fact_just_seen. ليست مخالفة محتوى: تُعدّ وحدها،
+    وtests/test_content_sequence.py يثبّت قائمتها."""
+    return violations(pairs, by_id, marked=True)
 
 
 def load_types(items):
@@ -197,6 +237,8 @@ def main(argv):
     for a, b, how, label, f in bad[:12]:
         print('    %s ثم %s (%s) في %s: الحقيقة %s' % (a, b, how, label, f))
     print('الحقيقة نفسها في بندين متتاليين: %d' % len(bad))
+    print('وخارجها، بعد تأخير بند تقييم، بلا موضع آخر، فيوسَم البند: %d زوجًا في %d فرعًا' % (
+        len({(a, b) for a, b, _h, _l, _f in marked(pairs, by_id)}), len(marked(pairs, by_id))))
     return 1 if bad else 0
 
 

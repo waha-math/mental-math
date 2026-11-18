@@ -8,6 +8,8 @@
 2. الفحص يكشف: يُزرع في نسخة من المحتوى بند دليل فهم بحقيقة البند الذي قبله، فيجده. ويُزرع بديل دليل فهم بحقيقة
    البند الذي يليه في الموضع التالي، فيجده (البديل يُفحص مع ما يليه).
 3. الاستثناء محدود: البند الذي يلي بندًا منقطعًا لا يُعدّ مخالفة، والذي يلي بندًا أُجيب عنه يُعدّ.
+6. تأخير بند التقييم: البنود الأصلية التي لا موضع لها هي أواخر المراحل وحدها.
+7. ما يبقى بلا علاج بعد تأخير وانقطاع: أوله بديل دائمًا، وفي الوحدة 1-4 وحدها.
 4. التغطية: كل بندين متتاليين يعرضهما المجدول فعلًا للمهارة نفسها في الجلسة نفسها، في 13 تشغيلًا كاملًا للشريحة
    (منها عشوائية بالبذرتين 79 و16 من المراجعة 22)، لهما صنف صريح: يضمنه المحتوى (من أزواج الفحص)، أو يعالجه التشغيل
    (دخول الافتتاح ودليل الفهم من نشاط آخر: لا حقيقة مكررة)، أو عرض تعليمي (مسموح)، أو يوسَم (دخول نشاط تقييم).
@@ -42,7 +44,8 @@ def expect(title, got, want):
         print('        %r، والمتوقع %r' % (got, want))
 
 
-pairs, by_id, explored = cs.collect(items, types)
+stuck = set()
+pairs, by_id, explored = cs.collect(items, types, stuck)
 bad = cs.violations(pairs, by_id)
 zeros = [i['id'] for i in items if i['skill'] in SLOTS and zero_step(i)]
 expect('1. المحتوى الحالي: لا مخالفة تتابع ولا قفزة صفرية (%d نشاطًا، %d زوجًا)' % (explored, len(pairs)),
@@ -97,7 +100,7 @@ def classify(a1, a2):
     if a2 in DISPLAY:
         return 'عرض تعليمي'               # دخول بنود الدرس أو التدريب: لا تصنع دليلًا ولا قرارًا، والتكرار فيها مسموح
     if a2 in ASSESS:
-        return 'يوسَم'                    # دخول نشاط تقييم من نشاط آخر: لا علاج له بعد، والبند يوسَم fact_just_seen
+        return 'يُؤخَّر أو يوسَم'          # دخول نشاط تقييم من نشاط آخر: البند المكرر يُؤخَّر، وإن لم يوجد له موضع وُسم
     return None
 
 
@@ -146,13 +149,39 @@ for name, sessions, events in runs:
             problems.append(('ليس مما استكشفه الفحص', a1, a2, i1, i2))
         elif c == 'يعالجه التشغيل' and same:
             problems.append(('الحقيقة نفسها بلا علاج', a1, a2, i1, i2))
-        elif c == 'يوسَم' and same and m2 != i1:
+        elif c == 'يُؤخَّر أو يوسَم' and same and m2 != i1:
             problems.append(('الحقيقة نفسها بلا وسم', a1, a2, i1, i2))
 expect('4. كل انتقال بين بندين متتاليين للمهارة نفسها في الجلسة نفسها، في %d تشغيلًا كاملًا، له صنف صريح ويحقق شرط '
        'صنفه (%s)' % (len(runs), '، '.join('%s: %d' % (k, v) for k, v in sorted(classes.items(), key=str))),
        problems[:5], [])
 for (a1, a2, c), n in sorted(kinds.items()):
     print('        %s ثم %s: %d (%s)' % (a1, a2, n, c))
+
+# 6) تأخير بند التقييم: ما لا موضع له، وما يبقى بلا علاج
+# القاعدة (item_layer.Activity._defer): لا يُؤخَّر آخر بند في مرحلته (لا موضع بعده)، ولا بديل بند منقطع. فالمتوقع أن
+# البنود الأصلية التي لا تُؤخَّر هي أواخر المراحل وحدها: آخر الأصلية في البوابة وإعادتها، وثاني التعويضية لكل نوع،
+# وثالث التحقق القصير، والخانة العاشرة في كل محاولة فحص، وخامس كل جولة احتفاظ. يضمن ذلك المولّد (البند الثالث من
+# آخر مرحلته لا يحمل حقيقة آخرها)
+src6 = cs.ContentSource(items)
+want6 = set()
+for skill, ts in types.items():
+    for grp in ('gate', 'regate'):
+        want6.add(src6.by[(skill, grp, 'gate')][-1]['id'])
+        want6.update(src6._typed(skill, grp, 'gate.compensation', t)[1]['id'] for t in ts)
+    want6.add(src6.by[(skill, 'short', 'short_check')][2]['id'])
+    want6.update(i['id'] for a in 'ABC' for i in src6.by[(skill, 'check' + a, 'check')] if i['slot'] == 10)
+    for rnd in (1, 2, 3):
+        want6.add([i for i in src6.by[(skill, 'deferred', 'deferred_check')] if i['slot'] == rnd][-1]['id'])
+got6 = {i for i, _r, _l in stuck if 'alternate' not in by_id[i]['role']}
+expect('6. البنود الأصلية التي لا موضع يُؤخَّر إليه بندها هي أواخر المراحل وحدها (%d بندًا)' % len(want6),
+       [sorted(got6 - want6), sorted(want6 - got6)], [[], []])
+# ما يبقى: بعد تأخير، ينقطع بند ويأتي بديله بحقيقة البند الذي يليه، ولا موضع يُؤخَّر إليه ذاك. المتوقع من القاعدة:
+# أول كل زوج باقٍ بديل، وكله في الوحدة 1-4 (خمس حقائق). وعدده مقيس لا مشتق: 16 زوجًا عند كتابة الاختبار
+rest = sorted({(a, b) for a, b, _h, _l, _f in cs.marked(pairs, by_id)})
+print('        أزواج تبقى بلا علاج بعد تأخير وانقطاع (البند يوسَم): %d' % len(rest))
+expect('7. ما يبقى بلا علاج: أوله بديل بند منقطع دائمًا، وكله في الوحدة 1-4، وعدده 16 (مقيس)',
+       [sorted({by_id[a]['role'] for a, _b in rest}), sorted({a.split('/')[0] for a, _b in rest}), len(rest)],
+       [['check.alternate', 'gate.alternate'], ['1-4-1', '1-4-2'], 16])
 
 # 5) المحتوى قبل الإصلاح
 try:

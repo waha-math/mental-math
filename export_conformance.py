@@ -259,6 +259,8 @@ def drive_steps(act, source, records=None, pause=None, **more):       # ما ي�
     step = {}
 
     def src(skill, w):
+        if w.get('peek'):                                   # سؤال عن بند دون عرضه (تأخير بند التقييم): ليس خطوة
+            return source(skill, w)
         item = source(skill, w)
         step.clear()
         step.update(w=jsonable(w), item=jsonable(item))

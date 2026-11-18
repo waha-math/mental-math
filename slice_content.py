@@ -528,6 +528,16 @@ def respace_small(items):
                             and o['evidence'] == it['evidence'] and o.get('round', 1) == it.get('round', 1)):
                         near[it['id']].add(o['id'])
                         near[o['id']].add(it['id'])
+        # تأخير بند التقييم (item_layer.Activity._defer) يحتاج موضعًا لا يجاور فيه البند حقيقته. البند الثالث من
+        # آخر مرحلته لا موضع له إلا آخرها، فلا يحمل حقيقة آخرها: بهذا يبقى بلا موضع آخرُ كل مرحلة وحده
+        stages = [[i for i in items if i['skill'] == skill and i['group'] == g and i['role'] == r]
+                  for g, r in (('gate', 'gate'), ('regate', 'gate'), ('short', 'short_check'))]
+        stages += [[i for i in items if i['skill'] == skill and i['role'] == 'deferred_check' and i['slot'] == rnd]
+                   for rnd in (1, 2, 3)]
+        for lst in stages:
+            if len(lst) >= 3:
+                near[lst[-3]['id']].add(lst[-1]['id'])
+                near[lst[-1]['id']].add(lst[-3]['id'])
         todo = [i for i in items if i['skill'] == skill and not i['group'].startswith('check')
                 and 1 <= i['numbers'].get('n', i['numbers'].get('e')) <= 9]
         ids = {i['id'] for i in todo}

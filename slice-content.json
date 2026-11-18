@@ -1486,6 +1486,32 @@
    "evidence": "ف3",
    "performance": "make_ten",
    "numbers": {
+    "n": 5
+   },
+   "resource": "بلا نموذج",
+   "answer_type": "ج1",
+   "answer": 5,
+   "text_ar": "5 وكم تصير 10؟",
+   "text_en": "5 and how many make 10?",
+   "audio_ar": "5 وكم تصير 10؟",
+   "audio_en": "5 and how many make 10?",
+   "wrong": {},
+   "slot": null,
+   "alt_of": null,
+   "graded": true,
+   "fact": [
+    5,
+    5
+   ]
+  },
+  {
+   "id": "1-4-1/regate/05",
+   "skill": "1-4-1",
+   "group": "regate",
+   "role": "gate",
+   "evidence": "ف3",
+   "performance": "make_ten",
+   "numbers": {
     "n": 4
    },
    "resource": "بلا نموذج",
@@ -1507,32 +1533,6 @@
    ]
   },
   {
-   "id": "1-4-1/regate/05",
-   "skill": "1-4-1",
-   "group": "regate",
-   "role": "gate",
-   "evidence": "ف3",
-   "performance": "make_ten",
-   "numbers": {
-    "n": 5
-   },
-   "resource": "بلا نموذج",
-   "answer_type": "ج1",
-   "answer": 5,
-   "text_ar": "5 وكم تصير 10؟",
-   "text_en": "5 and how many make 10?",
-   "audio_ar": "5 وكم تصير 10؟",
-   "audio_en": "5 and how many make 10?",
-   "wrong": {},
-   "slot": null,
-   "alt_of": null,
-   "graded": true,
-   "fact": [
-    5,
-    5
-   ]
-  },
-  {
    "id": "1-4-1/regate/06",
    "skill": "1-4-1",
    "group": "regate",
@@ -1540,24 +1540,22 @@
    "evidence": "ف1",
    "performance": "frame_empty",
    "numbers": {
-    "n": 6
+    "n": 5
    },
    "resource": "إطار العشرة وعليه الأقراص",
    "answer_type": "ج1",
-   "answer": 4,
+   "answer": 5,
    "text_ar": "كم خانة فارغة في الإطار؟",
    "text_en": "How many boxes in the frame are empty?",
    "audio_ar": "كم خانة فارغة في الإطار؟",
    "audio_en": "How many boxes in the frame are empty?",
-   "wrong": {
-    "6": "given_back"
-   },
+   "wrong": {},
    "slot": null,
    "alt_of": null,
    "graded": true,
    "fact": [
-    4,
-    6
+    5,
+    5
    ]
   },
   {
@@ -1736,22 +1734,24 @@
    "evidence": "ف1",
    "performance": "frame_empty",
    "numbers": {
-    "n": 5
+    "n": 3
    },
    "resource": "إطار العشرة وعليه الأقراص",
    "answer_type": "ج1",
-   "answer": 5,
+   "answer": 7,
    "text_ar": "كم خانة فارغة في الإطار؟",
    "text_en": "How many boxes in the frame are empty?",
    "audio_ar": "كم خانة فارغة في الإطار؟",
    "audio_en": "How many boxes in the frame are empty?",
-   "wrong": {},
+   "wrong": {
+    "3": "given_back"
+   },
    "slot": null,
    "alt_of": null,
    "graded": true,
    "fact": [
-    5,
-    5
+    3,
+    7
    ]
   },
   {
@@ -1818,43 +1818,15 @@
    "evidence": "ف1",
    "performance": "frame_empty",
    "numbers": {
-    "n": 9
+    "n": 8
    },
    "resource": "إطار العشرة وعليه الأقراص",
    "answer_type": "ج1",
-   "answer": 1,
+   "answer": 2,
    "text_ar": "كم خانة فارغة في الإطار؟",
    "text_en": "How many boxes in the frame are empty?",
    "audio_ar": "كم خانة فارغة في الإطار؟",
    "audio_en": "How many boxes in the frame are empty?",
-   "wrong": {
-    "9": "given_back"
-   },
-   "slot": null,
-   "alt_of": null,
-   "graded": true,
-   "fact": [
-    1,
-    9
-   ]
-  },
-  {
-   "id": "1-4-1/short/02",
-   "skill": "1-4-1",
-   "group": "short",
-   "role": "short_check",
-   "evidence": "ف3",
-   "performance": "make_ten",
-   "numbers": {
-    "n": 8
-   },
-   "resource": "بلا نموذج",
-   "answer_type": "ج1",
-   "answer": 2,
-   "text_ar": "8 وكم تصير 10؟",
-   "text_en": "8 and how many make 10?",
-   "audio_ar": "8 وكم تصير 10؟",
-   "audio_en": "8 and how many make 10?",
    "wrong": {
     "8": "given_back"
    },
@@ -1867,24 +1839,24 @@
    ]
   },
   {
-   "id": "1-4-1/short/03",
+   "id": "1-4-1/short/02",
    "skill": "1-4-1",
    "group": "short",
    "role": "short_check",
    "evidence": "ف3",
    "performance": "make_ten",
    "numbers": {
-    "n": 1
+    "n": 9
    },
    "resource": "بلا نموذج",
    "answer_type": "ج1",
-   "answer": 9,
-   "text_ar": "1 وكم تصير 10؟",
-   "text_en": "1 and how many make 10?",
-   "audio_ar": "1 وكم تصير 10؟",
-   "audio_en": "1 and how many make 10?",
+   "answer": 1,
+   "text_ar": "9 وكم تصير 10؟",
+   "text_en": "9 and how many make 10?",
+   "audio_ar": "9 وكم تصير 10؟",
+   "audio_en": "9 and how many make 10?",
    "wrong": {
-    "1": "given_back"
+    "9": "given_back"
    },
    "slot": null,
    "alt_of": null,
@@ -1892,6 +1864,34 @@
    "fact": [
     1,
     9
+   ]
+  },
+  {
+   "id": "1-4-1/short/03",
+   "skill": "1-4-1",
+   "group": "short",
+   "role": "short_check",
+   "evidence": "ف3",
+   "performance": "make_ten",
+   "numbers": {
+    "n": 3
+   },
+   "resource": "بلا نموذج",
+   "answer_type": "ج1",
+   "answer": 7,
+   "text_ar": "3 وكم تصير 10؟",
+   "text_en": "3 and how many make 10?",
+   "audio_ar": "3 وكم تصير 10؟",
+   "audio_en": "3 and how many make 10?",
+   "wrong": {
+    "3": "given_back"
+   },
+   "slot": null,
+   "alt_of": null,
+   "graded": true,
+   "fact": [
+    3,
+    7
    ]
   },
   {
@@ -3657,64 +3657,6 @@
    "evidence": "ف3",
    "performance": "make_ten",
    "numbers": {
-    "n": 4
-   },
-   "resource": "بلا نموذج",
-   "answer_type": "ج1",
-   "answer": 6,
-   "text_ar": "4 وكم تصير 10؟",
-   "text_en": "4 and how many make 10?",
-   "audio_ar": "4 وكم تصير 10؟",
-   "audio_en": "4 and how many make 10?",
-   "wrong": {
-    "4": "given_back"
-   },
-   "slot": 1,
-   "alt_of": null,
-   "graded": true,
-   "fact": [
-    4,
-    6
-   ],
-   "fact_seen_before": true
-  },
-  {
-   "id": "1-4-1/deferred/03",
-   "skill": "1-4-1",
-   "group": "deferred",
-   "role": "deferred_check",
-   "evidence": "ف3",
-   "performance": "make_ten",
-   "numbers": {
-    "n": 7
-   },
-   "resource": "بلا نموذج",
-   "answer_type": "ج1",
-   "answer": 3,
-   "text_ar": "7 وكم تصير 10؟",
-   "text_en": "7 and how many make 10?",
-   "audio_ar": "7 وكم تصير 10؟",
-   "audio_en": "7 and how many make 10?",
-   "wrong": {
-    "7": "given_back"
-   },
-   "slot": 1,
-   "alt_of": null,
-   "graded": true,
-   "fact": [
-    3,
-    7
-   ],
-   "fact_seen_before": true
-  },
-  {
-   "id": "1-4-1/deferred/04",
-   "skill": "1-4-1",
-   "group": "deferred",
-   "role": "deferred_check",
-   "evidence": "ف3",
-   "performance": "make_ten",
-   "numbers": {
     "n": 5
    },
    "resource": "بلا نموذج",
@@ -3731,6 +3673,64 @@
    "fact": [
     5,
     5
+   ],
+   "fact_seen_before": true
+  },
+  {
+   "id": "1-4-1/deferred/03",
+   "skill": "1-4-1",
+   "group": "deferred",
+   "role": "deferred_check",
+   "evidence": "ف3",
+   "performance": "make_ten",
+   "numbers": {
+    "n": 6
+   },
+   "resource": "بلا نموذج",
+   "answer_type": "ج1",
+   "answer": 4,
+   "text_ar": "6 وكم تصير 10؟",
+   "text_en": "6 and how many make 10?",
+   "audio_ar": "6 وكم تصير 10؟",
+   "audio_en": "6 and how many make 10?",
+   "wrong": {
+    "6": "given_back"
+   },
+   "slot": 1,
+   "alt_of": null,
+   "graded": true,
+   "fact": [
+    4,
+    6
+   ],
+   "fact_seen_before": true
+  },
+  {
+   "id": "1-4-1/deferred/04",
+   "skill": "1-4-1",
+   "group": "deferred",
+   "role": "deferred_check",
+   "evidence": "ف3",
+   "performance": "make_ten",
+   "numbers": {
+    "n": 3
+   },
+   "resource": "بلا نموذج",
+   "answer_type": "ج1",
+   "answer": 7,
+   "text_ar": "3 وكم تصير 10؟",
+   "text_en": "3 and how many make 10?",
+   "audio_ar": "3 وكم تصير 10؟",
+   "audio_en": "3 and how many make 10?",
+   "wrong": {
+    "3": "given_back"
+   },
+   "slot": 1,
+   "alt_of": null,
+   "graded": true,
+   "fact": [
+    3,
+    7
    ],
    "fact_seen_before": true
   },
@@ -3914,24 +3914,24 @@
    "evidence": "ف3",
    "performance": "make_ten",
    "numbers": {
-    "n": 9
+    "n": 7
    },
    "resource": "بلا نموذج",
    "answer_type": "ج1",
-   "answer": 1,
-   "text_ar": "9 وكم تصير 10؟",
-   "text_en": "9 and how many make 10?",
-   "audio_ar": "9 وكم تصير 10؟",
-   "audio_en": "9 and how many make 10?",
+   "answer": 3,
+   "text_ar": "7 وكم تصير 10؟",
+   "text_en": "7 and how many make 10?",
+   "audio_ar": "7 وكم تصير 10؟",
+   "audio_en": "7 and how many make 10?",
    "wrong": {
-    "9": "given_back"
+    "7": "given_back"
    },
    "slot": 3,
    "alt_of": null,
    "graded": true,
    "fact": [
-    1,
-    9
+    3,
+    7
    ],
    "fact_seen_before": true
   },
@@ -5570,25 +5570,25 @@
    "evidence": "ف4",
    "performance": "context10",
    "numbers": {
-    "n": 3,
+    "n": 6,
     "ctx": "ctx_balloons"
    },
    "resource": "صورة الموقف، والنص منطوق",
    "answer_type": "ج1",
-   "answer": 7,
-   "text_ar": "كان مع عمر 10 بالونات. عدد ما طار منها 3. كم بالونًا بقي؟",
-   "text_en": "Omar had 10 balloons. Balloons that flew away: 3. How many are left?",
-   "audio_ar": "كان مع عمر 10 بالونات. عدد ما طار منها 3. كم بالونًا بقي؟",
-   "audio_en": "Omar had 10 balloons. Balloons that flew away: 3. How many are left?",
+   "answer": 4,
+   "text_ar": "كان مع عمر 10 بالونات. عدد ما طار منها 6. كم بالونًا بقي؟",
+   "text_en": "Omar had 10 balloons. Balloons that flew away: 6. How many are left?",
+   "audio_ar": "كان مع عمر 10 بالونات. عدد ما طار منها 6. كم بالونًا بقي؟",
+   "audio_en": "Omar had 10 balloons. Balloons that flew away: 6. How many are left?",
    "wrong": {
-    "3": "given_back"
+    "6": "given_back"
    },
    "slot": null,
    "alt_of": null,
    "graded": true,
    "fact": [
-    3,
-    7
+    4,
+    6
    ]
   },
   {
@@ -5599,24 +5599,24 @@
    "evidence": "ف2",
    "performance": "step_pair",
    "numbers": {
-    "n": 6
+    "n": 2
    },
    "resource": "هيكل الإطار الشفاف",
    "answer_type": "ج1",
-   "answer": 4,
-   "text_ar": "⁦ 10 − 6 = ▢ ⁩ لأن ⁦ 6 + ▢ = 10 ⁩. ما العدد الذي يكمل الاثنتين؟",
-   "text_en": "⁦ 10 − 6 = ▢ ⁩ because ⁦ 6 + ▢ = 10 ⁩. What number completes both?",
-   "audio_ar": "⁦ 10 − 6 = ▢ ⁩ لأن ⁦ 6 + ▢ = 10 ⁩. ما العدد الذي يكمل الاثنتين؟",
-   "audio_en": "⁦ 10 − 6 = ▢ ⁩ because ⁦ 6 + ▢ = 10 ⁩. What number completes both?",
+   "answer": 8,
+   "text_ar": "⁦ 10 − 2 = ▢ ⁩ لأن ⁦ 2 + ▢ = 10 ⁩. ما العدد الذي يكمل الاثنتين؟",
+   "text_en": "⁦ 10 − 2 = ▢ ⁩ because ⁦ 2 + ▢ = 10 ⁩. What number completes both?",
+   "audio_ar": "⁦ 10 − 2 = ▢ ⁩ لأن ⁦ 2 + ▢ = 10 ⁩. ما العدد الذي يكمل الاثنتين؟",
+   "audio_en": "⁦ 10 − 2 = ▢ ⁩ because ⁦ 2 + ▢ = 10 ⁩. What number completes both?",
    "wrong": {
-    "6": "given_back"
+    "2": "given_back"
    },
    "slot": null,
    "alt_of": null,
    "graded": true,
    "fact": [
-    4,
-    6
+    2,
+    8
    ]
   },
   {
@@ -5962,25 +5962,25 @@
    "evidence": "ف4",
    "performance": "context10",
    "numbers": {
-    "n": 2,
+    "n": 3,
     "ctx": "ctx_balloons"
    },
    "resource": "صورة الموقف، والنص منطوق",
    "answer_type": "ج1",
-   "answer": 8,
-   "text_ar": "كان مع عمر 10 بالونات. عدد ما طار منها 2. كم بالونًا بقي؟",
-   "text_en": "Omar had 10 balloons. Balloons that flew away: 2. How many are left?",
-   "audio_ar": "كان مع عمر 10 بالونات. عدد ما طار منها 2. كم بالونًا بقي؟",
-   "audio_en": "Omar had 10 balloons. Balloons that flew away: 2. How many are left?",
+   "answer": 7,
+   "text_ar": "كان مع عمر 10 بالونات. عدد ما طار منها 3. كم بالونًا بقي؟",
+   "text_en": "Omar had 10 balloons. Balloons that flew away: 3. How many are left?",
+   "audio_ar": "كان مع عمر 10 بالونات. عدد ما طار منها 3. كم بالونًا بقي؟",
+   "audio_en": "Omar had 10 balloons. Balloons that flew away: 3. How many are left?",
    "wrong": {
-    "2": "given_back"
+    "3": "given_back"
    },
    "slot": null,
    "alt_of": null,
    "graded": true,
    "fact": [
-    2,
-    8
+    3,
+    7
    ]
   },
   {
@@ -6154,25 +6154,25 @@
    "evidence": "ف4",
    "performance": "context10",
    "numbers": {
-    "n": 9,
+    "n": 2,
     "ctx": "ctx_balloons"
    },
    "resource": "صورة الموقف، والنص منطوق",
    "answer_type": "ج1",
-   "answer": 1,
-   "text_ar": "كان مع عمر 10 بالونات. عدد ما طار منها 9. كم بالونًا بقي؟",
-   "text_en": "Omar had 10 balloons. Balloons that flew away: 9. How many are left?",
-   "audio_ar": "كان مع عمر 10 بالونات. عدد ما طار منها 9. كم بالونًا بقي؟",
-   "audio_en": "Omar had 10 balloons. Balloons that flew away: 9. How many are left?",
+   "answer": 8,
+   "text_ar": "كان مع عمر 10 بالونات. عدد ما طار منها 2. كم بالونًا بقي؟",
+   "text_en": "Omar had 10 balloons. Balloons that flew away: 2. How many are left?",
+   "audio_ar": "كان مع عمر 10 بالونات. عدد ما طار منها 2. كم بالونًا بقي؟",
+   "audio_en": "Omar had 10 balloons. Balloons that flew away: 2. How many are left?",
    "wrong": {
-    "9": "given_back"
+    "2": "given_back"
    },
    "slot": null,
    "alt_of": null,
    "graded": true,
    "fact": [
-    1,
-    9
+    2,
+    8
    ]
   },
   {
@@ -6577,43 +6577,15 @@
    "evidence": "ف2",
    "performance": "step_pair",
    "numbers": {
-    "n": 9
+    "n": 8
    },
    "resource": "هيكل الإطار الشفاف",
    "answer_type": "ج1",
-   "answer": 1,
-   "text_ar": "⁦ 10 − 9 = ▢ ⁩ لأن ⁦ 9 + ▢ = 10 ⁩. ما العدد الذي يكمل الاثنتين؟",
-   "text_en": "⁦ 10 − 9 = ▢ ⁩ because ⁦ 9 + ▢ = 10 ⁩. What number completes both?",
-   "audio_ar": "⁦ 10 − 9 = ▢ ⁩ لأن ⁦ 9 + ▢ = 10 ⁩. ما العدد الذي يكمل الاثنتين؟",
-   "audio_en": "⁦ 10 − 9 = ▢ ⁩ because ⁦ 9 + ▢ = 10 ⁩. What number completes both?",
-   "wrong": {
-    "9": "given_back"
-   },
-   "slot": null,
-   "alt_of": null,
-   "graded": true,
-   "fact": [
-    1,
-    9
-   ]
-  },
-  {
-   "id": "1-4-2/short/02",
-   "skill": "1-4-2",
-   "group": "short",
-   "role": "short_check",
-   "evidence": "ف3",
-   "performance": "missing_first",
-   "numbers": {
-    "n": 8
-   },
-   "resource": "بلا نموذج",
-   "answer_type": "ج1",
    "answer": 2,
-   "text_ar": "ما العدد الناقص؟ ⁦ ▢ + 8 = 10 ⁩",
-   "text_en": "What number is missing? ⁦ ▢ + 8 = 10 ⁩",
-   "audio_ar": "ما العدد الناقص؟ ⁦ ▢ + 8 = 10 ⁩",
-   "audio_en": "What number is missing? ⁦ ▢ + 8 = 10 ⁩",
+   "text_ar": "⁦ 10 − 8 = ▢ ⁩ لأن ⁦ 8 + ▢ = 10 ⁩. ما العدد الذي يكمل الاثنتين؟",
+   "text_en": "⁦ 10 − 8 = ▢ ⁩ because ⁦ 8 + ▢ = 10 ⁩. What number completes both?",
+   "audio_ar": "⁦ 10 − 8 = ▢ ⁩ لأن ⁦ 8 + ▢ = 10 ⁩. ما العدد الذي يكمل الاثنتين؟",
+   "audio_en": "⁦ 10 − 8 = ▢ ⁩ because ⁦ 8 + ▢ = 10 ⁩. What number completes both?",
    "wrong": {
     "8": "given_back"
    },
@@ -6626,24 +6598,24 @@
    ]
   },
   {
-   "id": "1-4-2/short/03",
+   "id": "1-4-2/short/02",
    "skill": "1-4-2",
    "group": "short",
    "role": "short_check",
    "evidence": "ف3",
-   "performance": "subtract",
+   "performance": "missing_first",
    "numbers": {
-    "n": 1
+    "n": 9
    },
    "resource": "بلا نموذج",
    "answer_type": "ج1",
-   "answer": 9,
-   "text_ar": "ما العدد الناقص؟ ⁦ 10 − 1 = ▢ ⁩",
-   "text_en": "What number is missing? ⁦ 10 − 1 = ▢ ⁩",
-   "audio_ar": "ما العدد الناقص؟ ⁦ 10 − 1 = ▢ ⁩",
-   "audio_en": "What number is missing? ⁦ 10 − 1 = ▢ ⁩",
+   "answer": 1,
+   "text_ar": "ما العدد الناقص؟ ⁦ ▢ + 9 = 10 ⁩",
+   "text_en": "What number is missing? ⁦ ▢ + 9 = 10 ⁩",
+   "audio_ar": "ما العدد الناقص؟ ⁦ ▢ + 9 = 10 ⁩",
+   "audio_en": "What number is missing? ⁦ ▢ + 9 = 10 ⁩",
    "wrong": {
-    "1": "given_back"
+    "9": "given_back"
    },
    "slot": null,
    "alt_of": null,
@@ -6651,6 +6623,34 @@
    "fact": [
     1,
     9
+   ]
+  },
+  {
+   "id": "1-4-2/short/03",
+   "skill": "1-4-2",
+   "group": "short",
+   "role": "short_check",
+   "evidence": "ف3",
+   "performance": "subtract",
+   "numbers": {
+    "n": 3
+   },
+   "resource": "بلا نموذج",
+   "answer_type": "ج1",
+   "answer": 7,
+   "text_ar": "ما العدد الناقص؟ ⁦ 10 − 3 = ▢ ⁩",
+   "text_en": "What number is missing? ⁦ 10 − 3 = ▢ ⁩",
+   "audio_ar": "ما العدد الناقص؟ ⁦ 10 − 3 = ▢ ⁩",
+   "audio_en": "What number is missing? ⁦ 10 − 3 = ▢ ⁩",
+   "wrong": {
+    "3": "given_back"
+   },
+   "slot": null,
+   "alt_of": null,
+   "graded": true,
+   "fact": [
+    3,
+    7
    ]
   },
   {
@@ -8449,24 +8449,22 @@
    "evidence": "ف3",
    "performance": "missing_first",
    "numbers": {
-    "n": 4
+    "n": 5
    },
    "resource": "بلا نموذج",
    "answer_type": "ج1",
-   "answer": 6,
-   "text_ar": "ما العدد الناقص؟ ⁦ ▢ + 4 = 10 ⁩",
-   "text_en": "What number is missing? ⁦ ▢ + 4 = 10 ⁩",
-   "audio_ar": "ما العدد الناقص؟ ⁦ ▢ + 4 = 10 ⁩",
-   "audio_en": "What number is missing? ⁦ ▢ + 4 = 10 ⁩",
-   "wrong": {
-    "4": "given_back"
-   },
+   "answer": 5,
+   "text_ar": "ما العدد الناقص؟ ⁦ ▢ + 5 = 10 ⁩",
+   "text_en": "What number is missing? ⁦ ▢ + 5 = 10 ⁩",
+   "audio_ar": "ما العدد الناقص؟ ⁦ ▢ + 5 = 10 ⁩",
+   "audio_en": "What number is missing? ⁦ ▢ + 5 = 10 ⁩",
+   "wrong": {},
    "slot": 1,
    "alt_of": null,
    "graded": true,
    "fact": [
-    4,
-    6
+    5,
+    5
    ],
    "fact_seen_before": true
   },
@@ -8478,24 +8476,24 @@
    "evidence": "ف3",
    "performance": "subtract",
    "numbers": {
-    "n": 7
+    "n": 6
    },
    "resource": "بلا نموذج",
    "answer_type": "ج1",
-   "answer": 3,
-   "text_ar": "ما العدد الناقص؟ ⁦ 10 − 7 = ▢ ⁩",
-   "text_en": "What number is missing? ⁦ 10 − 7 = ▢ ⁩",
-   "audio_ar": "ما العدد الناقص؟ ⁦ 10 − 7 = ▢ ⁩",
-   "audio_en": "What number is missing? ⁦ 10 − 7 = ▢ ⁩",
+   "answer": 4,
+   "text_ar": "ما العدد الناقص؟ ⁦ 10 − 6 = ▢ ⁩",
+   "text_en": "What number is missing? ⁦ 10 − 6 = ▢ ⁩",
+   "audio_ar": "ما العدد الناقص؟ ⁦ 10 − 6 = ▢ ⁩",
+   "audio_en": "What number is missing? ⁦ 10 − 6 = ▢ ⁩",
    "wrong": {
-    "7": "given_back"
+    "6": "given_back"
    },
    "slot": 1,
    "alt_of": null,
    "graded": true,
    "fact": [
-    3,
-    7
+    4,
+    6
    ],
    "fact_seen_before": true
   },
@@ -8507,22 +8505,24 @@
    "evidence": "ف3",
    "performance": "missing_second",
    "numbers": {
-    "n": 5
+    "n": 3
    },
    "resource": "بلا نموذج",
    "answer_type": "ج1",
-   "answer": 5,
-   "text_ar": "ما العدد الناقص؟ ⁦ 5 + ▢ = 10 ⁩",
-   "text_en": "What number is missing? ⁦ 5 + ▢ = 10 ⁩",
-   "audio_ar": "ما العدد الناقص؟ ⁦ 5 + ▢ = 10 ⁩",
-   "audio_en": "What number is missing? ⁦ 5 + ▢ = 10 ⁩",
-   "wrong": {},
+   "answer": 7,
+   "text_ar": "ما العدد الناقص؟ ⁦ 3 + ▢ = 10 ⁩",
+   "text_en": "What number is missing? ⁦ 3 + ▢ = 10 ⁩",
+   "audio_ar": "ما العدد الناقص؟ ⁦ 3 + ▢ = 10 ⁩",
+   "audio_en": "What number is missing? ⁦ 3 + ▢ = 10 ⁩",
+   "wrong": {
+    "3": "given_back"
+   },
    "slot": 1,
    "alt_of": null,
    "graded": true,
    "fact": [
-    5,
-    5
+    3,
+    7
    ],
    "fact_seen_before": true
   },
@@ -8706,24 +8706,24 @@
    "evidence": "ف3",
    "performance": "missing_first",
    "numbers": {
-    "n": 1
+    "n": 7
    },
    "resource": "بلا نموذج",
    "answer_type": "ج1",
-   "answer": 9,
-   "text_ar": "ما العدد الناقص؟ ⁦ ▢ + 1 = 10 ⁩",
-   "text_en": "What number is missing? ⁦ ▢ + 1 = 10 ⁩",
-   "audio_ar": "ما العدد الناقص؟ ⁦ ▢ + 1 = 10 ⁩",
-   "audio_en": "What number is missing? ⁦ ▢ + 1 = 10 ⁩",
+   "answer": 3,
+   "text_ar": "ما العدد الناقص؟ ⁦ ▢ + 7 = 10 ⁩",
+   "text_en": "What number is missing? ⁦ ▢ + 7 = 10 ⁩",
+   "audio_ar": "ما العدد الناقص؟ ⁦ ▢ + 7 = 10 ⁩",
+   "audio_en": "What number is missing? ⁦ ▢ + 7 = 10 ⁩",
    "wrong": {
-    "1": "given_back"
+    "7": "given_back"
    },
    "slot": 3,
    "alt_of": null,
    "graded": true,
    "fact": [
-    1,
-    9
+    3,
+    7
    ],
    "fact_seen_before": true
   },

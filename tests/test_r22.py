@@ -249,7 +249,7 @@ try:
     gen.send(([('confirm', 1)], 2, True))
 except StopIteration:
     pass
-expect('8. نشاط تقييم بلا علاج: البند يُعرض موسومًا في الطلب وفي سجله بالبند الذي سبقه',
+expect('8. نشاط تقييم ولا موضع يُؤخَّر إليه البند (كل بنوده بالحقيقة نفسها): يُعرض موسومًا في الطلب وفي سجله بالبند الذي سبقه',
        [gate.repeated('g1'), w.get('fact_just_seen'), recs[0].get('fact_just_seen')], [False, 'p9', 'p9'])
 print('النتيجة: نجح %d من %d' % (sum(results), len(results)))
 sys.exit(0 if all(results) else 1)

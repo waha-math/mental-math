@@ -141,6 +141,9 @@ def opening_types(types):
 
 
 # ---------------------------------------------------------------- الأنشطة
+ALT_PEEK = 8                                        # أقصى عدد بدائل يُسأل عنها لنوع عند تأخير بند
+
+
 class Activity:
     name = None
 
@@ -154,11 +157,42 @@ class Activity:
     def unavailable(self):
         raise RuntimeError('%s: لا يُطلب بديل في هذا النشاط' % self.name)
 
-    def repeated(self, item_id):
+    def repeated(self, item_id, fact_at=None):
         """أول بند يُطلب للنشاط حقيقته حقيقة آخر بند عُرض للمهارة نفسها في الجلسة نفسها من نشاط آخر (R22-01).
         تعيد صحيحًا إن غيّر النشاط ما يطلبه (فيُطلب من جديد)، وغير ذلك إن عُرض البند كما هو، فيوسَم بأن حقيقته
-        عُرضت للتو. الأنشطة التي لها علاج تعيد تعريفها."""
+        عُرضت للتو. الأنشطة التي لها علاج تعيد تعريفها. fact_at(want): حقيقة البند الذي يُعرض لطلب، دون عرضه."""
         return False
+
+    def _defer(self, pos, last, key, plain, after, fact_at, alts=None):
+        """علاج أنشطة التقييم (قرار الأب، 18 نوفمبر): البند الذي يكرر حقيقة ما عُرض قبله يُؤخَّر، ولا يُستبدل. تُعرض
+        البنود التي تليه في مرحلته، ثم يُعرض هو عند أقرب موضع لا تجاور فيه حقيقتُه حقيقةَ بند الموضع الذي قبله ولا
+        ما بعده: البنود نفسها والحكم نفسه، بترتيب آخر. pos موضع الترتيب الجاري و last آخر موضع في مرحلته، و key(q)
+        مفتاح الموضع، و plain(q) ما يُطلب لبند موضع بلا بديل، و after(q) ما قد يُعرض بعد موضع q: بند الموضع التالي،
+        أو أول بنود المرحلة التالية إن كان q آخر مرحلته. fact_at(want): حقيقة بند دون عرضه. alts(q): بدائل بند موضع
+        عند الانقطاع: بديل المؤجَّل، إن انقطع في موضعه الجديد، لا تجاور حقيقتُه ما بعده.
+        البند المؤجَّل قد يُؤخَّر ثانية إن كرر عند موضعه الجديد حقيقة ما عُرض قبله (بديل بند انقطع مثلًا)، فالفحص
+        يجري قبل كل بند تقييم لا عند الدخول وحده (drive_steps).
+        تعيد غير صحيح إن لم يوجد موضع، أو كان موضع لاحق طرفًا في تأخير سابق: يُعرض البند موسومًا. الحقل defer لا
+        يُنشأ إلا عند التأخير: مفاتيحه مواضع الترتيب، وقيمه مواضع البنود التي تُعرض فيها."""
+        if fact_at is None or pos >= last:
+            return False
+        d = getattr(self, 'defer', {})
+        cur = d.get(key(pos), pos)                  # موضع البند المعروض الآن: قد يكون مؤجَّلًا من قبل
+        fact = fact_at(plain(cur))
+        if fact is None or any(key(q) in d for q in range(pos + 1, last + 1)) or fact_at(plain(pos + 1)) == fact:
+            return False
+        mine = {tuple(f) for f in (fact_at(w) for w in (alts(cur) if alts else ())) if f is not None} | {tuple(fact)}
+        for j in range(1, last - pos + 1):
+            if fact_at(plain(pos + j)) == fact or any(tuple(fact_at(w) or ()) in mine for w in after(pos + j)):
+                continue
+            new = {key(pos + i): pos + i + 1 for i in range(j)}
+            new[key(pos + j)] = cur
+            self.__dict__.setdefault('defer', {}).update(new)
+            return True
+        return False
+
+    def _at(self, key, pos):
+        return getattr(self, 'defer', {}).get(key, pos)
 
     def voided(self, item_id, exposed):
         """البند المعروض استُبعد لتغيّر صلاحية النشاط (R17-01). exposed: هل أُجيب عنه أو طُلب فيه دعم قبل التغيّر؟
@@ -191,18 +225,38 @@ class GateRun(Activity):
         self.alt, self.cuts, self.total_cuts = {}, {}, 0
         self.alt_used, self.alt_index = {}, {}          # بدائل كل نوع المستعملة، وبديل كل موضع من بدائل نوعه
 
+    def _p(self):                                   # موضع البند المعروض الآن: موضع الترتيب، إلا إن أُخّر بند (defer)
+        return self._at('%s%d' % (self.stage, self.pos), self.pos)
+
     def _key(self):
-        return '%s%d' % (self.stage, self.pos)
+        return '%s%d' % (self.stage, self._p())
 
     def _type(self):
-        return self.plan[self.pos] if self.stage == 'main' else self.errors[0]
+        return self.plan[self._p()] if self.stage == 'main' else self.errors[0]
+
+    def _plain(self, q, stage=None, t=None):        # ما يُطلب لموضع في مرحلة بلا بديل
+        stage = stage or self.stage
+        return dict(activity=self.name, role='gate' if stage == 'main' else 'gate.compensation',
+                    type=t or (self.plan[q] if stage == 'main' else self.errors[0]), pos=q, alternate=0,
+                    alt_index=None, attempt=self.attempt)
+
+    def repeated(self, item_id, fact_at=None):
+        if self.alt.get(self._key()):               # بديل بند منقطع: ليس بند موضعه، فلا يُؤخَّر
+            return False
+        last = len(self.plan) - 1 if self.stage == 'main' else 1
+
+        def after(q):                               # ما بعد آخر المرحلة (أول التعويضية) يُفحص عند عرضه، لا هنا
+            return [self._plain(q + 1)] if q < last else []
+        return self._defer(self.pos, last, lambda q: '%s%d' % (self.stage, q), self._plain, after, fact_at,
+                           lambda q: [dict(self._plain(q), role='gate.alternate', alternate=1, alt_index=k)
+                                      for k in range(ALT_PEEK)])
 
     def want(self):
         if self.done:
             return None
         k = self._key()
         return dict(activity=self.name, role='gate' if self.stage == 'main' else 'gate.compensation',
-                    type=self._type(), pos=self.pos, alternate=self.alt.get(k, 0), alt_index=self.alt_index.get(k),
+                    type=self._type(), pos=self._p(), alternate=self.alt.get(k, 0), alt_index=self.alt_index.get(k),
                     attempt=self.attempt)
 
     def feed(self, outcome):
@@ -256,7 +310,13 @@ class ShortCheckRun(Activity):
     def want(self):
         if self.done:
             return None
-        return dict(activity=self.name, role='short_check', type=self.types[self.pos], pos=self.pos, alternate=0)
+        p = self._at(str(self.pos), self.pos)
+        return dict(activity=self.name, role='short_check', type=self.types[p], pos=p, alternate=0)
+
+    def repeated(self, item_id, fact_at=None):
+        def w(q):
+            return dict(activity=self.name, role='short_check', type=self.types[q], pos=q, alternate=0)
+        return self._defer(self.pos, 2, str, w, lambda q: [w(q + 1)] if q < 2 else [], fact_at)
 
     def feed(self, outcome):
         assert not self.done
@@ -312,7 +372,7 @@ class OpeningRun(Activity):
             w.update(typed=True, type_index=k)
         return w
 
-    def repeated(self, item_id):
+    def repeated(self, item_id, fact_at=None):
         """R22-01: بند الافتتاح الأول يكرر حقيقة آخر بند عُرض (آخر بند في البوابة مثلًا). في «جرّب أولًا» بنوعي الخطأ
         يُبدأ بالبند الآخر من نوعه. وإن لم يكن له آخر، أو كرر الآخر الحقيقة أيضًا، لا يُعرض ونتيجته void: لا يُتخذ منه
         قرار اختصار ولا يُعدّ خطأ. والبند الموجَّه يُعرض للتعليم ولا تُستعمل نتيجته."""
@@ -412,7 +472,7 @@ class EvidenceRun(Activity):
     def _key(self):
         return '%s/%s/%d' % (self._current(), self.stage, self.pos)
 
-    def repeated(self, item_id):
+    def repeated(self, item_id, fact_at=None):
         """R22-01: أول بند يُطلب عند دخول دليل الفهم يكرر حقيقة آخر بند عُرض من نشاط آخر: لا يُعرض الآن، ويُطلب لموضعه
         بديل نوعه في الجولة. وإن لم يوجد بديل، أو كرر الحقيقة هو أيضًا، انتهت الجولة no_alternate بلا حكم."""
         swap = self.__dict__.setdefault('swap', {})
@@ -485,14 +545,25 @@ class CheckRun(Activity):
     def want(self):
         if self.done:
             return None
-        a = self.alt.get(str(self.slot), 0)
-        return dict(activity=self.name, role='check' if a == 0 else 'check.alternate', slot=self.slot,
+        a = self.alt.get(self._k(), 0)
+        return dict(activity=self.name, role='check' if a == 0 else 'check.alternate', slot=int(self._k()),
                     alternate=a, attempt=self.attempt)
+
+    def _k(self):                                   # خانة البند المعروض الآن: خانة الترتيب، إلا إن أُخّر بند (defer)
+        return str(self._at(str(self.slot), self.slot))
+
+    def repeated(self, item_id, fact_at=None):
+        if self.alt.get(self._k()):                 # بديل بند منقطع: ليس بند خانته، فلا يُؤخَّر
+            return False
+        def w(q):
+            return dict(activity=self.name, role='check', slot=q, alternate=0, attempt=self.attempt)
+        return self._defer(self.slot, self.slots, str, w, lambda q: [w(q + 1)] if q < self.slots else [], fact_at,
+                           lambda q: [dict(w(q), role='check.alternate', alternate=1)])
 
     def feed(self, outcome):
         assert not self.done
         self.shown['check'] += 1
-        k = str(self.slot)
+        k = self._k()
         if outcome == 'interrupted':
             self.cuts[k] = self.cuts.get(k, 0) + 1
             self.total_cuts += 1
@@ -514,7 +585,7 @@ class CheckRun(Activity):
         self._finish('held')
 
     def unavailable(self):
-        self._hold('no_alternate' if self.alt.get(str(self.slot), 0) else 'no_items')   # لا بنود لهذه المحاولة
+        self._hold('no_alternate' if self.alt.get(self._k(), 0) else 'no_items')   # لا بنود لهذه المحاولة
 
     def start_event(self):
         return dict(type='check_started', skill=self.skill, check_id=self.check_id,
@@ -539,7 +610,14 @@ class RetentionRun(Activity):
     def want(self):
         if self.done:
             return None
-        return dict(activity=self.name, role='deferred_check', round=self.round, pos=self.pos, alternate=0)
+        return dict(activity=self.name, role='deferred_check', round=self.round, pos=self._at(str(self.pos), self.pos),
+                    alternate=0)
+
+    def repeated(self, item_id, fact_at=None):
+        def w(q):
+            return dict(activity=self.name, role='deferred_check', round=self.round, pos=q, alternate=0)
+        return self._defer(self.pos, self.size - 1, str, w, lambda q: [w(q + 1)] if q < self.size - 1 else [],
+                           fact_at)
 
     def feed(self, outcome):
         assert not self.done
@@ -556,6 +634,7 @@ class RetentionRun(Activity):
 
 
 CLASSES = {c.__name__: c for c in (GateRun, ShortCheckRun, OpeningRun, EvidenceRun, CheckRun, RetentionRun)}
+ASSESSING = ('gate', 'short', 'check', 'retention')         # أنشطة التقييم: علاج تكرار الحقيقة فيها تأخير البند
 
 
 # ---------------------------------------------------------------- التشغيل
@@ -573,12 +652,19 @@ def exposure(records, skill, activity):
     return out
 
 
+def peek_fact(source, skill, want):
+    """حقيقة البند الذي يعرضه المصدر لطلب، دون عرضه: الطلب يحمل peek فلا يُعدّ البند معروضًا."""
+    it = source(skill, dict(want, peek=True))
+    return list(it['fact']) if isinstance(it, dict) and it.get('fact') is not None else None
+
+
 def drive_steps(act, source, records=None, pause=None, history=None, prev=None):
     """مولّد يعرض بنود النشاط حتى ينتهي. source(skill, want) يعيد البند أو None. يعطي (البند، المطلوب) ويستقبل
     أحداث البند الخام وجوابه الصحيح ونوع البند، أو نتيجة جاهزة (للمحاكاة).
     pause(want) تُسأل بعد كل بند اكتمل: إن أعادت صحيحًا توقف العرض والنشاط غير منتهٍ، ليُحفظ ويُستأنف في جلسة
     لاحقة. بها يُنفَّذ سقف الوقت الذي لا يقطع بندًا جاريًا (7.1)."""
     entry = True                                            # أول بند يُعرض في هذا الدخول إلى النشاط
+    inner = None                                            # آخر بند عُرض من هذا النشاط في هذا الدخول، إن احتُسب تعرّضًا
     while True:
         w = act.want()
         if w is None:
@@ -599,13 +685,23 @@ def drive_steps(act, source, records=None, pause=None, history=None, prev=None):
         # prev(): آخر بند عُرض للمهارة نفسها في الجلسة نفسها من نشاط آخر، (معرّفه، حقيقته)، إن كان يُحتسب تعرّضًا.
         # الحقيقة نفسها لا تُعرض في بندين متتاليين (3.5) ولو كانا من نشاطين (R22-01): النشاط يغيّر ما يطلبه إن كان له
         # علاج، وإلا عُرض البند موسومًا بأن حقيقته عُرضت للتو. داخل النشاط الواحد يضمن المحتوى ذلك (content_sequence)
-        p = prev() if entry and prev and isinstance(item, dict) and item.get('fact') is not None else None
+        # وفي أنشطة التقييم العلاج تأخير البند، والتأخير يغيّر الترتيب الذي ضمنه المحتوى، فيُفحص كل بند فيها مع
+        # البند الذي عُرض قبله من النشاط نفسه أيضًا (بديل بند انقطع قد يجاور بندًا مؤجَّلًا)
+        facted = isinstance(item, dict) and item.get('fact') is not None
+        p = prev() if entry and prev and facted else inner if facted and act.name in ASSESSING else None
         if p and p[0] != item['id'] and list(p[1]) == list(item['fact']):
-            if act.repeated(item['id']):
+            if act.repeated(item['id'], lambda q: peek_fact(source, act.skill, q)):
                 continue
             w = dict(w, fact_just_seen=p[0])
         entry = False
         got = yield item, w
+        if facted:                                          # قاعدة Scheduler.seen نفسها: المنقطع بلا إجابة ولا دعم لا يُحتسب
+            raw = None if isinstance(got, str) else got[0]
+            counts = got != 'interrupted' if raw is None else (
+                any(ev[0] in ('confirm', 'support') for ev in raw) or not (raw and raw[-1][0] == 'interrupt'))
+            inner = (item['id'], item['fact']) if counts else None
+        else:
+            inner = None
         if isinstance(got, str):
             act.feed(got)
             if pause and pause(w) and not act.done:

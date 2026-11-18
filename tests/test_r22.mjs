@@ -213,7 +213,7 @@ const recs = [];
 const gen = driveSteps(gate, () => ({ id: 'g1', fact: [2, 8] }), recs, null, null, () => ['p9', [2, 8]]);
 const first = gen.next().value;
 gen.next([[['confirm', 1]], 2, true]);
-expect('8. نشاط تقييم بلا علاج: البند يُعرض موسومًا في الطلب وفي سجله بالبند الذي سبقه',
+expect('8. نشاط تقييم ولا موضع يُؤخَّر إليه البند (كل بنوده بالحقيقة نفسها): يُعرض موسومًا في الطلب وفي سجله بالبند الذي سبقه',
   [gate.repeated('g1'), first[1].fact_just_seen ?? null, recs[0].fact_just_seen ?? null], [false, 'p9', 'p9']);
 console.log(`النتيجة: نجح ${results.filter(Boolean).length} من ${results.length}`);
 process.exit(results.every(Boolean) ? 0 : 1);

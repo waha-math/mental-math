@@ -72,5 +72,6 @@ class ContentSource:
         if it is not None:
             if 'type' in w and it['evidence'] != w['type'] and a not in ('lesson', 'practice'):
                 raise AssertionError('المحتوى يخالف الطبقة: %s يُطلب %s والبند %s' % (it['id'], w['type'], it['evidence']))
-            self.served.append(it['id'])
+            if not w.get('peek'):                           # سؤال عن بند دون عرضه (تأخير بند التقييم)
+                self.served.append(it['id'])
         return it
