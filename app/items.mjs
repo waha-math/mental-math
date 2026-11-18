@@ -82,8 +82,29 @@ export function classify(rec) {
 // في أي موضع، ونتيجته النهائية غير مكتملة، ويُعدّ مرة واحدة. الدعم بعد آخر إجابة في بند انتهى بنتيجة يُحفظ ولا
 // يدخل المؤشرين، لأن الإجابة لم تأتِ بعده
 // والسجل المستبعد (void: بند توقف نشاطه لتغيّر صلاحيته، R17-01) تاريخ محفوظ لا يدخل أي مؤشر
-export function indicators(all) {
-  const records = all.filter((r) => !r.void);
+// ما وقع في البند كما وقع، لتدقيق النتيجة لاحقًا (ك2 في مراجعة 04e0168، وهو P0-04): الجواب الذي صُحّح به (key)، وقيم
+// الإجابات المؤكدة بترتيبها (values)، وأنواع الدعم بترتيبها (support)، وبصمة تعريف البند (v) إن عُرفت
+export function evidence(raw, key, v = null) {
+  const d = { key, values: raw.filter((ev) => ev[0] === 'confirm').map((ev) => ev[1]),
+    support: raw.filter((ev) => ev[0] === 'support').map((ev) => ev[1]) };
+  if (v !== null && v !== undefined) d.v = v;
+  return d;
+}
+
+// ما لا تحسبه المؤشرات ولماذا (ك2): void سجلات استُبعدت لتغيّر صلاحية نشاطها، session سجلات جلسات أُبطلت، و unlinked
+// سجلات بلا معرّف جلسة: تُحسب في المؤشرات لأنها لا تُنسب إلى جلسة تخمينًا، ويُذكر عددها
+export function leftOut(all, invalid = []) {
+  const bad = new Set(invalid);
+  const live = all.filter((r) => !r.void);
+  return { void: all.length - live.length, session: live.filter((r) => bad.has(r.session)).length,
+    unlinked: live.filter((r) => r.session === null || r.session === undefined).length };
+}
+
+// invalid: معرّفات الجلسات المبطلة (ك2). سجل بند من جلسة مبطلة يبقى في التاريخ ولا يدخل أي مؤشر. والسجل الذي لا يحمل
+// معرّف جلسته لا يُنسب تخمينًا: يبقى في المؤشرات
+export function indicators(all, invalid = []) {
+  const bad = new Set(invalid);
+  const records = all.filter((r) => !r.void && !bad.has(r.session));
   const complete = records.filter((r) => r.status === 'complete');
   const used = records.filter((r) => r.support_before.length || r.later.some((a) => a.support.length));
   const reached = used.filter((r) => r.final === 'correct' || r.final === 'wrong');
@@ -786,7 +807,9 @@ export function* driveSteps(act, source, records = null, pause = null, history =
       const rec = foldItem(raw, correct, assess);
       if (records !== null) {
         const isObj = item !== null && typeof item === 'object' && !Array.isArray(item);
-        const r = { ...rec, skill: act.skill, activity: act.name, role: w.role, item: isObj ? (item.id ?? null) : null };
+        const r = { ...rec, skill: act.skill, activity: act.name, role: w.role, item: isObj ? (item.id ?? null) : null,
+          ...evidence(raw, correct, isObj ? (item.v ?? null) : null) };
+        if (got.length > 3 && got[3]) Object.assign(r, got[3]);   // ما تعرفه الواجهة وحدها عن الحدث: وقته
         if (isObj && item.reshown_same_fact) r.reshown_after_interrupt = true;   // 3.6: «أُعيد عرضه بعد انقطاع»
         if (w.fact_just_seen) r.fact_just_seen = w.fact_just_seen;   // حقيقته حقيقة آخر بند عُرض من نشاط آخر، ولا علاج له
         if (w.ahead_of) r.ahead_of = [...w.ahead_of];   // عُرض قبل بنود أُخّرت لأنها تكرر حقيقة ما سبقها

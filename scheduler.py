@@ -32,7 +32,7 @@ import itertools
 from collections import Counter
 
 from item_layer import (CALC, Activity, GateRun, ShortCheckRun, OpeningRun, EvidenceRun, CheckRun, RetentionRun,
-                        drive_steps, run_sync, gate_plan, fold_item, exposure)
+                        drive_steps, run_sync, gate_plan, fold_item, exposure, evidence, indicators, left_out)
 from transition_engine import OPEN_CHECK
 
 GATES_PER_SEARCH = {'older': 2, 'young': 1}
@@ -261,6 +261,19 @@ class Scheduler:
             return self.invalid('show', v['skill'])
         return self.invalid(v['kind'], v['act'].skill, getattr(v['act'], 'check_id', None))
 
+    def stamp(self):
+        """رابطة سجل البند (ك2، وهو P0-04): معرّفه في سجل الطفل، والجلسة التي وقع فيها، وإصدار حزمة المحتوى. بها
+        تُستبعد سجلات جلسة أُبطلت لاحقًا من المؤشرات (indicators)، والتاريخ باقٍ. الطفل هوية السجل كله (snapshot)."""
+        return dict(id='i%d' % len(self.records), session=self.cur,
+                    pack=None if self.content is None else self.content['version'])
+
+    def indicators(self):
+        """مؤشرات البنود بلا سجلات الجلسات المبطلة في المحرك."""
+        return indicators(self.records or [], {s for s, x in self.e.s['sessions'].items() if x['invalid']})
+
+    def left_out(self):
+        return left_out(self.records or [], {s for s, x in self.e.s['sessions'].items() if x['invalid']})
+
     def halt(self, code, entry, started, answered, void=None, about=None):
         """النشاط الجاري لم يعد صالحًا: لا يتقدم. مصيره بقاعدة سبب الرفض كما عند استئناف نشاط محفوظ: الرفض الخاص
         بالجلسة يُبقيه محفوظًا، والمؤقت الخاص بالمهارة يركن النشاط التعليمي بتقدّمه، وما عداهما يُسقطه. ما أُنجز منه
@@ -270,7 +283,8 @@ class Scheduler:
         if void is not None and void.shown and about is not None and self.records is not None:
             rec = fold_item(void.raw + [('interrupt',)], void.answer, void.assess)
             self.records.append(dict(rec, skill=entry['skill'], activity=about['activity'], role=about['role'],
-                                     item=about['item'], void=code))
+                                     item=about['item'], void=code, **dict(self.stamp(), **evidence(
+                                         void.raw, void.answer, about.get('v')))))
         self.live, self.carried_items = None, []
         k, skill = refusal_kind(code), entry['skill']
         if k == 'session' and started:
@@ -326,7 +340,9 @@ class Scheduler:
             self.n.update(act.shown - mark[0])
             mark[0] = Counter(act.shown)
             if self.records is not None:
-                self.records.extend(recs[mark[1]:])
+                for r in recs[mark[1]:]:                    # رابطة السجل بجلسته وحزمته، عند دخوله سجل الطفل (ك2)
+                    r.update(self.stamp())
+                    self.records.append(r)
             mark[1] = len(recs)
         def guard(got=None):
             # الصلاحية تُفحص قبل عرض البند، ومرة أخرى قبل تطبيق الإجابة (R16-01). قرار يقع بينهما يوقف النشاط
@@ -343,7 +359,8 @@ class Scheduler:
             self.halt(code, entry, bool(sum(act.shown.values())) or kind == 'check',
                       got is not None and not (isinstance(got, Void) and not got.answered),
                       void=got if isinstance(got, Void) else None,
-                      about=dict(activity=act.name, role=w['role'], item=item.get('id') if isinstance(item, dict) else None))
+                      about=dict(activity=act.name, role=w['role'], item=item.get('id') if isinstance(item, dict) else None,
+                                 v=item.get('v') if isinstance(item, dict) else None))
         req = None
         # تاريخ التعرّض من السجلات، لا من كائن النشاط: يبقى بعد إسقاط النشاط وإنشاء غيره (R19-01). لدليل الفهم وافتتاح الدرس
         history = (lambda a: exposure(self.records, a.skill, a.name)) if kind in ('evidence', 'opening') else None

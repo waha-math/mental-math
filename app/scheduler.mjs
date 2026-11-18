@@ -13,7 +13,7 @@
 // المرجع هو scheduler.py: كل قرار هنا يطابقه في متجهات app/scheduler_vectors.json (app/test_scheduler_conformance.mjs).
 import { OPEN_CHECK } from './engine.mjs';
 import { CALC, Activity, GateRun, ShortCheckRun, OpeningRun, EvidenceRun, CheckRun, RetentionRun, driveSteps, runSync, gatePlan,
-  foldItem, exposure }
+  foldItem, exposure, evidence, indicators, leftOut }
   from './items.mjs';
 
 export const GATES_PER_SEARCH = { older: 2, young: 1 };
@@ -303,11 +303,26 @@ export class Scheduler {
   // السجلات. وإجابة جاءت بعد تغيّر الصلاحية لا تُحتسب دليلًا ولا خطأً
   // void و about: البند المعروض عند التوقف وما سُجّل فيه قبل تغيّر الصلاحية (R17-01). تاريخه يُحفظ في سجلات البنود مع
   // سبب استبعاده (void)، ولا يُعطى للنشاط ولا يدخل عدّادًا ولا مؤشرًا: الحفظ غير الاستعمال في التقييم
+  // رابطة سجل البند (ك2، وهو P0-04): معرّفه في سجل الطفل، والجلسة التي وقع فيها، وإصدار حزمة المحتوى. بها تُستبعد
+  // سجلات جلسة أُبطلت لاحقًا من المؤشرات، والتاريخ باقٍ. الطفل هوية السجل كله (snapshot)
+  stamp() {
+    return { id: `i${this.records.length}`, session: this.cur, pack: this.content === null ? null : this.content.version };
+  }
+
+  _invalid() {
+    return Object.entries(this.e.s.sessions).filter(([, x]) => x.invalid).map(([s]) => s);
+  }
+
+  // مؤشرات البنود بلا سجلات الجلسات المبطلة في المحرك
+  indicators() { return indicators(this.records ?? [], this._invalid()); }
+
+  left_out() { return leftOut(this.records ?? [], this._invalid()); }
+
   halt(code, entry, started, answered, void_ = null, about = null) {
     if (void_ !== null && void_.shown && about !== null && this.records !== null) {
       const rec = foldItem([...void_.raw, ['interrupt']], void_.answer, void_.assess);
       this.records.push({ ...rec, skill: entry.skill, activity: about.activity, role: about.role, item: about.item,
-        void: code });
+        void: code, ...this.stamp(), ...evidence(void_.raw, void_.answer, about.v ?? null) });
     }
     this.live = null;
     this.carried_items = [];
@@ -368,7 +383,12 @@ export class Scheduler {
         if (d > 0) this.n[k] = get(this.n, k) + d;
       }
       seen = { ...act.shown };
-      if (this.records !== null) this.records.push(...recs.slice(done));
+      if (this.records !== null) {
+        for (const r of recs.slice(done)) {       // رابطة السجل بجلسته وحزمته، عند دخوله سجل الطفل (ك2)
+          Object.assign(r, this.stamp());
+          this.records.push(r);
+        }
+      }
       done = recs.length;
     };
     // تاريخ التعرّض من السجلات، لا من كائن النشاط: يبقى بعد إسقاط النشاط وإنشاء غيره (R19-01). لدليل الفهم وافتتاح الدرس
@@ -395,7 +415,7 @@ export class Scheduler {
         items: [...prior, ...recs.filter((r) => r.item).map((r) => r.item)] };
       this.halt(code, entry, sum(act.shown) > 0 || kind === 'check',
         got !== undefined && !(got instanceof Void && !got.answered), got instanceof Void ? got : null,
-        { activity: act.name, role: w.role, item: isObj ? (item.id ?? null) : null });
+        { activity: act.name, role: w.role, item: isObj ? (item.id ?? null) : null, v: isObj ? (item.v ?? null) : null });
     };
     for (let r = gen.next(); !r.done;) {
       guard(r.value);

@@ -89,12 +89,26 @@ def classify(rec):
 
 
 # ---------------------------------------------------------------- 3.2 المؤشرات
-def indicators(records):
+def evidence(raw, key, v=None):
+    """ما وقع في البند كما وقع، لتدقيق النتيجة لاحقًا (ك2 في مراجعة 04e0168، وهو P0-04): الجواب الذي صُحّح به (key)،
+    وقيم الإجابات المؤكدة بترتيبها (values)، وأنواع الدعم بترتيبها (support)، وبصمة تعريف البند (v) إن عُرفت.
+    الحقول الخمسة المطوية (fold_item) تُشتق من هذه ولا تغني عنها: منها يُعرف هل الإجابة صحيحة، لا ما هي."""
+    d = dict(key=key, values=[ev[1] for ev in raw if ev[0] == 'confirm'],
+             support=[ev[1] for ev in raw if ev[0] == 'support'])
+    if v is not None:
+        d['v'] = v
+    return d
+
+
+def indicators(records, invalid=()):
     """النجاح بمساعدة: البنود التي سبق دعمٌ إحدى إجاباتها وبلغت نتيجة نهائية. والمدعومة غير المكتملة: كل بند فيه
     دعم، في أي موضع، ونتيجته النهائية غير مكتملة، ويُعدّ مرة واحدة. الدعم بعد آخر إجابة في بند انتهى بنتيجة
     يُحفظ ولا يدخل المؤشرين، لأن الإجابة لم تأتِ بعده.
-    والسجل المستبعد (void: بند توقف نشاطه لتغيّر صلاحيته، R17-01) تاريخ محفوظ لا يدخل أي مؤشر."""
-    records = [r for r in records if not r.get('void')]
+    والسجل المستبعد (void: بند توقف نشاطه لتغيّر صلاحيته، R17-01) تاريخ محفوظ لا يدخل أي مؤشر.
+    invalid: معرّفات الجلسات المبطلة (ك2). سجل بند من جلسة مبطلة يبقى في التاريخ ولا يدخل أي مؤشر. والسجل الذي لا
+    يحمل معرّف جلسته لا يُنسب تخمينًا: يبقى في المؤشرات. أعداد المستبعد وغير المنسوب في left_out."""
+    invalid = set(invalid)
+    records = [r for r in records if not r.get('void') and r.get('session') not in invalid]
     complete = [r for r in records if r['status'] == 'complete']
     used = [r for r in records if r['support_before'] or any(a['support'] for a in r['later'])]
     reached = [r for r in used if r['final'] in ('correct', 'wrong')]
@@ -111,6 +125,16 @@ def indicators(records):
         assisted=dict(rate(sum(1 for r in reached if r['final'] == 'correct'), len(reached)),
                       supported_unfinished=len(unfinished)),
         interrupted=dict(count=len(cut), with_support=sum(1 for r in cut if r['support_before'])))
+
+
+def left_out(records, invalid=()):
+    """ما لا تحسبه المؤشرات ولماذا، ليبقى التقرير قابلًا للمراجعة (ك2): void سجلات استُبعدت لتغيّر صلاحية نشاطها،
+    session سجلات جلسات أُبطلت، و unlinked سجلات بلا معرّف جلسة (قبل نسخة السجل 5): تُحسب في المؤشرات لأنها لا
+    تُنسب إلى جلسة تخمينًا، ويُذكر عددها «سجل قديم ناقص النسبة»."""
+    invalid = set(invalid)
+    live = [r for r in records if not r.get('void')]
+    return dict(void=len(records) - len(live), session=sum(1 for r in live if r.get('session') in invalid),
+                unlinked=sum(1 for r in live if r.get('session') is None))
 
 
 # ---------------------------------------------------------------- القوالب
@@ -659,7 +683,7 @@ def peek_fact(source, skill, want):
     return list(it['fact']) if isinstance(it, dict) and it.get('fact') is not None else None
 
 
-def drive_steps(act, source, records=None, pause=None, history=None, prev=None):
+def drive_steps(act, source, records=None, pause=None, history=None, prev=None):  # noqa: C901
     """مولّد يعرض بنود النشاط حتى ينتهي. source(skill, want) يعيد البند أو None. يعطي (البند، المطلوب) ويستقبل
     أحداث البند الخام وجوابه الصحيح ونوع البند، أو نتيجة جاهزة (للمحاكاة).
     pause(want) تُسأل بعد كل بند اكتمل: إن أعادت صحيحًا توقف العرض والنشاط غير منتهٍ، ليُحفظ ويُستأنف في جلسة
@@ -713,11 +737,14 @@ def drive_steps(act, source, records=None, pause=None, history=None, prev=None):
             if pause and pause(w) and not act.done:
                 return act
             continue
-        raw, correct, assess = got
+        raw, correct, assess = got[:3]
         rec = fold_item(raw, correct, assess)
         if records is not None:
             r = dict(rec, skill=act.skill, activity=act.name, role=w['role'],
-                     item=item.get('id') if isinstance(item, dict) else None)
+                     item=item.get('id') if isinstance(item, dict) else None,
+                     **evidence(raw, correct, item.get('v') if isinstance(item, dict) else None))
+            if len(got) > 3 and got[3]:                     # ما تعرفه الواجهة وحدها عن الحدث: وقته
+                r.update(got[3])
             if isinstance(item, dict) and item.get('reshown_same_fact'):
                 r['reshown_after_interrupt'] = True        # 3.6: «أُعيد عرضه بعد انقطاع»
             if w.get('fact_just_seen'):                     # حقيقته حقيقة آخر بند عُرض من نشاط آخر، ولا علاج له

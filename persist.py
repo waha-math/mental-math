@@ -28,10 +28,11 @@
 import copy
 import json
 
-from item_layer import Activity, fold_item, classify
+from item_layer import Activity, fold_item, classify, evidence
 from scheduler import Scheduler, exposed
 
-SCHEMA = 4                    # 2: سجل محاولات البنود (المراجعة 14). 3: موضع الجلسة الجارية (المرحلة 0). 4: هوية المحتوى (ك1)
+SCHEMA = 5                    # 2: سجل محاولات البنود (المراجعة 14). 3: موضع الجلسة الجارية (المرحلة 0). 4: هوية المحتوى (ك1).
+                              # 5: سجل البند يحمل جلسته وإصدار حزمته وقيم إجاباته (ك2)
 OPTS = ('group', 'start', 'scope', 'learning', 'tolerant', 'compat', 'content_version', 'no_short', 'try_from_gate',
         'cap', 'retention', 'content')
 STATE = ('saved', 'parked', 'carried_items', 'intent', 'pending', 'proven', 'attempt', 'ev_round', 'last_items', 'n',
@@ -195,6 +196,12 @@ def restore(record, net, types, source, answer, item_seconds=None, records=None,
     sc = Scheduler(e, types, source, answer, records=local, item_seconds=item_seconds, **o)
     st = copy.deepcopy(record['scheduler']['state'])
     notes = []
+
+    def linked(j):
+        # رابطة السجل الذي تكتبه الاستعادة وما وقع فيه، كما يكتبهما المجدول في الجلسة (Scheduler.stamp، ك2)
+        return dict(dict(id='i%d' % len(sc.records), session=st['cur'],
+                         pack=None if o.get('content') is None else o['content']['version']),
+                    **evidence([tuple(ev) for ev in j['raw']], j['answer'], j.get('v')))
     if content is not None and bound != content and o['content'] == content and not fresh:
         notes.append(('content_upgraded', None if bound is None else bound['version'], content['version']))
     cur = copy.deepcopy(record.get('current'))
@@ -203,7 +210,7 @@ def restore(record, net, types, source, answer, item_seconds=None, records=None,
             j = cur['journal']                              # ما وقع في البند المعروض يبقى، مستبعدًا من التقييم
             rec = fold_item([tuple(ev) for ev in j['raw']] + [('interrupt',)], j['answer'], j['assess'])
             if sc.records is not None:
-                sc.records.append(dict(rec, skill=cur['skill'], activity=Activity.from_dict(cur['act']).name,
+                sc.records.append(dict(rec, **linked(j), skill=cur['skill'], activity=Activity.from_dict(cur['act']).name,
                                        role=j['want'].get('role'),
                                        item=j.get('item'), unsettled=True, void='content_changed'))
             notes.append(('void_item', cur['skill'], j.get('item'), 'content_changed'))
@@ -250,7 +257,7 @@ def restore(record, net, types, source, answer, item_seconds=None, records=None,
                     more['void'] = v['code']
                     notes.append(('void_item', act.skill, j.get('item'), v['code']))
                 if sc.records is not None:
-                    sc.records.append(dict(rec, **more))
+                    sc.records.append(dict(rec, **dict(linked(j), **more)))
                 # البند خُتم هنا، فهو آخر بند عُرض في الجلسة (R23-01)، بقاعدة التعرّض نفسها في Scheduler.seen: خُتم
                 # بانقطاع، فيُحتسب تعرّضًا إن أُكدت فيه إجابة أو طُلب فيه دعم. لقطة قديمة بلا حقيقة البند: لا يُعرف
                 st['last'] = None if j.get('fact') is None or st['cur'] is None else dict(

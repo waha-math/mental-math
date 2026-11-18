@@ -138,5 +138,15 @@ with tempfile.TemporaryDirectory() as tmp:
            [True, ['8.']])
     open(js_persist, 'w', encoding='utf-8').write(keep)
 
+    # ك2: التطبيق لا يستبعد سجلات الجلسة المبطلة من المؤشرات. الكاشف اختبار المشهد
+    keep = swap(js_items, 'const records = all.filter((r) => !r.void && !bad.has(r.session));',
+                'const records = all.filter((r) => !r.void);')
+    r = subprocess.run(['node', os.path.join(HERE, 'test_record_audit.mjs'), os.path.join(tree, 'app')],
+                       stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+    expect('12. التطبيق يُبقي سجلات الجلسة المبطلة في المؤشرات: حالة الإبطال في اختبار سجل البند تُخفق وحدها',
+           [r.returncode != 0, sorted(l.strip().split()[1] for l in r.stdout.split('\n') if l.strip().startswith('أخفق'))],
+           [True, ['4.']])
+    open(js_items, 'w', encoding='utf-8').write(keep)
+
 print('النتيجة: نجح %d من %d' % (sum(results), len(results)))
 sys.exit(0 if all(results) else 1)

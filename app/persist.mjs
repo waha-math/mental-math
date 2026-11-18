@@ -10,10 +10,11 @@
 // من المخزن)، والبند الجاري يُختم بانقطاع ويُعلَّم «غير محسوم»، والنشاط الجاري يُحفظ في saved، والجلسة التي لم تُختم
 // تُختم، ولا يُقبل سجل يخالف فيه المجدولُ المحرك.
 import { Engine } from './engine.mjs';
-import { Activity, foldItem, classify } from './items.mjs';
+import { Activity, foldItem, classify, evidence } from './items.mjs';
 import { Scheduler, exposed } from './scheduler.mjs';
 
-export const SCHEMA = 4;                // 2: سجل محاولات البنود (المراجعة 14). 3: موضع الجلسة الجارية (المرحلة 0). 4: هوية المحتوى (ك1)
+export const SCHEMA = 5;                // 2: سجل محاولات البنود (المراجعة 14). 3: موضع الجلسة الجارية (المرحلة 0). 4: هوية المحتوى (ك1).
+                                        // 5: سجل البند يحمل جلسته وإصدار حزمته وقيم إجاباته (ك2)
 export const STATE = ['saved', 'parked', 'carried_items', 'intent', 'pending', 'proven', 'attempt', 'ev_round',
   'last_items', 'n', 'gates_run', 'searches', 'sessions', 'day', 'cur', 'log', 'refused', 'stalled', 'elapsed',
   'start_at', 'items_before', 'start_w', 'start_what', 'stage'];
@@ -149,6 +150,9 @@ export function restore(record, { types, source, answer, item_seconds = null, re
   const sc = new Scheduler(e, types, source, answer, { ...o, records: local, item_seconds });
   const st = clone(record.scheduler.state);
   const notes = [];
+  // رابطة السجل الذي تكتبه الاستعادة وما وقع فيه، كما يكتبهما المجدول في الجلسة (Scheduler.stamp، ك2)
+  const linked = (j) => ({ id: `i${sc.records.length}`, session: st.cur,
+    pack: (o.content ?? null) === null ? null : o.content.version, ...evidence(j.raw, j.answer, j.v ?? null) });
   if (content !== null && !sameId(bound, content) && sameId(o.content ?? null, content) && !fresh) {
     notes.push(['content_upgraded', bound === null ? null : bound.version, content.version]);
   }
@@ -158,7 +162,7 @@ export function restore(record, { types, source, answer, item_seconds = null, re
       const j = cur.journal;                    // ما وقع في البند المعروض يبقى، مستبعدًا من التقييم
       const rec = foldItem([...j.raw, ['interrupt']], j.answer, j.assess);
       if (sc.records !== null) {
-        sc.records.push({ ...rec, skill: cur.skill, activity: Activity.fromDict(cur.act).name, role: j.want.role ?? null,
+        sc.records.push({ ...rec, ...linked(j), skill: cur.skill, activity: Activity.fromDict(cur.act).name, role: j.want.role ?? null,
           item: j.item ?? null, unsettled: true, void: 'content_changed' });
       }
       notes.push(['void_item', cur.skill, j.item ?? null, 'content_changed']);
@@ -208,7 +212,7 @@ export function restore(record, { types, source, answer, item_seconds = null, re
           more.void = v.code;
           notes.push(['void_item', act.skill, j.item ?? null, v.code]);
         }
-        if (sc.records !== null) sc.records.push({ ...rec, ...more });
+        if (sc.records !== null) sc.records.push({ ...rec, ...linked(j), ...more });
         // البند خُتم هنا، فهو آخر بند عُرض في الجلسة (R23-01)، بقاعدة التعرّض نفسها في Scheduler.seen: خُتم بانقطاع،
         // فيُحتسب تعرّضًا إن أُكدت فيه إجابة أو طُلب فيه دعم. لقطة قديمة بلا حقيقة البند: لا يُعرف
         st.last = j.fact === undefined || j.fact === null || st.cur === null ? null

@@ -16,9 +16,10 @@ export const SHOWN = ['lesson', 'practice'];                     // بنود ا�
 export const TEACH_SUPPORT = ['hint', 'extra_model', 'someone']; // الدعم المسموح في بنود التعليم
 
 export class Stepper {
-  constructor(engine, sc) {
+  constructor(engine, sc, clock = null) {
     this.e = engine;
     this.sc = sc;
+    this.clock = clock;                           // وقت الحدث كما تعرفه الواجهة: يُكتب في سجل البند (at) عند ختمه
     this.gen = null;
     this.pending = null;                // [البند، المطلوب] أو null
     this.seq = 0;
@@ -142,7 +143,7 @@ export class Stepper {
       this.raw = raw;
       return 'open';
     }
-    this._advance([raw, item.answer, this.assess()]);
+    this._advance([raw, item.answer, this.assess(), this.clock === null ? null : { at: this.clock() }]);
     return 'next';
   }
 

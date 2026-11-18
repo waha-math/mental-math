@@ -19,8 +19,9 @@ TEACH_SUPPORT = ('hint', 'extra_model', 'someone')          # الدعم الم�
 
 
 class Stepper:
-    def __init__(self, engine, sc):
+    def __init__(self, engine, sc, clock=None):
         self.e, self.sc = engine, sc
+        self.clock = clock                                  # وقت الحدث كما تعرفه الواجهة: يُكتب في سجل البند (at) عند ختمه
         self.gen = None
         self.pending = None                                 # (البند، المطلوب) أو None
         self.seq = 0
@@ -137,7 +138,7 @@ class Stepper:
         if not persist.item_ends([list(x) for x in raw], self.assess()):
             self.raw = raw
             return 'open'
-        self._advance((raw, item['answer'], self.assess()))
+        self._advance((raw, item['answer'], self.assess(), None if self.clock is None else dict(at=self.clock())))
         return 'next'
 
     # ------------------------------------------------------------ اللقطة
