@@ -483,6 +483,9 @@ class Scheduler:
         kind = 'consolidate' if consolidate else 'show'
         while True:
             if self.over():                                 # السقف: يُستأنف العرض من موضعه في جلسة لاحقة
+                # تثبيت عُرضت بنوده كلها يكتمل الآن: لو حُفظ لأخذ حصة جلسة لاحقة ولا بند فيه، وأخّر الجولة يومًا
+                if consolidate and self.source(s, dict(activity=activity, pos=k, peek=True)) is None:
+                    return k
                 self.save(dict(kind='show', skill=s, activity=activity, pos=k, items=[], **mark))
                 self.log.append((self.sessions, 'capped', s))
                 raise Capped()

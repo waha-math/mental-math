@@ -261,5 +261,34 @@ expect('9. في المحرك: لا تثبيت بلا طلب مساعدة. وفي
        [no_help, during, done],
        ['no_consolidation', ['consolidation_first', 'quota_teach', 'lesson_idle', True],
         ['no_consolidation', 'no_consolidation', 'no_consolidation']])
+# 8) السقف في أثناء التثبيت. سقف الجلسة 240 ثانية والبند 25: بعد 3 إجابات صحيحة وطلب في الرابع مضى 100، فالبنود الستة
+#    تتم عند 250 والسقف يحلّ وقد عُرضت كلها. وبعد 4 إجابات وطلب في الخامس مضى 125، فالسقف يحلّ بعد خمسة وبقي بند
+e, sc, st = to_retention(correct_first=3)
+ses = e.s['current']
+answer(st, 'h')
+shown10 = rest_of_session(e, st, ses)
+nxt10 = e.s['current']
+after10 = sessions(e, st, 1)[0]
+expect('10. السقف يحلّ وقد عُرضت بنود التثبيت كلها: يكتمل في جلسته ولا يُحفظ، ولا يأخذ حصة الجلسة التالية، والجولة البديلة أول '
+       'الجلسة التالية مباشرة (قبل الإصلاح مضت جلسة كاملة بلا بند)',
+       [[i for a, i in shown10 if a == 'practice'] == practice, facts(e, ses)['notes'],
+        [c for c in sc.saved if c.get('consolidate')], facts(e, nxt10)['notes'], kinds(after10)[:1],
+        int(nxt10[1:]) - int(ses[1:])],
+       [True, [(1, 'help'), (1, 'consolidating'), (1, 'consolidated')], [], [], ['retention'], 1])
+e, sc, st = to_retention(correct_first=4)
+ses = e.s['current']
+answer(st, 'h')
+shown11 = rest_of_session(e, st, ses)
+# قرأتُ أولًا sc.saved هنا فكان فارغًا: طبقة الخطوات كانت قد فتحت الجلسة التالية واستأنفت المحفوظ. الدليل الباقي سجل المجدول
+saved11 = [x for x in sc.log if x[0] == int(ses[1:]) and x[1] == 'capped']
+nxt11 = e.s['current']
+after11 = sessions(e, st, 1)[0]
+expect('11. السقف يحلّ بعد خمسة بنود من التثبيت: يُحفظ عند بنده السادس، ويُستأنف في الجلسة التالية بحدث بدء يأخذ حصتها، فيُعرض '
+       'السادس وحده ويكتمل. والجولة لا تُطلب في تلك الجلسة',
+       [[i for a, i in shown11 if a == 'practice'] == practice[:5], saved11, facts(e, ses)['notes'],
+        [i for a, i in after11 if a == 'practice'] == practice[5:], facts(e, nxt11)['notes'],
+        [a for a, _i in after11 if a == 'retention'], e.s['sessions'][nxt11]['teach']],
+       [True, [(int(ses[1:]), 'capped', SKILL)], [(1, 'help'), (1, 'consolidating')], True,
+        [(1, 'consolidating'), (1, 'consolidated')], [], 1])
 print('النتيجة: نجح %d من %d' % (sum(results), len(results)))
 sys.exit(0 if all(results) else 1)

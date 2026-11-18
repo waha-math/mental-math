@@ -1,5 +1,5 @@
 // طلب المساعدة في فحص الاحتفاظ على التطبيق (ت3 في مراجعة 04e0168): المشهد نفسه في tests/test_retention_help.py،
-// بالحالات الإحدى عشرة نفسها والتوقعات نفسها.
+// بالحالات الثلاث عشرة نفسها والتوقعات نفسها.
 //
 //     node tests/test_retention_help.mjs [مجلد app]
 import { readFileSync } from 'node:fs';
@@ -221,5 +221,31 @@ expect('9. في المحرك: لا تثبيت بلا طلب مساعدة. وفي
   [noHelp, during, done],
   ['no_consolidation', ['consolidation_first', 'quota_teach', 'lesson_idle', true],
     ['no_consolidation', 'no_consolidation', 'no_consolidation']]);
+// 8) السقف في أثناء التثبيت (الحساب في نسخة بايثون): يحلّ وقد عُرضت البنود كلها، ثم يحلّ وقد بقي بند
+({ e, sc, st } = toRetention({ correctFirst: 3 }));
+ses = e.s.current;
+answer(st, 'h');
+const shown10 = restOfSession(e, st, ses);
+const nxt10 = e.s.current;
+const after10 = sessions(e, st, 1)[0];
+expect('10. السقف يحلّ وقد عُرضت بنود التثبيت كلها: يكتمل في جلسته ولا يُحفظ، ولا يأخذ حصة الجلسة التالية، والجولة البديلة أول '
+  + 'الجلسة التالية مباشرة (قبل الإصلاح مضت جلسة كاملة بلا بند)',
+  [text(of(shown10, 'practice')) === text(practice), facts(e, ses).notes, sc.saved.filter((c) => c.consolidate),
+    facts(e, nxt10).notes, kinds(after10).slice(0, 1), Number(nxt10.slice(1)) - Number(ses.slice(1))],
+  [true, [[1, 'help'], [1, 'consolidating'], [1, 'consolidated']], [], [], ['retention'], 1]);
+({ e, sc, st } = toRetention({ correctFirst: 4 }));
+ses = e.s.current;
+answer(st, 'h');
+const shown11 = restOfSession(e, st, ses);
+const saved11 = sc.log.filter((x) => x[0] === Number(ses.slice(1)) && x[1] === 'capped');   // سجل المجدول: المحفوظ استؤنف
+const nxt11 = e.s.current;
+const after11 = sessions(e, st, 1)[0];
+expect('11. السقف يحلّ بعد خمسة بنود من التثبيت: يُحفظ عند بنده السادس، ويُستأنف في الجلسة التالية بحدث بدء يأخذ حصتها، فيُعرض '
+  + 'السادس وحده ويكتمل. والجولة لا تُطلب في تلك الجلسة',
+  [text(of(shown11, 'practice')) === text(practice.slice(0, 5)), saved11, facts(e, ses).notes,
+    text(of(after11, 'practice')) === text(practice.slice(5)), facts(e, nxt11).notes, of(after11, 'retention'),
+    e.s.sessions[nxt11].teach],
+  [true, [[Number(ses.slice(1)), 'capped', SKILL]], [[1, 'help'], [1, 'consolidating']], true,
+    [[1, 'consolidating'], [1, 'consolidated']], [], 1]);
 console.log(`النتيجة: نجح ${results.filter(Boolean).length} من ${results.length}`);
 process.exit(results.every(Boolean) ? 0 : 1);

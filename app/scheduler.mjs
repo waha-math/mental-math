@@ -531,6 +531,8 @@ export class Scheduler {
     const kind = consolidate ? 'consolidate' : 'show';
     for (;;) {
       if (this.over()) {                         // السقف: يُستأنف العرض من موضعه في جلسة لاحقة
+        // تثبيت عُرضت بنوده كلها يكتمل الآن: لو حُفظ لأخذ حصة جلسة لاحقة ولا بند فيه، وأخّر الجولة يومًا
+        if (consolidate && isNone(this.source(s, { activity, pos: k, peek: true }))) return k;
         this.save({ kind: 'show', skill: s, activity, pos: k, items: [], ...mark });
         this.log.push([this.sessions, 'capped', s]);
         throw new Capped();
