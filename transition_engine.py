@@ -262,8 +262,8 @@ TABLE = [
      'بعد دليل استقلالها الساري. يوم الجلسة بلغ الموعد: 7 أيام بعد يوم الاجتياز، ثم 21 يومًا بعد يوم الفحص '
      'السابق الفعلي، ثم 60 (3.7). عدد الصحيح من 0 إلى 5',
      'تُحفظ النتيجة بجولتها ويومها وموعدها ومدتها منذ الاجتياز أو الفحص السابق وبنودها. توصف «احتفاظ»، أو «أداء '
-     'مؤجل» إن نشط درس المهارة داخل الفاصل أو أبلغ التطبيق عن تدريب مباشر فيه. أقل من 4 من 5: تُعلَّم «تحتاج '
-     'تثبيتًا». ليست دليلًا، ولا تغيّر حالة',
+     'مؤجل» إن نشط درس المهارة داخل الفاصل أو أبلغ التطبيق عن تدريب مباشر فيه أو جرى فيه تثبيت. أقل من 4 من 5: '
+     'تُعلَّم «تحتاج تثبيتًا» ويُستحق للمهارة تثبيت، ولا تُعاد الجولة ولا يتغير موعد التالية. ليست دليلًا، ولا تغيّر حالة',
      'no_session، unknown_skill، bad_event، not_met، retention_done، date_unconfirmed، retention_early، '
      'retention_referred، consolidation_first',
      'لا أثر: لا تُغلق ما فُتح'),
@@ -282,16 +282,17 @@ TABLE = [
      'no_session، unknown_skill، not_met، retention_done، date_unconfirmed، retention_early، retention_round، '
      'retention_referred، consolidation_first',
      'لا أثر: لا تُغلق ما فُتح'),
-    ('consolidation_started', 'بدء تثبيت بعد طلب مساعدة في فحص احتفاظ',
-     'جلسة فيها حصة تعليمية، والمهارة مستوفاة، وآخر ما سُجّل على جولة احتفاظها التالية طلب مساعدة أو تثبيت بدأ في '
-     'جلسة أخرى ولم يكتمل',
+    ('consolidation_started', 'بدء تثبيت بعد طلب مساعدة أو نتيجة منخفضة في فحص احتفاظ',
+     'جلسة فيها حصة تعليمية، والمهارة مستوفاة، ويُستحق لها تثبيت لم يكتمل: آخر نتيجة احتفاظ لها أقل من 4 من 5، أو '
+     'آخر ما سُجّل على جولة احتفاظها التالية طلب مساعدة أو تثبيت بدأ في جلسة أخرى',
      'يستهلك الحصة التعليمية للجلسة (7.1: درس جديد أو تثبيت أو فحص). يُسجَّل بدء التثبيت بجلسته ويومه. به يحق عرض '
      'تدريب المهارة في هذه الجلسة وهي مستوفاة، بلا إعادة فتح درسها ولا تغيير حالتها',
      'no_session، unknown_skill، quota_teach، not_met، no_consolidation',
      'لا أثر: لا تُغلق ما فُتح'),
     ('consolidation_done', 'اكتمال التثبيت',
      'التثبيت بدأ في هذه الجلسة ولم يكتمل',
-     'يُسجَّل اكتماله بيومه وبنوده. بعده تعود جولة الاحتفاظ مستحقة من اليوم التالي',
+     'يُسجَّل اكتماله بيومه وبنوده. بعد طلب مساعدة تعود جولة الاحتفاظ مستحقة من اليوم التالي. وبعد نتيجة منخفضة '
+     'توصف نتيجة الجولة التالية «أداء مؤجل»',
      'no_session، unknown_skill، not_met، no_consolidation',
      'لا أثر: لا تُغلق ما فُتح'),
     ('retention_release', 'قرار البالغ في جولة احتفاظ محالة',
@@ -1103,19 +1104,34 @@ class Engine:
                 return True
         return False
 
+    def _consolidation(self, skill):
+        """ما يُستحق له تثبيت في مهارة مستوفاة: (الجولة، ما سُجّل عليها منذ سببه)، أو None. سببان:
+        - آخر نتيجة احتفاظ صالحة أقل من 4 من 5 ولم يكتمل بعدها تثبيت (3.7، بقرار الأب في 18 نوفمبر). التثبيت يُسجَّل على
+          جولة النتيجة نفسها، فيُستحق بعد الجولة الثالثة أيضًا ولا جولة بعدها. لا يوقف الجولة التالية ولا يغيّر موعدها.
+        - طلب مساعدة في الجولة التالية لم يكتمل بعده تثبيت (ت3). هذا يوقف الجولة حتى يكتمل.
+        النتيجة المنخفضة أقدم فتُقدَّم."""
+        if self.direct(skill) != 'met':
+            return None
+        ind = self.valid_evidence(skill, INDEPENDENT)[-1]
+        done = [r for r in self.s['retention'] if r['skill'] == skill and r['valid'] and r['seq'] > ind['seq']]
+        if done and done[-1]['consolidate']:
+            notes = self._retention_notes(skill, done[-1]['round'], done[-1]['seq'])
+            if not any(n['what'] == 'consolidated' for n in notes):
+                return done[-1]['round'], notes
+        if len(done) < len(RETENTION_GAPS):
+            notes = self._retention_notes(skill, len(done) + 1, ind['seq'])
+            if self._owed(notes):
+                return len(done) + 1, notes
+        return None
+
     def consolidation_owed(self):
-        """المهارات التي طُلبت مساعدة في جولة احتفاظها التالية ولم يكتمل تثبيتها، بترتيب الشبكة."""
-        out = []
-        for s in self.ids:
-            r = self._retention_round(s)
-            if r and self._owed(self._retention_notes(s, r[0], r[1])):
-                out.append(s)
-        return out
+        """المهارات التي يُستحق لها تثبيت لم يكتمل (نتيجة احتفاظ منخفضة، أو طلب مساعدة في جولة)، بترتيب الشبكة."""
+        return [s for s in self.ids if self._consolidation(s)]
 
     def consolidating(self, skill):
         """جلسة التثبيت الجاري للمهارة (بدأ ولم يكتمل)، أو None."""
-        r = self._retention_round(skill)
-        notes = self._retention_notes(skill, r[0], r[1]) if r else []
+        t = self._consolidation(skill)
+        notes = t[1] if t else []
         return notes[-1]['session'] if notes and notes[-1]['what'] == 'consolidating' else None
 
     def _retention_notes(self, skill, rnd, after):
@@ -1191,8 +1207,9 @@ class Engine:
             return v
         return ok() if ev['round'] == self.retention_next(ev['skill'])[0] else no('retention_round')
 
-    def _retention_note(self, ev, what):
-        rnd, seq = self._retention_round(ev['skill'])
+    def _retention_note(self, ev, what, rnd=None):
+        if rnd is None:
+            rnd = self._retention_round(ev['skill'])[0]
         ses = ev.get('session')
         self.s['retention_notes'].append(dict(
             id='N%d' % (len(self.s['retention_notes']) + 1), skill=ev['skill'], round=rnd, what=what, session=ses,
@@ -1223,7 +1240,7 @@ class Engine:
 
     def do_consolidation_started(self, ev):
         self.s['sessions'][ev['session']]['teach'] += 1
-        self._retention_note(ev, 'consolidating')
+        self._retention_note(ev, 'consolidating', self._consolidation(ev['skill'])[0])
 
     def can_consolidation_done(self, ev):
         bad = self._need(ev)
@@ -1234,7 +1251,7 @@ class Engine:
         return ok() if self.consolidating(ev['skill']) == ev['session'] else no('no_consolidation')
 
     def do_consolidation_done(self, ev):
-        self._retention_note(ev, 'consolidated')
+        self._retention_note(ev, 'consolidated', self._consolidation(ev['skill'])[0])
 
     def can_retention_release(self, ev):
         if ev.get('skill') not in self.idx:              # سبب فارغ يرفضه المخطط قبل هذا (bad_event)
@@ -1255,6 +1272,11 @@ class Engine:
         ind = self.valid_evidence(skill, INDEPENDENT)[-1]
         # طُلبت مساعدة في هذه الجولة من قبل، أو أعادها البالغ ببنودها: ليست احتفاظًا مستقلًا جديدًا (ت3)
         practised = practised or bool(self._retention_notes(skill, rnd, ind['seq']))
+        # تثبيت بعد نتيجة منخفضة في الجولة السابقة تدريب مباشر داخل الفاصل (3.7): «أداء مؤجل». بدؤه يكفي، فبنوده عُرضت
+        done = [r for r in self.s['retention'] if r['skill'] == skill and r['valid'] and r['seq'] > ind['seq']]
+        if done:
+            practised = practised or any(n['what'] in ('consolidating', 'consolidated')
+                                         for n in self._retention_notes(skill, done[-1]['round'], done[-1]['seq']))
         low = ev['correct'] < RETENTION_OK
         self.s['retention'].append(dict(
             id='R%d' % (len(self.s['retention']) + 1), skill=skill, round=rnd, session=ev['session'], day=day,

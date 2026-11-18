@@ -43,6 +43,9 @@ SEARCH_CAP = 4
 DONE = ('exempt', 'met')
 DIAG = ('gate', 'comp', 'try', 'short')      # البنود التشخيصية
 RETENTION_PER_SESSION = 1
+# التثبيت قصير (3.4: 3 إلى 5 بنود): أول 4 بنود من تدريب المهارة. مقيس: جولة احتفاظ كاملة ثم التدريب كله (6 بنود) لا يسعهما
+# سقف جلسة الصغير (240 ثانية بـ25 للبند)، فيمتد التثبيت إلى جلسة ثانية ويأخذ حصتها. خمسة ثم أربعة يسعها السقف
+CONSOLIDATION_ITEMS = 4
 TEACH_KINDS = ('opening', 'evidence', 'show', 'check')     # أنشطة الحصة التعليمية
 # أسباب رفض استئناف نشاط محفوظ (المراجعة 11، الملاحظة الأولى). النهائية وحدها تُسقطه: لم يعد في المحرك ما يُستأنف.
 # الخاصة بالجلسة تُبقيه في saved حتى جلسة فيها الحصة وتاريخها مؤكد، ولا يُعلَّم فيها غيره. وما سواها مؤقت يخص
@@ -484,12 +487,15 @@ class Scheduler:
         while True:
             if self.over():                                 # السقف: يُستأنف العرض من موضعه في جلسة لاحقة
                 # تثبيت عُرضت بنوده كلها يكتمل الآن: لو حُفظ لأخذ حصة جلسة لاحقة ولا بند فيه، وأخّر الجولة يومًا
-                if consolidate and self.source(s, dict(activity=activity, pos=k, peek=True)) is None:
+                if consolidate and (k >= CONSOLIDATION_ITEMS
+                                    or self.source(s, dict(activity=activity, pos=k, peek=True)) is None):
                     return k
                 self.save(dict(kind='show', skill=s, activity=activity, pos=k, items=[], **mark))
                 self.log.append((self.sessions, 'capped', s))
                 raise Capped()
             w = dict(activity=activity, pos=k, role=activity)
+            if consolidate and k >= CONSOLIDATION_ITEMS:
+                return k
             item = self.source(s, dict(activity=activity, pos=k))
             if item is None:
                 return k

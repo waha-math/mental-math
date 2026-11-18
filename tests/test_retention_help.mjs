@@ -1,5 +1,5 @@
 // طلب المساعدة في فحص الاحتفاظ على التطبيق (ت3 في مراجعة 04e0168): المشهد نفسه في tests/test_retention_help.py،
-// بالحالات الثلاث عشرة نفسها والتوقعات نفسها.
+// بالحالات الست عشرة نفسها والتوقعات نفسها.
 //
 //     node tests/test_retention_help.mjs [مجلد app]
 import { readFileSync } from 'node:fs';
@@ -49,7 +49,8 @@ class Kid {
 let KID = null;
 function answer(st, how = 'c') {
   const [item, w] = st.pending;
-  for (const ev of how === 'h' ? [['support', 'requested']] : KID.events(item, w)) st.event(st.seq, ev);
+  const evs = how === 'h' ? [['support', 'requested']] : how === 'w' ? [['confirm', item.answer + 1]] : KID.events(item, w);
+  for (const ev of evs) st.event(st.seq, ev);
 }
 
 // حتى أول بند في أول فحص احتفاظ، ثم correctFirst إجابات صحيحة فيه. stripAlternates: محتوى بلا بدائل لبنود الاحتفاظ
@@ -101,12 +102,12 @@ expect('1. طلب المساعدة في البند الأول ينهي الجو�
     of(after, 'retention'), tags(sc, 'retention_')[0]],
   [[], [1, 'help'], [[first]], [], 'retention_help']);
 const practice = of(after, 'practice');
-expect('2. ثم التثبيت في الجلسة نفسها وقبل أي شيء آخر: تدريب المهارة كله، بحدثي بدء واكتمال في المحرك، وحصة الجلسة مستهلكة به، '
+expect('2. ثم التثبيت في الجلسة نفسها وقبل أي شيء آخر: أول أربعة بنود من تدريب المهارة، بحدثي بدء واكتمال في المحرك، وحصة الجلسة مستهلكة به، '
   + 'والمهارة باقية مستوفاة ودرسها لم يُستأنف',
   [kinds(after).slice(0, 1), practice.length, practice.every((i) => i.startsWith(SKILL + '/practice/')),
     facts(e, ses).notes, text(e.s.retention_notes.filter((n) => n.what === 'consolidated').map((n) => n.items)) === text([practice]),
     e.s.sessions[ses].teach - teachBefore, e.direct(SKILL), e.s.opened[SKILL].taught.includes(ses), tags(sc, 'carry_')],
-  [['practice'], 6, true, [[1, 'help'], [1, 'consolidating'], [1, 'consolidated']], true, 1, 'met', false, []]);
+  [['practice'], 4, true, [[1, 'help'], [1, 'consolidating'], [1, 'consolidated']], true, 1, 'met', false, []]);
 const rec = sc.records.filter((r) => r.item === first).pop();
 expect('3. سجل البند يحفظ الطلب: منقطع، بلا إجابة، ونوع الدعم requested',
   [rec.status, rec.values, rec.support], ['interrupted', [], ['requested']]);
@@ -224,6 +225,7 @@ expect('9. في المحرك: لا تثبيت بلا طلب مساعدة. وفي
 // 8) السقف في أثناء التثبيت (الحساب في نسخة بايثون): يحلّ وقد عُرضت البنود كلها، ثم يحلّ وقد بقي بند
 ({ e, sc, st } = toRetention({ correctFirst: 3 }));
 ses = e.s.current;
+sc.cap = 200;
 answer(st, 'h');
 const shown10 = restOfSession(e, st, ses);
 const nxt10 = e.s.current;
@@ -233,19 +235,58 @@ expect('10. السقف يحلّ وقد عُرضت بنود التثبيت كله
   [text(of(shown10, 'practice')) === text(practice), facts(e, ses).notes, sc.saved.filter((c) => c.consolidate),
     facts(e, nxt10).notes, kinds(after10).slice(0, 1), Number(nxt10.slice(1)) - Number(ses.slice(1))],
   [true, [[1, 'help'], [1, 'consolidating'], [1, 'consolidated']], [], [], ['retention'], 1]);
-({ e, sc, st } = toRetention({ correctFirst: 4 }));
+({ e, sc, st } = toRetention({ correctFirst: 3 }));
 ses = e.s.current;
+sc.cap = 175;
 answer(st, 'h');
 const shown11 = restOfSession(e, st, ses);
 const saved11 = sc.log.filter((x) => x[0] === Number(ses.slice(1)) && x[1] === 'capped');   // سجل المجدول: المحفوظ استؤنف
 const nxt11 = e.s.current;
 const after11 = sessions(e, st, 1)[0];
-expect('11. السقف يحلّ بعد خمسة بنود من التثبيت: يُحفظ عند بنده السادس، ويُستأنف في الجلسة التالية بحدث بدء يأخذ حصتها، فيُعرض '
-  + 'السادس وحده ويكتمل. والجولة لا تُطلب في تلك الجلسة',
-  [text(of(shown11, 'practice')) === text(practice.slice(0, 5)), saved11, facts(e, ses).notes,
-    text(of(after11, 'practice')) === text(practice.slice(5)), facts(e, nxt11).notes, of(after11, 'retention'),
+expect('11. السقف يحلّ بعد ثلاثة بنود من التثبيت: يُحفظ عند بنده الرابع، ويُستأنف في الجلسة التالية بحدث بدء يأخذ حصتها، فيُعرض '
+  + 'الرابع وحده ويكتمل. والجولة لا تُطلب في تلك الجلسة',
+  [text(of(shown11, 'practice')) === text(practice.slice(0, 3)), saved11, facts(e, ses).notes,
+    text(of(after11, 'practice')) === text(practice.slice(3)), facts(e, nxt11).notes, of(after11, 'retention'),
     e.s.sessions[nxt11].teach],
   [true, [[Number(ses.slice(1)), 'capped', SKILL]], [[1, 'help'], [1, 'consolidating']], true,
     [[1, 'consolidating'], [1, 'consolidated']], [], 1]);
+// 9) نتيجة منخفضة تستحق تثبيتًا (القاعدة والتوقعات في نسخة بايثون)
+{
+  const toRound = (st0, rnd) => {
+    while (st0.pending !== null && !(st0.pending[1].activity === 'retention' && st0.pending[1].round === rnd)) answer(st0);
+  };
+  ({ e, sc, st } = toRetention());
+  ses = e.s.current;
+  const day1 = e.s.sessions[ses].day;
+  const teachLow = e.s.sessions[ses].teach;
+  answer(st, 'w');
+  answer(st, 'w');
+  const low = restOfSession(e, st, ses);
+  const nx = e.retentionNext(SKILL);
+  expect('12. خطآن في الجولة الأولى: تكتمل بنودها الخمسة ونتيجتها 3 من 5 محفوظة. ثم التثبيت في الجلسة نفسها بحصتها، مسجَّلًا على '
+    + 'الجولة الأولى. والجولة الثانية بموعدها بعد 21 يومًا من يوم الفحص، لا تتوقف عليه',
+  [kinds(low), of(low, 'retention').length, text(of(low, 'practice')) === text(practice), facts(e, ses),
+    e.s.sessions[ses].teach - teachLow, nx[0] === 2 && nx[1] === day1 + 21, e.consolidationOwed()],
+  [['retention', 'practice'], 3, true,
+    { results: [[1, 3, 'retention']], notes: [[1, 'consolidating'], [1, 'consolidated']] }, 1, true, []]);
+  toRound(st, 2);
+  const ses2 = e.s.current;
+  const second = restOfSession(e, st, ses2);
+  const round2 = ITEMS.filter((i) => i.skill === SKILL && i.role === 'deferred_check' && i.slot === 2).map((i) => i.id);
+  expect('13. الجولة الثانية في موعدها ببنودها الأصلية، ونتيجتها «أداء مؤجل» لأن تثبيتًا وقع في الفاصل. ولا تثبيت بعدها',
+    [e.s.sessions[ses2].day - day1, text(of(second, 'retention')) === text(round2), facts(e, ses2), of(second, 'practice')],
+    [21, true, { results: [[2, 5, 'deferred_performance']], notes: [] }, []]);
+  toRound(st, 3);
+  const ses3 = e.s.current;
+  answer(st, 'w');
+  answer(st, 'w');
+  answer(st, 'w');
+  const third = restOfSession(e, st, ses3);
+  expect('14. ثلاثة أخطاء في الجولة الثالثة: 2 من 5، ولا جولة بعدها، والتثبيت يُعرض مع ذلك في جلستها. ثم ينتهي المسار',
+    [facts(e, ses3), text(of(third, 'practice')) === text(practice), e.retentionNext(SKILL), e.retentionPending(),
+      st.pending === null],
+    [{ results: [[3, 2, 'retention']], notes: [[3, 'consolidating'], [3, 'consolidated']] }, true, null, [], true]);
+}
+
 console.log(`النتيجة: نجح ${results.filter(Boolean).length} من ${results.length}`);
 process.exit(results.every(Boolean) ? 0 : 1);

@@ -56,7 +56,8 @@ KID = [None]                                               # الطفل النم
 
 def answer(st, how='c'):
     item, w = st.pending
-    evs = [('support', 'requested')] if how == 'h' else KID[0].events(item, w)
+    evs = ([('support', 'requested')] if how == 'h' else [('confirm', item['answer'] + 1)] if how == 'w'
+           else KID[0].events(item, w))
     for ev in evs:
         st.event(st.seq, ev)
 
@@ -130,13 +131,13 @@ expect('1. طلب المساعدة في البند الأول ينهي الجو�
        [[], (1, 'help'), [[first]], [], 'retention_help'])
 # المهارة مستوفاة ودرسها غير نشط: ما يجيز العرض التثبيت الذي أقرّه المحرك، لا الدرس. والجلسة نفسها، وأول ما يُعرض
 practice = [i for a, i in after if a == 'practice']
-expect('2. ثم التثبيت في الجلسة نفسها وقبل أي شيء آخر: تدريب المهارة كله، بحدثي بدء واكتمال في المحرك، وحصة الجلسة مستهلكة به، '
+expect('2. ثم التثبيت في الجلسة نفسها وقبل أي شيء آخر: أول أربعة بنود من تدريب المهارة، بحدثي بدء واكتمال في المحرك، وحصة الجلسة مستهلكة به، '
        'والمهارة باقية مستوفاة ودرسها لم يُستأنف',
        [kinds(after)[:1], len(practice), all(i.startswith(SKILL + '/practice/') for i in practice),
         facts(e, ses)['notes'], [n['items'] for n in e.s['retention_notes'] if n['what'] == 'consolidated'] == [practice],
         e.s['sessions'][ses]['teach'] - teach_before, e.direct(SKILL), ses in e.s['opened'][SKILL]['taught'],
         [x for x in sc.log if x[1].startswith('carry_')]],
-       [['practice'], 6, True, [(1, 'help'), (1, 'consolidating'), (1, 'consolidated')], True, 1, 'met', False, []])
+       [['practice'], 4, True, [(1, 'help'), (1, 'consolidating'), (1, 'consolidated')], True, 1, 'met', False, []])
 rec = [r for r in sc.records if r['item'] == first][-1]
 expect('3. سجل البند يحفظ الطلب: منقطع، بلا إجابة، ونوع الدعم requested',
        [rec['status'], rec['values'], rec['support']], ['interrupted', [], ['requested']])
@@ -261,10 +262,12 @@ expect('9. في المحرك: لا تثبيت بلا طلب مساعدة. وفي
        [no_help, during, done],
        ['no_consolidation', ['consolidation_first', 'quota_teach', 'lesson_idle', True],
         ['no_consolidation', 'no_consolidation', 'no_consolidation']])
-# 8) السقف في أثناء التثبيت. سقف الجلسة 240 ثانية والبند 25: بعد 3 إجابات صحيحة وطلب في الرابع مضى 100، فالبنود الستة
-#    تتم عند 250 والسقف يحلّ وقد عُرضت كلها. وبعد 4 إجابات وطلب في الخامس مضى 125، فالسقف يحلّ بعد خمسة وبقي بند
+# 8) السقف في أثناء التثبيت. البند 25 ثانية، وبعد 3 إجابات صحيحة وطلب في الرابع مضى 100. التثبيت أربعة بنود، فبسقف 200
+#    يحلّ السقف وقد عُرضت كلها، وبسقف 175 يحلّ بعد ثلاثة وبقي بند. السقف يُضبط عند بند الطلب، فما قبله بسقف المشهد 240.
+#    (كُتبت الحالتان والتثبيت تدريب المهارة كله، 6 بنود، بسقف 240. صار 4 بنود فلا يبلغ ذاك السقف، فأُعيد حسابهما)
 e, sc, st = to_retention(correct_first=3)
 ses = e.s['current']
+sc.cap = 200
 answer(st, 'h')
 shown10 = rest_of_session(e, st, ses)
 nxt10 = e.s['current']
@@ -275,20 +278,60 @@ expect('10. السقف يحلّ وقد عُرضت بنود التثبيت كله
         [c for c in sc.saved if c.get('consolidate')], facts(e, nxt10)['notes'], kinds(after10)[:1],
         int(nxt10[1:]) - int(ses[1:])],
        [True, [(1, 'help'), (1, 'consolidating'), (1, 'consolidated')], [], [], ['retention'], 1])
-e, sc, st = to_retention(correct_first=4)
+e, sc, st = to_retention(correct_first=3)
 ses = e.s['current']
+sc.cap = 175
 answer(st, 'h')
 shown11 = rest_of_session(e, st, ses)
 # قرأتُ أولًا sc.saved هنا فكان فارغًا: طبقة الخطوات كانت قد فتحت الجلسة التالية واستأنفت المحفوظ. الدليل الباقي سجل المجدول
 saved11 = [x for x in sc.log if x[0] == int(ses[1:]) and x[1] == 'capped']
 nxt11 = e.s['current']
 after11 = sessions(e, st, 1)[0]
-expect('11. السقف يحلّ بعد خمسة بنود من التثبيت: يُحفظ عند بنده السادس، ويُستأنف في الجلسة التالية بحدث بدء يأخذ حصتها، فيُعرض '
-       'السادس وحده ويكتمل. والجولة لا تُطلب في تلك الجلسة',
-       [[i for a, i in shown11 if a == 'practice'] == practice[:5], saved11, facts(e, ses)['notes'],
-        [i for a, i in after11 if a == 'practice'] == practice[5:], facts(e, nxt11)['notes'],
+expect('11. السقف يحلّ بعد ثلاثة بنود من التثبيت: يُحفظ عند بنده الرابع، ويُستأنف في الجلسة التالية بحدث بدء يأخذ حصتها، فيُعرض '
+       'الرابع وحده ويكتمل. والجولة لا تُطلب في تلك الجلسة',
+       [[i for a, i in shown11 if a == 'practice'] == practice[:3], saved11, facts(e, ses)['notes'],
+        [i for a, i in after11 if a == 'practice'] == practice[3:], facts(e, nxt11)['notes'],
         [a for a, _i in after11 if a == 'retention'], e.s['sessions'][nxt11]['teach']],
        [True, [(int(ses[1:]), 'capped', SKILL)], [(1, 'help'), (1, 'consolidating')], True,
         [(1, 'consolidating'), (1, 'consolidated')], [], 1])
+# 9) نتيجة منخفضة (أقل من 4 من 5) تستحق تثبيتًا، بقرار الأب في 18 نوفمبر بالبنود الأربعة: النتيجة باقية ولا تُعاد جولتها؛
+#    التثبيت بالآلية نفسها؛ موعد الجولة التالية لا يتغير؛ وبعد الجولة الثالثة يُعرض أيضًا
+def to_round(st, rnd):
+    while st.pending is not None and not (st.pending[1]['activity'] == 'retention' and st.pending[1]['round'] == rnd):
+        answer(st)
+
+
+e, sc, st = to_retention()
+ses = e.s['current']
+day1 = e.s['sessions'][ses]['day']
+teach_low = e.s['sessions'][ses]['teach']
+answer(st, 'w')
+answer(st, 'w')
+low = rest_of_session(e, st, ses)
+expect('12. خطآن في الجولة الأولى: تكتمل بنودها الخمسة ونتيجتها 3 من 5 محفوظة. ثم التثبيت في الجلسة نفسها بحصتها، مسجَّلًا على '
+       'الجولة الأولى. والجولة الثانية بموعدها بعد 21 يومًا من يوم الفحص، لا تتوقف عليه',
+       [kinds(low), len([a for a, _i in low if a == 'retention']), [i for a, i in low if a == 'practice'] == practice,
+        facts(e, ses), e.s['sessions'][ses]['teach'] - teach_low, e.retention_next(SKILL)[:2] == (2, day1 + 21),
+        e.consolidation_owed()],
+       [['retention', 'practice'], 3, True,
+        dict(results=[(1, 3, 'retention')], notes=[(1, 'consolidating'), (1, 'consolidated')]), 1, True, []])
+to_round(st, 2)
+ses2 = e.s['current']
+second = rest_of_session(e, st, ses2)
+expect('13. الجولة الثانية في موعدها ببنودها الأصلية، ونتيجتها «أداء مؤجل» لأن تثبيتًا وقع في الفاصل. ولا تثبيت بعدها',
+       [e.s['sessions'][ses2]['day'] - day1, [i for a, i in second if a == 'retention'] == [
+           i['id'] for i in g['ITEMS'] if i['skill'] == SKILL and i['role'] == 'deferred_check' and i['slot'] == 2],
+        facts(e, ses2), [a for a, _i in second if a == 'practice']],
+       [21, True, dict(results=[(2, 5, 'deferred_performance')], notes=[]), []])
+to_round(st, 3)
+ses3 = e.s['current']
+answer(st, 'w')
+answer(st, 'w')
+answer(st, 'w')
+third = rest_of_session(e, st, ses3)
+expect('14. ثلاثة أخطاء في الجولة الثالثة: 2 من 5، ولا جولة بعدها، والتثبيت يُعرض مع ذلك في جلستها. ثم ينتهي المسار',
+       [facts(e, ses3), [i for a, i in third if a == 'practice'] == practice, e.retention_next(SKILL),
+        e.retention_pending(), st.pending is None],
+       [dict(results=[(3, 2, 'retention')], notes=[(3, 'consolidating'), (3, 'consolidated')]), True, None, [], True])
 print('النتيجة: نجح %d من %d' % (sum(results), len(results)))
 sys.exit(0 if all(results) else 1)

@@ -866,20 +866,36 @@ export class Engine {
     return false;
   }
 
-  // المهارات التي طُلبت مساعدة في جولة احتفاظها التالية ولم يكتمل تثبيتها، بترتيب الشبكة
-  consolidationOwed() {
-    const out = [];
-    for (const s of this.ids) {
-      const r = this._retentionRound(s);
-      if (r && Engine._owed(this._retentionNotes(s, r[0], r[1]))) out.push(s);
+  // ما يُستحق له تثبيت في مهارة مستوفاة: [الجولة، ما سُجّل عليها منذ سببه]، أو null. سببان: آخر نتيجة احتفاظ صالحة أقل
+  // من 4 من 5 ولم يكتمل بعدها تثبيت (3.7، بقرار الأب في 18 نوفمبر؛ يُسجَّل على جولة النتيجة، فيُستحق بعد الثالثة أيضًا،
+  // ولا يوقف الجولة التالية ولا يغيّر موعدها)، أو طلب مساعدة في الجولة التالية لم يكتمل بعده تثبيت (ت3؛ يوقفها).
+  // النتيجة المنخفضة أقدم فتُقدَّم
+  _consolidation(skill) {
+    if (this.direct(skill) !== 'met') return null;
+    const inds = this.validEvidence(skill, INDEPENDENT);
+    const ind = inds[inds.length - 1];
+    const done = this.s.retention.filter((r) => r.skill === skill && r.valid && r.seq > ind.seq);
+    const last = done.length ? done[done.length - 1] : null;
+    if (last && last.consolidate) {
+      const notes = this._retentionNotes(skill, last.round, last.seq);
+      if (!notes.some((n) => n.what === 'consolidated')) return [last.round, notes];
     }
-    return out;
+    if (done.length < RETENTION_GAPS.length) {
+      const notes = this._retentionNotes(skill, done.length + 1, ind.seq);
+      if (Engine._owed(notes)) return [done.length + 1, notes];
+    }
+    return null;
+  }
+
+  // المهارات التي يُستحق لها تثبيت لم يكتمل (نتيجة احتفاظ منخفضة، أو طلب مساعدة في جولة)، بترتيب الشبكة
+  consolidationOwed() {
+    return this.ids.filter((s) => this._consolidation(s));
   }
 
   // جلسة التثبيت الجاري للمهارة (بدأ ولم يكتمل)، أو null
   consolidating(skill) {
-    const r = this._retentionRound(skill);
-    const notes = r ? this._retentionNotes(skill, r[0], r[1]) : [];
+    const t = this._consolidation(skill);
+    const notes = t ? t[1] : [];
     return notes.length && notes[notes.length - 1].what === 'consolidating' ? notes[notes.length - 1].session : null;
   }
 
@@ -956,8 +972,8 @@ export class Engine {
     return ev.round === this.retentionNext(ev.skill)[0] ? ok() : no('retention_round');
   }
 
-  _retentionNote(ev, what) {
-    const [rnd] = this._retentionRound(ev.skill);
+  _retentionNote(ev, what, round = null) {
+    const rnd = round === null ? this._retentionRound(ev.skill)[0] : round;
     const ses = has(ev, 'session') ? ev.session : null;
     this.s.retention_notes.push({
       id: 'N' + (this.s.retention_notes.length + 1), skill: ev.skill, round: rnd, what, session: ses,
@@ -985,7 +1001,7 @@ export class Engine {
 
   do_consolidation_started(ev) {
     this.s.sessions[ev.session].teach += 1;
-    this._retentionNote(ev, 'consolidating');
+    this._retentionNote(ev, 'consolidating', this._consolidation(ev.skill)[0]);
   }
 
   can_consolidation_done(ev) {
@@ -995,7 +1011,7 @@ export class Engine {
     return this.consolidating(ev.skill) === ev.session ? ok() : no('no_consolidation');
   }
 
-  do_consolidation_done(ev) { this._retentionNote(ev, 'consolidated'); }
+  do_consolidation_done(ev) { this._retentionNote(ev, 'consolidated', this._consolidation(ev.skill)[0]); }
 
   can_retention_release(ev) {
     if (!has(this.idx, ev.skill)) return no('unknown_skill');   // سبب فارغ يرفضه المخطط قبل هذا (bad_event)
@@ -1013,9 +1029,14 @@ export class Engine {
     const o = this.s.opened[skill];
     const inds = this.validEvidence(skill, INDEPENDENT);
     // طُلبت مساعدة في هذه الجولة من قبل، أو أعادها البالغ ببنودها: ليست احتفاظًا مستقلًا جديدًا (ت3)
+    // تثبيت بعد نتيجة منخفضة في الجولة السابقة تدريب مباشر داخل الفاصل (3.7): «أداء مؤجل». بدؤه يكفي، فبنوده عُرضت
+    const done = this.s.retention.filter((r) => r.skill === skill && r.valid && r.seq > inds[inds.length - 1].seq);
+    const prev = done.length ? done[done.length - 1] : null;
     const practised = (has(ev, 'exposed') ? ev.exposed : false)
       || Boolean(o && o.taught.some((x) => this.s.order.indexOf(x) > at))
-      || this._retentionNotes(skill, rnd, inds[inds.length - 1].seq).length > 0;
+      || this._retentionNotes(skill, rnd, inds[inds.length - 1].seq).length > 0
+      || Boolean(prev && this._retentionNotes(skill, prev.round, prev.seq)
+        .some((n) => n.what === 'consolidating' || n.what === 'consolidated'));
     const low = ev.correct < RETENTION_OK;
     this.s.retention.push({
       id: 'R' + (this.s.retention.length + 1), skill, round: rnd, session: ev.session, day, due_day: due,

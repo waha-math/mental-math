@@ -1051,6 +1051,82 @@ check('تثبيت بعد يوم الطلب: الجولة في اليوم الت�
       'كانت بمحاولتها الأولى، والثلاثة باقية في السجل غير صالحة. وسقوط الاستيفاء: لا جولة ولا تثبيت. وحالة محفوظة قبل هذه '
       'الإضافة تُقرأ', a and b and c and d and f)
 
+# 33) نتيجة احتفاظ منخفضة تستحق تثبيتًا (3.7، بقرار الأب في 18 نوفمبر، بالبنود الأربعة): النتيجة باقية ولا تُعاد جولتها؛
+#     التثبيت بالآلية نفسها؛ موعد الجولة التالية لا يتغير ولا تتوقف عليه؛ وبعد الجولة الثالثة يُستحق أيضًا
+def rrows(e):
+    return [(x['round'], x['day'], x['correct'], x['label'], x['consolidate']) for x in e.s['retention']]
+
+
+e = met_on(2)
+start(e, 'S3', 'follow', day=9)
+a = (ret(e, 'S3', correct=3)['ok'] and e.consolidation_owed() == ['1-1-1']
+     and e.retention_next('1-1-1') == (2, 30, 9, 'S3') and e.retention_pending() == ['1-1-1']
+     and note(e, 'consolidation_started', 'S3')['ok'] and e.s['sessions']['S3']['teach'] == 1
+     and e.consolidating('1-1-1') == 'S3' and e.may_continue('consolidate', 'S3', '1-1-1')['ok']
+     and note(e, 'consolidation_done', 'S3', items=['1-1-1/practice/01'])['ok']
+     and e.consolidation_owed() == [] and e.retention_next('1-1-1') == (2, 30, 9, 'S3')
+     and notes(e) == [('consolidating', 'S3', 9, True), ('consolidated', 'S3', 9, True)]
+     and [n['round'] for n in e.s['retention_notes']] == [1, 1]
+     and refused(e, 'consolidation_started', 'quota_teach', None, session='S3', skill='1-1-1'))
+end(e, 'S3')
+start(e, 'S4', 'follow', day=30)
+b = (refused(e, 'consolidation_started', 'no_consolidation', None, session='S4', skill='1-1-1')
+     and ret(e, 'S4', correct=5)['ok']
+     and rrows(e) == [(1, 9, 3, 'retention', True), (2, 30, 5, 'deferred_performance', False)])
+end(e, 'S4')
+start(e, 'S5', 'follow', day=90)
+ev(e, 'date_confirmed', target='S5')                         # 60 يومًا بعد آخر جلسة: تنبيه تاريخ. نسيتُه في أول كتابة فرُفضت النتيجة
+c = (ret(e, 'S5', correct=2)['ok'] and rrows(e)[-1] == (3, 90, 2, 'retention', True)
+     and e.retention_next('1-1-1') is None and e.consolidation_owed() == ['1-1-1'] and e.retention_pending() == ['1-1-1']
+     and refused(e, 'retention_result', 'retention_done', None, session='S5', skill='1-1-1', correct=5)
+     and note(e, 'consolidation_started', 'S5')['ok'] and note(e, 'consolidation_done', 'S5')['ok']
+     and e.consolidation_owed() == [] and e.retention_pending() == []
+     and [n['round'] for n in e.s['retention_notes']] == [1, 1, 3, 3]
+     and Engine.replay(NET, e.s['log']).dump() == e.dump())
+end(e, 'S5')
+# بلا تثبيت: الجولة التالية لا تتوقف عليه، ونتيجتها «احتفاظ»، والنتيجة غير المنخفضة تُسقط استحقاق ما قبلها
+e2 = met_on(2)
+start(e2, 'S3', 'follow', day=9)
+ret(e2, 'S3', correct=3)
+end(e2, 'S3')
+start(e2, 'S4', 'follow', day=30)
+d = (e2.consolidation_owed() == ['1-1-1'] and ret(e2, 'S4', correct=4)['ok']
+     and rrows(e2)[-1] == (2, 30, 4, 'retention', False) and e2.consolidation_owed() == [])
+end(e2, 'S4')
+# تثبيت بدأ ولم يكتمل يكفي لوصف الجولة التالية «أداء مؤجل»: بنوده عُرضت. وإبطال جلسة النتيجة يعيد الجولة ولا تثبيت
+e3 = met_on(2)
+start(e3, 'S3', 'follow', day=9)
+ret(e3, 'S3', correct=0)
+note(e3, 'consolidation_started', 'S3')
+end(e3, 'S3')
+start(e3, 'S4', 'follow', day=30)
+f = (e3.consolidation_owed() == ['1-1-1'] and ret(e3, 'S4', correct=5)['ok']
+     and rrows(e3)[-1] == (2, 30, 5, 'deferred_performance', False))
+end(e3, 'S4')
+ev(e3, 'invalidate_session', target='S4')
+ev(e3, 'invalidate_session', target='S3')
+f = (f and e3.consolidation_owed() == [] and e3.retention_next('1-1-1') == (1, 9, 2, 'S2')
+     and [x['valid'] for x in e3.s['retention']] == [False, False] and notes(e3) == [('consolidating', 'S3', 9, False)])
+# نتيجة منخفضة لم تُثبَّت، ثم طلب مساعدة في الجولة التالية: تثبيتان، الأقدم أولًا، كلٌّ على جولته
+e4 = met_on(2)
+start(e4, 'S3', 'follow', day=9)
+ret(e4, 'S3', correct=3)
+end(e4, 'S3')
+start(e4, 'S4', 'follow', day=30)
+h = (note(e4, 'retention_help', 'S4', round=2)['ok'] and note(e4, 'consolidation_started', 'S4')['ok']
+     and note(e4, 'consolidation_done', 'S4')['ok'] and e4.consolidation_owed() == ['1-1-1']
+     and e4.retention_next('1-1-1') is None)
+end(e4, 'S4')
+start(e4, 'S5', 'follow', day=31)
+h = (h and note(e4, 'consolidation_started', 'S5')['ok'] and note(e4, 'consolidation_done', 'S5')['ok']
+     and e4.consolidation_owed() == [] and e4.retention_next('1-1-1') == (2, 32, 9, 'S3')
+     and [(n['what'], n['round']) for n in e4.s['retention_notes']] == [
+         ('help', 2), ('consolidating', 1), ('consolidated', 1), ('consolidating', 2), ('consolidated', 2)])
+check('نتيجة احتفاظ منخفضة: يُستحق تثبيت يُسجَّل على جولتها، والجولة التالية بموعدها ولا تتوقف عليه، ونتيجتها بعده «أداء مؤجل». '
+      'وبعد الجولة الثالثة يُستحق أيضًا ويُبقي المسار منتظرًا حتى يكتمل. وبلا تثبيت تبقى التالية «احتفاظ». وتثبيت بدأ ولم يكتمل '
+      'يكفي للوصف. والإبطال يعيد الجولة. ومع طلب مساعدة في التالية: تثبيتان، الأقدم أولًا',
+      a and b and c and d and f and h)
+
 if not all(results):
     print('أخفق اختبار.')
     sys.exit(1)
