@@ -166,7 +166,8 @@ class Activity:
     def _defer(self, pos, last, key, plain, after, fact_at, alts=None):
         """علاج أنشطة التقييم (قرار الأب، 18 نوفمبر): البند الذي يكرر حقيقة ما عُرض قبله يُؤخَّر، ولا يُستبدل. تُعرض
         البنود التي تليه في مرحلته، ثم يُعرض هو عند أقرب موضع لا تجاور فيه حقيقتُه حقيقةَ بند الموضع الذي قبله ولا
-        ما بعده: البنود نفسها والحكم نفسه، بترتيب آخر. pos موضع الترتيب الجاري و last آخر موضع في مرحلته، و key(q)
+        ما بعده. تبقى هوية البنود وخاناتها، ويتغير ترتيب عرضها. قاعدة التوقف تُطبَّق على ترتيب العرض الفعلي، فقد
+        يغيّر التأخير البنود التي يصل إليها الطفل وسبب انتهاء النشاط (ت1 في مراجعة 04e0168). pos موضع الترتيب الجاري و last آخر موضع في مرحلته، و key(q)
         مفتاح الموضع، و plain(q) ما يُطلب لبند موضع بلا بديل، و after(q) ما قد يُعرض بعد موضع q: بند الموضع التالي،
         أو أول بنود المرحلة التالية إن كان q آخر مرحلته. fact_at(want): حقيقة بند دون عرضه. alts(q): بدائل بند موضع
         عند الانقطاع: بديل المؤجَّل، إن انقطع في موضعه الجديد، لا تجاور حقيقتُه ما بعده.
@@ -665,6 +666,7 @@ def drive_steps(act, source, records=None, pause=None, history=None, prev=None):
     لاحقة. بها يُنفَّذ سقف الوقت الذي لا يقطع بندًا جاريًا (7.1)."""
     entry = True                                            # أول بند يُعرض في هذا الدخول إلى النشاط
     inner = None                                            # آخر بند عُرض من هذا النشاط في هذا الدخول، إن احتُسب تعرّضًا
+    moved = []                                              # بنود تقييم أُخّرت قبل البند الذي سيُعرض الآن
     while True:
         w = act.want()
         if w is None:
@@ -691,8 +693,12 @@ def drive_steps(act, source, records=None, pause=None, history=None, prev=None):
         p = prev() if entry and prev and facted else inner if facted and act.name in ASSESSING else None
         if p and p[0] != item['id'] and list(p[1]) == list(item['fact']):
             if act.repeated(item['id'], lambda q: peek_fact(source, act.skill, q)):
+                if act.name in ASSESSING:
+                    moved.append(item['id'])
                 continue
             w = dict(w, fact_just_seen=p[0])
+        if moved:                                           # يُحفظ أن الترتيب تغيّر ولماذا: هذا البند عُرض قبل ما أُخّر
+            w, moved = dict(w, ahead_of=moved), []
         entry = False
         got = yield item, w
         if facted:                                          # قاعدة Scheduler.seen نفسها: المنقطع بلا إجابة ولا دعم لا يُحتسب
@@ -716,6 +722,8 @@ def drive_steps(act, source, records=None, pause=None, history=None, prev=None):
                 r['reshown_after_interrupt'] = True        # 3.6: «أُعيد عرضه بعد انقطاع»
             if w.get('fact_just_seen'):                     # حقيقته حقيقة آخر بند عُرض من نشاط آخر، ولا علاج له
                 r['fact_just_seen'] = w['fact_just_seen']
+            if w.get('ahead_of'):                           # عُرض قبل بنود أُخّرت لأنها تكرر حقيقة ما سبقها
+                r['ahead_of'] = list(w['ahead_of'])
             if w.get('repeated'):                           # بند مستهلك أُعيد للتعليم، لا دليلًا لقرار
                 r['repeated_after_void'] = True
             if w.get('replaces'):                           # R18-01: بديل بند استُهلك، ووصف التعرّض السابق لحقيقته (3.5)

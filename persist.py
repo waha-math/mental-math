@@ -168,6 +168,15 @@ def restore(record, net, types, source, answer, item_seconds=None, records=None,
                     if hasattr(e, 'may_continue') and e.s['current'] is not None else dict(ok=True)
                 more = dict(skill=act.skill, activity=act.name, role=j['want'].get('role'), item=j.get('item'),
                             unsettled=True)
+                # ما حمله طلب البند من وسوم يبقى في سجله كما يبقى لو خُتم في الجلسة (drive_steps)
+                if j['want'].get('fact_just_seen'):
+                    more['fact_just_seen'] = j['want']['fact_just_seen']
+                if j['want'].get('ahead_of'):
+                    more['ahead_of'] = list(j['want']['ahead_of'])
+                if j['want'].get('repeated'):
+                    more['repeated_after_void'] = True
+                if j['want'].get('replaces'):
+                    more['replaces'] = j['want']['replaces']
                 if v['ok']:
                     shown = dict(act.shown)
                     act.feed(classify(rec))

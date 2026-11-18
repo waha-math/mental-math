@@ -125,6 +125,11 @@ export function restore(record, { types, source, answer, item_seconds = null, re
           : { ok: true };
         const more = { skill: act.skill, activity: act.name, role: j.want.role ?? null, item: j.item ?? null,
           unsettled: true };
+        // ما حمله طلب البند من وسوم يبقى في سجله كما يبقى لو خُتم في الجلسة (driveSteps)
+        if (j.want.fact_just_seen) more.fact_just_seen = j.want.fact_just_seen;
+        if (j.want.ahead_of) more.ahead_of = [...j.want.ahead_of];
+        if (j.want.repeated) more.repeated_after_void = true;
+        if (j.want.replaces) more.replaces = j.want.replaces;
         if (v.ok) {
           const shown = { ...act.shown };
           act.feed(classify(rec));

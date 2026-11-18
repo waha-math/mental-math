@@ -61,10 +61,11 @@ function runCase(c) {
   let r = gen.next();
   while (!r.done) {
     const [item, w] = r.value;
-    const o = shown.length < c.script.length ? c.script[shown.length] : 'c';
+    const o = (c.by_id ?? {})[item.id] ?? (shown.length < c.script.length ? c.script[shown.length] : 'c');
     shown.push(item.id);
     if (w.fact_just_seen) marked.push(item.id);
-    const got = [o === 'i' ? [['interrupt']] : [['confirm', o === 'c' ? 1 : 2]], 1, true];
+    const got = [o === 'i' ? [['interrupt']] : o === 'h' ? [['support', 'requested'], ['interrupt']]
+      : [['confirm', o === 'c' ? 1 : 2]], 1, true];
     r = gen.next(got);
     if (c.roundtrip === shown.length && !r.done) {   // يُحفظ النشاط بعد هذا البند ويُنشأ من لقطته
       act = Activity.fromDict(JSON.parse(JSON.stringify(act.toDict())));
@@ -72,7 +73,8 @@ function runCase(c) {
       r = gen.next();
     }
   }
-  const out = { shown, marked, result: act.result, defer: act.defer ?? null, records: recs.map((x) => x.item) };
+  const out = { shown, marked, result: act.result, defer: act.defer ?? null, records: recs.map((x) => x.item),
+    ahead: Object.fromEntries(recs.filter((x) => x.ahead_of).map((x) => [x.item, x.ahead_of])) };
   if ('errors' in c) out.errors = act.errors;
   if ('answers' in c) out.answers = Object.fromEntries(Object.keys(c.answers).map((k) => [k, act.answers[k]]));
   if ('correct' in c) out.correct = act.correct;
@@ -82,7 +84,7 @@ function runCase(c) {
 console.log('=== تأخير بند التقييم، بلغة JavaScript');
 for (const c of CASES) {
   const want = { records: c.shown };
-  for (const k of ['shown', 'marked', 'result', 'defer', 'errors', 'answers', 'correct']) if (k in c) want[k] = c[k];
+  for (const k of ['shown', 'marked', 'result', 'defer', 'errors', 'answers', 'correct', 'ahead']) if (k in c) want[k] = c[k];
   expect(c.name, runCase(c), want);
 }
 
@@ -145,6 +147,48 @@ function scene(inject, closeAt = null) {
   return [shown.map((x) => x[0]), shown.map((x) => x[1]).filter((m) => m), recs, eng.derive()['1-4-2'] ?? null];
 }
 
+// وسوم الطلب تبقى في السجل حين تختم الاستعادةُ البند: المشهدان م5 وم6 في tests/test_defer.py
+function settled(pins, target) {
+  const src = new ContentSource(ITEMS);
+  const box = { sc: null, done: false };
+  const pick = (s, w) => {
+    let it = src.pick(s, w);
+    if (it && pins[it.id]) it = { ...it, ...pins[it.id] };
+    if (!box.done && !w.peek && it && it.id === '1-4-2/gate/01') {
+      box.done = true;
+      box.sc.last = { session: box.sc.cur, skill: '1-4-2', activity: 'lesson', item: '1-4-2/lesson/x', fact: [3, 7],
+        counts: true };
+    }
+    return it;
+  };
+  const eng = new Engine(undefined, { group: 'young' });
+  eng.apply({ id: 'd0', type: 'teacher_open', skill: '1-4-1', bypass: ['1-3-3'], reason: 'قرار الشريحة في 10.2' });
+  const sc = new Scheduler(eng, TYPES, pick, null, { group: 'young', scope: ['1-4-1', '1-4-2'],
+    learning: true, cap: 240, item_seconds: secs, records: [], retention: false });
+  box.sc = sc;
+  const st = new Stepper(eng, sc);
+  st.open(sc.g_run(20));
+  let n = 0;
+  while (st.pending !== null && st.pending[0].id !== target && n < 400) {
+    const [item, w] = st.pending;
+    n += 1;
+    const evs = ['lesson', 'practice'].includes(w.activity) ? [['end']]
+      : [['confirm', item.answer], ...(ASSESS.includes(w.activity) ? [] : [['end']])];
+    for (const ev of evs) st.event(st.seq, ev);
+  }
+  st.show(st.seq);
+  const r = persist.restore(JSON.parse(JSON.stringify(st.snapshot())), { types: TYPES, source: pick, answer: null,
+    item_seconds: secs, records: [], today: null });
+  const rec = r.scheduler.records.filter((x) => x.item === target).pop();
+  return { unsettled: rec.unsettled ?? null, fact_just_seen: rec.fact_just_seen ?? null, ahead_of: rec.ahead_of ?? null };
+}
+
+expect('م5. بند عُرض قبل بند أُخّر، ثم إغلاق واستعادة تختمه: سجله يحمل ما أُخّر',
+  settled(SCENE, '1-4-2/gate/02'), { unsettled: true, fact_just_seen: null, ahead_of: ['1-4-2/gate/01'] });
+const SAME = Object.fromEntries([1, 2, 3, 4, 5, 6, 7, 8, 9].map((k) => [num(k), { numbers: { n: 7 }, answer: 3, fact: [3, 7] }]));
+expect('م6. بند لا موضع يُؤخَّر إليه عُرض موسومًا، ثم إغلاق واستعادة تختمه: سجله يحمل الوسم',
+  settled(SAME, '1-4-2/gate/01'), { unsettled: true, fact_just_seen: '1-4-2/lesson/x', ahead_of: null });
+
 const plain = scene(false);
 expect('م1. بلا حقن: بوابة 1-4-2 بترتيب المحتوى، بلا وسم', plain.slice(0, 3), [PLAIN, [], PLAIN]);
 const cont = scene(true);
@@ -152,5 +196,65 @@ expect('م2. بالحقن: يُبدأ بالبند الثاني ثم الأول�
 expect('م3. حالة المهارة بعد البوابة واحدة بالتأخير وبدونه، وهي الإعفاء', [cont[3], plain[3]], ['exempt', 'exempt']);
 const again = scene(true, '1-4-2/gate/01');
 expect('م4. إغلاق والبند المؤجَّل مطلوب لم يُعرض، ثم استعادة: الترتيب والسجلات وحالة المهارة كالمتصل', again, cont);
+
+// 4) أثر تغيّر الحكم على المهارة وما بعدها (ت1): المشهد نفسه في tests/test_defer.py، القسم 4
+const SCENE_T1 = { '1-4-2/gate/01': { numbers: { n: 7 }, answer: 3, fact: [3, 7] },
+  '1-4-2/gate/02': { numbers: { n: 4 }, answer: 6, fact: [4, 6] },
+  '1-4-2/gate/03': { numbers: { n: 7 }, answer: 3, fact: [3, 7] },
+  '1-4-2/gate/04': { numbers: { n: 9 }, answer: 1, fact: [1, 9] },
+  '1-4-2/gate/05': { numbers: { n: 5 }, answer: 5, fact: [5, 5] },
+  '1-4-2/gate/18': { numbers: { n: 8 }, answer: 2, fact: [2, 8] },
+  '1-4-2/gate/19': { numbers: { n: 4 }, answer: 6, fact: [4, 6] } };
+
+function sceneT1(inject) {
+  const src = new ContentSource(ITEMS);
+  const box = { sc: null, done: !inject };
+  const pick = (s, w) => {
+    let it = src.pick(s, w);
+    if (it && SCENE_T1[it.id]) it = { ...it, ...SCENE_T1[it.id] };
+    if (!box.done && !w.peek && it && it.id === '1-4-2/gate/01') {
+      box.done = true;
+      box.sc.last = { session: box.sc.cur, skill: '1-4-2', activity: 'lesson', item: '1-4-2/lesson/x', fact: [3, 7],
+        counts: true };
+    }
+    return it;
+  };
+  const eng = new Engine(undefined, { group: 'young' });
+  eng.apply({ id: 'd0', type: 'teacher_open', skill: '1-4-1', bypass: ['1-3-3'], reason: 'قرار الشريحة في 10.2' });
+  const sc = new Scheduler(eng, TYPES, pick, null, { group: 'young', scope: ['1-4-1', '1-4-2'],
+    learning: true, cap: 240, item_seconds: secs, records: [], retention: false });
+  box.sc = sc;
+  const st = new Stepper(eng, sc);
+  st.open(sc.g_run(20));
+  const shown = [];
+  let after = null;
+  let n = 0;
+  while (st.pending !== null && n < 400) {
+    const [item, w] = st.pending;
+    n += 1;
+    if (item.id.startsWith('1-4-2/gate/')) shown.push(item.id);
+    else if (shown.length) { after = [item.id.split('/').slice(0, -1).join('/'), w.activity]; break; }
+    let evs;
+    if (item.id === '1-4-2/gate/01') evs = [['support', 'requested']];
+    else if (['1-4-2/gate/02', '1-4-2/gate/03'].includes(item.id)) evs = [['confirm', item.answer + 1]];
+    else if (['lesson', 'practice'].includes(w.activity)) evs = [['end']];
+    else evs = [['confirm', item.answer], ...(ASSESS.includes(w.activity) ? [] : [['end']])];
+    for (const ev of evs) st.event(st.seq, ev);
+  }
+  return { shown, after,
+    attempts: eng.s.attempts.filter((a) => a.skill === '1-4-2' && a.what === 'gate').map((a) => a.result),
+    status: eng.derive()['1-4-2'] ?? null,
+    treatment: eng.s.evidence.filter((x) => x.skill === '1-4-2').map((x) => x.treatment ?? null) };
+}
+
+const tPlain = sceneT1(false);
+const tDefer = sceneT1(true);
+expect('ث3. على المجدول بلا حقن: يُعرض gate/01 وحده، ومحاولة البوابة «طلب دعم»، ولا حالة للمهارة',
+  [tPlain.shown, tPlain.attempts, tPlain.status], [['1-4-2/gate/01'], ['help'], null]);
+expect('ث4. بالحقن: يُعرض gate/02 ثم gate/03، ومحاولة البوابة «إخفاق»، وحالة المهارة تعثّر',
+  [tDefer.shown, tDefer.attempts, tDefer.status], [['1-4-2/gate/02', '1-4-2/gate/03'], ['fail'], 'stumbled']);
+expect('ث5. ما بعد البوابة يختلف (مقيس): بعد طلب الدعم افتتاح الدرس ببنوده الثابتة، وبعد الإخفاق ببنود «جرّب أولًا»، وعلاج التعثّر regular',
+  [tPlain.after, tDefer.after, tPlain.treatment, tDefer.treatment],
+  [['1-4-2/opening', 'opening'], ['1-4-2/tryfirst', 'opening'], [], ['regular']]);
 console.log(`النتيجة: نجح ${results.filter(Boolean).length} من ${results.length}`);
 process.exit(results.every(Boolean) ? 0 : 1);

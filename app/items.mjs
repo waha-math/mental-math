@@ -158,7 +158,8 @@ export class Activity {
 
   // علاج أنشطة التقييم (قرار الأب، 18 نوفمبر): البند الذي يكرر حقيقة ما عُرض قبله يُؤخَّر، ولا يُستبدل. تُعرض البنود
   // التي تليه في مرحلته، ثم يُعرض هو عند أقرب موضع لا تجاور فيه حقيقتُه حقيقةَ بند الموضع الذي قبله ولا ما بعده:
-  // البنود نفسها والحكم نفسه، بترتيب آخر. pos موضع الترتيب الجاري و last آخر موضع في مرحلته، و key(q) مفتاح الموضع،
+  // تبقى هوية البنود وخاناتها، ويتغير ترتيب عرضها. قاعدة التوقف تُطبَّق على ترتيب العرض الفعلي، فقد يغيّر التأخير
+  // البنود التي يصل إليها الطفل وسبب انتهاء النشاط (ت1 في مراجعة 04e0168). pos موضع الترتيب الجاري و last آخر موضع في مرحلته، و key(q) مفتاح الموضع،
   // و plain(q) ما يُطلب لبند موضع بلا بديل، و after(q) ما قد يُعرض بعد موضع q. alts(q): بدائل بند موضع عند الانقطاع:
   // بديل المؤجَّل، إن انقطع في موضعه الجديد، لا تجاور حقيقتُه ما بعده. والبند المؤجَّل قد يُؤخَّر ثانية، فالفحص يجري
   // قبل كل بند تقييم (driveSteps). تعيد غير صحيح إن لم يوجد موضع، أو كان موضع لاحق طرفًا في تأخير سابق: يُعرض البند
@@ -731,6 +732,7 @@ export function peekFact(source, skill, want) {
 export function* driveSteps(act, source, records = null, pause = null, history = null, prev = null) {
   let entry = true;                               // أول بند يُعرض في هذا الدخول إلى النشاط
   let inner = null;                               // آخر بند عُرض من هذا النشاط في هذا الدخول، إن احتُسب تعرّضًا
+  let moved = [];                                 // بنود تقييم أُخّرت قبل البند الذي سيُعرض الآن
   for (;;) {
     let w = act.want();
     if (w === null) return act;
@@ -756,8 +758,15 @@ export function* driveSteps(act, source, records = null, pause = null, history =
     const facted = isItem && item.fact !== undefined && item.fact !== null;
     const p = entry && prev && facted ? prev() : (facted && ASSESSING.includes(act.name) ? inner : null);
     if (p && p[0] !== item.id && JSON.stringify(p[1]) === JSON.stringify(item.fact)) {
-      if (act.repeated(item.id, (q) => peekFact(source, act.skill, q))) continue;
+      if (act.repeated(item.id, (q) => peekFact(source, act.skill, q))) {
+        if (ASSESSING.includes(act.name)) moved.push(item.id);
+        continue;
+      }
       w = { ...w, fact_just_seen: p[0] };
+    }
+    if (moved.length) {                           // يُحفظ أن الترتيب تغيّر ولماذا: هذا البند عُرض قبل ما أُخّر
+      w = { ...w, ahead_of: moved };
+      moved = [];
     }
     entry = false;
     const got = yield [item, w];
@@ -780,6 +789,7 @@ export function* driveSteps(act, source, records = null, pause = null, history =
         const r = { ...rec, skill: act.skill, activity: act.name, role: w.role, item: isObj ? (item.id ?? null) : null };
         if (isObj && item.reshown_same_fact) r.reshown_after_interrupt = true;   // 3.6: «أُعيد عرضه بعد انقطاع»
         if (w.fact_just_seen) r.fact_just_seen = w.fact_just_seen;   // حقيقته حقيقة آخر بند عُرض من نشاط آخر، ولا علاج له
+        if (w.ahead_of) r.ahead_of = [...w.ahead_of];   // عُرض قبل بنود أُخّرت لأنها تكرر حقيقة ما سبقها
         if (w.repeated) r.repeated_after_void = true;   // بند مستهلك أُعيد للتعليم، لا دليلًا لقرار
         if (w.replaces) {                         // R18-01: بديل بند استُهلك، ووصف التعرّض السابق لحقيقته (3.5)
           r.replaces = w.replaces;
