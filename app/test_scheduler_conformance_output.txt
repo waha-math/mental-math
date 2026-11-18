@@ -1,5 +1,5 @@
 === مطابقة المجدول في التطبيق بالمجدول المرجعي
-  نجح  1. 613 مجدولًا (test_item_layer.py 18، tests/test_r11.py 2، tests/test_r13.py 2، المحاكاة 192، مسارات تعلّم عشوائية 240، تشخيص بسقف وقت 160، واستُبعد 1 بدّل فيه الاختبار دالة من دوال المجدول): 16499 نداءً من الخارج و236820 نداءً للشريط. النتيجة وحالة المجدول وبصمة المحرك تطابق المرجع بعد كل نداء، والشريط يُطلب بترتيبه كاملًا
+  نجح  1. 617 مجدولًا (test_item_layer.py 18، tests/test_r11.py 2، tests/test_r13.py 2، المحاكاة 192، مسارات تعلّم عشوائية 240، تشخيص بسقف وقت 160، مسارات تأخير بند التقييم 4، واستُبعد 1 بدّل فيه الاختبار دالة من دوال المجدول): 16696 نداءً من الخارج و237644 نداءً للشريط. النتيجة وحالة المجدول وبصمة المحرك تطابق المرجع بعد كل نداء، والشريط يُطلب بترتيبه كاملًا
   نجح  2. الدوال المنادَاة من الخارج موجودة كلها في مجدول التطبيق: begin، cut، end، engine_apply، follow_learning، pick_gate، run، satisfied، search، send، start_session، teach
-  نجح  3. مداخل سجل المجدول التي ظهرت: capped، carry_dropped، carry_parked، carry_resumed، check_fail، check_held، check_help، check_pass، evidence_no_items، evidence_not_proven، lesson، none، practice، retention_2، retention_3، retention_4، retention_5، retention_cut، skip، use
+  نجح  3. مداخل سجل المجدول التي ظهرت: capped، carry_dropped، carry_parked، carry_resumed، check_fail، check_held، check_help، check_pass، consolidated، evidence_no_items، evidence_not_proven، lesson، none، practice، retention_2، retention_3، retention_4، retention_5، retention_cut، retention_help، retention_no_alternate، skip، use
 نجحت الاختبارات كلها: 3

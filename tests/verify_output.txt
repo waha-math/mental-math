@@ -33,7 +33,7 @@
   نجح  حالات content_identity، JavaScript  ·  النتيجة: نجح 8 من 8
   نجح  حالات record_audit، بايثون  ·  النتيجة: نجح 8 من 8
   نجح  حالات record_audit، JavaScript  ·  النتيجة: نجح 8 من 8
-  نجح  حالات retention_help، بايثون  ·  النتيجة: نجح 11 من 11
-  نجح  حالات retention_help، JavaScript  ·  النتيجة: نجح 11 من 11
+  نجح  حالات retention_help، بايثون  ·  النتيجة: نجح 13 من 13
+  نجح  حالات retention_help، JavaScript  ·  النتيجة: نجح 13 من 13
   نجح  اختبارات Chrome للحفظ  ·  نجحت الاختبارات كلها: 9
 نجح التحقق: 37 خطوة من 37
