@@ -190,6 +190,49 @@ console.log(`=== الحفظ الذرّي في Chrome ${browser.version()} (Index
   await page.close();
 }
 
+// ك3 (مراجعة 04e0168): طلبان متداخلان ثم فشل الكتابة الثانية. الطلب الثاني يأتي والكتابة الأولى جارية (النداءان
+// متتاليان بلا انتظار، والحالة تتغير بينهما). الكتابة الثانية تُلغى داخل معاملتها.
+// توقعتُ أولًا رمز الفشل aborted: الإلغاء يقع قبل put فترميه المعاملة الملغاة، والرمز write_failed. وكانت state عند إشعار
+// «فشل» تُقرأ «جارٍ الحفظ» لأن الحلقة لم تكن خرجت بعد: أصلحتُ ذلك في الكاتب (unsaved يُكتب قبل الإشعار)
+{
+  const { page } = await open();
+  const r = await page.evaluate(async () => {
+    const { store, persist, setup } = window.H;
+    const db = await store.openDB('tk3');
+    const other = await store.openDB('tk3');
+    const st = setup();
+    const seen = [];
+    let writes = 0;
+    const saver = new store.Saver(db, 'kid', () => persist.snapshot(st.e, st.sc, null, 'kid'), {
+      onStatus: (s) => seen.push([s.status + (s.code ? ':' + s.code : ''), s.upto, s.pending ?? 0, saver.state]),
+      hooks: { beforePut: (tx) => { writes += 1; if (writes === 2) tx.abort(); } } });
+    const marker = (rec, m) => Boolean(rec) && rec.scheduler.state.log.some((x) => x[1] === m);
+    st.sc.log.push([99, 'A', '1-4-1']);
+    const p1 = saver.request();                          // الكتابة الأولى تبدأ وتحمل A
+    st.sc.log.push([99, 'B', '1-4-1']);
+    const p2 = saver.request();                          // يأتي والأولى جارية: B لم تُكتب
+    const r1 = await p1;
+    const afterFirst = { state: saver.state, done: saver.done, seq: saver.seq };
+    let err = null;
+    try { await p2; } catch (x) { err = x.code; }
+    const rec = await store.load(other, 'kid');          // اتصال آخر: ما على القرص
+    const afterFail = { state: saver.state, rev: rec.rev, a: marker(rec, 'A'), b: marker(rec, 'B') };
+    const r3 = await saver.request();                    // طلب ثالث يعيد المحاولة بأحدث حالة
+    const rec3 = await store.load(other, 'kid');
+    return { seen, r1, afterFirst, err, afterFail, r3, state3: saver.state, rev3: rec3.rev, b3: marker(rec3, 'B') };
+  });
+  check('ك3. طلبان متداخلان ثم فشل الكتابة الثانية: اكتمال الأولى يُعلَن «أُقرّت» وطلب واحد معلّق، والحالة العامة باقية «جارٍ '
+    + 'الحفظ» ولا يظهر «تم الحفظ». وعد الطلب الأول يتحقق برقم نسخته. ثم «فشل»، والحالة العامة «فشل»، والمحفوظ النسخة الأولى '
+    + 'وحدها (فيها A وليس فيها B) وتُقرأ من اتصال آخر. والطلب الثالث يحفظ أحدث حالة فيظهر «تم الحفظ»',
+  JSON.stringify(r.seen) === JSON.stringify([['saving', 1, 0, 'saving'], ['acked', 1, 1, 'saving'], ['saving', 2, 0, 'saving'],
+    ['failed:write_failed', 2, 0, 'failed'], ['saving', 3, 0, 'saving'], ['saved', 3, 0, 'saved']])
+    && r.r1.ok && r.r1.rev === 1 && JSON.stringify(r.afterFirst) === JSON.stringify({ state: 'saving', done: 1, seq: 2 })
+    && r.err === 'write_failed' && JSON.stringify(r.afterFail) === JSON.stringify({ state: 'failed', rev: 1, a: true, b: false })
+    && r.r3.ok && r.state3 === 'saved' && r.rev3 === 2 && r.b3,
+  JSON.stringify(r));
+  await page.close();
+}
+
 // 5. تكرار طلب الحفظ
 {
   const { page } = await open();
