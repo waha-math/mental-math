@@ -1018,6 +1018,40 @@ export class Scheduler {
     return [this.start_w, this.start_what];
   }
 
+  // هل بقيت جلسة متابعة تُعقد في وضع التعلّم؟ شرط حلقة g_run نفسه
+  more(max_sessions = 200) {
+    return this.sessions < max_sessions && !(this.satisfied() && !this.saved.length
+      && !Object.keys(this.parked).length && !(this.retention && this.e.retentionPending().length));
+  }
+
+  // جلسة واحدة للواجهة: تُكمل الجلسة الجارية إن وُجدت، وإلا تعقد الجلسة التالية بترتيب g_run نفسه (بحث، ثم بدء، ثم
+  // متابعة). تعيد false إن لم تبقَ جلسة تُعقد، ولا تغيّر شيئًا حينها. تكرارها حتى false يساوي g_run
+  *g_session(max_sessions = 200) {
+    if (this.cur !== null) {
+      yield* this.g_continue();
+      return true;
+    }
+    if (this.start_at === null) {
+      if (this.searches < SEARCH_CAP) {
+        const x = this.carried('gate') || this.next_gate();
+        if (x !== null) {
+          this.begin('search');
+          this.searches += 1;
+          yield* this.g_search_body(x);
+          return true;
+        }
+      }
+      yield* this.g_start_session();
+      return true;
+    }
+    if (this.learning) {
+      if (!this.more(max_sessions)) return false;
+      yield* this.g_follow_learning();
+      return true;
+    }
+    return (yield* this.g_follow());
+  }
+
   // جلسة متابعة في وضع التعلّم. تُعقد ولو لم يكن فيها غير «استرجع»، فالأيام تمضي
   *g_follow_learning() {
     this.begin('follow');

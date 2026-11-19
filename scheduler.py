@@ -939,6 +939,34 @@ class Scheduler:
                 pass
         return self.start_w, self.start_what
 
+    def more(self, max_sessions=200):
+        """هل بقيت جلسة متابعة تُعقد في وضع التعلّم؟ شرط حلقة g_run نفسه."""
+        return self.sessions < max_sessions and not (self.satisfied() and not self.saved and not self.parked and not (
+            self.retention and self.e.retention_pending()))
+
+    def g_session(self, max_sessions=200):
+        """جلسة واحدة للواجهة: تُكمل الجلسة الجارية إن وُجدت، وإلا تعقد الجلسة التالية بترتيب g_run نفسه (بحث، ثم بدء،
+        ثم متابعة). تعيد False إن لم تبقَ جلسة تُعقد، ولا تغيّر شيئًا حينها. تكرارها حتى False يساوي g_run."""
+        if self.cur is not None:
+            yield from self.g_continue()
+            return True
+        if self.start_at is None:
+            if self.searches < SEARCH_CAP:
+                x = self.carried('gate') or self.next_gate()
+                if x is not None:
+                    self.begin('search')
+                    self.searches += 1
+                    yield from self.g_search_body(x)
+                    return True
+            yield from self.g_start_session()
+            return True
+        if self.learning:
+            if not self.more(max_sessions):
+                return False
+            yield from self.g_follow_learning()
+            return True
+        return (yield from self.g_follow())
+
     def g_follow_learning(self):
         """جلسة متابعة في وضع التعلّم. تُعقد ولو لم يكن فيها غير «استرجع»، فالأيام تمضي."""
         self.begin('follow')
