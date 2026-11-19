@@ -47,8 +47,19 @@ public class MainActivity extends Activity {
         setContentView(web);
         immersive();
 
+        // نوع الملف صريحًا: وحدات JavaScript تُرفض إن خُدمت بنوع غير JavaScript، و .mjs قد لا يعرفه المحمّل
+        WebViewAssetLoader.AssetsPathHandler assets = new WebViewAssetLoader.AssetsPathHandler(this);
         WebViewAssetLoader loader = new WebViewAssetLoader.Builder()
-                .addPathHandler("/assets/", new WebViewAssetLoader.AssetsPathHandler(this))
+                .addPathHandler("/assets/", path -> {
+                    WebResourceResponse r = assets.handle(path);
+                    if (r == null) return null;
+                    String type = path.endsWith(".mjs") || path.endsWith(".js") ? "text/javascript"
+                            : path.endsWith(".json") ? "application/json"
+                            : path.endsWith(".css") ? "text/css"
+                            : path.endsWith(".html") ? "text/html"
+                            : path.endsWith(".webmanifest") ? "application/manifest+json" : r.getMimeType();
+                    return new WebResourceResponse(type, "utf-8", r.getData());
+                })
                 .build();
         web.setWebViewClient(new WebViewClientCompat() {
             @Override
