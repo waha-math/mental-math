@@ -19,7 +19,7 @@ const STR_AR = {
   lookFrame: 'انظر إلى الإطار، وجرّب مرة أخرى', tryAgain: 'جرّب مرة أخرى', askHelp: 'هل تحتاج مساعدة؟',
   yes: 'نعم', no: 'لا', someone: 'أحد الكبار', back: 'عدنا', exit: 'خروج', soon: 'قريبًا',
   doneToday: 'انتهت مهمة اليوم. نلتقي غدًا', nothing: 'لا مهمة جديدة الآن',
-  more: { resume: 'أكمل الدرس', lesson: 'أكمل الدرس', practice: 'تدريب أكثر', open: 'درس جديد' }, askMore: 'هل تريد المزيد؟',
+  more: { resume: 'أكمل الدرس', lesson: 'أكمل الدرس', practice: 'تدريب أكثر', open: 'درس جديد', session: 'تابع' }, askMore: 'هل تريد المزيد؟',
   answered: (n) => (n === 0 ? 'انتهت مهمة اليوم' : n === 1 ? 'أجبتَ عن سؤال واحد اليوم' : n === 2 ? 'أجبتَ عن سؤالين اليوم'
     : n <= 10 ? `أجبتَ عن ${n} أسئلة اليوم` : `أجبتَ عن ${n} سؤالًا اليوم`),
   save: { idle: '', saving: 'جارٍ الحفظ', saved: 'تم الحفظ', failed: 'لم يُحفظ', read_only: 'لم يُحفظ' },
@@ -30,7 +30,7 @@ const STR_EN = {
   lookFrame: 'Look at the frame and try again', tryAgain: 'Try again', askHelp: 'Do you need help?',
   yes: 'Yes', no: 'No', someone: 'A grown-up', back: "I'm back", exit: 'Exit', soon: 'Soon',
   doneToday: "Today's task is done. See you tomorrow", nothing: 'Nothing new right now',
-  more: { resume: 'Finish the lesson', lesson: 'Finish the lesson', practice: 'More practice', open: 'New lesson' },
+  more: { resume: 'Finish the lesson', lesson: 'Finish the lesson', practice: 'More practice', open: 'New lesson', session: 'Keep going' },
   askMore: 'Do you want more?',
   answered: (n) => (n === 0 ? "Today's task is done" : n === 1 ? 'You answered one question today'
     : `You answered ${n} questions today`),

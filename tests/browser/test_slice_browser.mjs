@@ -27,9 +27,9 @@ const IDENT = { version: PACK.version, digest: PACK.digest };
 const TYPES = { '1-4-1': ['ف1', 'ف3'], '1-4-2': ['ف2', 'ف3', 'ف4'], '3-5-1': ['ف1', 'ف2', 'ف3'],
   '3-5-2': ['ف1', 'ف2', 'ف3', 'ف4'], '3-5-3': ['ف3'] };                   // من صفوف المهارات في الخريطة
 // ملفات الأطفال كما في 10.2 وقرار الأب: السقف وحد اليوم بالثواني، وقرارات الفتح. مكتوبة هنا يدويًا، لا من إعداد التطبيق
-const OLDER = { group: 'older', scope: ['3-5-1', '3-5-2', '3-5-3'], cap: 600, day_cap: 3000,
+const OLDER = { group: 'older', scope: ['3-5-1', '3-5-2', '3-5-3'], cap: 600, day_cap: 86400,
   decisions: [['3-5-1', ['3-3-2', '3-2-3']], ['3-5-2', ['3-2-1', '3-3-1', '2-5-2']]] };
-const PROF = { young: { child: 'young', avatar: '🦊', group: 'young', scope: ['1-4-1', '1-4-2'], cap: 360, day_cap: 1800,
+const PROF = { young: { child: 'young', avatar: '🦊', group: 'young', scope: ['1-4-1', '1-4-2'], cap: 360, day_cap: 86400,
   decisions: [['1-4-1', ['1-3-3']]] }, older1: { child: 'older1', avatar: '🐬', ...OLDER },
 older2: { child: 'older2', avatar: '🦉', ...OLDER } };
 const DAY0 = Date.UTC(2026, 10, 19, 8, 0, 0);                             // 10 صباحًا في القاهرة، 19 نوفمبر 2026
@@ -95,7 +95,12 @@ function rStart(now, more = false) {
     item_seconds: secs, records: [], today: day, content: IDENT });
   R.e = r.engine; R.sc = r.scheduler; R.sc.today = day;
   R.st = new Stepper(R.e, R.sc, () => now);
-  R.st.open(more ? R.sc.g_extra() : R.sc.g_session());
+  // «أريد المزيد» (قرار الأب، 19 نوفمبر مساءً): إضافية إن كان عندها ما تعرضه، وإلا جلسة عادية أخرى. وجلسة عادية
+  // أخرى لم تعرض بندًا تُنهي المزيد لذلك اليوم. القاعدة مكتوبة هنا مستقلة عن طبقة الوصل
+  const extra = more && R.sc.cur === null && R.sc.can_extra(day);
+  const n0 = Object.values(R.sc.n).reduce((a, b) => a + b, 0);
+  R.st.open(extra ? R.sc.g_extra() : R.sc.g_session());
+  if (more && !extra && R.st.finished && Object.values(R.sc.n).reduce((a, b) => a + b, 0) === n0) R.sc.practiced(null, true);
   R.rec = rSnap();
 }
 function rShow(id) {
@@ -487,8 +492,9 @@ const more1 = await play(page, { stopAt: 3 });                            // ث�
   const more2 = await play(page);
   await page.waitForSelector('[data-screen="end"]');
   const rec2 = await dbRec(page);
-  check('تُكمَل الإضافية نفسها من البند الذي أُغلق عليه حتى آخر التدريب، ثم لا يُعرض المزيد: ما عندنا اليوم انتهى',
-    [more2, eng(rec2).sessions[cur].ended, eng(rec2).current, await moreBtn(page)], [PRACTICE.slice(2), true, null, null]);
+  // كان المتوقع هنا «لا يُعرض المزيد». بقرار الأب (المزيد مفتوح) يُعرض «تابع»: جلسة عادية أخرى في اليوم نفسه
+  check('تُكمَل الإضافية نفسها من البند الذي أُغلق عليه حتى آخر التدريب، ثم يُعرض «تابع» لجلسة عادية أخرى',
+    [more2, eng(rec2).sessions[cur].ended, eng(rec2).current, await moreBtn(page)], [PRACTICE.slice(2), true, null, ['session', '▶ تابع']]);
   await sameAsReplay(page, 'بعد الإضافية');
 }
 await page.close();
@@ -630,7 +636,8 @@ for (let d = 50; d <= 58; d++) {
   await page.waitForFunction(() => ['end', 'nothing'].includes(document.getElementById('app').dataset.screen));
   while (await page.evaluate(() => Boolean(document.getElementById('more')))) {
     await page.click('#more');
-    await page.waitForFunction(() => document.getElementById('app').dataset.screen !== 'end');
+    // جلسة لم تعرض بندًا تعود إلى الختام بلا «المزيد»: لا يُنتظر خروج الشاشة منه
+    await page.waitForFunction(() => document.getElementById('app').dataset.screen !== 'end' || !document.getElementById('more'));
     rStart(NOW.t, true);
     const extra = await play(page);
     olderMore += extra.length;

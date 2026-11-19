@@ -31,6 +31,8 @@ export class Blocked extends Error {      // ما يحتاج بالغًا: ال�
   }
 }
 
+const sum = (n) => Object.values(n ?? {}).reduce((a, b) => a + b, 0);
+
 export class Link {
   constructor({ db, child, profile, pack, tz, now = () => Date.now(), mono = () => performance.now(),
     onStatus = () => {}, hooks = {} }) {
@@ -129,13 +131,16 @@ export class Link {
       this._restore(record);
       this.sc.today = familyDay(this.now(), this.tz);
       const st = new Stepper(this.e, this.sc, () => this.now());
-      st.open(more && this.sc.cur === null ? this.sc.g_extra() : this.sc.g_session());
+      const extra = more && this.sc.cur === null && this.sc.can_extra(this.sc.today);
+      const n0 = sum(this.sc.n);
+      st.open(extra ? this.sc.g_extra() : this.sc.g_session());
       this.st = st;
       this.sessionOf = this.sc.cur ?? this.e.s.order[this.e.s.order.length - 1] ?? null;
       if (st.finished && st.result === false) {
         this.st = null;
         return 'done';
       }
+      if (more && !extra && st.finished && sum(this.sc.n) === n0) this.sc.practiced(null, true);   // لم تعرض بندًا
       await this.save();
       return st.finished ? 'ended' : 'item';
     } finally {
@@ -203,10 +208,15 @@ export class Link {
 
   // ما تعرضه جلسة إضافية الآن، بترتيبه: [['resume'|'lesson'|'practice'|'open'، المهارة]، ...]. فارغة: لا تُعرض.
   // الحكم حكم المجدول (can_extra): بعد جلسة مختومة اليوم، وفي اليوم وقت، وعندنا ما يُعرض
+  // «أريد المزيد» مفتوح (قرار الأب، 19 نوفمبر مساءً): جلسة إضافية إن كان عندها ما تعرضه، وإلا جلسة عادية أخرى في
+  // اليوم نفسه، فيمضي الطفل في الدروس والتقييم بقواعدها (فحص الاستقلال يبقى في يوم بعد دليل الفهم: يرفضه المحرك
+  // في يومه). جلسة عادية أخرى لم تعرض بندًا تُنهي المزيد لذلك اليوم (free.dry).
   more() {
     if (this.sc === null || (this.st !== null && !this.st.finished)) return [];
     const day = familyDay(this.now(), this.tz);
-    return this.sc.can_extra(day) ? this.sc.extra_plan(day) : [];
+    if (this.sc.can_extra(day)) return this.sc.extra_plan(day);
+    const dry = this.sc.free && this.sc.free.day === day && this.sc.free.dry;
+    return !dry && this.sc.cur === null && (this.sc.start_at === null || this.sc.more()) ? [['session', null]] : [];
   }
 
   // ما أنجزه الطفل في الجلسة، لرسالة الختام (7.1): عدد البنود التي أكّد فيها إجابة
