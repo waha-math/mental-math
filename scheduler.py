@@ -47,12 +47,13 @@ RETENTION_PER_SESSION = 1
 # سقف جلسة الصغير (240 ثانية بـ25 للبند)، فيمتد التثبيت إلى جلسة ثانية ويأخذ حصتها. خمسة ثم أربعة يسعها السقف
 CONSOLIDATION_ITEMS = 4
 TEACH_KINDS = ('opening', 'evidence', 'show', 'check')     # أنشطة الحصة التعليمية
+EXTRA_KINDS = ('opening', 'evidence', 'show')              # ما يُستأنف منها في الجلسة الإضافية: لا فحص فيها
 # أسباب رفض استئناف نشاط محفوظ (المراجعة 11، الملاحظة الأولى). النهائية وحدها تُسقطه: لم يعد في المحرك ما يُستأنف.
 # الخاصة بالجلسة تُبقيه في saved حتى جلسة فيها الحصة وتاريخها مؤكد، ولا يُعلَّم فيها غيره. وما سواها مؤقت يخص
 # المهارة (توقيت الفحص، تعليق الدرس): يُركن النشاط بتقدّمه في parked، وتمضي الجلسة، ويُستأنف أول جلسة يُقبل فيها
 FINAL_REFUSALS = ('check_state', 'no_check', 'version_unavailable', 'already_satisfied', 'unknown_skill', 'bad_event',
                   'no_consolidation', 'not_met')
-SESSION_REFUSALS = ('date_unconfirmed', 'no_session')
+SESSION_REFUSALS = ('date_unconfirmed', 'no_session', 'extra_session')
 
 
 def refusal_kind(code):
@@ -97,7 +98,7 @@ def old_types(types):
 class Scheduler:
     def __init__(self, engine, types, source, answer, group='older', start=None, scope=None, learning=False,
                  tolerant=True, compat=False, content_version=1, records=None, no_short=(), try_from_gate=True,
-                 cap=None, item_seconds=None, retention=False, content=None):
+                 cap=None, item_seconds=None, retention=False, content=None, day_cap=None):
         self.e, self.types, self.source, self.answer = engine, types, source, answer
         # هوية حزمة المحتوى التي تُربط بها المحاولة (ك1): dict(version, digest). تُحفظ مع اللقطة، ولا يُستأنف نشاط جارٍ
         # ببنك آخر بصمت (persist.restore). وبها يصير content_version رقم الحزمة، فتحمله محاولات الفحص في المحرك
@@ -117,6 +118,9 @@ class Scheduler:
         self.elapsed, self.saved, self.carried_items = 0, [], []
         self.parked = {}                    # مهارة ← نشاط تعليمي محفوظ رُفض استئنافه رفضًا مؤقتًا يخص المهارة
         self.retention = retention
+        # الاستمرار بعد جلسة اليوم (قرار الأب، 19 نوفمبر): day_cap حد وقت يوم الأسرة كله بالثواني، وبلا قيمة لا جلسة
+        # إضافية. used زمن جلسات اليوم المختومة، و free ما دُرّب في إضافيات اليوم. يُنشآن عند الحاجة ويُحفظان
+        self.day_cap, self.used, self.free = day_cap, None, None
         self.intent, self.pending, self.proven, self.attempt = [], [], {}, {}
         self.ev_round = {}                  # جولات دليل الفهم التي عُرضت بنودها لكل مهارة
         self.last_items = []                # معرّفات بنود آخر نشاط، تُرفق بأحداثه فيُحفظ الدليل ببنوده (3.5)
@@ -165,8 +169,16 @@ class Scheduler:
         self.send(dict(type='session_start', session=self.cur, kind=kind, day=self.day))
 
     def end(self):
+        if self.day_cap is not None:                        # زمن اليوم: يُجمع عند ختم كل جلسة
+            if self.used is None or self.used['day'] != self.day:
+                self.used = dict(day=self.day, seconds=0)
+            self.used['seconds'] += self.elapsed
         self.send(dict(type='session_end', session=self.cur))
         self.cur = self.stage = self.last = None
+
+    def spent(self, day):
+        """ثواني جلسات هذا اليوم المختومة."""
+        return self.used['seconds'] if self.used and self.used['day'] == day else 0
 
     def seen(self, skill, activity, item, got=None):
         """آخر بند عُرض في الجلسة (R22-01): مهارته ونشاطه ومعرّفه وحقيقته. counts: هل يُحتسب تعرّضًا؟ لا يُحتسب بند
@@ -214,6 +226,8 @@ class Scheduler:
 
     # ---------------------------------------------------------------- الأنشطة
     def over(self):
+        if self.stage is not None and self.stage['kind'] == 'extra':   # الإضافية يحدّها وقت اليوم كله لا سقف الجلسة
+            return self.spent(self.day) + self.elapsed >= self.day_cap
         return self.cap is not None and self.elapsed >= self.cap
 
     def tick(self, w):
@@ -967,6 +981,143 @@ class Scheduler:
             return True
         return (yield from self.g_follow())
 
+    # ---------------------------------------------------------------- الجلسة الإضافية (قرار الأب، 19 نوفمبر)
+    # الطفل الذي يريد أن يستمر بعد جلسة يومه لا يُقطع. الإضافية تعليم وتدريب فقط: يُكمَل فيها ما قطعه السقف، والدرس
+    # الجاري، وتدريب المهارة التي تنتظر فحص استقلالها، ودرس جديد إن لم يُفتح اليوم درس. لا بوابة ولا تحقق ولا فحص
+    # استقلال ولا فحص احتفاظ: مواعيدها بالأيام، والمحرك يرفضها في الإضافية. ولا تُدرَّب مهارة مستوفاة: تدريبها داخل
+    # فاصل الاحتفاظ يجعل جولته «أداء مؤجل» (3.7). والتثبيت المستحق بعد فحص احتفاظ يبقى في حصة الجلسة العادية، ويُكمَل
+    # هنا إن قطعه السقف.
+    def extra_lessons(self, st):
+        """المهارات التي درسها جارٍ: مفتوح، لم يثبت فهمه، وليس مركونًا ولا معلَّقًا."""
+        out = []
+        for s in self.ids:
+            o = self.e.s['opened'].get(s)
+            if not o or s in self.parked or s in self.e.s['suspended'] or st[s] in DONE or o['phase'] == 'skipped':
+                continue
+            if o['phase'] == 'due' or not self.e.progress(s)[1]:
+                out.append(s)
+        return out
+
+    def extra_practice(self, st, day):
+        """المهارات التي تُدرَّب في الإضافية: ثبت فهمها وتنتظر فحص استقلالها، ولا محاولة فحص لها معلَّقة أو مقطوعة،
+        ولم تُدرَّب في إضافية اليوم. مرة واحدة في اليوم: بنود التدريب قليلة، وتكرارها في الجلسة نفسها لا يضيف."""
+        done = self.free['skills'] if self.free and self.free['day'] == day else []
+        out = []
+        for s in self.ids:
+            o = self.e.s['opened'].get(s)
+            if not o or s in self.parked or s in self.e.s['suspended'] or st[s] in DONE or not self.e.progress(s)[1]:
+                continue
+            if o['phase'] not in ('opening', 'full', 'due') or s in done:
+                continue
+            if any(c['skill'] == s and c['state'] in OPEN_CHECK for c in self.e.s['checks'].values()):
+                continue
+            if any(c['kind'] == 'check' and c['skill'] == s for c in self.saved):
+                continue
+            out.append(s)
+        return out
+
+    def extra_plan(self, day):
+        """ما تعرضه جلسة إضافية في هذا اليوم، بترتيبه. يُسأل والجلسة مغلقة، فشروطه بنيوية: ما يرفضه المحرك عند
+        التنفيذ يُتخطى. قائمة فارغة: لا شيء يُعرض."""
+        st = self.e.derive()
+        plan = [('resume', c['skill']) for c in self.saved if c['kind'] in EXTRA_KINDS]
+        plan += [('lesson', s) for s in self.extra_lessons(st) if ('resume', s) not in plan]
+        plan += [('practice', s) for s in self.extra_practice(st, day)]
+        opened_today = any(self.e.s['sessions'][o['session']]['day'] == day for o in self.e.s['opened'].values())
+        if not opened_today and self.pick_lesson() is not None:
+            plan.append(('open', self.pick_lesson()))
+        return plan
+
+    def can_extra(self, day):
+        """هل تُعرض على الطفل جلسة إضافية الآن؟ بعد جلسة مختومة في يوم الأسرة نفسه، وفي اليوم وقت باقٍ، وعندنا ما
+        يُعرض، ولم تمضِ اليوم إضافية بلا بند."""
+        e = self.e.s
+        if self.day_cap is None or not self.learning or self.cur is not None or self.start_at is None or not e['order']:
+            return False
+        if e['sessions'][e['order'][-1]]['day'] != day or self.spent(day) >= self.day_cap:
+            return False
+        if self.free and self.free['day'] == day and self.free.get('dry'):
+            return False
+        return bool(self.extra_plan(day))
+
+    def g_extra(self):
+        """جلسة إضافية واحدة. تعيد False ولا تغيّر شيئًا إن لم تكن متاحة (can_extra)."""
+        if not self.can_extra(self.day if self.today is None else self.today):
+            return False
+        self.begin('extra')
+        self.stage['seen'] = []                             # ما جرى في هذه الجلسة لكل مهارة: مرة واحدة لكلٍّ
+        self.stage['free'] = None                           # المهارة التي يجري تدريبها الحر الآن
+        self.stage['n0'] = sum(self.n.values())             # عدد البنود المعروضة قبلها: به تُعرف الإضافية بلا بند
+        yield from self.g_extra_body()
+        return True
+
+    def g_extra_body(self):
+        st = self.stage
+        try:
+            yield from self.g_resume_mine()                 # نشاط قطعه إغلاق التطبيق في هذه الجلسة
+            if st['free'] is not None:                      # التدريب الحر الذي قطعه الإغلاق اكتمل الآن
+                self.log.append((self.sessions, 'extra_practice', st['free']))
+                self.practiced(st['free'])
+                st['free'] = None
+            while (yield from self.g_extra_step()):
+                pass
+        except Capped:
+            # حد اليوم قطع تدريبًا حرًّا: لا يُحفظ، فلا يأخذ غدًا حصة الجلسة من فحص أو درس
+            if st['free'] is not None:
+                for c in [c for c in self.saved if c['kind'] == 'show' and c['skill'] == st['free']
+                          and c.get('activity') == 'practice']:
+                    self.unsave(c)
+                self.practiced(st['free'])
+        if sum(self.n.values()) == st['n0']:
+            self.practiced(None, dry=True)                  # لم يُعرض بند: لا تُعرض إضافية أخرى اليوم
+        self.end()
+
+    def practiced(self, s, dry=False):
+        if self.free is None or self.free['day'] != self.day:
+            self.free = dict(day=self.day, skills=[])
+        if s is not None and s not in self.free['skills']:
+            self.free['skills'].append(s)
+        if dry:
+            self.free['dry'] = True
+
+    def g_extra_step(self):
+        """خطوة واحدة من الإضافية. True إن جرى شيء، و False إن لم يبقَ ما يُعرض."""
+        stage = self.stage
+        for c in [c for c in self.saved if c['kind'] in EXTRA_KINDS]:
+            r = (yield from self.g_resume(c))               # نشاط قطعه السقف: يُكمَل الآن بدل الغد
+            if r:
+                return True                                 # None: أُسقط أو رُكن. False: يبقى محفوظًا لجلسة عادية
+        st = self.e.derive()
+        for s in self.extra_lessons(st):
+            if s in stage['seen']:
+                continue
+            o = self.e.s['opened'][s]
+            if o['active'] != self.cur and not self.send(dict(type='resume_lesson', skill=s))['ok']:
+                continue
+            stage['seen'].append(s)
+            if self.e.s['opened'][s]['phase'] == 'opening':
+                (yield from self.g_opening(s))
+            else:
+                (yield from self.g_lesson_body(s))
+            return True
+        for s in self.extra_practice(st, self.day):
+            o = self.e.s['opened'][s]
+            if o['active'] != self.cur and not self.send(dict(type='resume_lesson', skill=s))['ok']:
+                continue
+            stage['free'] = s
+            (yield from self.g_show(s, 'practice'))
+            self.log.append((self.sessions, 'extra_practice', s))
+            self.practiced(s)
+            stage['free'] = None
+            return True
+        o = self.pick_lesson()
+        if o is not None and o not in stage['seen']:
+            stage['seen'].append(o)
+            if self.send(dict(type='open_lesson', skill=o))['ok']:   # يرفضه المحرك إن فُتح اليوم درس (lesson_today)
+                (yield from self.g_opening(o))
+                return True
+        return False
+
     def g_follow_learning(self):
         """جلسة متابعة في وضع التعلّم. تُعقد ولو لم يكن فيها غير «استرجع»، فالأيام تمضي."""
         self.begin('follow')
@@ -1043,6 +1194,8 @@ class Scheduler:
             yield from self.g_search_body(self.stage['gate'] or self.next_gate())
         elif kind == 'start':
             yield from self.g_start_body()
+        elif kind == 'extra':
+            yield from self.g_extra_body()
         elif self.learning:
             yield from self.g_follow_body()
         else:
@@ -1053,7 +1206,7 @@ class Scheduler:
 # سلسلة الاستدعاء التي تعرض بنودًا مولّدات (g_*): تعطي (البند، المطلوب) وتستقبل ما كانت answer تعيده. والدوال
 # بأسمائها السابقة أغلفة متزامنة تشغّل المولّد بـ self.answer، فلا يتغير شيء لمن يستدعيها. والواجهة تشغّل المولّد
 # نفسه خطوة خطوة. حالة المولّد ليست مصدر الاستعادة: المتابعة بعد الإغلاق تُبنى من الحالة المحفوظة.
-STEPPED = ('run_act', 'show', 'consolidate', 'lesson_body', 'open_lesson', 'gate', 'short', 'opening', 'evidence', 'check', 'retention_check', 'recall', 'search', 'working_point', 'start_session', 'follow', 'teach', 'resume', 'run', 'follow_learning', 'resume_mine')
+STEPPED = ('run_act', 'show', 'consolidate', 'lesson_body', 'open_lesson', 'gate', 'short', 'opening', 'evidence', 'check', 'retention_check', 'recall', 'search', 'working_point', 'start_session', 'follow', 'teach', 'resume', 'run', 'follow_learning', 'resume_mine', 'extra', 'extra_body', 'extra_step')
 
 
 def _sync(name):

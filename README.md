@@ -5,7 +5,7 @@
 للمراجع: الرد على مراجعة 04e0168 الشاملة في `R24-RESPONSE.md` (يُزاد مع كل بند)، وما نُفّذ بعد المراجعة الثالثة والعشرين في `AFTER-R23.md`، والرد عليها في `R23-RESPONSE.md`، والثانية والعشرين في `R22-RESPONSE.md`، والرد على المراجعة السادسة عشرة في `R16-RESPONSE.md`، وطلب مراجعة المرحلة 0 من الواجهة في `PHASE0-REVIEW.md` وخطتها في `UI-PLAN.md`، والرد على المراجعة الخامسة عشرة في `R15-RESPONSE.md`، والرابعة عشرة في `R14-RESPONSE.md`، وطلب الحفظ الذرّي في `ATOMIC-SAVE.md`، والرد على المراجعة الثالثة عشرة في `R13-RESPONSE.md`، وعلى الثانية عشرة في `R12-RESPONSE.md`، وعلى الحادية عشرة في `R11-RESPONSE.md`، وعلى العاشرة في `R10-RESPONSE.md`، ثم `state-transition-spec.md` (الأقسام 11.3 و12 إلى 17). الخريطة في `mental-math-map-v2.30-single-file.md`. الأوامر من هذا المجلد، بـ Python 3 وحده، وبـ Node لجزأي التطبيق:
 
 ```
-python3 test_transition_engine.py mental-math-map-v2.30-single-file.md      # 33 اختبارًا للمحرك المرجعي
+python3 test_transition_engine.py mental-math-map-v2.30-single-file.md      # 34 اختبارًا للمحرك المرجعي
 python3 test_item_layer.py mental-math-map-v2.30-single-file.md             # 23 اختبارًا لطبقة البنود والمجدول والمسارات
 python3 engine_sim.py mental-math-map-v2.30-single-file.md 400              # مطابقة المحاكاة على المحرك بالقديمة
 python3 policy_sim.py mental-math-map-v2.30-single-file.md                  # تجارب المحاكاة كلها على المحرك: أرقام الخريطة
@@ -41,6 +41,8 @@ npm install && node tests/browser/test_store_browser.mjs                    # ا
 node tests/browser/test_slice_browser.mjs                                   # تجربة الشريحة: مسار الصغير في 1-4 من الشاشة، بالنقر
 python3 tests/test_session.py mental-math-map-v2.30-single-file.md          # جلسة واحدة للواجهة (g_session) تساوي g_run
 node tests/test_session.mjs                                                 # الحالات نفسها على التطبيق
+python3 tests/test_extra.py mental-math-map-v2.30-single-file.md            # الجلسة الإضافية: الاستمرار بعد جلسة اليوم (--write يجدّد الشريط)
+node tests/test_extra.mjs                                                   # الحالات نفسها على التطبيق، وتطابق شريط المرجع
 python3 tests/test_r14.py mental-math-map-v2.30-single-file.md              # حالات المراجعة الرابعة عشرة: السجلات وقرار المعلم
 node tests/test_r14.mjs                                                     # الحالات نفسها على التطبيق
 sh tests/run_r14_against.sh 11419f8                                         # الحالات واختبار المتصفح على الالتزام قبل الإصلاح

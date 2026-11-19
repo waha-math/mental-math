@@ -67,6 +67,8 @@ def options(sc):
              learning=sc.learning, tolerant=sc.tolerant, compat=sc.compat, content_version=sc.content_version,
              content=plain(sc.content),
              no_short=sorted(sc.no_short), try_from_gate=sc.try_from_gate, cap=sc.cap, retention=sc.retention)
+    if sc.day_cap is not None:                              # حد وقت اليوم: يُحفظ حين يُضبط، فلا تتغير اللقطات القائمة
+        o['day_cap'] = sc.day_cap
     return o
 
 
@@ -76,6 +78,9 @@ def state_of(sc):
     d['next_id'] = next_id(sc)
     if sc.last is not None:                                 # آخر بند عُرض في الجلسة المفتوحة (R22-01)
         d['last'] = plain(sc.last)
+    for k in ('used', 'free'):                              # وقت اليوم وما دُرّب في إضافياته: حين وُجدا
+        if getattr(sc, k) is not None:
+            d[k] = plain(getattr(sc, k))
     return d
 
 
@@ -275,6 +280,7 @@ def restore(record, net, types, source, answer, item_seconds=None, records=None,
     for k in STATE:
         setattr(sc, k, st[k])
     sc.last = st.get('last') if st['cur'] is not None else None
+    sc.used, sc.free = st.get('used'), st.get('free')
     from collections import Counter
     sc.n = Counter(st['n'])
     import itertools
@@ -286,6 +292,11 @@ def restore(record, net, types, source, answer, item_seconds=None, records=None,
         r = e.apply(dict(id='restore-end-%s' % ses, type='session_end', session=ses))
         if not r['ok']:
             raise Inconsistent('تعذر ختم الجلسة %s: %s' % (ses, r.get('code')))
+        if sc.stage is not None and sc.stage.get('free'):  # تدريب حر قطعه انتهاء اليوم: لا يأخذ حصة جلسة لاحقة
+            for c in [c for c in sc.saved if c['kind'] == 'show' and c['skill'] == sc.stage['free']
+                      and c.get('activity') == 'practice']:
+                sc.saved.remove(c)
+                notes.append(('free_practice_dropped', c['skill']))
         sc.cur = sc.stage = sc.last = None                  # الجلسة خُتمت: لا «آخر بند» لها بعد (R23-01)
         notes.append(('session_closed', ses))
     if records is not None and local is not None:          # نجحت الاستعادة: تُحدَّث مصفوفة المستدعي بهويتها

@@ -1127,6 +1127,55 @@ check('نتيجة احتفاظ منخفضة: يُستحق تثبيت يُسجَ�
       'يكفي للوصف. والإبطال يعيد الجولة. ومع طلب مساعدة في التالية: تثبيتان، الأقدم أولًا',
       a and b and c and d and f and h)
 
+# 34) الجلسة الإضافية (قرار الأب، 19 نوفمبر): تعليم وتدريب بعد جلسة اليوم. لا تقييم فيها، ودرس جديد واحد في يوم الأسرة
+ROOTS = [x for x in IDS if x != '1-1-1' and '1-1-1' not in PRE[x]][:2]     # مهارتان يفتحهما قرار معلم يتجاوز متطلباتهما
+e = Engine(NET)
+for x in ROOTS:
+    ev(e, 'teacher_open', skill=x, bypass=sorted(PRE[x]), reason='اختبار')
+a = refused(e, 'session_start', 'session_order', None, session='X0', kind='extra', day=5)       # لا جلسة بدء بعد
+start(e, 'S1', 'start', day=5)
+ev(e, 'open_lesson', session='S1', skill='1-1-1')
+a = a and refused(e, 'session_start', 'session_open', None, session='X1', kind='extra', day=5)
+end(e, 'S1')
+a = a and refused(e, 'session_start', 'no_session_today', None, session='X1', kind='extra', day=6)   # يوم بلا جلسة
+a = a and start(e, 'X1', 'extra', day=5)['ok']
+# في الإضافية: الدرس يُكمَل ودليل الفهم يُقبل، ولا فحص ولا درس جديد ثانٍ في اليوم
+b = (ev(e, 'resume_lesson', session='X1', skill='1-1-1')['ok']
+     and refused(e, 'resume_lesson', 'already_active', None, session='X1', skill='1-1-1')
+     and ev(e, 'understanding_proved', session='X1', skill='1-1-1')['ok']
+     and refused(e, 'check_started', 'extra_session', None, session='X1', skill='1-1-1', check_id='k1', content_version=1)
+     and refused(e, 'open_lesson', 'lesson_today', None, session='X1', skill=ROOTS[0]))
+end(e, 'X1')
+# اليوم التالي: الفحص يُقبل، فدليل الفهم الذي وقع في الإضافية أمس يُحسب بيومه
+start(e, 'S2', 'follow', day=6)
+c = ev(e, 'check_started', session='S2', skill='1-1-1', check_id='k1', content_version=1)['ok']
+ev(e, 'independence_result', session='S2', skill='1-1-1', check_id='k1', result='fail')
+end(e, 'S2')
+# إضافية اليوم 6: لم يُفتح اليوم درس، فيُفتح واحد. والحصة غير معدودة: تدريب بعد الإخفاق ودرس جديد في الجلسة نفسها
+start(e, 'X2', 'extra', day=6)
+d = (ev(e, 'resume_lesson', session='X2', skill='1-1-1')['ok']
+     and ev(e, 'open_lesson', session='X2', skill=ROOTS[0])['ok']
+     and refused(e, 'open_lesson', 'lesson_today', None, session='X2', skill=ROOTS[1])
+     and e.s['sessions']['X2']['teach'] == 2 and e.s['opened'][ROOTS[0]]['mode'] == 'extra')
+end(e, 'X2')
+# التدريب في الإضافية جلسة تدريب بعد الإخفاق: الإعادة تُقبل في اليوم التالي، لا بعد يومين
+start(e, 'S3', 'follow', day=7)
+f = ev(e, 'check_started', session='S3', skill='1-1-1', check_id='k2', content_version=1)['ok']
+# الاحتفاظ لا يُجرى في الإضافية ولو حلّ موعده
+e2 = met_on(2)
+start(e2, 'S3', 'follow', day=9)
+end(e2, 'S3')
+start(e2, 'X3', 'extra', day=9)
+g = (e2.retention_due(9) == [('1-1-1', 1, 9)]
+     and refused(e2, 'retention_result', 'extra_session', None, session='X3', skill='1-1-1', correct=5)
+     and refused(e2, 'retention_help', 'extra_session', None, session='X3', skill='1-1-1', round=1))
+end(e2, 'X3')
+start(e2, 'S4', 'follow', day=10)
+g = g and ret(e2, 'S4', correct=5)['ok']
+check('الجلسة الإضافية: بعد جلسة البدء وفي يوم جلسة سبقتها. يُكمَل فيها الدرس ويُقبل دليل الفهم، ولا فحص استقلال ولا فحص احتفاظ. '
+      'ودرس جديد واحد في يوم الأسرة، والحصة غير معدودة. والتدريب فيها بعد إخفاق الفحص يُحسب جلسة تدريب، فتُقبل الإعادة في اليوم التالي',
+      a and b and c and d and f and g)
+
 if not all(results):
     print('أخفق اختبار.')
     sys.exit(1)

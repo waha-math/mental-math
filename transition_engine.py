@@ -48,6 +48,9 @@ QUOTA = {
     'search': {'gate': {'older': 2, 'young': 1}, 'short': 0, 'teach': 0},
     'start': {'gate': 0, 'short': 4, 'teach': 1},
     'follow': {'gate': 1, 'short': 2, 'teach': 1},
+    # الجلسة الإضافية (قرار الأب، 19 نوفمبر): تعليم وتدريب لمن أراد أن يستمر بعد جلسة يومه. لا تشخيص فيها، وحصتها
+    # غير معدودة (None): يحدّها وقت اليوم في المجدول، ودرس جديد واحد في يوم الأسرة
+    'extra': {'gate': 0, 'short': 0, 'teach': None},
 }
 SEARCH_CAP = 4
 # 3.7: فواصل فحوص الاحتفاظ بالأيام. الأول من يوم اجتياز الاستقلال، وكل فاصل بعده من يوم الفحص السابق الفعلي
@@ -61,7 +64,10 @@ REASONS = {
     'unknown_skill': 'المهارة ليست في المحتوى المسلَّم',
     'no_session': 'لا جلسة مفتوحة بهذا المعرّف',
     'session_open': 'جلسة أخرى مفتوحة ولم تُختم',
-    'session_order': 'نوع الجلسة لا يأتي في هذا الموضع: بحث (4 على الأكثر) ثم بدء واحدة ثم متابعة',
+    'session_order': 'نوع الجلسة لا يأتي في هذا الموضع: بحث (4 على الأكثر) ثم بدء واحدة ثم متابعة أو إضافية',
+    'no_session_today': 'الجلسة الإضافية تأتي بعد جلسة في يوم الأسرة نفسه',
+    'extra_session': 'الجلسة الإضافية تعليم وتدريب: لا فحص استقلال ولا فحص احتفاظ فيها',
+    'lesson_today': 'درس جديد واحد في يوم الأسرة: فُتح اليوم درس، والباقي تدريب',
     'quota_gate': 'استُهلكت بوابات هذه الجلسة، أو لا بوابة في هذا النوع من الجلسات',
     'quota_short': 'استُهلكت التحققات القصيرة في هذه الجلسة',
     'quota_teach': 'استُهلكت الحصة التعليمية الواحدة في هذه الجلسة',
@@ -108,7 +114,7 @@ RESULTS = ('pass', 'fail', 'help')
 OPEN_CHECK = ('pending', 'held', 'needs_restart')        # محاولة لم تُغلق ولم تُترك: تمنع بدء أخرى
 # مخطط كل حدث: الحقول المطلوبة وأنواعها وقيمها. الحقل المنتهي بعلامة ? اختياري. لا يُقبل حقل غيرها.
 SCHEMA = {
-    'session_start': {'session': str, 'kind': ('search', 'start', 'follow'), 'day': int},
+    'session_start': {'session': str, 'kind': ('search', 'start', 'follow', 'extra'), 'day': int},
     'date_confirmed': {'target': str},
     'session_end': {'session': str},
     'gate_result': {'session': str, 'skill': str, 'result': RESULTS + ('interrupted',),
@@ -152,7 +158,7 @@ def _fits(v, rule):
 TABLE = [
     ('session_start', 'بدء جلسة',
      'لا جلسة مفتوحة. يوم الأسرة عدد صحيح غير سالب. بحث: أقل من 4 جلسات بحث ولم تقع جلسة البدء. بدء: مرة '
-     'واحدة. متابعة: بعد جلسة البدء',
+     'واحدة. متابعة: بعد جلسة البدء. إضافية: بعد جلسة البدء، ويوم آخر جلسة هو يومها',
      'تُفتح الجلسة بنوعها ويومها وعدّاداتها صفر. مرجع التاريخ يوم آخر جلسة، بترتيب الجلسات، تاريخها موثوق: لم '
      'تُعلَّم بتنبيه، أو عُلّمت ثم أكّد الوالد تاريخها. الجلسة المبطلة تبقى مرجعًا لأن الإبطال يخص الطفل لا ساعة '
      'الجهاز. إن جاء يومها قبل المرجع، أو بعده بأكثر من 30 يومًا، عُلّمت بتنبيه تاريخ (9.1)',
@@ -621,9 +627,20 @@ class Engine:
             limit = QUOTA[ses['kind']][quota]
             if isinstance(limit, dict):
                 limit = limit[self.s['group']]
-            if ses[quota] >= limit:
+            if limit is not None and ses[quota] >= limit:
                 return no('quota_' + quota)
         return None
+
+    @staticmethod
+    def _has_teach(ses):
+        """هل بقيت في الجلسة حصة تعليمية؟ حصة الجلسة الإضافية غير معدودة."""
+        limit = QUOTA[ses['kind']]['teach']
+        return limit is None or ses['teach'] < limit
+
+    def _extra(self, ev):
+        """هل الحدث في جلسة إضافية؟ لا تقييم فيها: لا فحص استقلال ولا فحص احتفاظ."""
+        ses = self._session(ev)
+        return ses is not None and ses['kind'] == 'extra'
 
     def _blocked(self, skill, st):
         for p in sorted(self.pre[skill], key=self.idx.get):
@@ -654,8 +671,14 @@ class Engine:
         kinds = [self.s['sessions'][x]['kind'] for x in self.s['order']]
         k = ev['kind']
         fine = ((k == 'search' and 'start' not in kinds and kinds.count('search') < SEARCH_CAP)
-                or (k == 'start' and 'start' not in kinds) or (k == 'follow' and 'start' in kinds))
-        return ok() if fine and ev['session'] not in self.s['sessions'] else no('session_order')
+                or (k == 'start' and 'start' not in kinds) or (k in ('follow', 'extra') and 'start' in kinds))
+        if not fine or ev['session'] in self.s['sessions']:
+            return no('session_order')
+        if k == 'extra':                                    # بعد جلسة مختومة في يوم الأسرة نفسه: التشخيص والحصة أولًا
+            last = self.s['sessions'][self.s['order'][-1]]
+            if last['day'] != ev['day']:
+                return no('no_session_today')
+        return ok()
 
     def date_reference(self):
         """مرجع التاريخ (9.1): يوم آخر جلسة، بترتيب الجلسات، تاريخها موثوق، أي لم تُعلَّم بتنبيه أو أكّد الوالد
@@ -737,7 +760,7 @@ class Engine:
                       treatment='regular' if calc or not ev.get('has_calc', True) else 'structure')
         o = self.s['opened'].get(skill)
         if o and res in ('fail', 'help'):                   # يمضي الدرس كاملًا. طلب الدعم بلا دليل
-            if ses['teach'] < QUOTA[ses['kind']]['teach']:
+            if self._has_teach(ses):
                 ses['teach'] += 1
                 o['phase'], o['active'] = 'full', ev['session']
                 o['taught'].append(ev['session'])
@@ -776,7 +799,11 @@ class Engine:
             return no('already_open')
         if st[skill] in SATISFIED:
             return no('already_satisfied')
-        return self.eligible(skill, self.s['sessions'][ev['session']]['kind'], st)
+        ses = self.s['sessions'][ev['session']]
+        if ses['kind'] == 'extra' and any(self.s['sessions'][o['session']]['day'] == ses['day']
+                                          for o in self.s['opened'].values()):
+            return no('lesson_today')                       # درس جديد واحد في يوم الأسرة، والباقي تدريب
+        return self.eligible(skill, ses['kind'], st)
 
     def do_open_lesson(self, ev):
         ses = self.s['sessions'][ev['session']]
@@ -848,6 +875,8 @@ class Engine:
         bad = self._lesson(ev, ('opening', 'skipped', 'full'), active=False)
         if bad:
             return bad
+        if self._extra(ev):
+            return no('extra_session')
         return None if self.progress(ev['skill'])[1] else no('understanding_first')
 
     def can_check_started(self, ev):
@@ -868,7 +897,7 @@ class Engine:
         bad = self._check_timing(skill, ses['day'])
         if bad:
             return bad
-        return ok() if ses['teach'] < QUOTA[ses['kind']]['teach'] else no('quota_teach')
+        return ok() if self._has_teach(ses) else no('quota_teach')
 
     def _check_timing(self, skill, day):
         """3.6: في يوم بعد يوم الدرس، والإعادة في يوم لاحق، وبعد الإخفاق جلسة تدريب. الأيام أيام الأسرة.
@@ -918,7 +947,7 @@ class Engine:
         bad = self._check_timing(ev['skill'], ses['day'])
         if bad:
             return bad
-        return ok() if ses['teach'] < QUOTA[ses['kind']]['teach'] else no('quota_teach')
+        return ok() if self._has_teach(ses) else no('quota_teach')
 
     def do_check_resumed(self, ev):
         self.s['sessions'][ev['session']]['teach'] += 1
@@ -1178,6 +1207,8 @@ class Engine:
             return bad
         if not 0 <= ev['correct'] <= RETENTION_ITEMS:
             return dict(no('bad_event'), field='correct')
+        if self._extra(ev):
+            return no('extra_session')
         if self.direct(ev['skill']) != 'met':
             return no('not_met')
         return self._retention_open(ev)
@@ -1200,6 +1231,8 @@ class Engine:
         bad = self._need(ev)
         if bad:
             return bad
+        if self._extra(ev):
+            return no('extra_session')
         if self.direct(ev['skill']) != 'met':
             return no('not_met')
         v = self._retention_open(ev)

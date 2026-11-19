@@ -378,7 +378,7 @@ export class Engine {
     if (quota) {
       let limit = QUOTA[ses.kind][quota];
       if (isDict(limit)) limit = limit[this.s.group];
-      if (ses[quota] >= limit) return no('quota_' + quota);
+      if (limit !== null && ses[quota] >= limit) return no('quota_' + quota);
     }
     return null;
   }
@@ -399,8 +399,16 @@ export class Engine {
     return null;
   }
 
+  // هل بقيت في الجلسة حصة تعليمية؟ حصة الجلسة الإضافية غير معدودة
   _teachLeft(ses) {
-    return ses.teach < QUOTA[ses.kind].teach;
+    const limit = QUOTA[ses.kind].teach;
+    return limit === null || ses.teach < limit;
+  }
+
+  // هل الحدث في جلسة إضافية؟ لا تقييم فيها: لا فحص استقلال ولا فحص احتفاظ
+  _extra(ev) {
+    const ses = this._session(ev);
+    return ses !== null && ses.kind === 'extra';
   }
 
   // ---------------------------------------------------------------- الجلسات
@@ -410,8 +418,13 @@ export class Engine {
     const kinds = this.s.order.map((x) => this.s.sessions[x].kind);
     const k = ev.kind;
     const fine = (k === 'search' && !kinds.includes('start') && kinds.filter((x) => x === 'search').length < SEARCH_CAP)
-      || (k === 'start' && !kinds.includes('start')) || (k === 'follow' && kinds.includes('start'));
-    return fine && !has(this.s.sessions, ev.session) ? ok() : no('session_order');
+      || (k === 'start' && !kinds.includes('start')) || ((k === 'follow' || k === 'extra') && kinds.includes('start'));
+    if (!fine || has(this.s.sessions, ev.session)) return no('session_order');
+    if (k === 'extra') {                           // بعد جلسة مختومة في يوم الأسرة نفسه: التشخيص والحصة أولًا
+      const last = this.s.sessions[this.s.order[this.s.order.length - 1]];
+      if (last.day !== ev.day) return no('no_session_today');
+    }
+    return ok();
   }
 
   // مرجع التاريخ (9.1): يوم آخر جلسة، بترتيب الجلسات، تاريخها موثوق، أي لم تُعلَّم بتنبيه أو أكّد الوالد تاريخها.
@@ -539,7 +552,11 @@ export class Engine {
     if (has(this.s.suspended, skill)) return no('suspended', this.s.suspended[skill].missing);
     if (has(this.s.opened, skill)) return no('already_open');
     if (SATISFIED.includes(st[skill])) return no('already_satisfied');
-    return this.eligible(skill, this.s.sessions[ev.session].kind, st);
+    const ses = this.s.sessions[ev.session];
+    if (ses.kind === 'extra' && Object.values(this.s.opened).some((o) => this.s.sessions[o.session].day === ses.day)) {
+      return no('lesson_today');                   // درس جديد واحد في يوم الأسرة، والباقي تدريب
+    }
+    return this.eligible(skill, ses.kind, st);
   }
 
   do_open_lesson(ev) {
@@ -615,6 +632,7 @@ export class Engine {
   _checkReady(ev) {
     const bad = this._lesson(ev, ['opening', 'skipped', 'full'], false);
     if (bad) return bad;
+    if (this._extra(ev)) return no('extra_session');
     return this.progress(ev.skill)[1] ? null : no('understanding_first');
   }
 
@@ -946,6 +964,7 @@ export class Engine {
     const bad = this._need(ev);
     if (bad) return bad;
     if (!(ev.correct >= 0 && ev.correct <= RETENTION_ITEMS)) return { ...no('bad_event'), field: 'correct' };
+    if (this._extra(ev)) return no('extra_session');
     if (this.direct(ev.skill) !== 'met') return no('not_met');
     return this._retentionOpen(ev);
   }
@@ -966,6 +985,7 @@ export class Engine {
   _canRetentionNote(ev) {
     const bad = this._need(ev);
     if (bad) return bad;
+    if (this._extra(ev)) return no('extra_session');
     if (this.direct(ev.skill) !== 'met') return no('not_met');
     const v = this._retentionOpen(ev);
     if (!v.ok) return v;

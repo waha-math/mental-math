@@ -46,7 +46,9 @@ export function options(sc) {
   return { group: sc.group, start: sc.start, scope: sc.ids.length === sc.e.ids.length ? null : [...sc.ids],
     learning: sc.learning, tolerant: sc.tolerant, compat: sc.compat, content_version: sc.content_version,
     no_short: [...sc.no_short].sort(), try_from_gate: sc.try_from_gate, cap: sc.cap, retention: sc.retention,
-    content: sc.content === null ? null : { ...sc.content } };
+    content: sc.content === null ? null : { ...sc.content },
+    // حد وقت اليوم: يُحفظ حين يُضبط، فلا تتغير اللقطات القائمة
+    ...(sc.day_cap !== null && sc.day_cap !== undefined ? { day_cap: sc.day_cap } : {}) };
 }
 
 export function stateOf(sc) {
@@ -55,6 +57,9 @@ export function stateOf(sc) {
   d.n = Object.fromEntries(Object.entries(d.n).filter(([, v]) => v));
   d.next_id = sc._next;
   if (sc.last !== null && sc.last !== undefined) d.last = clone(sc.last);   // آخر بند عُرض في الجلسة المفتوحة (R22-01)
+  for (const k of ['used', 'free']) {             // وقت اليوم وما دُرّب في إضافياته: حين وُجدا
+    if (sc[k] !== null && sc[k] !== undefined) d[k] = clone(sc[k]);
+  }
   return d;
 }
 
@@ -230,6 +235,8 @@ export function restore(record, { types, source, answer, item_seconds = null, re
   if (bad.length) throw new Inconsistent(bad.join('؛ '));
   for (const k of STATE) sc[k] = st[k];
   sc.last = st.cur !== null && st.last !== undefined && st.last !== null ? st.last : null;
+  sc.used = st.used ?? null;
+  sc.free = st.free ?? null;
   sc._next = st.next_id;
   // الجلسة التعليمية غير فتح التطبيق: إغلاقه لا يختمها، فتُكمَل بهويتها ووقتها وحصصها (المرحلة 0ج). تُختم هنا
   // فقط إن انتقل يوم الأسرة: today يوم الأسرة عند الفتح، وبلا قيمة تبقى الجلسة مفتوحة
@@ -237,6 +244,12 @@ export function restore(record, { types, source, answer, item_seconds = null, re
     const ses = e.s.current;
     const r = e.apply({ id: `restore-end-${ses}`, type: 'session_end', session: ses });
     if (!r.ok) throw new Inconsistent(`تعذر ختم الجلسة ${ses}: ${r.code}`);
+    if (sc.stage !== null && sc.stage.free) {      // تدريب حر قطعه انتهاء اليوم: لا يأخذ حصة جلسة لاحقة
+      for (const c of sc.saved.filter((x) => x.kind === 'show' && x.skill === sc.stage.free && x.activity === 'practice')) {
+        sc.saved.splice(sc.saved.indexOf(c), 1);
+        notes.push(['free_practice_dropped', c.skill]);
+      }
+    }
     sc.cur = null;
     sc.stage = null;
     sc.last = null;                               // الجلسة خُتمت: لا «آخر بند» لها بعد (R23-01)

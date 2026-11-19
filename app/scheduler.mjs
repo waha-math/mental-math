@@ -27,11 +27,12 @@ export const RETENTION_PER_SESSION = 1;
 // التثبيت قصير (3.4: 3 إلى 5 بنود): أول 4 بنود من تدريب المهارة. السبب المقيس في المرجع
 export const CONSOLIDATION_ITEMS = 4;
 export const TEACH_KINDS = ['opening', 'evidence', 'show', 'check'];   // أنشطة الحصة التعليمية
+export const EXTRA_KINDS = ['opening', 'evidence', 'show'];            // ما يُستأنف منها في الجلسة الإضافية: لا فحص فيها
 // أسباب رفض استئناف نشاط محفوظ (المراجعة 11): النهائية وحدها تُسقطه، والخاصة بالجلسة تُبقيه في saved، وما سواها
 // مؤقت يخص المهارة فيُركن بتقدّمه في parked
 export const FINAL_REFUSALS = ['check_state', 'no_check', 'version_unavailable', 'already_satisfied', 'unknown_skill',
   'bad_event', 'no_consolidation', 'not_met'];
-export const SESSION_REFUSALS = ['date_unconfirmed', 'no_session'];
+export const SESSION_REFUSALS = ['date_unconfirmed', 'no_session', 'extra_session'];
 
 export function refusalKind(code) {
   if (FINAL_REFUSALS.includes(code)) return 'final';
@@ -91,7 +92,7 @@ export class Scheduler {
   constructor(engine, types, source, answer, {
     group = 'older', start = null, scope = null, learning = false, tolerant = true, compat = false,
     content_version = 1, records = null, no_short = [], try_from_gate = true, cap = null, item_seconds = null,
-    retention = false, content = null,
+    retention = false, content = null, day_cap = null,
   } = {}) {
     this.e = engine;
     this.types = types;
@@ -121,6 +122,11 @@ export class Scheduler {
     this.carried_items = [];
     this.parked = {};                   // مهارة ← نشاط تعليمي محفوظ رُفض استئنافه رفضًا مؤقتًا يخص المهارة
     this.retention = retention;
+    // الاستمرار بعد جلسة اليوم (قرار الأب، 19 نوفمبر): day_cap حد وقت يوم الأسرة كله بالثواني، وبلا قيمة لا جلسة
+    // إضافية. used زمن جلسات اليوم المختومة، و free ما دُرّب في إضافيات اليوم. يُنشآن عند الحاجة ويُحفظان
+    this.day_cap = day_cap;
+    this.used = null;
+    this.free = null;
     this.intent = [];
     this.pending = [];
     this.proven = {};
@@ -183,6 +189,10 @@ export class Scheduler {
   }
 
   end() {
+    if (this.day_cap !== null) {                   // زمن اليوم: يُجمع عند ختم كل جلسة
+      if (this.used === null || this.used.day !== this.day) this.used = { day: this.day, seconds: 0 };
+      this.used.seconds += this.elapsed;
+    }
     this.send({ type: 'session_end', session: this.cur });
     this.cur = null;
     this.stage = null;
@@ -241,7 +251,15 @@ export class Scheduler {
   }
 
   // ---------------------------------------------------------------- الأنشطة
+  // ثواني جلسات هذا اليوم المختومة
+  spent(day) {
+    return this.used && this.used.day === day ? this.used.seconds : 0;
+  }
+
   over() {
+    if (this.stage !== null && this.stage.kind === 'extra') {   // الإضافية يحدّها وقت اليوم كله لا سقف الجلسة
+      return this.spent(this.day) + this.elapsed >= this.day_cap;
+    }
     return this.cap !== null && this.elapsed >= this.cap;
   }
 
@@ -1052,6 +1070,142 @@ export class Scheduler {
     return (yield* this.g_follow());
   }
 
+  // ---------------------------------------------------------------- الجلسة الإضافية (قرار الأب، 19 نوفمبر)
+  // الطفل الذي يريد أن يستمر بعد جلسة يومه لا يُقطع. الإضافية تعليم وتدريب فقط: يُكمَل فيها ما قطعه السقف، والدرس
+  // الجاري، وتدريب المهارة التي تنتظر فحص استقلالها، ودرس جديد إن لم يُفتح اليوم درس. لا بوابة ولا تحقق ولا فحص
+  // استقلال ولا فحص احتفاظ: مواعيدها بالأيام، والمحرك يرفضها في الإضافية. ولا تُدرَّب مهارة مستوفاة: تدريبها داخل
+  // فاصل الاحتفاظ يجعل جولته «أداء مؤجل» (3.7). والتثبيت المستحق بعد فحص احتفاظ يبقى في حصة الجلسة العادية، ويُكمَل
+  // هنا إن قطعه السقف.
+
+  // المهارات التي درسها جارٍ: مفتوح، لم يثبت فهمه، وليس مركونًا ولا معلَّقًا
+  extra_lessons(st) {
+    const out = [];
+    for (const s of this.ids) {
+      const o = this.e.s.opened[s];
+      if (!o || s in this.parked || s in this.e.s.suspended || DONE.includes(st[s]) || o.phase === 'skipped') continue;
+      if (o.phase === 'due' || !this.e.progress(s)[1]) out.push(s);
+    }
+    return out;
+  }
+
+  // المهارات التي تُدرَّب في الإضافية: ثبت فهمها وتنتظر فحص استقلالها، ولا محاولة فحص لها معلَّقة أو مقطوعة، ولم
+  // تُدرَّب في إضافية اليوم. مرة واحدة في اليوم: بنود التدريب قليلة، وتكرارها في الجلسة نفسها لا يضيف
+  extra_practice(st, day) {
+    const done = this.free && this.free.day === day ? this.free.skills : [];
+    const out = [];
+    for (const s of this.ids) {
+      const o = this.e.s.opened[s];
+      if (!o || s in this.parked || s in this.e.s.suspended || DONE.includes(st[s]) || !this.e.progress(s)[1]) continue;
+      if (!['opening', 'full', 'due'].includes(o.phase) || done.includes(s)) continue;
+      if (Object.values(this.e.s.checks).some((c) => c.skill === s && OPEN_CHECK.includes(c.state))) continue;
+      if (this.saved.some((c) => c.kind === 'check' && c.skill === s)) continue;
+      out.push(s);
+    }
+    return out;
+  }
+
+  // ما تعرضه جلسة إضافية في هذا اليوم، بترتيبه. يُسأل والجلسة مغلقة، فشروطه بنيوية: ما يرفضه المحرك عند التنفيذ
+  // يُتخطى. قائمة فارغة: لا شيء يُعرض
+  extra_plan(day) {
+    const st = this.e.derive();
+    const plan = this.saved.filter((c) => EXTRA_KINDS.includes(c.kind)).map((c) => ['resume', c.skill]);
+    const has = (kind, s) => plan.some((x) => x[0] === kind && x[1] === s);
+    for (const s of this.extra_lessons(st)) if (!has('resume', s)) plan.push(['lesson', s]);
+    for (const s of this.extra_practice(st, day)) plan.push(['practice', s]);
+    const openedToday = Object.values(this.e.s.opened).some((o) => this.e.s.sessions[o.session].day === day);
+    if (!openedToday && this.pick_lesson() !== null) plan.push(['open', this.pick_lesson()]);
+    return plan;
+  }
+
+  // هل تُعرض على الطفل جلسة إضافية الآن؟ بعد جلسة مختومة في يوم الأسرة نفسه، وفي اليوم وقت باقٍ، وعندنا ما يُعرض،
+  // ولم تمضِ اليوم إضافية بلا بند
+  can_extra(day) {
+    const e = this.e.s;
+    if (this.day_cap === null || !this.learning || this.cur !== null || this.start_at === null || !e.order.length) return false;
+    if (e.sessions[e.order[e.order.length - 1]].day !== day || this.spent(day) >= this.day_cap) return false;
+    if (this.free && this.free.day === day && this.free.dry) return false;
+    return this.extra_plan(day).length > 0;
+  }
+
+  // جلسة إضافية واحدة. تعيد false ولا تغيّر شيئًا إن لم تكن متاحة (can_extra)
+  *g_extra() {
+    if (!this.can_extra(this.today === null ? this.day : this.today)) return false;
+    this.begin('extra');
+    this.stage.seen = [];                          // ما جرى في هذه الجلسة لكل مهارة: مرة واحدة لكلٍّ
+    this.stage.free = null;                        // المهارة التي يجري تدريبها الحر الآن
+    this.stage.n0 = sum(this.n);                   // عدد البنود المعروضة قبلها: به تُعرف الإضافية بلا بند
+    yield* this.g_extra_body();
+    return true;
+  }
+
+  *g_extra_body() {
+    const st = this.stage;
+    try {
+      yield* this.g_resume_mine();                 // نشاط قطعه إغلاق التطبيق في هذه الجلسة
+      if (st.free !== null) {                      // التدريب الحر الذي قطعه الإغلاق اكتمل الآن
+        this.log.push([this.sessions, 'extra_practice', st.free]);
+        this.practiced(st.free);
+        st.free = null;
+      }
+      while (yield* this.g_extra_step());
+    } catch (err) {
+      if (!(err instanceof Capped)) throw err;
+      // حد اليوم قطع تدريبًا حرًّا: لا يُحفظ، فلا يأخذ غدًا حصة الجلسة من فحص أو درس
+      if (st.free !== null) {
+        for (const c of this.saved.filter((x) => x.kind === 'show' && x.skill === st.free && x.activity === 'practice')) {
+          this.unsave(c);
+        }
+        this.practiced(st.free);
+      }
+    }
+    if (sum(this.n) === st.n0) this.practiced(null, true);   // لم يُعرض بند: لا تُعرض إضافية أخرى اليوم
+    this.end();
+  }
+
+  practiced(s, dry = false) {
+    if (this.free === null || this.free.day !== this.day) this.free = { day: this.day, skills: [] };
+    if (s !== null && !this.free.skills.includes(s)) this.free.skills.push(s);
+    if (dry) this.free.dry = true;
+  }
+
+  // خطوة واحدة من الإضافية. true إن جرى شيء، و false إن لم يبقَ ما يُعرض
+  *g_extra_step() {
+    const stage = this.stage;
+    for (const c of this.saved.filter((x) => EXTRA_KINDS.includes(x.kind))) {
+      const r = (yield* this.g_resume(c));         // نشاط قطعه السقف: يُكمَل الآن بدل الغد
+      if (r) return true;                          // null: أُسقط أو رُكن. false: يبقى محفوظًا لجلسة عادية
+    }
+    const st = this.e.derive();
+    for (const s of this.extra_lessons(st)) {
+      if (stage.seen.includes(s)) continue;
+      const o = this.e.s.opened[s];
+      if (o.active !== this.cur && !this.send({ type: 'resume_lesson', skill: s }).ok) continue;
+      stage.seen.push(s);
+      if (this.e.s.opened[s].phase === 'opening') (yield* this.g_opening(s));
+      else (yield* this.g_lesson_body(s));
+      return true;
+    }
+    for (const s of this.extra_practice(st, this.day)) {
+      const o = this.e.s.opened[s];
+      if (o.active !== this.cur && !this.send({ type: 'resume_lesson', skill: s }).ok) continue;
+      stage.free = s;
+      (yield* this.g_show(s, 'practice'));
+      this.log.push([this.sessions, 'extra_practice', s]);
+      this.practiced(s);
+      stage.free = null;
+      return true;
+    }
+    const o = this.pick_lesson();
+    if (o !== null && !stage.seen.includes(o)) {
+      stage.seen.push(o);
+      if (this.send({ type: 'open_lesson', skill: o }).ok) {   // يرفضه المحرك إن فُتح اليوم درس (lesson_today)
+        (yield* this.g_opening(o));
+        return true;
+      }
+    }
+    return false;
+  }
+
   // جلسة متابعة في وضع التعلّم. تُعقد ولو لم يكن فيها غير «استرجع»، فالأيام تمضي
   *g_follow_learning() {
     this.begin('follow');
@@ -1137,6 +1291,8 @@ export class Scheduler {
       yield* this.g_search_body(this.stage.gate || this.next_gate());
     } else if (kind === 'start') {
       yield* this.g_start_body();
+    } else if (kind === 'extra') {
+      yield* this.g_extra_body();
     } else if (this.learning) {
       yield* this.g_follow_body();
     } else {
@@ -1149,7 +1305,7 @@ export class Scheduler {
 // سلسلة الاستدعاء التي تعرض بنودًا مولّدات (g_*): تعطي [البند، المطلوب] وتستقبل ما كانت answer تعيده. والدوال
 // بأسمائها السابقة أغلفة متزامنة تشغّل المولّد بـ this.answer، فلا يتغير شيء لمن يستدعيها. والواجهة تشغّل المولّد
 // نفسه خطوة خطوة. حالة المولّد ليست مصدر الاستعادة: المتابعة بعد الإغلاق تُبنى من الحالة المحفوظة.
-export const STEPPED = ['run_act', 'show', 'consolidate', 'lesson_body', 'open_lesson', 'gate', 'short', 'opening', 'evidence', 'check', 'retention_check', 'recall', 'search', 'working_point', 'start_session', 'follow', 'teach', 'resume', 'run', 'follow_learning', 'resume_mine'];
+export const STEPPED = ['run_act', 'show', 'consolidate', 'lesson_body', 'open_lesson', 'gate', 'short', 'opening', 'evidence', 'check', 'retention_check', 'recall', 'search', 'working_point', 'start_session', 'follow', 'teach', 'resume', 'run', 'follow_learning', 'resume_mine', 'extra', 'extra_body', 'extra_step'];
 for (const name of STEPPED) {
   Scheduler.prototype[name] = function sync(...args) {
     return runSync(this['g_' + name](...args), (item, w) => this.answer(item, w));
