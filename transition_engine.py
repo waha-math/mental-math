@@ -162,7 +162,7 @@ TABLE = [
      'تُفتح الجلسة بنوعها ويومها وعدّاداتها صفر. مرجع التاريخ يوم آخر جلسة، بترتيب الجلسات، تاريخها موثوق: لم '
      'تُعلَّم بتنبيه، أو عُلّمت ثم أكّد الوالد تاريخها. الجلسة المبطلة تبقى مرجعًا لأن الإبطال يخص الطفل لا ساعة '
      'الجهاز. إن جاء يومها قبل المرجع، أو بعده بأكثر من 30 يومًا، عُلّمت بتنبيه تاريخ (9.1)',
-     'session_open، session_order، bad_event', 'لا أثر'),
+     'session_open، session_order، no_session_today، bad_event', 'لا أثر'),
     ('session_end', 'ختم الجلسة', 'هي الجلسة المفتوحة', 'تُختم. ما لم يكتمل يبقى في حالته',
      'no_session', 'لا أثر'),
     ('date_confirmed', 'تأكيد التاريخ من الوالد', 'الجلسة معلَّمة بتنبيه تاريخ',
@@ -184,10 +184,10 @@ TABLE = [
      'صحّت الثلاثة: دليل تحقق قصير. غير ذلك: تُسجَّل بوابتها',
      'no_session، unknown_skill، quota_short، blocked، not_checkable', 'لا يغيّر الحالات. يدخل أهلية جلسة البدء'),
     ('open_lesson', 'فتح درس',
-     'جلسة بدء أو متابعة وفيها الحصة التعليمية. الدرس غير مفتوح. المهارة غير مجتازة. دالة الأهلية تجيز',
+     'جلسة بدء أو متابعة أو إضافية وفيها الحصة التعليمية. في الإضافية: لم يُفتح اليوم درس. الدرس غير مفتوح. المهارة غير مجتازة. دالة الأهلية تجيز',
      'يُسجَّل الفتح بجلسته وطوره، ويصير الدرس نشطًا في هذه الجلسة وتُسجَّل في جلسات تدريسه، وتُستهلك الحصة '
      'التعليمية',
-     'no_session، unknown_skill، quota_teach، already_open، already_satisfied، suspended، prerequisite',
+     'no_session، unknown_skill، quota_teach، already_open، already_satisfied، suspended، lesson_today، prerequisite',
      'لا أثر'),
     ('resume_lesson', 'استئناف درس',
      'جلسة فيها الحصة التعليمية. الدرس مفتوح، في الافتتاح أو كامل أو ينتظر حصة، وليس نشطًا في هذه '
@@ -210,7 +210,7 @@ TABLE = [
      'ليوم إغلاقها، وبعد الإخفاق جلسة نشط فيها الدرس بعدها (3.6). في الجلسة حصة تعليمية، لأن الفحص هو نشاط '
      '«تعلّم أو أصلح» في يومه (7.1)',
      'محاولة «معلَّقة» بمعرّفها ومهارتها وإصدار تعريفاتها، نشطة في هذه الجلسة، وتُستهلك الحصة التعليمية',
-     'no_session، not_open، suspended، lesson_idle، understanding_first، already_satisfied، check_state، '
+     'no_session، not_open، suspended، lesson_idle، extra_session، understanding_first، already_satisfied، check_state، '
      'check_pending، version_unavailable، date_unconfirmed، check_same_day، check_needs_practice، quota_teach',
      'لا أثر'),
     ('check_resumed', 'استئناف محاولة فحص في جلسة لاحقة',
@@ -219,7 +219,7 @@ TABLE = [
      'تعليمية (7.1: ما لم يكتمل يُستأنف في الجلسة التالية)',
      'تصير المحاولة نشطة في هذه الجلسة وتُضاف إلى جلساتها المساهمة، وتُستهلك الحصة التعليمية. إجابات خاناتها '
      'السابقة تبقى',
-     'no_session، not_open، suspended، lesson_idle، understanding_first، no_check، check_state، already_active، '
+     'no_session، not_open، suspended، lesson_idle، extra_session، understanding_first، no_check، check_state، already_active، '
      'version_unavailable، date_unconfirmed، check_same_day، check_needs_practice، quota_teach', 'لا أثر'),
     ('check_held', 'تعليق محاولة فحص للمراجعة',
      'المحاولة موجودة، لهذه المهارة، «معلَّقة»، ونشطة في هذه الجلسة. السبب: انقطاعان في خانة أو 3 في الفحص، '
@@ -233,7 +233,7 @@ TABLE = [
      'تعريفاتها متاح',
      'تُغلق المحاولة بنتيجتها. اجتاز: دليل استقلال، وبه مع الفهم الساري تصير المهارة مستوفاة، ويوم هذه الجلسة '
      'مرجع أول فحص احتفاظ',
-     'no_session، not_open، suspended، lesson_idle، understanding_first، no_check، check_state، date_unconfirmed، '
+     'no_session، not_open، suspended، lesson_idle، extra_session، understanding_first، no_check، check_state، date_unconfirmed، '
      'check_idle، check_same_day، check_needs_practice، version_unavailable', 'المستوفاة تفكّ انتظار توابعها، وتصير متطلبًا مستوفى في دالة الأهلية'),
     ('check_abandoned', 'ترك محاولة فحص',
      'المحاولة «معلَّقة» أو «معلَّقة للمراجعة» أو «تحتاج إعادة بدء». سبب مكتوب',
@@ -270,7 +270,7 @@ TABLE = [
      'تُحفظ النتيجة بجولتها ويومها وموعدها ومدتها منذ الاجتياز أو الفحص السابق وبنودها. توصف «احتفاظ»، أو «أداء '
      'مؤجل» إن نشط درس المهارة داخل الفاصل أو أبلغ التطبيق عن تدريب مباشر فيه أو جرى فيه تثبيت. أقل من 4 من 5: '
      'تُعلَّم «تحتاج تثبيتًا» ويُستحق للمهارة تثبيت، ولا تُعاد الجولة ولا يتغير موعد التالية. ليست دليلًا، ولا تغيّر حالة',
-     'no_session، unknown_skill، bad_event، not_met، retention_done، date_unconfirmed، retention_early، '
+     'no_session، unknown_skill، bad_event، extra_session، not_met، retention_done، date_unconfirmed، retention_early، '
      'retention_referred، consolidation_first',
      'لا أثر: لا تُغلق ما فُتح'),
     ('retention_help', 'طلب مساعدة في فحص احتفاظ',
@@ -278,14 +278,14 @@ TABLE = [
      'تنتهي الجولة بلا حكم احتفاظ ولا تُعدّ إخفاقًا (قرار 18 نوفمبر، ت3). يُحفظ الطلب بجولته ويومه وبنوده. '
      'يُستحق للمهارة تثبيت، ولا تُطلب الجولة قبل اكتماله ولا في يومه ولا في يوم الطلب: موعدها اليوم التالي لهما '
      'على الأقل، ببنود بديلة. ونتيجتها حين تُجرى توصف «أداء مؤجل»',
-     'no_session، unknown_skill، not_met، retention_done، date_unconfirmed، retention_early، retention_round، '
+     'no_session، unknown_skill، extra_session، not_met، retention_done، date_unconfirmed، retention_early، retention_round، '
      'retention_referred، consolidation_first',
      'لا أثر: لا تُغلق ما فُتح'),
     ('retention_referred', 'إحالة جولة احتفاظ إلى البالغ',
      'شروط طلب المساعدة نفسها',
      'لا بنود بديلة مناسبة للجولة بعد طلب مساعدة: تُسجَّل الإحالة ولا يُعدّ ذلك إخفاقًا. لا تُطلب فحوص احتفاظ '
      'لهذه المهارة حتى يقرر البالغ',
-     'no_session، unknown_skill، not_met، retention_done، date_unconfirmed، retention_early، retention_round، '
+     'no_session، unknown_skill، extra_session، not_met، retention_done، date_unconfirmed، retention_early، retention_round، '
      'retention_referred، consolidation_first',
      'لا أثر: لا تُغلق ما فُتح'),
     ('consolidation_started', 'بدء تثبيت بعد طلب مساعدة أو نتيجة منخفضة في فحص احتفاظ',
