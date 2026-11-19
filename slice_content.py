@@ -272,6 +272,24 @@ def render(perf, n):
     raise ValueError(perf)
 
 
+LINES = ('line_back', 'station_back', 'line_up', 'jump_missing')
+
+
+def line_model(perf, n):
+    """ما يرسمه التطبيق لبند على خط الأعداد: القفزات والمحطات التي يذكرها نص البند نفسه، وما يُخفى منها. الرسم من هذا
+    الحقل، فلا يعيد التطبيق حساب طريقة الحل. back: يبدأ من المطروح منه ويقفز للخلف. up: يبدأ من المطروح ويكمل إلى
+    المطروح منه. hide: ما يُسأل عنه، محطة برقمها في stations أو قفزة برقمها في jumps."""
+    a, b = n['a'], n['b']
+    if perf in ('line_back', 'station_back'):
+        st = back_steps(a, b)
+        ss = stations(a, st)
+        hide = ['station', len(ss) - 1] if perf == 'line_back' else ['station', len(ss) - 2]
+        return dict(line='back', start=a, jumps=st, stations=ss, hide=hide)
+    t = b + 10 - b % 10
+    return dict(line='up', start=b, jumps=[t - b, a - t], stations=[t, a],
+                hide=['total'] if perf == 'line_up' else ['jump', 1])
+
+
 def wrong_answers(perf, n, ans):
     """إجابات خاطئة متوقعة ووصفها المحايد. ما سواها يوصف بالفرق عن الصحيح."""
     out = {}
@@ -780,6 +798,22 @@ def validate(items):
             bad['إشارة طرح غير U+2212'] += int('-' in txt)
             bad['قالب لم يُملأ'] += int('{' in txt or '}' in txt)
         bad['حروف عربية في النص الإنجليزي'] += int(any('؀' <= ch <= 'ۿ' for ch in it['text_en']))
+        m = it.get('model')
+        bad['بند خط أعداد بلا رسمه، أو رسم لغير بنده'] += int((m is None) != (it['performance'] not in LINES))
+        if m is not None:                                   # الرسم يُعاد حسابه هنا مستقلًا: المحطات من القفزات، وآخرها والمخفي
+            a, b, cur, seq = it['numbers']['a'], it['numbers']['b'], m['start'], []
+            for j in m['jumps']:
+                cur += -j if m['line'] == 'back' else j
+                seq.append(cur)
+            ends = (m['start'] == a and cur == a - b) if m['line'] == 'back' else (m['start'] == b and cur == a)
+            asked = {'total': sum(m['jumps']), 'jump': None, 'station': None}[m['hide'][0]]
+            if m['hide'][0] == 'jump':
+                asked = m['jumps'][m['hide'][1]]
+            elif m['hide'][0] == 'station':
+                asked = m['stations'][m['hide'][1]]
+            said = all(str(j) in it['text_ar'] for k, j in enumerate(m['jumps']) if m['hide'] != ['jump', k])
+            bad['رسم خط الأعداد يخالف أعداد بنده أو جوابه أو نصه'] += int(
+                seq != m['stations'] or not ends or asked != it['answer'] or any(j <= 0 for j in m['jumps']) or not said)
         if it['answer_type'] == 'ج1':
             bad['جواب خارج المجال'] += int(not (isinstance(it['answer'], int) and 0 <= it['answer'] <= 99))
             bad['إجابة خاطئة متوقعة تساوي الصحيحة'] += int(it['answer'] in it['wrong'])
@@ -1035,6 +1069,9 @@ if __name__ == '__main__':
             n = it['numbers']
             v = n.get('n', n.get('e'))
             it['fact'] = [n['a'], n['b']] if 'a' in n else sorted((v, 10 - v))
+    for it in bank.items:                                   # بنود خط الأعداد تحمل ما يُرسم لها، بعد أن ثبتت أعدادها
+        if it['performance'] in LINES:
+            it['model'] = line_model(it['performance'], it['numbers'])
     bad = validate(bank.items)
     from content_sequence import collect, violations
     seq_pairs, seq_by, seq_n = collect(bank.items, EVIDENCE)

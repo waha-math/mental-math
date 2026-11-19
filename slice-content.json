@@ -1,6 +1,6 @@
 {
- "version": 6,
- "digest": "22522e46010a60172e78e929c2a73ef64c223452f10e120d9f70e76e3374b3f4",
+ "version": 7,
+ "digest": "34863c80e60fef8cd402f61c704fb27e09a51ba7817e15be5f1e6ca2a23e0c1a",
  "seed": 20261111,
  "texts": {
   "frame_empty": {
@@ -10825,7 +10825,25 @@
     29
    ],
    "fact_seen_before": false,
-   "v": "cb044b3ca5e54759"
+   "model": {
+    "line": "back",
+    "start": 83,
+    "jumps": [
+     20,
+     3,
+     6
+    ],
+    "stations": [
+     63,
+     60,
+     54
+    ],
+    "hide": [
+     "station",
+     2
+    ]
+   },
+   "v": "06bf33e7f9a49d39"
   },
   {
    "id": "3-5-1/lesson/02",
@@ -10858,7 +10876,25 @@
     49
    ],
    "fact_seen_before": false,
-   "v": "82b6bb83753ec45d"
+   "model": {
+    "line": "back",
+    "start": 87,
+    "jumps": [
+     40,
+     7,
+     2
+    ],
+    "stations": [
+     47,
+     40,
+     38
+    ],
+    "hide": [
+     "station",
+     2
+    ]
+   },
+   "v": "78c89d7286d7d442"
   },
   {
    "id": "3-5-1/lesson/03",
@@ -10890,7 +10926,23 @@
     58
    ],
    "fact_seen_before": false,
-   "v": "40764c304e86cdfb"
+   "model": {
+    "line": "back",
+    "start": 80,
+    "jumps": [
+     50,
+     8
+    ],
+    "stations": [
+     30,
+     22
+    ],
+    "hide": [
+     "station",
+     1
+    ]
+   },
+   "v": "27a6662cd111b1ca"
   },
   {
    "id": "3-5-1/lesson/04",
@@ -10919,7 +10971,23 @@
     71
    ],
    "fact_seen_before": false,
-   "v": "37a5beee6fefd2cb"
+   "model": {
+    "line": "back",
+    "start": 80,
+    "jumps": [
+     70,
+     1
+    ],
+    "stations": [
+     10,
+     9
+    ],
+    "hide": [
+     "station",
+     0
+    ]
+   },
+   "v": "80d819512a5e8a25"
   },
   {
    "id": "3-5-1/lesson/05",
@@ -10948,7 +11016,23 @@
     15
    ],
    "fact_seen_before": false,
-   "v": "a68e64aa70232def"
+   "model": {
+    "line": "back",
+    "start": 69,
+    "jumps": [
+     10,
+     5
+    ],
+    "stations": [
+     59,
+     54
+    ],
+    "hide": [
+     "station",
+     0
+    ]
+   },
+   "v": "380014bd59f3b6a9"
   },
   {
    "id": "3-5-1/lesson/06",
@@ -11079,7 +11163,25 @@
     69
    ],
    "fact_seen_before": false,
-   "v": "c109662df3a40fca"
+   "model": {
+    "line": "back",
+    "start": 76,
+    "jumps": [
+     60,
+     6,
+     3
+    ],
+    "stations": [
+     16,
+     10,
+     7
+    ],
+    "hide": [
+     "station",
+     2
+    ]
+   },
+   "v": "02b4f17852218822"
   },
   {
    "id": "3-5-1/opening/03",
@@ -11110,7 +11212,23 @@
     25
    ],
    "fact_seen_before": false,
-   "v": "ad86937ad5c172a5"
+   "model": {
+    "line": "back",
+    "start": 58,
+    "jumps": [
+     20,
+     5
+    ],
+    "stations": [
+     38,
+     33
+    ],
+    "hide": [
+     "station",
+     1
+    ]
+   },
+   "v": "2ddbc82a96063df8"
   },
   {
    "id": "3-5-1/opening/04",
@@ -11143,7 +11261,25 @@
     25
    ],
    "fact_seen_before": false,
-   "v": "94ebc64274555bd7"
+   "model": {
+    "line": "back",
+    "start": 64,
+    "jumps": [
+     20,
+     4,
+     1
+    ],
+    "stations": [
+     44,
+     40,
+     39
+    ],
+    "hide": [
+     "station",
+     2
+    ]
+   },
+   "v": "cda0aabb9bd06927"
   },
   {
    "id": "3-5-1/opening/05",
@@ -11176,7 +11312,25 @@
     59
    ],
    "fact_seen_before": false,
-   "v": "dd855c331fbd7c12"
+   "model": {
+    "line": "back",
+    "start": 87,
+    "jumps": [
+     50,
+     7,
+     2
+    ],
+    "stations": [
+     37,
+     30,
+     28
+    ],
+    "hide": [
+     "station",
+     2
+    ]
+   },
+   "v": "23892adf610812d7"
   },
   {
    "id": "3-5-1/practice/01",
@@ -11404,7 +11558,25 @@
     27
    ],
    "fact_seen_before": false,
-   "v": "02efcceed5ec8d55"
+   "model": {
+    "line": "back",
+    "start": 36,
+    "jumps": [
+     20,
+     6,
+     1
+    ],
+    "stations": [
+     16,
+     10,
+     9
+    ],
+    "hide": [
+     "station",
+     2
+    ]
+   },
+   "v": "06a90785ccfa170a"
   },
   {
    "id": "3-5-1/evidence/02",
@@ -11436,7 +11608,23 @@
     55
    ],
    "fact_seen_before": false,
-   "v": "219625b95ada1718"
+   "model": {
+    "line": "back",
+    "start": 99,
+    "jumps": [
+     50,
+     5
+    ],
+    "stations": [
+     49,
+     44
+    ],
+    "hide": [
+     "station",
+     1
+    ]
+   },
+   "v": "42567c4be72f52c5"
   },
   {
    "id": "3-5-1/evidence/03",
@@ -11470,7 +11658,25 @@
     19
    ],
    "fact_seen_before": false,
-   "v": "ebccf8dc03dbc1bd"
+   "model": {
+    "line": "back",
+    "start": 38,
+    "jumps": [
+     10,
+     8,
+     1
+    ],
+    "stations": [
+     28,
+     20,
+     19
+    ],
+    "hide": [
+     "station",
+     2
+    ]
+   },
+   "v": "5f377edeb5e60f2c"
   },
   {
    "id": "3-5-1/evidence/04",
@@ -11504,7 +11710,25 @@
     45
    ],
    "fact_seen_before": false,
-   "v": "db070263fb38c432"
+   "model": {
+    "line": "back",
+    "start": 64,
+    "jumps": [
+     40,
+     4,
+     1
+    ],
+    "stations": [
+     24,
+     20,
+     19
+    ],
+    "hide": [
+     "station",
+     2
+    ]
+   },
+   "v": "fdf8ea66716da775"
   },
   {
    "id": "3-5-1/evidence/05",
@@ -11534,7 +11758,23 @@
     14
    ],
    "fact_seen_before": false,
-   "v": "96c4a0404a183c06"
+   "model": {
+    "line": "back",
+    "start": 70,
+    "jumps": [
+     10,
+     4
+    ],
+    "stations": [
+     60,
+     56
+    ],
+    "hide": [
+     "station",
+     0
+    ]
+   },
+   "v": "26366e0f34cb3766"
   },
   {
    "id": "3-5-1/evidence/06",
@@ -11564,7 +11804,25 @@
     77
    ],
    "fact_seen_before": false,
-   "v": "bdd40802799abd7f"
+   "model": {
+    "line": "back",
+    "start": 82,
+    "jumps": [
+     70,
+     2,
+     5
+    ],
+    "stations": [
+     12,
+     10,
+     5
+    ],
+    "hide": [
+     "station",
+     1
+    ]
+   },
+   "v": "02ed07349c4c8319"
   },
   {
    "id": "3-5-1/evidence/07",
@@ -11594,7 +11852,23 @@
     23
    ],
    "fact_seen_before": false,
-   "v": "3e7ab18771d69e7c"
+   "model": {
+    "line": "back",
+    "start": 94,
+    "jumps": [
+     20,
+     3
+    ],
+    "stations": [
+     74,
+     71
+    ],
+    "hide": [
+     "station",
+     0
+    ]
+   },
+   "v": "c6b4c541310fdd37"
   },
   {
    "id": "3-5-1/evidence/08",
@@ -11624,7 +11898,25 @@
     19
    ],
    "fact_seen_before": false,
-   "v": "63a62f0a0e578558"
+   "model": {
+    "line": "back",
+    "start": 74,
+    "jumps": [
+     10,
+     4,
+     5
+    ],
+    "stations": [
+     64,
+     60,
+     55
+    ],
+    "hide": [
+     "station",
+     1
+    ]
+   },
+   "v": "777dd23b46aa5d39"
   },
   {
    "id": "3-5-1/evidence/09",
@@ -11948,7 +12240,25 @@
     42,
     29
    ],
-   "v": "25204b830fa1fa43"
+   "model": {
+    "line": "back",
+    "start": 42,
+    "jumps": [
+     20,
+     2,
+     7
+    ],
+    "stations": [
+     22,
+     20,
+     13
+    ],
+    "hide": [
+     "station",
+     2
+    ]
+   },
+   "v": "2362c9299cebf803"
   },
   {
    "id": "3-5-1/gate/07",
@@ -11980,7 +12290,25 @@
     83,
     59
    ],
-   "v": "ce4ba8a084e9b84d"
+   "model": {
+    "line": "back",
+    "start": 83,
+    "jumps": [
+     50,
+     3,
+     6
+    ],
+    "stations": [
+     33,
+     30,
+     24
+    ],
+    "hide": [
+     "station",
+     2
+    ]
+   },
+   "v": "32e207cfd3a9290b"
   },
   {
    "id": "3-5-1/gate/08",
@@ -12008,7 +12336,23 @@
     60,
     11
    ],
-   "v": "786d8d7e0c1d614b"
+   "model": {
+    "line": "back",
+    "start": 60,
+    "jumps": [
+     10,
+     1
+    ],
+    "stations": [
+     50,
+     49
+    ],
+    "hide": [
+     "station",
+     0
+    ]
+   },
+   "v": "b609d763f16f75d9"
   },
   {
    "id": "3-5-1/gate/09",
@@ -12036,7 +12380,25 @@
     33,
     24
    ],
-   "v": "012d7f21c1a61fa7"
+   "model": {
+    "line": "back",
+    "start": 33,
+    "jumps": [
+     20,
+     3,
+     1
+    ],
+    "stations": [
+     13,
+     10,
+     9
+    ],
+    "hide": [
+     "station",
+     1
+    ]
+   },
+   "v": "2a4ba98c4be02016"
   },
   {
    "id": "3-5-1/gate/10",
@@ -12067,7 +12429,23 @@
     49,
     22
    ],
-   "v": "e98d46e01b83aea7"
+   "model": {
+    "line": "back",
+    "start": 49,
+    "jumps": [
+     20,
+     2
+    ],
+    "stations": [
+     29,
+     27
+    ],
+    "hide": [
+     "station",
+     1
+    ]
+   },
+   "v": "29a550ce223c84f6"
   },
   {
    "id": "3-5-1/gate/11",
@@ -12099,7 +12477,25 @@
     73,
     27
    ],
-   "v": "0099cfe10f58caf5"
+   "model": {
+    "line": "back",
+    "start": 73,
+    "jumps": [
+     20,
+     3,
+     4
+    ],
+    "stations": [
+     53,
+     50,
+     46
+    ],
+    "hide": [
+     "station",
+     2
+    ]
+   },
+   "v": "53b8081e80f977f1"
   },
   {
    "id": "3-5-1/gate/12",
@@ -12127,7 +12523,25 @@
     92,
     47
    ],
-   "v": "3bad9960685d0398"
+   "model": {
+    "line": "back",
+    "start": 92,
+    "jumps": [
+     40,
+     2,
+     5
+    ],
+    "stations": [
+     52,
+     50,
+     45
+    ],
+    "hide": [
+     "station",
+     1
+    ]
+   },
+   "v": "50e691ad21a8a49e"
   },
   {
    "id": "3-5-1/gate/13",
@@ -12155,7 +12569,23 @@
     70,
     41
    ],
-   "v": "71edfba8e1affcac"
+   "model": {
+    "line": "back",
+    "start": 70,
+    "jumps": [
+     40,
+     1
+    ],
+    "stations": [
+     30,
+     29
+    ],
+    "hide": [
+     "station",
+     0
+    ]
+   },
+   "v": "5ffccbba4947a97e"
   },
   {
    "id": "3-5-1/gate/14",
@@ -12248,7 +12678,25 @@
     76,
     27
    ],
-   "v": "54362068d5783492"
+   "model": {
+    "line": "back",
+    "start": 76,
+    "jumps": [
+     20,
+     6,
+     1
+    ],
+    "stations": [
+     56,
+     50,
+     49
+    ],
+    "hide": [
+     "station",
+     2
+    ]
+   },
+   "v": "723cb347deb0784d"
   },
   {
    "id": "3-5-1/gate/17",
@@ -12280,7 +12728,25 @@
     84,
     35
    ],
-   "v": "1c5c7d898439a323"
+   "model": {
+    "line": "back",
+    "start": 84,
+    "jumps": [
+     30,
+     4,
+     1
+    ],
+    "stations": [
+     54,
+     50,
+     49
+    ],
+    "hide": [
+     "station",
+     2
+    ]
+   },
+   "v": "7655a02495ded510"
   },
   {
    "id": "3-5-1/gate/18",
@@ -12308,7 +12774,23 @@
     90,
     65
    ],
-   "v": "ec4e9d78b8cae6b5"
+   "model": {
+    "line": "back",
+    "start": 90,
+    "jumps": [
+     60,
+     5
+    ],
+    "stations": [
+     30,
+     25
+    ],
+    "hide": [
+     "station",
+     0
+    ]
+   },
+   "v": "6f637f8cd50a50a4"
   },
   {
    "id": "3-5-1/gate/19",
@@ -12336,7 +12818,25 @@
     22,
     17
    ],
-   "v": "b675922077e50f53"
+   "model": {
+    "line": "back",
+    "start": 22,
+    "jumps": [
+     10,
+     2,
+     5
+    ],
+    "stations": [
+     12,
+     10,
+     5
+    ],
+    "hide": [
+     "station",
+     1
+    ]
+   },
+   "v": "24ca50cdcce74c16"
   },
   {
    "id": "3-5-1/gate/20",
@@ -12588,7 +13088,25 @@
     83,
     44
    ],
-   "v": "e885be12f4bbcecc"
+   "model": {
+    "line": "back",
+    "start": 83,
+    "jumps": [
+     40,
+     3,
+     1
+    ],
+    "stations": [
+     43,
+     40,
+     39
+    ],
+    "hide": [
+     "station",
+     2
+    ]
+   },
+   "v": "dc5f19556558f355"
   },
   {
    "id": "3-5-1/regate/07",
@@ -12620,7 +13138,23 @@
     40,
     23
    ],
-   "v": "626fbcf27f1206eb"
+   "model": {
+    "line": "back",
+    "start": 40,
+    "jumps": [
+     20,
+     3
+    ],
+    "stations": [
+     20,
+     17
+    ],
+    "hide": [
+     "station",
+     1
+    ]
+   },
+   "v": "46ae3fc8a08dc33d"
   },
   {
    "id": "3-5-1/regate/08",
@@ -12648,7 +13182,25 @@
     34,
     29
    ],
-   "v": "571e0590743254b9"
+   "model": {
+    "line": "back",
+    "start": 34,
+    "jumps": [
+     20,
+     4,
+     5
+    ],
+    "stations": [
+     14,
+     10,
+     5
+    ],
+    "hide": [
+     "station",
+     1
+    ]
+   },
+   "v": "3a751974cbb812ca"
   },
   {
    "id": "3-5-1/regate/09",
@@ -12676,7 +13228,23 @@
     28,
     11
    ],
-   "v": "1af1f3742c335b09"
+   "model": {
+    "line": "back",
+    "start": 28,
+    "jumps": [
+     10,
+     1
+    ],
+    "stations": [
+     18,
+     17
+    ],
+    "hide": [
+     "station",
+     0
+    ]
+   },
+   "v": "a6240b8994e866c9"
   },
   {
    "id": "3-5-1/regate/10",
@@ -12708,7 +13276,25 @@
     85,
     29
    ],
-   "v": "0dc8f4af4a55e088"
+   "model": {
+    "line": "back",
+    "start": 85,
+    "jumps": [
+     20,
+     5,
+     4
+    ],
+    "stations": [
+     65,
+     60,
+     56
+    ],
+    "hide": [
+     "station",
+     2
+    ]
+   },
+   "v": "5291261ea0cfab09"
   },
   {
    "id": "3-5-1/regate/11",
@@ -12740,7 +13326,25 @@
     78,
     39
    ],
-   "v": "395c1991c0de3c2e"
+   "model": {
+    "line": "back",
+    "start": 78,
+    "jumps": [
+     30,
+     8,
+     1
+    ],
+    "stations": [
+     48,
+     40,
+     39
+    ],
+    "hide": [
+     "station",
+     2
+    ]
+   },
+   "v": "65480631af4b6d50"
   },
   {
    "id": "3-5-1/regate/12",
@@ -12768,7 +13372,23 @@
     50,
     35
    ],
-   "v": "87ca05b3d11daff9"
+   "model": {
+    "line": "back",
+    "start": 50,
+    "jumps": [
+     30,
+     5
+    ],
+    "stations": [
+     20,
+     15
+    ],
+    "hide": [
+     "station",
+     0
+    ]
+   },
+   "v": "fb57f0addcdb9cd7"
   },
   {
    "id": "3-5-1/regate/13",
@@ -12796,7 +13416,25 @@
     41,
     39
    ],
-   "v": "a1c6add9b49ac18d"
+   "model": {
+    "line": "back",
+    "start": 41,
+    "jumps": [
+     30,
+     1,
+     8
+    ],
+    "stations": [
+     11,
+     10,
+     2
+    ],
+    "hide": [
+     "station",
+     1
+    ]
+   },
+   "v": "8018cd8f5d598148"
   },
   {
    "id": "3-5-1/regate/14",
@@ -12891,7 +13529,25 @@
     92,
     77
    ],
-   "v": "f37f9d2b7ec84839"
+   "model": {
+    "line": "back",
+    "start": 92,
+    "jumps": [
+     70,
+     2,
+     5
+    ],
+    "stations": [
+     22,
+     20,
+     15
+    ],
+    "hide": [
+     "station",
+     2
+    ]
+   },
+   "v": "4aa7717fd679cff4"
   },
   {
    "id": "3-5-1/regate/17",
@@ -12923,7 +13579,23 @@
     60,
     23
    ],
-   "v": "b6181964dcbe7855"
+   "model": {
+    "line": "back",
+    "start": 60,
+    "jumps": [
+     20,
+     3
+    ],
+    "stations": [
+     40,
+     37
+    ],
+    "hide": [
+     "station",
+     1
+    ]
+   },
+   "v": "724f1051613cc83e"
   },
   {
    "id": "3-5-1/regate/18",
@@ -12951,7 +13623,25 @@
     81,
     76
    ],
-   "v": "52b8453aed1f6b94"
+   "model": {
+    "line": "back",
+    "start": 81,
+    "jumps": [
+     70,
+     1,
+     5
+    ],
+    "stations": [
+     11,
+     10,
+     5
+    ],
+    "hide": [
+     "station",
+     1
+    ]
+   },
+   "v": "bba31297fe98fb20"
   },
   {
    "id": "3-5-1/regate/19",
@@ -12979,7 +13669,23 @@
     91,
     81
    ],
-   "v": "dfbe955788e692ab"
+   "model": {
+    "line": "back",
+    "start": 91,
+    "jumps": [
+     80,
+     1
+    ],
+    "stations": [
+     11,
+     10
+    ],
+    "hide": [
+     "station",
+     0
+    ]
+   },
+   "v": "bf9ea94844c57e08"
   },
   {
    "id": "3-5-1/regate/20",
@@ -13074,7 +13780,23 @@
     80,
     32
    ],
-   "v": "64b9dd39a1843387"
+   "model": {
+    "line": "back",
+    "start": 80,
+    "jumps": [
+     30,
+     2
+    ],
+    "stations": [
+     50,
+     48
+    ],
+    "hide": [
+     "station",
+     1
+    ]
+   },
+   "v": "6f77d9dad8901aa4"
   },
   {
    "id": "3-5-1/short/02",
@@ -14958,7 +15680,22 @@
     47
    ],
    "fact_seen_before": false,
-   "v": "65831227c90e70e8"
+   "model": {
+    "line": "up",
+    "start": 47,
+    "jumps": [
+     3,
+     19
+    ],
+    "stations": [
+     50,
+     69
+    ],
+    "hide": [
+     "total"
+    ]
+   },
+   "v": "98a86f8f2644a159"
   },
   {
    "id": "3-5-2/lesson/02",
@@ -14989,7 +15726,22 @@
     64
    ],
    "fact_seen_before": false,
-   "v": "b68cdd858e2d6399"
+   "model": {
+    "line": "up",
+    "start": 64,
+    "jumps": [
+     6,
+     24
+    ],
+    "stations": [
+     70,
+     94
+    ],
+    "hide": [
+     "total"
+    ]
+   },
+   "v": "52f1d7c3256971aa"
   },
   {
    "id": "3-5-2/lesson/03",
@@ -15023,7 +15775,22 @@
     69
    ],
    "fact_seen_before": false,
-   "v": "4c78a94612692f94"
+   "model": {
+    "line": "up",
+    "start": 69,
+    "jumps": [
+     1,
+     20
+    ],
+    "stations": [
+     70,
+     90
+    ],
+    "hide": [
+     "total"
+    ]
+   },
+   "v": "6350410ad8ef53cb"
   },
   {
    "id": "3-5-2/lesson/04",
@@ -15052,7 +15819,23 @@
     26
    ],
    "fact_seen_before": false,
-   "v": "13ba97c4b1753137"
+   "model": {
+    "line": "up",
+    "start": 26,
+    "jumps": [
+     4,
+     29
+    ],
+    "stations": [
+     30,
+     59
+    ],
+    "hide": [
+     "jump",
+     1
+    ]
+   },
+   "v": "cee909104cc4d475"
   },
   {
    "id": "3-5-2/lesson/05",
@@ -15081,7 +15864,23 @@
     71
    ],
    "fact_seen_before": false,
-   "v": "ff1c43ec7b6ecab1"
+   "model": {
+    "line": "up",
+    "start": 71,
+    "jumps": [
+     9,
+     2
+    ],
+    "stations": [
+     80,
+     82
+    ],
+    "hide": [
+     "jump",
+     1
+    ]
+   },
+   "v": "6e96e83d6ee98ea2"
   },
   {
    "id": "3-5-2/lesson/06",
@@ -15208,7 +16007,22 @@
     45
    ],
    "fact_seen_before": false,
-   "v": "c8cbc6b87b6b4b52"
+   "model": {
+    "line": "up",
+    "start": 45,
+    "jumps": [
+     5,
+     39
+    ],
+    "stations": [
+     50,
+     89
+    ],
+    "hide": [
+     "total"
+    ]
+   },
+   "v": "ce0628d48bd9c7b3"
   },
   {
    "id": "3-5-2/opening/03",
@@ -15239,7 +16053,22 @@
     22
    ],
    "fact_seen_before": false,
-   "v": "059d687d10a13e08"
+   "model": {
+    "line": "up",
+    "start": 22,
+    "jumps": [
+     8,
+     2
+    ],
+    "stations": [
+     30,
+     32
+    ],
+    "hide": [
+     "total"
+    ]
+   },
+   "v": "b293d54a79cf41b2"
   },
   {
    "id": "3-5-2/opening/04",
@@ -15271,7 +16100,22 @@
     57
    ],
    "fact_seen_before": false,
-   "v": "265d35d2ae42da06"
+   "model": {
+    "line": "up",
+    "start": 57,
+    "jumps": [
+     3,
+     18
+    ],
+    "stations": [
+     60,
+     78
+    ],
+    "hide": [
+     "total"
+    ]
+   },
+   "v": "cfbfb060fd69add6"
   },
   {
    "id": "3-5-2/opening/05",
@@ -15302,7 +16146,22 @@
     65
    ],
    "fact_seen_before": false,
-   "v": "bb5ebe8512d62de0"
+   "model": {
+    "line": "up",
+    "start": 65,
+    "jumps": [
+     5,
+     25
+    ],
+    "stations": [
+     70,
+     95
+    ],
+    "hide": [
+     "total"
+    ]
+   },
+   "v": "414ee7c566dd8849"
   },
   {
    "id": "3-5-2/practice/01",
@@ -15526,7 +16385,22 @@
     14
    ],
    "fact_seen_before": false,
-   "v": "13c1fb048669d23f"
+   "model": {
+    "line": "up",
+    "start": 14,
+    "jumps": [
+     6,
+     27
+    ],
+    "stations": [
+     20,
+     47
+    ],
+    "hide": [
+     "total"
+    ]
+   },
+   "v": "9e8d0eaa4429afd0"
   },
   {
    "id": "3-5-2/evidence/02",
@@ -15559,7 +16433,22 @@
     52
    ],
    "fact_seen_before": false,
-   "v": "2ebcafc2c33b0e8f"
+   "model": {
+    "line": "up",
+    "start": 52,
+    "jumps": [
+     8,
+     8
+    ],
+    "stations": [
+     60,
+     68
+    ],
+    "hide": [
+     "total"
+    ]
+   },
+   "v": "9bcd807efa456fdd"
   },
   {
    "id": "3-5-2/evidence/03",
@@ -15592,7 +16481,22 @@
     51
    ],
    "fact_seen_before": false,
-   "v": "0f6fcf367b2ba69d"
+   "model": {
+    "line": "up",
+    "start": 51,
+    "jumps": [
+     9,
+     17
+    ],
+    "stations": [
+     60,
+     77
+    ],
+    "hide": [
+     "total"
+    ]
+   },
+   "v": "dece65fd3f9d0166"
   },
   {
    "id": "3-5-2/evidence/04",
@@ -15626,7 +16530,22 @@
     35
    ],
    "fact_seen_before": false,
-   "v": "29267386f30da699"
+   "model": {
+    "line": "up",
+    "start": 35,
+    "jumps": [
+     5,
+     23
+    ],
+    "stations": [
+     40,
+     63
+    ],
+    "hide": [
+     "total"
+    ]
+   },
+   "v": "d0a928ae01f18227"
   },
   {
    "id": "3-5-2/evidence/05",
@@ -15656,7 +16575,23 @@
     71
    ],
    "fact_seen_before": false,
-   "v": "e6d4724f91a87ceb"
+   "model": {
+    "line": "up",
+    "start": 71,
+    "jumps": [
+     9,
+     10
+    ],
+    "stations": [
+     80,
+     90
+    ],
+    "hide": [
+     "jump",
+     1
+    ]
+   },
+   "v": "d654604b7ef384f0"
   },
   {
    "id": "3-5-2/evidence/06",
@@ -15686,7 +16621,23 @@
     36
    ],
    "fact_seen_before": false,
-   "v": "ab06bb14a724374d"
+   "model": {
+    "line": "up",
+    "start": 36,
+    "jumps": [
+     4,
+     38
+    ],
+    "stations": [
+     40,
+     78
+    ],
+    "hide": [
+     "jump",
+     1
+    ]
+   },
+   "v": "30335e33970ec974"
   },
   {
    "id": "3-5-2/evidence/07",
@@ -15716,7 +16667,23 @@
     42
    ],
    "fact_seen_before": false,
-   "v": "642f40f4808c6c9f"
+   "model": {
+    "line": "up",
+    "start": 42,
+    "jumps": [
+     8,
+     9
+    ],
+    "stations": [
+     50,
+     59
+    ],
+    "hide": [
+     "jump",
+     1
+    ]
+   },
+   "v": "527dd10b7e3dd57b"
   },
   {
    "id": "3-5-2/evidence/08",
@@ -15746,7 +16713,23 @@
     27
    ],
    "fact_seen_before": false,
-   "v": "28a1fca63825a2d2"
+   "model": {
+    "line": "up",
+    "start": 27,
+    "jumps": [
+     3,
+     18
+    ],
+    "stations": [
+     30,
+     48
+    ],
+    "hide": [
+     "jump",
+     1
+    ]
+   },
+   "v": "41282760253ab8ee"
   },
   {
    "id": "3-5-2/evidence/09",
@@ -16266,7 +17249,22 @@
     51,
     27
    ],
-   "v": "8faecdb28d4c72c8"
+   "model": {
+    "line": "up",
+    "start": 27,
+    "jumps": [
+     3,
+     21
+    ],
+    "stations": [
+     30,
+     51
+    ],
+    "hide": [
+     "total"
+    ]
+   },
+   "v": "485a74ac222cd481"
   },
   {
    "id": "3-5-2/gate/09",
@@ -16298,7 +17296,22 @@
     50,
     32
    ],
-   "v": "1fa8756c9b44d420"
+   "model": {
+    "line": "up",
+    "start": 32,
+    "jumps": [
+     8,
+     10
+    ],
+    "stations": [
+     40,
+     50
+    ],
+    "hide": [
+     "total"
+    ]
+   },
+   "v": "e937e2f6803e1b2b"
   },
   {
    "id": "3-5-2/gate/10",
@@ -16326,7 +17339,23 @@
     76,
     45
    ],
-   "v": "65d7377d6d180d9e"
+   "model": {
+    "line": "up",
+    "start": 45,
+    "jumps": [
+     5,
+     26
+    ],
+    "stations": [
+     50,
+     76
+    ],
+    "hide": [
+     "jump",
+     1
+    ]
+   },
+   "v": "ee0620c7333a7d5b"
   },
   {
    "id": "3-5-2/gate/11",
@@ -16354,7 +17383,23 @@
     86,
     72
    ],
-   "v": "c72dc600eb80bca0"
+   "model": {
+    "line": "up",
+    "start": 72,
+    "jumps": [
+     8,
+     6
+    ],
+    "stations": [
+     80,
+     86
+    ],
+    "hide": [
+     "jump",
+     1
+    ]
+   },
+   "v": "69c751a31ae89116"
   },
   {
    "id": "3-5-2/gate/12",
@@ -16385,7 +17430,22 @@
     69,
     43
    ],
-   "v": "c1aef2f93e395860"
+   "model": {
+    "line": "up",
+    "start": 43,
+    "jumps": [
+     7,
+     19
+    ],
+    "stations": [
+     50,
+     69
+    ],
+    "hide": [
+     "total"
+    ]
+   },
+   "v": "4fdac54bda22ef6f"
   },
   {
    "id": "3-5-2/gate/13",
@@ -16415,7 +17475,22 @@
     46,
     16
    ],
-   "v": "75025bff9f1d28e5"
+   "model": {
+    "line": "up",
+    "start": 16,
+    "jumps": [
+     4,
+     26
+    ],
+    "stations": [
+     20,
+     46
+    ],
+    "hide": [
+     "total"
+    ]
+   },
+   "v": "ac9796d6369e4eb8"
   },
   {
    "id": "3-5-2/gate/14",
@@ -16444,7 +17519,23 @@
     50,
     34
    ],
-   "v": "4f4ee17ec213955a"
+   "model": {
+    "line": "up",
+    "start": 34,
+    "jumps": [
+     6,
+     10
+    ],
+    "stations": [
+     40,
+     50
+    ],
+    "hide": [
+     "jump",
+     1
+    ]
+   },
+   "v": "e3cfdd3727d62811"
   },
   {
    "id": "3-5-2/gate/15",
@@ -16472,7 +17563,23 @@
     86,
     53
    ],
-   "v": "5f521583273db07e"
+   "model": {
+    "line": "up",
+    "start": 53,
+    "jumps": [
+     7,
+     26
+    ],
+    "stations": [
+     60,
+     86
+    ],
+    "hide": [
+     "jump",
+     1
+    ]
+   },
+   "v": "00690e4a6d0a3115"
   },
   {
    "id": "3-5-2/gate/16",
@@ -16632,7 +17739,22 @@
     89,
     33
    ],
-   "v": "af57ba278bf95c9c"
+   "model": {
+    "line": "up",
+    "start": 33,
+    "jumps": [
+     7,
+     49
+    ],
+    "stations": [
+     40,
+     89
+    ],
+    "hide": [
+     "total"
+    ]
+   },
+   "v": "97d4ef87a0ea3d16"
   },
   {
    "id": "3-5-2/gate/21",
@@ -16663,7 +17785,22 @@
     67,
     53
    ],
-   "v": "9f298cf64fbcfe7c"
+   "model": {
+    "line": "up",
+    "start": 53,
+    "jumps": [
+     7,
+     7
+    ],
+    "stations": [
+     60,
+     67
+    ],
+    "hide": [
+     "total"
+    ]
+   },
+   "v": "efa28eb050af8729"
   },
   {
    "id": "3-5-2/gate/22",
@@ -16691,7 +17828,23 @@
     73,
     54
    ],
-   "v": "100fd5db35848612"
+   "model": {
+    "line": "up",
+    "start": 54,
+    "jumps": [
+     6,
+     13
+    ],
+    "stations": [
+     60,
+     73
+    ],
+    "hide": [
+     "jump",
+     1
+    ]
+   },
+   "v": "5c35c46dee1f2052"
   },
   {
    "id": "3-5-2/gate/23",
@@ -16719,7 +17872,23 @@
     41,
     16
    ],
-   "v": "c24c2e82efa61790"
+   "model": {
+    "line": "up",
+    "start": 16,
+    "jumps": [
+     4,
+     21
+    ],
+    "stations": [
+     20,
+     41
+    ],
+    "hide": [
+     "jump",
+     1
+    ]
+   },
+   "v": "95ccc9fa7926e2d9"
   },
   {
    "id": "3-5-2/gate/24",
@@ -17095,7 +18264,22 @@
     99,
     64
    ],
-   "v": "54f718341d46f9c4"
+   "model": {
+    "line": "up",
+    "start": 64,
+    "jumps": [
+     6,
+     29
+    ],
+    "stations": [
+     70,
+     99
+    ],
+    "hide": [
+     "total"
+    ]
+   },
+   "v": "1743efa0d64e7056"
   },
   {
    "id": "3-5-2/regate/09",
@@ -17126,7 +18310,22 @@
     76,
     64
    ],
-   "v": "b189783f2baf3b55"
+   "model": {
+    "line": "up",
+    "start": 64,
+    "jumps": [
+     6,
+     6
+    ],
+    "stations": [
+     70,
+     76
+    ],
+    "hide": [
+     "total"
+    ]
+   },
+   "v": "51d2478bf3d9b40e"
   },
   {
    "id": "3-5-2/regate/10",
@@ -17154,7 +18353,23 @@
     99,
     76
    ],
-   "v": "6c19081ea5451280"
+   "model": {
+    "line": "up",
+    "start": 76,
+    "jumps": [
+     4,
+     19
+    ],
+    "stations": [
+     80,
+     99
+    ],
+    "hide": [
+     "jump",
+     1
+    ]
+   },
+   "v": "c736042af2f012e0"
   },
   {
    "id": "3-5-2/regate/11",
@@ -17182,7 +18397,23 @@
     72,
     44
    ],
-   "v": "35220b44aa119d16"
+   "model": {
+    "line": "up",
+    "start": 44,
+    "jumps": [
+     6,
+     22
+    ],
+    "stations": [
+     50,
+     72
+    ],
+    "hide": [
+     "jump",
+     1
+    ]
+   },
+   "v": "5bd541de71f34510"
   },
   {
    "id": "3-5-2/regate/12",
@@ -17214,7 +18445,22 @@
     60,
     41
    ],
-   "v": "e2e82df781195c51"
+   "model": {
+    "line": "up",
+    "start": 41,
+    "jumps": [
+     9,
+     10
+    ],
+    "stations": [
+     50,
+     60
+    ],
+    "hide": [
+     "total"
+    ]
+   },
+   "v": "5427be88f9fd5f1c"
   },
   {
    "id": "3-5-2/regate/13",
@@ -17245,7 +18491,22 @@
     74,
     43
    ],
-   "v": "d78b0de9aef218aa"
+   "model": {
+    "line": "up",
+    "start": 43,
+    "jumps": [
+     7,
+     24
+    ],
+    "stations": [
+     50,
+     74
+    ],
+    "hide": [
+     "total"
+    ]
+   },
+   "v": "9910253c63c76177"
   },
   {
    "id": "3-5-2/regate/14",
@@ -17273,7 +18534,23 @@
     24,
     12
    ],
-   "v": "9b0472f728176960"
+   "model": {
+    "line": "up",
+    "start": 12,
+    "jumps": [
+     8,
+     4
+    ],
+    "stations": [
+     20,
+     24
+    ],
+    "hide": [
+     "jump",
+     1
+    ]
+   },
+   "v": "0d6fb92821d759ff"
   },
   {
    "id": "3-5-2/regate/15",
@@ -17301,7 +18578,23 @@
     79,
     59
    ],
-   "v": "30cb78035d33c699"
+   "model": {
+    "line": "up",
+    "start": 59,
+    "jumps": [
+     1,
+     19
+    ],
+    "stations": [
+     60,
+     79
+    ],
+    "hide": [
+     "jump",
+     1
+    ]
+   },
+   "v": "40937d18f8b28588"
   },
   {
    "id": "3-5-2/regate/16",
@@ -17460,7 +18753,22 @@
     51,
     35
    ],
-   "v": "62408e5e34736152"
+   "model": {
+    "line": "up",
+    "start": 35,
+    "jumps": [
+     5,
+     11
+    ],
+    "stations": [
+     40,
+     51
+    ],
+    "hide": [
+     "total"
+    ]
+   },
+   "v": "20bf859e216dcd40"
   },
   {
    "id": "3-5-2/regate/21",
@@ -17492,7 +18800,22 @@
     71,
     44
    ],
-   "v": "565e6941848fe2cd"
+   "model": {
+    "line": "up",
+    "start": 44,
+    "jumps": [
+     6,
+     21
+    ],
+    "stations": [
+     50,
+     71
+    ],
+    "hide": [
+     "total"
+    ]
+   },
+   "v": "b86e2654d9b84278"
   },
   {
    "id": "3-5-2/regate/22",
@@ -17521,7 +18844,23 @@
     50,
     27
    ],
-   "v": "6295f394dad4d2b2"
+   "model": {
+    "line": "up",
+    "start": 27,
+    "jumps": [
+     3,
+     20
+    ],
+    "stations": [
+     30,
+     50
+    ],
+    "hide": [
+     "jump",
+     1
+    ]
+   },
+   "v": "5c12077363e86264"
   },
   {
    "id": "3-5-2/regate/23",
@@ -17549,7 +18888,23 @@
     97,
     27
    ],
-   "v": "7bb7698a506edd97"
+   "model": {
+    "line": "up",
+    "start": 27,
+    "jumps": [
+     3,
+     67
+    ],
+    "stations": [
+     30,
+     97
+    ],
+    "hide": [
+     "jump",
+     1
+    ]
+   },
+   "v": "4d0422be71dae5a5"
   },
   {
    "id": "3-5-2/regate/24",
@@ -17707,7 +19062,22 @@
     96,
     52
    ],
-   "v": "b8b715d6c62513a0"
+   "model": {
+    "line": "up",
+    "start": 52,
+    "jumps": [
+     8,
+     36
+    ],
+    "stations": [
+     60,
+     96
+    ],
+    "hide": [
+     "total"
+    ]
+   },
+   "v": "97f6808c7f21b1f0"
   },
   {
    "id": "3-5-2/short/02",
@@ -22958,7 +24328,25 @@
     14
    ],
    "fact_seen_before": false,
-   "v": "29f41d5a97258f62"
+   "model": {
+    "line": "back",
+    "start": 82,
+    "jumps": [
+     10,
+     2,
+     2
+    ],
+    "stations": [
+     72,
+     70,
+     68
+    ],
+    "hide": [
+     "station",
+     2
+    ]
+   },
+   "v": "2e652e56057e1ef8"
   },
   {
    "id": "3-5-1/evidence/14",
@@ -22992,7 +24380,25 @@
     57
    ],
    "fact_seen_before": false,
-   "v": "b0465785f277ff25"
+   "model": {
+    "line": "back",
+    "start": 93,
+    "jumps": [
+     50,
+     3,
+     4
+    ],
+    "stations": [
+     43,
+     40,
+     36
+    ],
+    "hide": [
+     "station",
+     2
+    ]
+   },
+   "v": "a27988bc33ea2604"
   },
   {
    "id": "3-5-1/evidence/15",
@@ -23025,7 +24431,23 @@
     15
    ],
    "fact_seen_before": false,
-   "v": "599ed021eb8b3b86"
+   "model": {
+    "line": "back",
+    "start": 70,
+    "jumps": [
+     10,
+     5
+    ],
+    "stations": [
+     60,
+     55
+    ],
+    "hide": [
+     "station",
+     1
+    ]
+   },
+   "v": "7bb85688cfdba560"
   },
   {
    "id": "3-5-1/evidence/16",
@@ -23058,7 +24480,25 @@
     84
    ],
    "fact_seen_before": false,
-   "v": "f10d2a9f5b3e17c4"
+   "model": {
+    "line": "back",
+    "start": 93,
+    "jumps": [
+     80,
+     3,
+     1
+    ],
+    "stations": [
+     13,
+     10,
+     9
+    ],
+    "hide": [
+     "station",
+     2
+    ]
+   },
+   "v": "fb6cdcba6500cd8c"
   },
   {
    "id": "3-5-1/evidence/17",
@@ -23088,7 +24528,23 @@
     46
    ],
    "fact_seen_before": false,
-   "v": "e294bf11660a9a23"
+   "model": {
+    "line": "back",
+    "start": 88,
+    "jumps": [
+     40,
+     6
+    ],
+    "stations": [
+     48,
+     42
+    ],
+    "hide": [
+     "station",
+     0
+    ]
+   },
+   "v": "9559977212b9f462"
   },
   {
    "id": "3-5-1/evidence/18",
@@ -23118,7 +24574,25 @@
     17
    ],
    "fact_seen_before": false,
-   "v": "f675430c26a948e5"
+   "model": {
+    "line": "back",
+    "start": 61,
+    "jumps": [
+     10,
+     1,
+     6
+    ],
+    "stations": [
+     51,
+     50,
+     44
+    ],
+    "hide": [
+     "station",
+     1
+    ]
+   },
+   "v": "8310bcfd8fd6c8f5"
   },
   {
    "id": "3-5-1/evidence/19",
@@ -23148,7 +24622,25 @@
     49
    ],
    "fact_seen_before": false,
-   "v": "d8dade1013e1d14c"
+   "model": {
+    "line": "back",
+    "start": 86,
+    "jumps": [
+     40,
+     6,
+     3
+    ],
+    "stations": [
+     46,
+     40,
+     37
+    ],
+    "hide": [
+     "station",
+     1
+    ]
+   },
+   "v": "8c5283323d6b1b15"
   },
   {
    "id": "3-5-1/evidence/20",
@@ -23178,7 +24670,23 @@
     18
    ],
    "fact_seen_before": false,
-   "v": "fa2fd5cbdb848aed"
+   "model": {
+    "line": "back",
+    "start": 60,
+    "jumps": [
+     10,
+     8
+    ],
+    "stations": [
+     50,
+     42
+    ],
+    "hide": [
+     "station",
+     0
+    ]
+   },
+   "v": "8dff79e4401026fc"
   },
   {
    "id": "3-5-1/evidence/21",
@@ -23995,7 +25503,22 @@
     74
    ],
    "fact_seen_before": false,
-   "v": "d000668160985f3e"
+   "model": {
+    "line": "up",
+    "start": 74,
+    "jumps": [
+     6,
+     17
+    ],
+    "stations": [
+     80,
+     97
+    ],
+    "hide": [
+     "total"
+    ]
+   },
+   "v": "5ec9ca26683014f7"
   },
   {
    "id": "3-5-2/evidence/18",
@@ -24029,7 +25552,22 @@
     14
    ],
    "fact_seen_before": false,
-   "v": "49907eff1d185a49"
+   "model": {
+    "line": "up",
+    "start": 14,
+    "jumps": [
+     6,
+     21
+    ],
+    "stations": [
+     20,
+     41
+    ],
+    "hide": [
+     "total"
+    ]
+   },
+   "v": "28647465ae5ae75a"
   },
   {
    "id": "3-5-2/evidence/19",
@@ -24064,7 +25602,22 @@
     17
    ],
    "fact_seen_before": false,
-   "v": "bcbd1b170197d65a"
+   "model": {
+    "line": "up",
+    "start": 17,
+    "jumps": [
+     3,
+     20
+    ],
+    "stations": [
+     20,
+     40
+    ],
+    "hide": [
+     "total"
+    ]
+   },
+   "v": "a5553a8717375ff3"
   },
   {
    "id": "3-5-2/evidence/20",
@@ -24096,7 +25649,22 @@
     31
    ],
    "fact_seen_before": false,
-   "v": "5adb422584e1899b"
+   "model": {
+    "line": "up",
+    "start": 31,
+    "jumps": [
+     9,
+     31
+    ],
+    "stations": [
+     40,
+     71
+    ],
+    "hide": [
+     "total"
+    ]
+   },
+   "v": "3007ce61ee79fc94"
   },
   {
    "id": "3-5-2/evidence/21",
@@ -24126,7 +25694,23 @@
     84
    ],
    "fact_seen_before": false,
-   "v": "4c538990d12046fa"
+   "model": {
+    "line": "up",
+    "start": 84,
+    "jumps": [
+     6,
+     6
+    ],
+    "stations": [
+     90,
+     96
+    ],
+    "hide": [
+     "jump",
+     1
+    ]
+   },
+   "v": "a8b76289a6c15207"
   },
   {
    "id": "3-5-2/evidence/22",
@@ -24156,7 +25740,23 @@
     28
    ],
    "fact_seen_before": false,
-   "v": "39c780bd66b4f798"
+   "model": {
+    "line": "up",
+    "start": 28,
+    "jumps": [
+     2,
+     19
+    ],
+    "stations": [
+     30,
+     49
+    ],
+    "hide": [
+     "jump",
+     1
+    ]
+   },
+   "v": "3a5a4741c53fcad0"
   },
   {
    "id": "3-5-2/evidence/23",
@@ -24186,7 +25786,23 @@
     26
    ],
    "fact_seen_before": false,
-   "v": "de419161a2c06703"
+   "model": {
+    "line": "up",
+    "start": 26,
+    "jumps": [
+     4,
+     26
+    ],
+    "stations": [
+     30,
+     56
+    ],
+    "hide": [
+     "jump",
+     1
+    ]
+   },
+   "v": "ea2e10c36fb2094c"
   },
   {
    "id": "3-5-2/evidence/24",
@@ -24216,7 +25832,23 @@
     49
    ],
    "fact_seen_before": false,
-   "v": "1ea7b0d521b706d7"
+   "model": {
+    "line": "up",
+    "start": 49,
+    "jumps": [
+     1,
+     20
+    ],
+    "stations": [
+     50,
+     70
+    ],
+    "hide": [
+     "jump",
+     1
+    ]
+   },
+   "v": "55eef0ff6c56e774"
   },
   {
    "id": "3-5-2/evidence/25",
@@ -25922,7 +27554,25 @@
     96,
     19
    ],
-   "v": "0be5776d743796c6"
+   "model": {
+    "line": "back",
+    "start": 96,
+    "jumps": [
+     10,
+     6,
+     3
+    ],
+    "stations": [
+     86,
+     80,
+     77
+    ],
+    "hide": [
+     "station",
+     2
+    ]
+   },
+   "v": "1cc932002a600de5"
   },
   {
    "id": "3-5-1/tryfirst/02",
@@ -25954,7 +27604,25 @@
     86,
     58
    ],
-   "v": "ce9b630f9ac0615f"
+   "model": {
+    "line": "back",
+    "start": 86,
+    "jumps": [
+     50,
+     6,
+     2
+    ],
+    "stations": [
+     36,
+     30,
+     28
+    ],
+    "hide": [
+     "station",
+     2
+    ]
+   },
+   "v": "60e895a458014b02"
   },
   {
    "id": "3-5-1/tryfirst/03",
@@ -25982,7 +27650,23 @@
     70,
     19
    ],
-   "v": "242dc20f29668ca2"
+   "model": {
+    "line": "back",
+    "start": 70,
+    "jumps": [
+     10,
+     9
+    ],
+    "stations": [
+     60,
+     51
+    ],
+    "hide": [
+     "station",
+     0
+    ]
+   },
+   "v": "773b9da74c43cae7"
   },
   {
    "id": "3-5-1/tryfirst/04",
@@ -26010,7 +27694,25 @@
     84,
     76
    ],
-   "v": "f52de4336f3c2421"
+   "model": {
+    "line": "back",
+    "start": 84,
+    "jumps": [
+     70,
+     4,
+     2
+    ],
+    "stations": [
+     14,
+     10,
+     8
+    ],
+    "hide": [
+     "station",
+     1
+    ]
+   },
+   "v": "e8ea1285497d9e51"
   },
   {
    "id": "3-5-1/tryfirst/05",
@@ -26104,7 +27806,22 @@
     97,
     73
    ],
-   "v": "173113dbe1751421"
+   "model": {
+    "line": "up",
+    "start": 73,
+    "jumps": [
+     7,
+     17
+    ],
+    "stations": [
+     80,
+     97
+    ],
+    "hide": [
+     "total"
+    ]
+   },
+   "v": "c1fc7513536afa61"
   },
   {
    "id": "3-5-2/tryfirst/02",
@@ -26136,7 +27853,22 @@
     57,
     28
    ],
-   "v": "b09411c4bfaa268e"
+   "model": {
+    "line": "up",
+    "start": 28,
+    "jumps": [
+     2,
+     27
+    ],
+    "stations": [
+     30,
+     57
+    ],
+    "hide": [
+     "total"
+    ]
+   },
+   "v": "b2c717d50df56b4b"
   },
   {
    "id": "3-5-2/tryfirst/03",
@@ -26165,7 +27897,23 @@
     50,
     28
    ],
-   "v": "964d3ec131176bef"
+   "model": {
+    "line": "up",
+    "start": 28,
+    "jumps": [
+     2,
+     20
+    ],
+    "stations": [
+     30,
+     50
+    ],
+    "hide": [
+     "jump",
+     1
+    ]
+   },
+   "v": "6e51088eb1c34ff2"
   },
   {
    "id": "3-5-2/tryfirst/04",
@@ -26193,7 +27941,23 @@
     98,
     33
    ],
-   "v": "c6eaff82101f4a0c"
+   "model": {
+    "line": "up",
+    "start": 33,
+    "jumps": [
+     7,
+     58
+    ],
+    "stations": [
+     40,
+     98
+    ],
+    "hide": [
+     "jump",
+     1
+    ]
+   },
+   "v": "8303856331cb1dcf"
   },
   {
    "id": "3-5-2/tryfirst/05",
@@ -26414,7 +28178,25 @@
     19
    ],
    "fact_seen_before": false,
-   "v": "71d8681672542679"
+   "model": {
+    "line": "back",
+    "start": 76,
+    "jumps": [
+     10,
+     6,
+     3
+    ],
+    "stations": [
+     66,
+     60,
+     57
+    ],
+    "hide": [
+     "station",
+     2
+    ]
+   },
+   "v": "49ef287cc85bc9b3"
   },
   {
    "id": "3-5-1/evidence/26",
@@ -26444,7 +28226,25 @@
     47
    ],
    "fact_seen_before": false,
-   "v": "127463294367729d"
+   "model": {
+    "line": "back",
+    "start": 85,
+    "jumps": [
+     40,
+     5,
+     2
+    ],
+    "stations": [
+     45,
+     40,
+     38
+    ],
+    "hide": [
+     "station",
+     1
+    ]
+   },
+   "v": "dcbe25a77b0e8fa0"
   },
   {
    "id": "3-5-1/evidence/27",
@@ -26511,7 +28311,25 @@
     48
    ],
    "fact_seen_before": false,
-   "v": "d6e53add091066c0"
+   "model": {
+    "line": "back",
+    "start": 54,
+    "jumps": [
+     40,
+     4,
+     4
+    ],
+    "stations": [
+     14,
+     10,
+     6
+    ],
+    "hide": [
+     "station",
+     2
+    ]
+   },
+   "v": "a360a7fb812a8b65"
   },
   {
    "id": "3-5-1/evidence/29",
@@ -26541,7 +28359,23 @@
     52
    ],
    "fact_seen_before": false,
-   "v": "ae1f06fd6743dd01"
+   "model": {
+    "line": "back",
+    "start": 93,
+    "jumps": [
+     50,
+     2
+    ],
+    "stations": [
+     43,
+     41
+    ],
+    "hide": [
+     "station",
+     0
+    ]
+   },
+   "v": "875315d0d19730b7"
   },
   {
    "id": "3-5-1/evidence/30",
@@ -26608,7 +28442,22 @@
     65
    ],
    "fact_seen_before": false,
-   "v": "c73b961712589af8"
+   "model": {
+    "line": "up",
+    "start": 65,
+    "jumps": [
+     5,
+     18
+    ],
+    "stations": [
+     70,
+     88
+    ],
+    "hide": [
+     "total"
+    ]
+   },
+   "v": "3812197c8bc456c4"
   },
   {
    "id": "3-5-2/evidence/34",
@@ -26638,7 +28487,23 @@
     24
    ],
    "fact_seen_before": false,
-   "v": "83affaa0c83406e0"
+   "model": {
+    "line": "up",
+    "start": 24,
+    "jumps": [
+     6,
+     23
+    ],
+    "stations": [
+     30,
+     53
+    ],
+    "hide": [
+     "jump",
+     1
+    ]
+   },
+   "v": "781aa8b341ff2c36"
   },
   {
    "id": "3-5-2/evidence/35",
@@ -26739,7 +28604,22 @@
     41
    ],
    "fact_seen_before": false,
-   "v": "44db8f24c029b3ca"
+   "model": {
+    "line": "up",
+    "start": 41,
+    "jumps": [
+     9,
+     9
+    ],
+    "stations": [
+     50,
+     59
+    ],
+    "hide": [
+     "total"
+    ]
+   },
+   "v": "da32e7bd3142626c"
   },
   {
    "id": "3-5-2/evidence/38",
@@ -26769,7 +28649,23 @@
     19
    ],
    "fact_seen_before": false,
-   "v": "ee47cd41fcbd3194"
+   "model": {
+    "line": "up",
+    "start": 19,
+    "jumps": [
+     1,
+     11
+    ],
+    "stations": [
+     20,
+     31
+    ],
+    "hide": [
+     "jump",
+     1
+    ]
+   },
+   "v": "5601f2e50b8aca46"
   },
   {
    "id": "3-5-2/evidence/39",
@@ -28460,7 +30356,25 @@
     75
    ],
    "fact_seen_before": false,
-   "v": "9bc74d8f8d23787e"
+   "model": {
+    "line": "back",
+    "start": 92,
+    "jumps": [
+     70,
+     2,
+     3
+    ],
+    "stations": [
+     22,
+     20,
+     17
+    ],
+    "hide": [
+     "station",
+     2
+    ]
+   },
+   "v": "60c85b568d801b16"
   },
   {
    "id": "3-5-1/more/03",
@@ -28586,7 +30500,25 @@
     18
    ],
    "fact_seen_before": false,
-   "v": "f8084c0c79f90cbc"
+   "model": {
+    "line": "back",
+    "start": 67,
+    "jumps": [
+     10,
+     7,
+     1
+    ],
+    "stations": [
+     57,
+     50,
+     49
+    ],
+    "hide": [
+     "station",
+     1
+    ]
+   },
+   "v": "77f7756af0bf1d67"
   },
   {
    "id": "3-5-1/more/07",
@@ -28652,7 +30584,23 @@
     13
    ],
    "fact_seen_before": false,
-   "v": "5a9c38ce453af003"
+   "model": {
+    "line": "back",
+    "start": 70,
+    "jumps": [
+     10,
+     3
+    ],
+    "stations": [
+     60,
+     57
+    ],
+    "hide": [
+     "station",
+     1
+    ]
+   },
+   "v": "bb332aab3c642d67"
   },
   {
    "id": "3-5-1/more/09",
@@ -28778,7 +30726,25 @@
     35
    ],
    "fact_seen_before": false,
-   "v": "50a368e53fb57f7b"
+   "model": {
+    "line": "back",
+    "start": 81,
+    "jumps": [
+     30,
+     1,
+     4
+    ],
+    "stations": [
+     51,
+     50,
+     46
+    ],
+    "hide": [
+     "station",
+     1
+    ]
+   },
+   "v": "27958f3e7a17bed8"
   },
   {
    "id": "3-5-2/more/01",
@@ -28843,7 +30809,22 @@
     56
    ],
    "fact_seen_before": false,
-   "v": "548fb4f8eda54c1e"
+   "model": {
+    "line": "up",
+    "start": 56,
+    "jumps": [
+     4,
+     24
+    ],
+    "stations": [
+     60,
+     84
+    ],
+    "hide": [
+     "total"
+    ]
+   },
+   "v": "bbc512cc04ee16ab"
   },
   {
    "id": "3-5-2/more/03",
@@ -28971,7 +30952,22 @@
     24
    ],
    "fact_seen_before": false,
-   "v": "63978683f886e10a"
+   "model": {
+    "line": "up",
+    "start": 24,
+    "jumps": [
+     6,
+     19
+    ],
+    "stations": [
+     30,
+     49
+    ],
+    "hide": [
+     "total"
+    ]
+   },
+   "v": "fe90bf14e2448242"
   },
   {
    "id": "3-5-2/more/07",
@@ -29102,7 +31098,22 @@
     81
    ],
    "fact_seen_before": false,
-   "v": "68bd0f017f34bd7c"
+   "model": {
+    "line": "up",
+    "start": 81,
+    "jumps": [
+     9,
+     4
+    ],
+    "stations": [
+     90,
+     94
+    ],
+    "hide": [
+     "total"
+    ]
+   },
+   "v": "152aea23d1224f65"
   },
   {
    "id": "3-5-2/more/11",
