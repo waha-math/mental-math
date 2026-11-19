@@ -14,6 +14,7 @@ from collections import Counter, defaultdict
 
 LRI, PDI, MINUS, BOX = '⁦', '⁩', '−', '▢'
 SEED = 20261111
+MORE_PRACTICE = 12                                     # بنود التدريب الإضافي لكل مهارة: مجموعتان من 6
 LEDGER = 'content-ledger.json'                         # سجل إصدارات المحتوى: رقم وبصمة لكل حزمة صدرت
 
 
@@ -475,6 +476,13 @@ def build_big(bank, rng, used):
         for rnd in (1, 2, 3):
             for _ in range(5):
                 put('deferred', 'deferred_check.alternate', 'ف3', 'solve', slot=rnd)['set'] = 1
+    # تدريب إضافي لمن أراد أن يستمر بعد جلسة يومه (قرار الأب، 19 نوفمبر): مجموعتان من 6 بعد بنود التدريب الستة، بأزواج
+    # أعداد لم تُستعمل، وبصيغ المهارة كلها لا بالحساب المجرد وحده. بعد كل ما سبق، فلا تتغير أعداد بند آخر
+    for skill in ('3-5-1', '3-5-2', '3-5-3'):
+        put = maker(skill)
+        forms = ['solve'] + [PERF[skill][t] for t in EVIDENCE[skill] if PERF[skill][t] != 'solve']
+        for k in range(MORE_PRACTICE):
+            put('more', 'practice.more', None, forms[k % len(forms)] if k % 2 else 'solve')
 
 
 # ---------------------------------------------------------------- توليد وحدة 1-4
@@ -524,6 +532,8 @@ def respace_small(items):
     pairs, by_id, _n = collect(items, EVIDENCE)
     near = defaultdict(set)
     for a, b, how, _label in pairs:
+        if 'more' in (by_id[a]['group'], by_id[b]['group']):   # التدريب الإضافي يُكتب بعد هذا البحث وخارجه (more_small)
+            continue
         if a != b and how != 'interrupted' and by_id[a]['skill'] in SLOTS_SMALL:
             near[a].add(b)
             near[b].add(a)
@@ -546,7 +556,7 @@ def respace_small(items):
             if len(lst) >= 3:
                 near[lst[-3]['id']].add(lst[-1]['id'])
                 near[lst[-1]['id']].add(lst[-3]['id'])
-        todo = [i for i in items if i['skill'] == skill and not i['group'].startswith('check')
+        todo = [i for i in items if i['skill'] == skill and not i['group'].startswith('check') and i['group'] != 'more'
                 and 1 <= i['numbers'].get('n', i['numbers'].get('e')) <= 9]
         ids = {i['id'] for i in todo}
         order = sorted(todo, key=lambda i: -len(near[i['id']]))      # الترتيب ثابت: sorted مستقر على ترتيب الملف
@@ -700,6 +710,28 @@ def build_small(bank, rng):
         for rnd in (1, 2, 3):
             for _ in range(5):
                 put('deferred', 'deferred_check.alternate', 'ف3', P['ف3'], slot=rnd)['set'] = 1
+
+
+def more_small(bank):
+    """تدريب إضافي للوحدة 1-4، لمن أراد أن يستمر بعد جلسة يومه (قرار الأب، 19 نوفمبر): مجموعتان من 6 تُعرضان بعد بنود
+    التدريب الستة. حقائق الوحدة خمس، فالتنويع في الصيغة لا في الحقيقة: صيغ المهارة كلها بالتناوب. ولا تتوالى الحقيقة
+    نفسها في بندين، من آخر بنود التدريب إلى آخر الإضافي (3.5). يُستدعى بعد respace_small، وبنوده خارج بحثها، فلا يتغير
+    بها عدد بند سابق."""
+    order = [6, 3, 8, 1, 5, 9, 2, 7, 4]
+    for skill in SLOTS_SMALL:
+        forms = [PERF[skill][t] for t in EVIDENCE[skill]]
+        prev = small_fact([i for i in bank.items if i['skill'] == skill and i['role'] == 'practice'][-1])
+        k, missing, ctx = 0, 0, 0
+        for j in range(MORE_PRACTICE):
+            while frozenset((order[k % 9], 10 - order[k % 9])) == prev:
+                k += 1
+            perf, n = forms[j % len(forms)], dict(n=order[k % 9])
+            if perf == 'missing':
+                perf, missing = ('missing_second', 'missing_first', 'subtract')[missing % 3], missing + 1
+            if perf == 'context10':
+                n['ctx'], ctx = CTX10[ctx % len(CTX10)], ctx + 1
+            it = bank.add(skill, 'more', 'practice.more', None, perf, **n)
+            prev, k = small_fact(it), k + 1
 
 
 # ---------------------------------------------------------------- التحقق المستقل
@@ -949,8 +981,8 @@ def markdown(items, bad, cases, accepted):
 
 
 LABEL = {'lesson.watch': 'شاهِد', 'lesson.model': 'بالنموذج', 'lesson.fade': 'يخفت', 'lesson.nomodel': 'بلا نموذج',
-         'lesson.compare': 'مقارنة', 'practice': 'تدريب'}
-PATH = ['lesson', 'opening', 'practice', 'evidence', 'checkA', 'checkB', 'checkC', 'deferred']
+         'lesson.compare': 'مقارنة', 'practice': 'تدريب', 'practice.more': 'تدريب إضافي'}
+PATH = ['lesson', 'opening', 'practice', 'evidence', 'checkA', 'checkB', 'checkC', 'deferred', 'more']   # الإضافي آخرًا: لا يغيّر وسم بند سابق
 
 
 def mark_seen(items):
@@ -996,6 +1028,7 @@ if __name__ == '__main__':
         if it['group'] == 'evidence':
             it.setdefault('round', 1)
     respaced = respace_small(bank.items)
+    more_small(bank)
     mark_seen(bank.items)
     for it in bank.items:                                   # كل بند يحمل حقيقته: يقرؤها المجدول للتتابع بين الأنشطة
         if 'fact' not in it:

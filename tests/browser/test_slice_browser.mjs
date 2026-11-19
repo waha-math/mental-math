@@ -392,7 +392,7 @@ await sameAsReplay(page, 'بعد جلسة قُطعت بإغلاق');
 
 // ---------------------------------------------------------------- 5ب) يريد أن يستمر (قرار الأب، 19 نوفمبر)
 // القاعدة: الدرس اكتمل وثبت الفهم اليوم، فالمهارة تنتظر فحص استقلالها غدًا. الإضافية تعرض تدريبها مرة، ولا تقييم فيها
-const PRACTICE = PACK.items.filter((i) => i.skill === '1-4-1' && i.role === 'practice').map((i) => i.id);
+const PRACTICE = PACK.items.filter((i) => i.skill === '1-4-1' && ['practice', 'practice.more'].includes(i.role)).map((i) => i.id);   // 6 ثم 12
 const moreBtn = (p) => p.evaluate(() => { const b = document.getElementById('more'); return b ? [b.dataset.plan, b.textContent] : null; });
 check('ختام جلسة اليوم: يُعرض «تدريب أكثر»، ويُسأل الطفل بصوت «هل تريد المزيد؟»', [await moreBtn(page),
   (await page.evaluate(() => window.MM_TEST.spoken.slice(-1)[0])).endsWith('هل تريد المزيد؟')], [['practice', '▶ تدريب أكثر'], true]);

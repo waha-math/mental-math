@@ -175,16 +175,16 @@ def collect(items, types, stuck=None):
             explore(act, src, outcomes, label, pairs, f, l, stuck=stuck if outcomes is ASSESS else None)
             return f, l
 
-        def shown(activity):
+        def shown(activity, **more):
             ids, k = [], 0
             while True:
-                it = src(skill, dict(activity=activity, pos=k))
+                it = src(skill, dict(activity=activity, pos=k, **more))
                 if it is None:
                     return ids
                 ids.append(it['id'])
                 k += 1
 
-        lesson, practice = shown('lesson'), shown('practice')
+        lesson, practice = shown('lesson'), shown('practice', more=True)   # التدريب ثم التدريب الإضافي بعده
         for name, ids in (('الدرس', lesson), ('التدريب', practice)):
             pairs.update((a, b, 'shown', name) for a, b in zip(ids, ids[1:]))
         open_last = set()

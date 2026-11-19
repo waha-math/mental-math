@@ -912,7 +912,9 @@ export class ContentSource {
     if (a === 'lesson') {
       it = at(LESSON_ROLES.flatMap((r) => this._list(skill, 'lesson', r)), w.pos);
     } else if (a === 'practice') {
-      it = at(this._list(skill, 'practice', 'practice'), w.pos);
+      // التدريب الإضافي (more) يلي بنود التدريب الستة، لمن أراد أن يستمر بعد جلسة يومه. بلا الطلب: الستة وحدها
+      const more = w.more ? this._list(skill, 'more', 'practice.more') : [];
+      it = at([...this._list(skill, 'practice', 'practice'), ...more], w.pos);
     } else if (a === 'gate') {
       const g = (w.attempt ?? 1) === 1 ? 'gate' : 'regate';       // الإعادة وإعادة التحقق ببنود جديدة
       if (w.alternate) it = at(this._typed(skill, g, 'gate.alternate', w.type), w.alt_index);

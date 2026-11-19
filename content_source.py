@@ -87,7 +87,9 @@ class ContentSource:
         if a == 'lesson':
             it = self._at([i for r in LESSON_ROLES for i in self.by[(skill, 'lesson', r)]], w['pos'])
         elif a == 'practice':
-            it = self._at(self.by[(skill, 'practice', 'practice')], w['pos'])
+            # التدريب الإضافي (more) يلي بنود التدريب الستة، لمن أراد أن يستمر بعد جلسة يومه. بلا الطلب: الستة وحدها
+            more = self.by[(skill, 'more', 'practice.more')] if w.get('more') else []
+            it = self._at(self.by[(skill, 'practice', 'practice')] + more, w['pos'])
         elif a == 'gate':
             g = 'gate' if w.get('attempt', 1) == 1 else 'regate'     # الإعادة وإعادة التحقق ببنود جديدة
             if w['alternate']:

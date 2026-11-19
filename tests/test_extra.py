@@ -5,7 +5,8 @@
 
 القاعدة التي يُختبر عليها، وهي مكتوبة قبل التشغيل:
 - الإضافية بعد جلسة مختومة في يوم الأسرة نفسه، وبعد جلسة البدء، وما دام في اليوم وقت (day_cap) وعندنا ما يُعرض.
-- فيها تعليم وتدريب فقط: يُكمَل ما قطعه السقف، والدرس الجاري، وتدريب المهارة التي تنتظر فحص استقلالها مرة في اليوم،
+- فيها تعليم وتدريب فقط: يُكمَل ما قطعه السقف، والدرس الجاري، وتدريب المهارة التي تنتظر فحص استقلالها مرة في اليوم
+  (بنود التدريب الستة ثم التدريب الإضافي، 18 بندًا؛ والتدريب في الجلسة العادية يبقى الستة وحدها)،
   ودرس جديد إن لم يُفتح اليوم درس. لا بوابة ولا تحقق قصير ولا فحص استقلال ولا فحص احتفاظ.
 - المهارة المستوفاة لا تُدرَّب فيها، فتبقى جولات احتفاظها «احتفاظ».
 - حد اليوم لا يقطع بندًا. ما قطعه من درس يُحفظ لجلسة الغد، وما قطعه من تدريب حر لا يُحفظ.
@@ -30,7 +31,9 @@ from stepper import Stepper  # noqa: E402
 Engine, Scheduler, ContentSource, NET, TYPES, ITEMS, Kid, persist, final, dump = (g[k] for k in (
     'Engine', 'Scheduler', 'ContentSource', 'NET', 'TYPES', 'ITEMS', 'Kid', 'persist', 'final', 'dump'))
 TEACHING = ('opening', 'lesson', 'evidence', 'practice')
-PRACTICE = {s: [i['id'] for i in ITEMS if i['skill'] == s and i['role'] == 'practice'] for s in {i['skill'] for i in ITEMS}}
+# ما يُعرض في التدريب الحر: بنود التدريب الستة ثم التدريب الإضافي (12)، بترتيبها في المحتوى
+PRACTICE = {s: [i['id'] for i in ITEMS if i['skill'] == s and i['role'] in ('practice', 'practice.more')]
+            for s in {i['skill'] for i in ITEMS}}
 # الشريحة (10.2). السقف وحد اليوم بقرار الأب: 6 دقائق و30 دقيقة للصغير، و10 و50 للكبيرين. ثواني البند قيمة اختبار
 SCEN = dict(
     young=dict(group='young', scope=['1-4-1', '1-4-2'], decisions=[('1-4-1', ['1-3-3'])], cap=360, day_cap=1800, secs=30),
@@ -136,7 +139,9 @@ rest = [t[3] for t in b.of(day=2) if t[4] in TEACHING]
 if [t[3] for t in x1][:len(rest)] != rest or not rest:
     bad.append('الإضافية لم تبدأ ببنود الدرس الباقية نفسها: %r مقابل %r' % ([t[3] for t in x1][:len(rest)], rest))
 if [t[3] for t in x1][len(rest):] != PRACTICE['1-4-1']:
-    bad.append('بعد اكتمال الدرس: المتوقع تدريب المهارة مرة واحدة، والناتج %r' % [t[3] for t in x1][len(rest):])
+    bad.append('بعد اكتمال الدرس: المتوقع تدريب المهارة مرة واحدة (18 بندًا)، والناتج %r' % [t[3] for t in x1][len(rest):])
+if len(PRACTICE['1-4-1']) != 18 or [i.split('/')[1] for i in PRACTICE['1-4-1']] != ['practice'] * 6 + ['more'] * 12:
+    bad.append('بنود التدريب الحر في المحتوى: %r' % PRACTICE['1-4-1'])
 if any(t[4] not in TEACHING for t in a.of(kind='extra')):
     bad.append('في الإضافيات نشاط غير تعليمي: %r' % sorted({t[4] for t in a.of(kind='extra')}))
 if (a.first_day('1-4-1', 'check'), b.first_day('1-4-1', 'check')) != (2, 3):

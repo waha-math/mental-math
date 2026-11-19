@@ -497,6 +497,9 @@ class Scheduler:
         consolidate: العرض تثبيت بعد طلب مساعدة في فحص احتفاظ (ت3)، فصلاحيته صلاحية التثبيت الجاري في المحرك لا الدرس
         النشط. الحقل لا يدخل النشاط المحفوظ ولا المعروض إلا حينها. shown: تُجمع فيها معرّفات ما عُرض."""
         mark = dict(consolidate=True) if consolidate else {}
+        # التدريب الحر في الجلسة الإضافية يمتد إلى بنود التدريب الإضافي (more). غيره: بنود التدريب الستة وحدها
+        free = dict(more=True) if (activity == 'practice' and self.stage is not None
+                                   and self.stage.get('free') == s) else {}
         kind = 'consolidate' if consolidate else 'show'
         while True:
             if self.over():                                 # السقف: يُستأنف العرض من موضعه في جلسة لاحقة
@@ -510,7 +513,7 @@ class Scheduler:
             w = dict(activity=activity, pos=k, role=activity)
             if consolidate and k >= CONSOLIDATION_ITEMS:
                 return k
-            item = self.source(s, dict(activity=activity, pos=k))
+            item = self.source(s, dict(activity=activity, pos=k, **free))
             if item is None:
                 return k
             self.live = dict(kind='show', skill=s, activity=activity, pos=k, **mark)

@@ -548,6 +548,8 @@ export class Scheduler {
   // النشط. الحقل لا يدخل النشاط المحفوظ ولا المعروض إلا حينها. shown: تُجمع فيها معرّفات ما عُرض
   *g_show(s, activity, k = 0, consolidate = false, shown = null) {
     const mark = consolidate ? { consolidate: true } : {};
+    // التدريب الحر في الجلسة الإضافية يمتد إلى بنود التدريب الإضافي (more). غيره: بنود التدريب الستة وحدها
+    const free = activity === 'practice' && this.stage !== null && this.stage.free === s ? { more: true } : {};
     const kind = consolidate ? 'consolidate' : 'show';
     for (;;) {
       if (this.over()) {                         // السقف: يُستأنف العرض من موضعه في جلسة لاحقة
@@ -559,7 +561,7 @@ export class Scheduler {
       }
       const w = { activity, pos: k, role: activity };
       if (consolidate && k >= CONSOLIDATION_ITEMS) return k;
-      const item = this.source(s, { activity, pos: k });
+      const item = this.source(s, { activity, pos: k, ...free });
       if (isNone(item)) return k;
       this.live = { kind: 'show', skill: s, activity, pos: k, ...mark };
       const entry = { kind: 'show', skill: s, activity, pos: k, items: [], ...mark };

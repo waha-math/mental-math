@@ -48,7 +48,8 @@ class Kid {
 }
 
 const TEACHING = ['opening', 'lesson', 'evidence', 'practice'];
-const PRACTICE = (s) => ITEMS.filter((i) => i.skill === s && i.role === 'practice').map((i) => i.id);
+// ما يُعرض في التدريب الحر: بنود التدريب الستة ثم التدريب الإضافي (12)، بترتيبها في المحتوى
+const PRACTICE = (s) => ITEMS.filter((i) => i.skill === s && ['practice', 'practice.more'].includes(i.role)).map((i) => i.id);
 const TAPE = JSON.parse(readFileSync(new URL('./extra_tape.json', import.meta.url), 'utf8'));
 // الشريحة (10.2). السقف وحد اليوم بقرار الأب: 6 دقائق و30 دقيقة للصغير، و10 و50 للكبيرين. ثواني البند قيمة اختبار
 const SCEN = {
@@ -148,7 +149,7 @@ if (!eq(a.of({ day: 0 }), b.of({ day: 0 })) || !eq(a.of({ kind: 'start' }), b.of
 if (cut * 30 < 360 || (cut - 1) * 30 >= 360) bad.push(`السقف لم يقطع جلسة البدء حيث يجب: ${cut}`);
 if (!x1.length || new Set(x1.map((t) => t[0])).size !== 1) bad.push('اليوم 1: المتوقع جلسة إضافية واحدة');
 if (!rest.length || !eq(ids(x1).slice(0, rest.length), rest)) bad.push('الإضافية لم تبدأ ببنود الدرس الباقية نفسها');
-if (!eq(ids(x1).slice(rest.length), PRACTICE('1-4-1'))) bad.push('بعد اكتمال الدرس: المتوقع تدريب المهارة مرة واحدة');
+if (!eq(ids(x1).slice(rest.length), PRACTICE('1-4-1')) || PRACTICE('1-4-1').length !== 18) bad.push('بعد اكتمال الدرس: المتوقع تدريب المهارة مرة واحدة (18 بندًا)');
 if (a.of({ kind: 'extra' }).some((t) => !TEACHING.includes(t[4]))) bad.push('في الإضافيات نشاط غير تعليمي');
 if (!eq([a.firstDay('1-4-1', 'check'), b.firstDay('1-4-1', 'check')], [2, 3])) bad.push('يوم فحص استقلال 1-4-1');
 if (a.e.derive()['1-4-1'] !== 'met' || a.e.derive()['1-4-2'] !== 'met' || !eq(a.e.derive(), b.e.derive())) bad.push('حالة المهارتين في النهاية');
