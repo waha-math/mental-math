@@ -118,7 +118,8 @@ async function open({ stub = true } = {}) {
   page.on('pageerror', (e) => errors.push(e.message));
   page.on('console', (m) => { if (m.type() === 'error' && !m.text().includes('404')) errors.push(m.text()); });
   await page.addInitScript(({ stub, t }) => {
-    const T = { spoken: [], clock: { now: t, mono: 0 }, fail: false };
+    // noWorker: عامل الخدمة (العمل دون اتصال) يُختبر في test_backup_browser.mjs، لا هنا
+    const T = { spoken: [], clock: { now: t, mono: 0 }, fail: false, noWorker: true };
     T.now = () => T.clock.now;
     T.mono = () => T.clock.mono;
     T.hooks = { beforePut: (tx) => { if (T.fail) { T.fail = false; tx.abort(); } } };

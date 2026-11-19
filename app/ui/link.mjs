@@ -249,6 +249,11 @@ export class Link {
   }
 }
 
+// يفحص سجل طفل كما يُفحص عند الفتح، بلا قاعدة ولا قفل ولا كتابة: يرمي Blocked إن لم يُستعد (للنسخة الاحتياطية)
+export function checkRecord(record, { profile, pack, tz, now = () => Date.now() }) {
+  new Link({ db: null, child: record.child, profile, pack, tz, now })._restore(record);
+}
+
 // سجل الجهاز: رمز البالغ وأسماء الملفات. يُحفظ في مخزن الأطفال بمفتاحه، بالمعاملة نفسها وحارس rev
 export async function loadDevice(db, key) {
   return (await load(db, key)) ?? { child: key, rev: 0, pin: null, salt: null, names: {} };

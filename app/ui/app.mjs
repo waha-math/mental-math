@@ -2,7 +2,8 @@
 // لا قرار تربوي هنا: الشاشة تعرض البند الذي يطلبه المجدول، وترسل النقرات أحداثًا خامًا عبر طبقة الوصل (link.mjs).
 // ما تقرره الشاشة شكلٌ فقط: متى يظهر النموذج بعد خطأ في التعلّم (4.1)، ومتى يظهر زر «التالي».
 import { openDB } from '../store.mjs';
-import { Link, Blocked, familyDay, loadDevice, saveDevice, pinHash } from './link.mjs';
+import { Link, Blocked, familyDay, loadDevice, saveDevice, pinHash, checkRecord } from './link.mjs';
+import { readAll, makeBackup, checkBackup, importBackup, undoInfo, undoImport } from '../backup.mjs';
 import { PROFILES, TZ, DEVICE } from './config.mjs';
 import { spoken, browserSpeaker } from './speech.mjs';
 import { modelFor, supportFor } from './models.mjs';
@@ -32,6 +33,7 @@ const REASON = {
   menu: 'مدخل البالغ',
 };
 
+let worker = null;                      // تسجيل عامل الخدمة، إن وُجد
 let db, dev, pack, speaker, link = null, child = null, lastActivity = null, audioWaived = false, muted = false;
 
 function h(tag, attrs = {}, ...kids) {
@@ -380,6 +382,14 @@ function adultPanel(reason, detail = null) {
       h('button', { id: 'audio-retry', on: { click: ready } }, 'أعد فحص الصوت'),
       h('button', { id: 'audio-waive', on: { click: () => { audioWaived = true; workshop(); } } }, 'تابع بلا صوت: سأقرأ له')));
   }
+  if (reason === 'menu') sections.push(backupSection(msg));
+  if (reason === 'menu' && worker && worker.waiting) {    // إصدار جديد نُزّل وينتظر: يُطبَّق بطلب البالغ وحده
+    sections.push(h('section', { id: 'update' }, h('p', {}, 'نسخة أحدث من التطبيق جاهزة.'),
+      h('button', { id: 'update-now', on: { click: () => {
+        navigator.serviceWorker.addEventListener('controllerchange', () => location.reload());
+        worker.waiting.postMessage('update');
+      } } }, 'حدّث الآن')));
+  }
   if (detail && (reason === 'restore_rejected' || reason === 'content_changed')) sections.push(h('section', {}, h('p', {}, detail)));
   if (link && link.e !== null && p) {            // قرارات الفتح: المسجّل منها، وما لم يُسجَّل لهذا الطفل
     const made = link.decisions();
@@ -411,6 +421,70 @@ function adultPanel(reason, detail = null) {
     sections, msg, h('button', { id: 'adult-back', on: { click: () => (reason === 'menu' ? resumeChild() : who()) } }, 'رجوع')));
 }
 
+// ---------------------------------------------------------------- النسخة الاحتياطية (9.2)
+const BACKUP_NO = {
+  not_backup: 'هذا الملف ليس نسخة احتياطية من هذا التطبيق.', version: 'صيغة النسخة أحدث من هذا التطبيق.',
+  record: 'في الملف سجل تالف.', duplicate: 'في الملف سجلان لملف واحد.', device: 'سجل الجهاز في الملف تالف.',
+  unknown_child: 'في الملف ملف طفل لا يعرفه هذا التطبيق.', restore_rejected: 'سجل في الملف لا يُقبل عند الفتح.',
+  content_changed: 'في الملف نشاط جارٍ على محتوى غير المحتوى الحالي.', unreadable: 'تعذّرت قراءة الملف.',
+};
+const when = (ms) => new Date(ms).toLocaleString('ar-EG', { timeZone: TZ, dateStyle: 'medium', timeStyle: 'short' });
+const nowMs = () => (T.now ?? Date.now)();
+
+function backupSection(msg) {
+  const box = h('section', { id: 'backup' });
+  const pick = h('input', { type: 'file', id: 'backup-file', accept: 'application/json,.json' });
+  const out = h('div', { id: 'backup-check' });
+  pick.addEventListener('change', async () => {
+    out.replaceChildren();
+    let obj;
+    try { obj = JSON.parse(await pick.files[0].text()); } catch { obj = undefined; }
+    const r = obj === undefined ? { ok: false, code: 'unreadable' } : checkBackup(obj, { device: DEVICE,
+      children: Object.keys(PROFILES),
+      check: (rec) => checkRecord(rec, { profile: PROFILES[rec.child], pack, tz: TZ, now: nowMs }) });
+    if (!r.ok) {
+      out.append(h('p', { class: 'warn', id: 'backup-refused', 'data-code': r.code },
+        `${BACKUP_NO[r.code] ?? r.code} لم يتغير شيء.`, r.detail ? ` (${r.detail})` : ''));
+      return;
+    }
+    const names = (obj.records.find((x) => x.child === DEVICE) ?? { names: {} }).names;
+    out.append(h('p', {}, `نسخة من ${when(obj.made_at)}، فيها: ${r.children.map((c) => names[c] || c).join('، ') || 'لا ملف طفل'}.`),
+      h('p', { class: 'warn' }, 'ستحل محل كل ما على هذا الجهاز، ومعه رمز البالغ. يمكن التراجع مرة واحدة.'),
+      h('button', { id: 'backup-import', on: { click: async () => {
+        const w = await importBackup(db, obj, { made_at: nowMs() });
+        if (!w.ok) { msg.textContent = `لم يُستعد: ${w.code}. لم يتغير شيء.`; return; }
+        location.reload();
+      } } }, 'استبدل ما على هذا الجهاز بهذه النسخة'));
+  });
+  const undo = h('div', { id: 'backup-undo' });
+  undoInfo(db).then((u) => {
+    if (u !== null) undo.append(h('button', { id: 'undo-import', on: { click: async () => {
+      const w = await undoImport(db);
+      if (!w.ok) { msg.textContent = `لم يُتراجع: ${w.code}`; return; }
+      location.reload();
+    } } }, `تراجع عن الاستيراد (أعد ما كان على الجهاز قبل ${when(u.made_at)})`));
+  });
+  box.append(h('p', {}, dev.backup_at ? `آخر نسخة احتياطية: ${when(dev.backup_at)}` : 'لم تُحفظ نسخة احتياطية من هذا الجهاز بعد.'),
+    h('button', { id: 'backup-save', on: { click: async () => {
+      if (link && link.saver && link.saver.state !== 'saved' && link.saver.state !== 'idle') {
+        msg.textContent = 'في هذه النافذة ما لم يُحفظ بعد. احفظه أولًا.'; return;
+      }
+      const made = nowMs();
+      const obj = makeBackup(await readAll(db), { content: { version: pack.version, digest: pack.digest }, made_at: made });
+      const day = new Date(made).toLocaleDateString('en-CA', { timeZone: TZ });
+      const a = h('a', { href: URL.createObjectURL(new Blob([JSON.stringify(obj)], { type: 'application/json' })),
+        download: `mental-math-backup-${day}.json` });
+      document.body.append(a);
+      a.click();
+      a.remove();
+      dev.backup_at = made;
+      try { await saveDevice(db, dev); } catch { /* التاريخ للتذكير وحده */ }
+      adultPanel('menu');
+    } } }, 'احفظ نسخة احتياطية'),
+    h('label', {}, 'استعد من نسخة احتياطية', pick), out, undo);
+  return box;
+}
+
 // ---------------------------------------------------------------- الإقلاع
 document.addEventListener('visibilitychange', () => {   // إخفاء الصفحة ليس من زمن السقف (2.4)
   if (!link) return;
@@ -423,6 +497,9 @@ try {
   db = await openDB(T.db);
   dev = await loadDevice(db, DEVICE);
   speaker = T.speaker ?? browserSpeaker('ar');
+  if ('serviceWorker' in navigator && !T.noWorker) {   // العمل دون اتصال (9.2). فشل التسجيل لا يوقف التطبيق
+    navigator.serviceWorker.register(new URL('../sw.js', import.meta.url)).then((r) => { worker = r; }, () => {});
+  }
   who();
 } catch (err) {
   screen('broken', h('section', { class: 'center' }, h('h1', {}, STR.callAdult), h('p', {}, String(err))));

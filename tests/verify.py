@@ -101,6 +101,7 @@ def main(argv):
                       ('توليد المحتوى وفحصه', [py, 'slice_content.py', m], None, ()),
                       ('المحتوى المحفوظ هو ما يولّده المولّد', [py, '-c', SAME, os.path.join(tree, 'slice-content.json'),
                                                              'slice-content.json'], None, ()),
+                      ('عامل الخدمة يطابق ملفات التطبيق', [py, 'build_sw.py', '--check'], None, ()),
                       ('تتابع البنود أثناء التشغيل', [py, 'content_sequence.py'], None, ()),
                       ('اختبار فحص التتابع', [py, 'tests/test_content_sequence.py', m], all_passed, ())]
             for t in ('r10', 'r11', 'r13', 'r14', 'r15', 'phase0', 'r22', 'defer', 'content_identity', 'record_audit',
@@ -113,6 +114,8 @@ def main(argv):
             os.symlink(os.path.join(tree, 'node_modules'), os.path.join(work, 'node_modules'))
             steps.append(('اختبارات Chrome للحفظ', [node, 'tests/browser/test_store_browser.mjs'], all_passed, ()))
             steps.append(('تجربة الشريحة في Chrome', [node, 'tests/browser/test_slice_browser.mjs'], all_passed, ()))
+            steps.append(('النسخة الاحتياطية والعمل دون اتصال في Chrome', [node, 'tests/browser/test_backup_browser.mjs'],
+                          all_passed, ()))
         print('التحقق من %s في مجلد مؤقت نظيف (%d خطوة)' % (tree, len(steps)))
         for step in steps:
             if run(*step):
