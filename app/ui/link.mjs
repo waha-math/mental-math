@@ -221,6 +221,22 @@ export class Link {
       .map((s) => ({ session: s, day: this.e.s.sessions[s].day }));
   }
 
+  // قرار فتح يسجّله البالغ بعد إنشاء الملف (10.2)، باسم مهارته ومتطلباتها المتجاوزة وسببه. والجلسة مغلقة
+  async decide(d, reason) {
+    if (this.sc.cur !== null) throw new Error('جلسة مفتوحة: يُسجَّل القرار بعد ختمها');
+    const ev = { type: 'teacher_open', skill: d.skill, bypass: d.bypass, reason };
+    const v = this.e.preflight({ ...ev, id: 'ask' });
+    if (!v.ok) throw new Error(`رُفض قرار فتح ${d.skill}: ${v.code}`);
+    this.sc.send(ev);
+    await this.save();
+  }
+
+  // قرارات الفتح المسجّلة في الملف: قرارات معلم، لا أدلة إتقان
+  decisions() {
+    return this.e === null ? [] : this.e.s.decisions.filter((x) => x.kind === 'open')
+      .map((x) => ({ skill: x.skills[0], bypass: x.bypass, reason: x.reason, standing: x.standing }));
+  }
+
   async confirmDate(session) {
     const r = this.sc.send({ type: 'date_confirmed', target: session });
     if (!r.ok) throw new Error(`رُفض تأكيد التاريخ: ${r.code}`);

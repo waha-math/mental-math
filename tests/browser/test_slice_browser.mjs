@@ -24,7 +24,14 @@ const CHROME = process.argv[2] || '/usr/bin/google-chrome';
 const PACK = JSON.parse(readFileSync(join(ROOT, 'slice-content.json'), 'utf8'));
 const BY = new Map(PACK.items.map((i) => [i.id, i]));
 const IDENT = { version: PACK.version, digest: PACK.digest };
-const TYPES = { '1-4-1': ['ف1', 'ف3'], '1-4-2': ['ف2', 'ف3', 'ف4'] };      // من صفّي المهارتين في الخريطة
+const TYPES = { '1-4-1': ['ف1', 'ف3'], '1-4-2': ['ف2', 'ف3', 'ف4'], '3-5-1': ['ف1', 'ف2', 'ف3'],
+  '3-5-2': ['ف1', 'ف2', 'ف3', 'ف4'], '3-5-3': ['ف3'] };                   // من صفوف المهارات في الخريطة
+// ملفات الأطفال كما في 10.2 وقرار الأب: السقف وحد اليوم بالثواني، وقرارات الفتح. مكتوبة هنا يدويًا، لا من إعداد التطبيق
+const OLDER = { group: 'older', scope: ['3-5-1', '3-5-2', '3-5-3'], cap: 600, day_cap: 3000,
+  decisions: [['3-5-1', ['3-3-2', '3-2-3']], ['3-5-2', ['3-2-1', '3-3-1', '2-5-2']]] };
+const PROF = { young: { child: 'young', avatar: '🦊', group: 'young', scope: ['1-4-1', '1-4-2'], cap: 360, day_cap: 1800,
+  decisions: [['1-4-1', ['1-3-3']]] }, older1: { child: 'older1', avatar: '🐬', ...OLDER },
+older2: { child: 'older2', avatar: '🦉', ...OLDER } };
 const DAY0 = Date.UTC(2026, 10, 19, 8, 0, 0);                             // 10 صباحًا في القاهرة، 19 نوفمبر 2026
 const DAYNUM = Math.floor(Date.UTC(2026, 10, 19) / 86400000);
 const SECS = 10;                                                          // ثواني كل بند، يضعها الاختبار
@@ -58,15 +65,28 @@ const errors = [];
 
 // ---------------------------------------------------------------- الإعادة في Node: المرجع الذي يُقارن به المحفوظ
 // لا تستعمل طبقة الوصل: تبني المحرك والمجدول وطبقة الخطوات مباشرة، بالخيارات المكتوبة هنا يدويًا من الخريطة
-const R = { rec: null, st: null, e: null, sc: null, secs: 0 };
+const RS = {};                                                            // حالة الإعادة لكل طفل
+let CUR = PROF.young, R = (RS.young = { rec: null, st: null, e: null, sc: null, secs: 0 });
+const use = (child) => { CUR = PROF[child]; R = (RS[child] ??= { rec: null, st: null, e: null, sc: null, secs: 0 }); };
 const source = () => { const src = new ContentSource(PACK.items, true, IDENT); return (s, w) => src.pick(s, w); };
 const secs = () => { const x = R.secs; R.secs = 0; return x; };
-const rSnap = () => (R.st ? R.st.snapshot('young') : persist.snapshot(R.e, R.sc, null, 'young'));
-function rSetup(reason) {
-  R.e = new Engine(undefined, { group: 'young' });
-  R.e.apply({ id: 'd0', type: 'teacher_open', skill: '1-4-1', bypass: ['1-3-3'], reason });
-  R.sc = new Scheduler(R.e, TYPES, source(), null, { group: 'young', scope: ['1-4-1', '1-4-2'], learning: true, cap: 360,
-    item_seconds: secs, records: [], retention: true, content: IDENT, day_cap: 1800 });
+const rSnap = () => (R.st ? R.st.snapshot(CUR.child) : persist.snapshot(R.e, R.sc, null, CUR.child));
+// decisions: أرقام قرارات الملف التي سجّلها البالغ، بترتيبها
+function rSetup(reason, decisions = [0]) {
+  R.e = new Engine(undefined, { group: CUR.group });
+  decisions.forEach((d, k) => R.e.apply({ id: 'd' + k, type: 'teacher_open', skill: CUR.decisions[d][0],
+    bypass: CUR.decisions[d][1], reason }));
+  R.sc = new Scheduler(R.e, TYPES, source(), null, { group: CUR.group, scope: CUR.scope, learning: true, cap: CUR.cap,
+    item_seconds: secs, records: [], retention: true, content: IDENT, day_cap: CUR.day_cap });
+  R.st = null;
+  R.rec = rSnap();
+}
+// قرار فتح بعد إنشاء الملف، والجلسة مغلقة
+function rDecide(d, reason) {
+  const r = persist.restore(JSON.parse(JSON.stringify(R.rec)), { types: TYPES, source: source(), answer: null,
+    item_seconds: secs, records: [], today: null, content: IDENT });
+  R.e = r.engine; R.sc = r.scheduler; R.st = null;
+  R.sc.send({ type: 'teacher_open', skill: CUR.decisions[d][0], bypass: CUR.decisions[d][1], reason });
   R.rec = rSnap();
 }
 function rStart(now, more = false) {
@@ -121,7 +141,7 @@ const dbRec = (page, key = 'young') => page.evaluate(async (key) => {
 const shownItem = async (page) => {
   await page.waitForSelector('.task[data-ready="true"]');
   return page.evaluate(() => {
-    const t = document.querySelector('.task'), svg = document.querySelector('#model svg');
+    const t = document.querySelector('.task'), svg = document.querySelector('#model svg.frame'), ln = document.querySelector('#model svg.line');
     return { id: t.dataset.item, kind: t.dataset.kind, activity: t.dataset.activity,
       prompt: document.getElementById('prompt').textContent.replace(/\s+/g, ' ').trim(),
       // المعادلة من اليسار إلى اليمين فعلًا: أول محارفها على الشاشة يسار آخرها، لا صفة الاتجاه وحدها
@@ -130,6 +150,10 @@ const shownItem = async (page) => {
         return [b.getAttribute('dir'), getComputedStyle(b).direction, at(0) < at(t.length - 1)];
       }),
       model: svg ? { counters: Number(svg.dataset.counters), covered: svg.dataset.covered === 'true', ghost: svg.classList.contains('ghost') } : null,
+      line: ln ? JSON.parse(ln.dataset.shown) : null,
+      // الإشارة قبل العدد على الرسم («−40» لا «40−»): اتجاه نص الرسم من اليسار، وأول محرف مرسوم يسار آخره
+      lineLtr: ln ? [...ln.querySelectorAll('text')].every((t) => getComputedStyle(t).direction === 'ltr'
+        && (t.textContent.length < 2 || t.getStartPositionOfChar(0).x < t.getStartPositionOfChar(t.textContent.length - 1).x)) : null,
       next: Boolean(document.getElementById('next')), ok: Boolean(document.getElementById('ok')),
       who: document.querySelector('.strip .who')?.textContent ?? null,
       scroll: document.documentElement.scrollHeight <= window.innerHeight && document.documentElement.scrollWidth <= window.innerWidth,
@@ -157,8 +181,20 @@ function inspect(v) {
     : it.performance === 'frame_counters' ? { counters: 10 - n.e, covered: true, ghost: false }
       : it.performance === 'step_pair' ? { counters: 0, covered: false, ghost: true } : null;
   if (canonical(v.model) !== canonical(model)) bad.push('النموذج');
+  // خط الأعداد: ما يُكتب عليه، من حقل model في المحتوى وبوصف المورد في 10.2. المسؤول عنه مربع، ولا يُكتب جوابه
+  const m = it.model ?? null;
+  const line = m === null ? null : {
+    line_back: { stations: [String(m.start), ...m.stations.map((_, k) => (k === m.stations.length - 1 ? '▢' : ''))],
+      jumps: m.jumps.map((j) => '−' + j) },
+    station_back: { stations: [String(m.start), ...m.stations.map((x, k) => (k === m.hide[1] ? '▢' : String(x)))],
+      jumps: m.jumps.map((j) => '−' + j) },
+    line_up: { stations: [m.start, ...m.stations].map(String), jumps: m.jumps.map((j) => '+' + j) },
+    jump_missing: { stations: [m.start, ...m.stations].map(String), jumps: m.jumps.map((j, k) => (k === m.hide[1] ? '▢' : '+' + j)) },
+  }[it.performance];
+  if (canonical(v.line) !== canonical(line)) bad.push('خط الأعداد');
+  if (line !== null && v.lineLtr !== true) bad.push('اتجاه أعداد خط الأعداد');
   if (!v.said || !v.said.includes(say(it.audio_ar))) bad.push('الصوت');
-  if (v.who !== '🦊') bad.push('هوية الطفل');
+  if (v.who !== CUR.avatar) bad.push('هوية الطفل');
   if (!v.scroll) bad.push('الشاشة تتمرر');
   if (v.kind === 'assess' && (v.next || v.ok)) bad.push('تغذية راجعة أو «التالي» في بند تقييم');
   if (bad.length) FAULTS.push([v.id, bad]);
@@ -228,7 +264,9 @@ const pin = async (page, first = false) => {
   await page.waitForSelector('[data-screen="adult"]');
 };
 const sameAsReplay = async (page, name) => check(name + ': المحفوظ في المتصفح يطابق الإعادة في Node حرفًا بحرف',
-  strip(await dbRec(page)), R.rec);
+  strip(await dbRec(page, CUR.child)), R.rec);
+const sameAsReplay2 = async (name, child) => check(name + ': المحفوظ في المتصفح يطابق الإعادة في Node حرفًا بحرف',
+  strip(await dbRec(page, child)), RS[child].rec);
 
 console.log(`=== تجربة الشريحة في Chrome ${browser.version()}: مسار الصغير في 1-4 من الشاشة`);
 
@@ -242,6 +280,11 @@ check('أول فتح: الطفل يختار صورته، ولا ملف له: «�
 await pin(page, true);
 await page.fill('#child-name', 'ك');
 await page.fill('#decision-reason', 'قرار الشريحة في 10.2');
+await page.click('#setup-ok');                                           // بلا قرار مختار: لا يُنشأ ملف
+check('مدخل البالغ: لا قرار مختار سلفًا، وبلا اختيار لا يُنشأ ملف', [await page.evaluate(() => document.getElementById('dec-0').checked),
+  await page.evaluate(() => document.getElementById('adult-msg').textContent), await dbRec(page)],
+[false, 'اختر قرارًا واحدًا على الأقل', null]);
+await page.click('#dec-0');
 await page.click('#setup-ok');
 await page.waitForSelector('[data-screen="workshop"]');
 rSetup('قرار الشريحة في 10.2');
@@ -507,12 +550,96 @@ for (let d = 3; d <= 45; d++) {
 check('الأيام التالية بلغت الدرس ودليل الفهم وفحص الاستقلال', ['lesson', 'evidence', 'check'].filter((a) => !acts.has(a)), []);
 console.log('        أدوار البنود التي عُرضت في الأيام التالية: ' + [...kinds].sort().join('، ') + ' · الأنشطة: ' + [...acts].sort().join('، '));
 
+// ---------------------------------------------------------------- 8ب) الكبيران في 3-5: ملف لكل طفل وقراراته
+// القاعدة: القراران في 10.2 يُعرضان لكل طفل، ويسجّل البالغ منهما ما يراه. قرار المعلم يفتح التقدم وليس دليل إتقان.
+// الطفل الأول يُسجَّل له القراران. الثاني يُسجَّل له 3-5-1 وحده، ثم 3-5-2 لاحقًا من مدخل البالغ.
+const youngRev = (await (async () => { const p = await open(); const r = await dbRec(p); await p.close(); return r; })()).rev;
+const setupOlder = async (child, picks) => {
+  use(child);
+  page = await open();
+  await page.click(`[data-child="${child}"]`);
+  await page.waitForSelector('[data-screen="call"]');
+  await pin(page);
+  for (const k of picks) await page.click('#dec-' + k);
+  await page.fill('#decision-reason', 'تحديد نقطة البدء');
+  await page.click('#setup-ok');
+  await page.waitForSelector('[data-screen="workshop"]');
+  rSetup('تحديد نقطة البدء', picks);
+};
+const opens = (rec) => eng(rec).decisions.filter((x) => x.kind === 'open').map((x) => [x.skills[0], x.bypass, x.reason]);
+NOW.t = DAY0 + 50 * 86400000;
+await setupOlder('older1', [0, 1]);
+await sameAsReplay(page, 'ملف الطفل الأول');
+await page.close();
+await setupOlder('older2', [0]);
+{
+  const r1 = await dbRec(page, 'older1'), r2 = await dbRec(page, 'older2'), y = await dbRec(page);
+  check('لكل طفل ملفه وقراراته: الأول بالقرارين، والثاني بقرار 3-5-1 وحده، وملف الصغير لم يُمسّ. ولا دليل إتقان في ملفيهما',
+    [opens(r1), opens(r2), y.rev, eng(r1).evidence.length + eng(r2).evidence.length],
+    [[['3-5-1', ['3-2-3', '3-3-2'], 'تحديد نقطة البدء'], ['3-5-2', ['2-5-2', '3-2-1', '3-3-1'], 'تحديد نقطة البدء']],
+      [['3-5-1', ['3-2-3', '3-3-2'], 'تحديد نقطة البدء']], youngRev, 0]);
+  await pin(page);
+  const shownMade = await page.evaluate(() => [...document.querySelectorAll('#decisions .made')].map((n) => n.dataset.skill));
+  await page.fill('#decide-reason', 'بعد أسبوع من المتابعة');
+  await page.click('[data-decide="3-5-2"]');
+  await page.waitForFunction(() => document.querySelectorAll('#decisions .made').length === 2);
+  rDecide(1, 'بعد أسبوع من المتابعة');
+  check('قرار لاحق من مدخل البالغ: يُسجَّل باسم مهارته وسببه، ويظهر «قرار معلم» مع السابق',
+    [shownMade, opens(await dbRec(page, 'older2')).map((x) => [x[0], x[2]])],
+    [['3-5-1'], [['3-5-1', 'تحديد نقطة البدء'], ['3-5-2', 'بعد أسبوع من المتابعة']]]);
+  await sameAsReplay2('ملف الطفل الثاني بعد القرار اللاحق', 'older2');
+}
+await page.close();
+
+// الطفل الأول يمضي أيامًا، ويطلب المزيد كلما عُرض عليه. خط الأعداد يُفحص في كل بند يُعرض (inspect)
+use('older1');
+const perfs = new Set(), olderActs = new Set();
+let olderMore = 0;
+for (let d = 50; d <= 58; d++) {
+  NOW.t = DAY0 + d * 86400000;
+  page = await open();
+  await page.click('[data-child="older1"]');
+  await page.waitForSelector('[data-screen="workshop"]');
+  if (!(await page.evaluate(() => Boolean(document.getElementById('start'))))) { await page.close(); continue; }
+  await press(page);
+  rStart(NOW.t);
+  let seen = await play(page);
+  await page.waitForFunction(() => ['end', 'nothing'].includes(document.getElementById('app').dataset.screen));
+  while (await page.evaluate(() => Boolean(document.getElementById('more')))) {
+    await page.click('#more');
+    await page.waitForFunction(() => document.getElementById('app').dataset.screen !== 'end');
+    rStart(NOW.t, true);
+    const extra = await play(page);
+    olderMore += extra.length;
+    seen = [...seen, ...extra];
+    await page.waitForSelector('[data-screen="end"]');
+  }
+  for (const id of seen) { perfs.add(BY.get(id).performance); olderActs.add(BY.get(id).role.split('.')[0]); }
+  await sameAsReplay2(`الطفل الأول، اليوم ${d - 49}`, 'older1');
+  await page.close();
+}
+check('الطفل الأول بلغ الأداءات الأربعة على خط الأعداد، والمسألة السياقية، والحساب بلا نموذج، وفحص الاستقلال، وطلب المزيد',
+  [['line_back', 'station_back', 'line_up', 'jump_missing', 'context_sub', 'solve'].filter((x) => !perfs.has(x)), olderActs.has('check'),
+    olderMore > 0], [[], true, true]);
+check('ملف الطفل الثاني وملف الصغير لم يتغيرا أثناء أيام الأول', [strip(await (async () => { const p = await open(); const r = await dbRec(p, 'older2');
+  const y = await dbRec(p); await p.close(); return { ...r, y: y.rev }; })())], [{ ...RS.older2.rec, y: youngRev }]);
+
 // ---------------------------------------------------------------- 9) بلا صوت عربي
 page = await open({ stub: false });
 await page.click('[data-child="young"]');
 await page.waitForFunction(() => ['call', 'workshop'].includes(document.getElementById('app').dataset.screen), null, { timeout: 8000 });
 check('متصفح بلا صوت عربي: لا يُترك الطفل الذي لا يقرأ وحده، ويُنادى بالغ', [await scr(page),
   await page.evaluate(() => document.querySelector('.center').dataset.reason ?? null)], ['call', 'audio']);
+await page.click('#adult');
+await page.click('#pin-cancel');
+await page.waitForFunction(() => document.getElementById('app').dataset.screen !== 'pin');
+check('«رجوع» من شاشة الرمز بلا رمز يعيد إلى «نادِ أحد الكبار»، لا إلى الورشة', [await scr(page),
+  await page.evaluate(() => document.querySelector('.center').dataset.reason ?? null)], ['call', 'audio']);
+await page.close();
+page = await open({ stub: false });                                       // من يقرأ يمضي بلا صوت
+await page.click('[data-child="older2"]');
+await page.waitForFunction(() => ['call', 'workshop'].includes(document.getElementById('app').dataset.screen), null, { timeout: 8000 });
+check('متصفح بلا صوت عربي والطفل يقرأ: يصل إلى الورشة بلا مناداة بالغ', await scr(page), 'workshop');
 await page.close();
 
 check('كل بند عُرض: نصه من المحتوى، ومعادلته من اليسار إلى اليمين، ونموذجه بأعداده، وصوته، وهوية الطفل، والشاشة لا تتمرر، ولا تغذية '

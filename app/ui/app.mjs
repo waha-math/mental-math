@@ -32,7 +32,7 @@ const REASON = {
   menu: 'مدخل البالغ',
 };
 
-let db, dev, pack, speaker, link = null, child = null, lastActivity = null, audioWaived = false;
+let db, dev, pack, speaker, link = null, child = null, lastActivity = null, audioWaived = false, muted = false;
 
 function h(tag, attrs = {}, ...kids) {
   const n = document.createElement(tag);
@@ -41,16 +41,16 @@ function h(tag, attrs = {}, ...kids) {
     else if (v === true) n.setAttribute(k, '');
     else if (v !== false && v !== null && v !== undefined) n.setAttribute(k, v);
   }
-  n.append(...kids.flat().filter((x) => x !== null && x !== undefined && x !== false));
+  n.append(...kids.flat(Infinity).filter((x) => x !== null && x !== undefined && x !== false));
   return n;
 }
 
 function screen(name, ...kids) {
   root.dataset.screen = name;
-  root.replaceChildren(...kids.flat().filter((x) => x !== null && x !== undefined && x !== false));
+  root.replaceChildren(...kids.flat(Infinity).filter((x) => x !== null && x !== undefined && x !== false));
 }
 
-const say = (text) => { if (speaker) speaker.say(spoken(text)); };
+const say = (text) => { if (speaker && !muted) speaker.say(spoken(text)); };
 const ui = (key) => pack.ui[key].ar;
 const nameOf = (c) => dev.names[c] ?? '';
 
@@ -88,7 +88,7 @@ function who() {
   link = null;
   child = null;
   lastActivity = null;
-  screen('who', strip({ adult: () => pinGate(() => adultPanel('menu')) }),
+  screen('who', strip({ adult: () => pinGate(() => adultPanel('menu'), who) }),
     h('section', { class: 'center' }, h('div', { class: 'avatars' },
       Object.entries(PROFILES).map(([id, p]) => h('button', { class: 'avatar', 'data-child': id, disabled: !p.ready,
         'aria-label': nameOf(id) || id, on: { click: () => enter(id) } }, p.avatar,
@@ -105,8 +105,11 @@ async function enter(id) {
   await ready();
 }
 
+// الصوت شرط لمن لا يقرأ (profile.voice): بلا صوت عربي يُنادى بالغ. من يقرأ يمضي بلا صوت
 async function ready() {
-  if (!audioWaived && !(await speaker.available())) return callAdult('audio');
+  const ok = await speaker.available();
+  if (!ok && PROFILES[child].voice && !audioWaived) return callAdult('audio');
+  muted = !ok;
   workshop();
 }
 
@@ -116,7 +119,7 @@ function workshop() {
   // جلسة مفتوحة، ولو إضافية، تُكمَل بـ«ابدأ». وبعد ختم جلسة اليوم لا «ابدأ»: يُعرض «أريد المزيد» إن كان عندنا ما يُعرض
   const done = link.sc.cur === null
     && link.e.s.order.some((s) => link.e.s.sessions[s].ended && link.e.s.sessions[s].day === today);
-  screen('workshop', strip({ adult: () => pinGate(() => adultPanel('menu')) }),
+  screen('workshop', strip({ adult: () => pinGate(() => adultPanel('menu'), workshop) }),
     h('section', { class: 'center' },
       done ? [h('div', { class: 'icon' }, '🌙'), h('h1', { id: 'done-today' }, STR.doneToday), moreButton(),
         h('button', { id: 'exit', on: { click: who } }, STR.exit)]
@@ -135,7 +138,7 @@ async function begin(more = false) {
   const r = await guard(() => link.start(more));
   if (r === null || r === 'busy') return;
   if (r === 'done') {
-    screen('nothing', strip({ adult: () => pinGate(() => adultPanel('menu')) }),
+    screen('nothing', strip({ adult: () => pinGate(() => adultPanel('menu'), who) }),
       h('section', { class: 'center' }, h('h1', {}, STR.nothing), h('button', { id: 'exit', on: { click: who } }, STR.exit)));
     return;
   }
@@ -300,12 +303,14 @@ function endScreen() {
 function callAdult(reason, detail = null) {
   screen('call', strip(), h('section', { class: 'center', 'data-reason': reason },
     h('div', { class: 'icon' }, '🧑‍🤝‍🧑'), h('h1', {}, STR.callAdult),
-    h('button', { id: 'adult', on: { click: () => pinGate(() => adultPanel(reason, detail)) } }, STR.adults)));
+    h('button', { id: 'adult', on: { click: () => pinGate(() => adultPanel(reason, detail), () => callAdult(reason, detail)) } },
+      STR.adults)));
   say(STR.callAdult);
 }
 
 // رمز البالغ: 4 أرقام (8.3). يُنشأ عند أول دخول. قفل للطفل، لا حماية بيانات
-function pinGate(then) {
+// back: الشاشة التي جاء منها. «رجوع» بلا رمز يعيد إليها هي، فلا يتجاوز الطفل بها «نادِ أحد الكبار»
+function pinGate(then, back) {
   const fresh = dev.pin === null;
   const a = h('input', { id: 'pin', type: 'password', inputmode: 'numeric', maxlength: '4', autocomplete: 'off' });
   const b = fresh ? h('input', { id: 'pin2', type: 'password', inputmode: 'numeric', maxlength: '4', autocomplete: 'off' }) : null;
@@ -326,7 +331,7 @@ function pinGate(then) {
   screen('pin', strip(), h('section', { class: 'adultbox' }, h('h1', {}, fresh ? 'أنشئ رمز البالغ (4 أرقام)' : 'رمز البالغ'),
     h('section', {}, h('label', {}, 'الرمز', a), fresh && h('label', {}, 'أعد الرمز', b), msg,
       h('button', { id: 'pin-ok', on: { click: go } }, 'دخول'),
-      h('button', { id: 'pin-cancel', on: { click: () => (link && link.e ? resumeChild() : who()) } }, 'رجوع'))));
+      h('button', { id: 'pin-cancel', on: { click: back } }, 'رجوع'))));
 }
 
 function resumeChild() {
@@ -342,19 +347,23 @@ function adultPanel(reason, detail = null) {
   if (reason === 'setup') {
     const name = h('input', { id: 'child-name', maxlength: '20', value: nameOf(child) });
     const why = h('textarea', { id: 'decision-reason', rows: '2' }, 'قرار الشريحة في 10.2');
+    // القرارات لهذا الطفل وحده: يُسجَّل منها ما يختاره البالغ، ولا قرار مختار سلفًا
+    const boxes = p.decisions.map((d, k) => h('input', { type: 'checkbox', id: 'dec-' + k, 'data-skill': d.skill }));
     sections.push(h('section', {}, h('label', {}, 'اسم الطفل كما يظهر له (يُحفظ على هذا الجهاز وحده)', name),
-      h('p', {}, 'قرار الفتح (10.2): ' + p.decisions.map((d) => `${d.skill} متجاوزًا ${d.bypass.join(' و')}`).join('، ')
-        + '. يُسجَّل قرارًا للمعلم باسم مهارته، ولا يغيّر وصف الأدلة.'),
+      h('p', {}, 'قرارات الفتح في الشريحة (10.2)، لهذا الطفل وحده. كل قرار يُسجَّل قرارًا للمعلم باسم مهارته، ولا يغيّر وصف الأدلة:'),
+      p.decisions.map((d, k) => h('label', { class: 'pick' }, boxes[k], `فتح ${d.skill} متجاوزًا ${d.bypass.join(' و')}`)),
       h('label', {}, 'سبب القرار', why),
       h('button', { id: 'setup-ok', on: { click: async () => {
+        const chosen = p.decisions.filter((_, k) => boxes[k].checked);
+        if (!chosen.length) { msg.textContent = 'اختر قرارًا واحدًا على الأقل'; return; }
         if (!why.value.trim()) { msg.textContent = 'السبب مطلوب'; return; }
         try {
           dev.names[child] = name.value.trim();
           await saveDevice(db, dev);
-          await link.setup(p.decisions, why.value.trim());
+          await link.setup(chosen, why.value.trim());
         } catch (err) { msg.textContent = String(err.detail ?? err.message ?? err); return; }
         await ready();
-      } } }, 'سجّل القرار وأنشئ الملف')));
+      } } }, 'سجّل وأنشئ الملف')));
   }
   if (reason === 'save') {
     sections.push(h('section', {}, h('p', {}, `سبب الفشل: ${detail}`),
@@ -372,6 +381,19 @@ function adultPanel(reason, detail = null) {
       h('button', { id: 'audio-waive', on: { click: () => { audioWaived = true; workshop(); } } }, 'تابع بلا صوت: سأقرأ له')));
   }
   if (detail && (reason === 'restore_rejected' || reason === 'content_changed')) sections.push(h('section', {}, h('p', {}, detail)));
+  if (link && link.e !== null && p) {            // قرارات الفتح: المسجّل منها، وما لم يُسجَّل لهذا الطفل
+    const made = link.decisions();
+    const rest = p.decisions.filter((d) => !made.some((x) => x.skill === d.skill));
+    const why2 = h('textarea', { id: 'decide-reason', rows: '2' });
+    sections.push(h('section', { id: 'decisions' }, h('p', {}, 'قرارات الفتح في هذا الملف. قرار معلم يفتح التقدم، وليس دليل إتقان:'),
+      made.map((x) => h('p', { class: 'made', 'data-skill': x.skill }, `${x.skill} متجاوزًا ${x.bypass.join(' و')}. السبب: ${x.reason}`)),
+      rest.length ? [h('label', {}, 'سبب القرار الجديد', why2), rest.map((d) => h('button', { 'data-decide': d.skill,
+        disabled: link.sc.cur !== null, on: { click: async () => {
+          if (!why2.value.trim()) { msg.textContent = 'السبب مطلوب'; return; }
+          try { await link.decide(d, why2.value.trim()); } catch (err) { msg.textContent = String(err.message ?? err); return; }
+          adultPanel(reason, detail);
+        } } }, `سجّل فتح ${d.skill} متجاوزًا ${d.bypass.join(' و')}`))] : null));
+  }
   for (const f of (link ? link.flagged() : [])) {
     sections.push(h('section', { 'data-flag': f.session }, h('p', { class: 'warn' },
       `الجلسة ${f.session}: تاريخ الجهاز يومها بعيد عن آخر جلسة (9.1). القرارات المعتمدة على التاريخ معلّقة حتى تؤكده.`),
