@@ -19,6 +19,7 @@ button:focus-visible { outline: 4px solid var(--warm); outline-offset: 2px; }
 .strip .name { font-size: 22px; font-weight: 600; }
 .strip .save { margin-inline-start: auto; font-size: 16px; color: var(--soft); }
 .strip .adult { font-size: 16px; min-height: 44px; padding: 0 14px; color: var(--soft); box-shadow: none; background: transparent; }
+.strip .lang { font-size: 18px; min-height: 44px; padding: 0 16px; }
 
 .center { display: grid; place-items: center; align-content: center; gap: 28px; padding: 24px; text-align: center; }
 .center h1 { font-size: 34px; margin: 0; font-weight: 600; }

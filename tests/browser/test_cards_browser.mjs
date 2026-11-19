@@ -16,6 +16,7 @@ import { Scheduler } from '../../app/scheduler.mjs';
 import { ContentSource } from '../../app/items.mjs';
 import { Stepper } from '../../app/stepper.mjs';
 import * as persist from '../../app/persist.mjs';
+import { spoken } from '../../app/ui/speech.mjs';
 
 const ROOT = resolve(new URL('../..', import.meta.url).pathname);
 const CHROME = process.argv[2] || '/usr/bin/google-chrome';
@@ -171,6 +172,27 @@ check('بند المقارنة في الدرس: الحلان على خطين ب�
   view, { id: cmp.id, rows: [['A', PACK.cards.compare.A.ar, { stations: [A.start, ...A.stations].map(String), jumps: A.jumps.map((j) => '−' + j) }],
     ['B', PACK.cards.compare.B.ar, { stations: [B.start, ...B.stations].map(String), jumps: B.jumps.map((j) => '+' + j) }]],
   cards: cmp.cards.map((k) => [k, PACK.cards.compare[k].ar]), pad: false, next: false, help: false });
+// الإنجليزية بزر الطفل (قرار الأب): النص والصوت والبطاقات من حقول en في المحتوى، والصفحة من اليسار، وتُحفظ لملفه
+const langView = () => page.evaluate(() => ({ dir: document.getElementById('app').dir,
+  prompt: document.getElementById('prompt').textContent.replace(/\s/g, ''),
+  names: [...document.querySelectorAll('.pair-name')].map((x) => x.textContent),
+  cards: [...document.querySelectorAll('#cards [data-card]')].map((b) => b.textContent),
+  said: window.MM_TEST.spoken.at(-1), button: document.getElementById('lang')?.textContent ?? null }));
+// المعادلة تُعرض مقصوصة الأطراف في <bdi>، فالمسافة قبل النقطة تزول: يُقارن النص بلا مسافات، كما في تجربة الشريحة
+const plainText = (t) => t.replace(/[⁦-⁩\s]/g, '');
+await page.click('#lang');
+await page.waitForFunction(() => document.getElementById('app').dir === 'ltr');
+const en = await langView();
+if (process.env.SHOTS) await page.screenshot({ path: process.env.SHOTS + '/compare-en.png' });
+const devEn = await dbRec('@device');
+check('زر اللغة: النص والصوت والبطاقات بالإنجليزية من المحتوى، والصفحة من اليسار، واللغة محفوظة لملف الطفل',
+  [en, devEn.lang], [{ dir: 'ltr', prompt: plainText(cmp.text_en), names: [PACK.cards.compare.A.en, PACK.cards.compare.B.en],
+    cards: cmp.cards.map((k) => PACK.cards.compare[k].en), said: spoken(cmp.audio_en, 'en'), button: 'عربي' }, { older2: 'en' }]);
+await page.click('#lang');
+await page.waitForFunction(() => document.getElementById('app').dir === 'rtl');
+const ar = await langView();
+check('والعودة إلى العربية', [ar.dir, ar.prompt, ar.said, ar.button],
+  ['rtl', plainText(cmp.text_ar), spoken(cmp.audio_ar, 'ar'), 'English']);
 const wrongCard = cmp.cards.find((k) => k !== cmp.answer);
 await page.click(`#cards [data-card="${wrongCard}"]`);          // لا [data-card] وحده: صفّا الرسم يحملانه أيضًا
 await page.waitForSelector('#next');

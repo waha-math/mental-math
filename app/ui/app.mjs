@@ -12,7 +12,7 @@ const T = globalThis.MM_TEST ?? {};     // منفذ الاختبار: speaker و
 const root = document.getElementById('app');
 
 // نصوص الواجهة التي ليست في ملف المحتوى بعد (7.6). العربية وحدها في هذه الجولة
-const STR = {
+const STR_AR = {
   start: 'ابدأ', tapStart: 'اضغط ابدأ', callAdult: 'نادِ أحد الكبار', adults: 'للكبار', next: 'التالي',
   lookFrame: 'انظر إلى الإطار، وجرّب مرة أخرى', tryAgain: 'جرّب مرة أخرى', askHelp: 'هل تحتاج مساعدة؟',
   yes: 'نعم', no: 'لا', someone: 'أحد الكبار', back: 'عدنا', exit: 'خروج', soon: 'قريبًا',
@@ -22,6 +22,26 @@ const STR = {
     : n <= 10 ? `أجبتَ عن ${n} أسئلة اليوم` : `أجبتَ عن ${n} سؤالًا اليوم`),
   save: { idle: '', saving: 'جارٍ الحفظ', saved: 'تم الحفظ', failed: 'لم يُحفظ', read_only: 'لم يُحفظ' },
 };
+// الإنجليزية بزر يبدّله الطفل (قرار الأب، 19 نوفمبر). شاشات البالغ بالعربية وحدها
+const STR_EN = {
+  start: 'Start', tapStart: 'Tap start', callAdult: 'Call a grown-up', next: 'Next',
+  lookFrame: 'Look at the frame and try again', tryAgain: 'Try again', askHelp: 'Do you need help?',
+  yes: 'Yes', no: 'No', someone: 'A grown-up', back: "I'm back", exit: 'Exit', soon: 'Soon',
+  doneToday: "Today's task is done. See you tomorrow", nothing: 'Nothing new right now',
+  more: { resume: 'Finish the lesson', lesson: 'Finish the lesson', practice: 'More practice', open: 'New lesson' },
+  askMore: 'Do you want more?',
+  answered: (n) => (n === 0 ? "Today's task is done" : n === 1 ? 'You answered one question today'
+    : `You answered ${n} questions today`),
+  save: { idle: '', saving: 'Saving', saved: 'Saved', failed: 'Not saved', read_only: 'Not saved' },
+};
+const CHILD_SCREENS = new Set(['workshop', 'item', 'end', 'nothing', 'call']);
+let lang = 'ar', STR = STR_AR, onLang = null;
+const L = (o) => o[lang] ?? o.ar;                          // {ar, en} من المحتوى بلغة الطفل
+function setLang(l) {
+  lang = l;
+  STR = l === 'en' ? { ...STR_AR, ...STR_EN } : STR_AR;
+}
+
 const REASON = {
   setup: 'لا ملف لهذا الطفل بعد. يُنشأ بقرار الفتح في 10.2.',
   save: 'تعذّر الحفظ. ما أجابه الطفل باقٍ في هذه النافذة، ولن يُعرض بند جديد قبل أن يُحفظ.',
@@ -34,7 +54,8 @@ const REASON = {
 };
 
 let worker = null;                      // تسجيل عامل الخدمة، إن وُجد
-let db, dev, pack, speaker, link = null, child = null, lastActivity = null, audioWaived = false, muted = false;
+let db, dev, pack, link = null, child = null, lastActivity = null, audioWaived = false;
+const speakers = {}, mutedIn = { ar: false, en: false };
 
 function h(tag, attrs = {}, ...kids) {
   const n = document.createElement(tag);
@@ -49,11 +70,15 @@ function h(tag, attrs = {}, ...kids) {
 
 function screen(name, ...kids) {
   root.dataset.screen = name;
+  const en = lang === 'en' && CHILD_SCREENS.has(name);
+  root.dir = en ? 'ltr' : 'rtl';
+  root.lang = en ? 'en' : 'ar';
+  if (!CHILD_SCREENS.has(name)) onLang = null;
   root.replaceChildren(...kids.flat(Infinity).filter((x) => x !== null && x !== undefined && x !== false));
 }
 
-const say = (text) => { if (speaker && !muted) speaker.say(spoken(text)); };
-const ui = (key) => pack.ui[key].ar;
+const say = (text) => { const sp = speakers[lang]; if (sp && !mutedIn[lang]) sp.say(spoken(text, lang)); };
+const ui = (key) => L(pack.ui[key]);
 const nameOf = (c) => dev.names[c] ?? '';
 
 function strip({ adult = null } = {}) {
@@ -62,7 +87,17 @@ function strip({ adult = null } = {}) {
     p && h('span', { class: 'who', 'data-child': child }, p.avatar),
     p && h('span', { class: 'name' }, nameOf(child)),
     h('span', { class: 'save', id: 'save' }, link && link.saver ? STR.save[link.saver.state] : ''),
+    onLang && (lang === 'en' || canEn()) && h('button', { class: 'lang', id: 'lang', 'data-lang': lang, on: { click: toggleLang } }, lang === 'ar' ? 'English' : 'عربي'),
     adult && h('button', { class: 'adult', id: 'adult', on: { click: adult } }, STR.adults));
+}
+
+// الطفل يبدّل لغته، وتُحفظ في سجل الجهاز لملفه. الشاشة الجارية تُرسم من جديد وتُقال
+async function toggleLang() {
+  if (!onLang) return;
+  setLang(lang === 'ar' ? 'en' : 'ar');
+  dev.lang = { ...(dev.lang ?? {}), [child]: lang };
+  try { await saveDevice(db, dev); } catch { /* اللغة تفضيل عرض: فشل حفظها لا يوقف الطفل */ }
+  onLang();
 }
 
 function showSave() {
@@ -86,6 +121,8 @@ async function guard(fn) {
 
 // ---------------------------------------------------------------- من أنا؟
 function who() {
+  setLang('ar');
+  onLang = null;
   if (link) link.close();
   link = null;
   child = null;
@@ -99,6 +136,7 @@ function who() {
 
 async function enter(id) {
   child = id;
+  setLang((dev.lang ?? {})[id] ?? 'ar');
   link = new Link({ db, child: id, profile: PROFILES[id], pack, tz: TZ, now: T.now, mono: T.mono, hooks: T.hooks ?? {},
     onStatus: showSave });
   const r = await guard(() => link.load());
@@ -109,14 +147,20 @@ async function enter(id) {
 
 // الصوت شرط لمن لا يقرأ (profile.voice): بلا صوت عربي يُنادى بالغ. من يقرأ يمضي بلا صوت
 async function ready() {
-  const ok = await speaker.available();
+  const [ok, en] = await Promise.all([speakers.ar.available(), speakers.en.available()]);
   if (!ok && PROFILES[child].voice && !audioWaived) return callAdult('audio');
-  muted = !ok;
+  mutedIn.ar = !ok;
+  mutedIn.en = !en;
+  if (lang === 'en' && !canEn()) setLang('ar');
   workshop();
 }
 
+// الإنجليزية لمن لا يقرأ تحتاج صوتًا إنجليزيًا، كالعربية
+const canEn = () => !(PROFILES[child].voice && mutedIn.en);
+
 // ---------------------------------------------------------------- الورشة
 function workshop() {
+  onLang = workshop;
   const today = familyDay((T.now ?? Date.now)(), TZ);
   // جلسة مفتوحة، ولو إضافية، تُكمَل بـ«ابدأ». وبعد ختم جلسة اليوم لا «ابدأ»: يُعرض «أريد المزيد» إن كان عندنا ما يُعرض
   const done = link.sc.cur === null
@@ -176,7 +220,8 @@ async function item() {
     if (r === 'rejected') console.warn('حدث مرفوض', ev, link.st.reject);
     return r;
   };
-  const speakItem = () => say(it.audio_ar);
+  const speakItem = () => say(it['audio_' + lang] ?? it.audio_ar);
+  onLang = () => { draw(); speakItem(); };
 
   const confirm = async () => {
     if (!s.ready || s.solved || s.typed === '') return;
@@ -194,7 +239,7 @@ async function item() {
           s.how = true;
           s.ready = true;
           await confirm();
-        } } }, c.ar))));
+        } } }, L(c)))));
       draw();
       return;
     }
@@ -275,18 +320,18 @@ async function item() {
     if (!s.ready || s.solved) return;
     s.picked = k;
     s.solved = true;
-    say(pack.cards.compare[it.answer].ar);
+    say(L(pack.cards.compare[it.answer]));
     draw();
   };
 
   function draw() {
-    const model = cards ? comparePair(it.model, pack.cards.compare) : (s.support && supportFor(it)) || modelFor(it);
+    const model = cards ? comparePair(it.model, pack.cards.compare, lang) : (s.support && supportFor(it)) || modelFor(it);
     const canNext = kind !== 'assess' && s.ready && (watch || s.solved || s.tries >= 2);
     const padOff = !s.ready || s.solved || watch;
     screen('item', strip(),
       h('section', { class: 'task', 'data-item': it.id, 'data-kind': kind, 'data-activity': want.activity,
         'data-ready': String(s.ready) },
-      h('div', { class: 'stage' }, promptOf(it.text_ar),
+      h('div', { class: 'stage' }, promptOf(it['text_' + lang] ?? it.text_ar),
         h('div', { class: 'model', id: 'model' }, model),
         h('div', { class: 'tools' },
           h('button', { id: 'listen', 'aria-label': ui('button.listen'), on: { click: speakItem } }, '🔊'),
@@ -297,7 +342,7 @@ async function item() {
       h('div', { class: 'side' },
         cards ? h('div', { class: 'cards', id: 'cards' }, cards.map((k) => h('button', { 'data-card': k,
           class: s.solved && k === it.answer ? 'right' : s.picked === k ? 'picked' : null, disabled: !s.ready || s.solved,
-          on: { click: () => pick(k) } }, (s.solved && k === it.answer ? '✓ ' : '') + pack.cards.compare[k].ar)))
+          on: { click: () => pick(k) } }, (s.solved && k === it.answer ? '✓ ' : '') + L(pack.cards.compare[k]))))
           : [h('div', { class: 'answer', id: 'answer' }, watch ? String(it.answer) : s.typed),
             h('div', { class: 'pad' },
           ['1', '2', '3', '4', '5', '6', '7', '8', '9'].map((d) => h('button', { 'data-key': d, disabled: padOff,
@@ -318,11 +363,12 @@ async function item() {
   draw();
   const intro = want.activity !== lastActivity && pack.ui[want.activity + '.intro'];
   lastActivity = want.activity;
-  say((intro ? intro.ar + ' ' : '') + it.audio_ar + (watch ? ' ' + it.answer : ''));
+  say((intro ? L(intro) + ' ' : '') + (it['audio_' + lang] ?? it.audio_ar) + (watch ? ' ' + it.answer : ''));
 }
 
 // ---------------------------------------------------------------- الختام
 function endScreen() {
+  onLang = endScreen;
   const { answered } = link.summary();
   screen('end', strip(), h('section', { class: 'center' }, h('div', { class: 'icon' }, '⭐'),
     h('h1', { id: 'end-message' }, STR.answered(answered)), moreButton(),
@@ -526,7 +572,8 @@ try {
   pack = await (await fetch(new URL('../../slice-content.json', import.meta.url))).json();
   db = await openDB(T.db);
   dev = await loadDevice(db, DEVICE);
-  speaker = T.speaker ?? browserSpeaker('ar');
+  speakers.ar = T.speaker ?? browserSpeaker('ar');
+  speakers.en = T.speakerEn ?? T.speaker ?? browserSpeaker('en');
   if ('serviceWorker' in navigator && !T.noWorker) {   // العمل دون اتصال (9.2). فشل التسجيل لا يوقف التطبيق
     navigator.serviceWorker.register(new URL('../sw.js', import.meta.url)).then((r) => { worker = r; }, () => {});
   }

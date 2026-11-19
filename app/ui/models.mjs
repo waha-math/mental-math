@@ -61,7 +61,7 @@ export function numberLine(m, { perf } = {}) {
 }
 
 // بند المقارنة (10.2): الحلان اللذان يذكرهما نصه، كل على خط باسم بطاقته. labels: بطاقات المقارنة من المحتوى
-export function comparePair(model, labels) {
+export function comparePair(model, labels, lang = 'ar') {
   const box = document.createElement('div');
   box.className = 'pair';
   model.pair.forEach((m, k) => {
@@ -70,7 +70,7 @@ export function comparePair(model, labels) {
     row.dataset.card = k === 0 ? 'A' : 'B';
     const name = document.createElement('span');
     name.className = 'pair-name';
-    name.textContent = labels[k === 0 ? 'A' : 'B'].ar;
+    name.textContent = labels[k === 0 ? 'A' : 'B'][lang];
     row.append(name, numberLine(m, { perf: 'compare' }));
     box.append(row);
   });
