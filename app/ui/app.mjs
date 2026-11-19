@@ -2,7 +2,9 @@
 // لا قرار تربوي هنا: الشاشة تعرض البند الذي يطلبه المجدول، وترسل النقرات أحداثًا خامًا عبر طبقة الوصل (link.mjs).
 // ما تقرره الشاشة شكلٌ فقط: متى يظهر النموذج بعد خطأ في التعلّم (4.1)، ومتى يظهر زر «التالي».
 import { openDB } from '../store.mjs';
-import { Link, Blocked, familyDay, loadDevice, saveDevice, pinHash, checkRecord } from './link.mjs';
+import { Link, Blocked, familyDay, loadDevice, saveDevice, pinHash, checkRecord, readRecord } from './link.mjs';
+import { summarize, dayText } from './dashboard.mjs';
+import { load as loadRecord } from '../store.mjs';
 import { readAll, makeBackup, checkBackup, importBackup, undoInfo, undoImport } from '../backup.mjs';
 import { PROFILES, TZ, DEVICE } from './config.mjs';
 import { spoken, browserSpeaker } from './speech.mjs';
@@ -80,6 +82,9 @@ function screen(name, ...kids) {
 const say = (text) => { const sp = speakers[lang]; if (sp && !mutedIn[lang]) sp.say(spoken(text, lang)); };
 const ui = (key) => L(pack.ui[key]);
 const nameOf = (c) => dev.names[c] ?? '';
+// رموز المهارات (3-5-1) معزولة من اليسار داخل نص عربي. قواعد الاتجاه تُبقيها من اليسار بلا عزل أيضًا (أرقام بينها
+// شرطات)، والعزل صريح لا يعتمد على ذلك. ظننتُها معكوسة في صورة اللوحة، والقياس في الاختبار أثبت أنها لم تكن
+const codes = (text) => String(text).split(/(\d+-\d+-\d+)/).map((x, k) => (k % 2 ? h('bdi', { dir: 'ltr' }, x) : x));
 
 function strip({ adult = null } = {}) {
   const p = child ? PROFILES[child] : null;
@@ -429,7 +434,7 @@ function adultPanel(reason, detail = null) {
     const boxes = p.decisions.map((d, k) => h('input', { type: 'checkbox', id: 'dec-' + k, 'data-skill': d.skill }));
     sections.push(h('section', {}, h('label', {}, 'اسم الطفل كما يظهر له (يُحفظ على هذا الجهاز وحده)', name),
       h('p', {}, 'قرارات الفتح في الشريحة (10.2)، لهذا الطفل وحده. كل قرار يُسجَّل قرارًا للمعلم باسم مهارته، ولا يغيّر وصف الأدلة:'),
-      p.decisions.map((d, k) => h('label', { class: 'pick' }, boxes[k], `فتح ${d.skill} متجاوزًا ${d.bypass.join(' و')}`)),
+      p.decisions.map((d, k) => h('label', { class: 'pick' }, boxes[k], codes(`فتح ${d.skill} متجاوزًا ${d.bypass.join(' و')}`))),
       h('label', {}, 'سبب القرار', why),
       h('button', { id: 'setup-ok', on: { click: async () => {
         const chosen = p.decisions.filter((_, k) => boxes[k].checked);
@@ -458,6 +463,7 @@ function adultPanel(reason, detail = null) {
       h('button', { id: 'audio-retry', on: { click: ready } }, 'أعد فحص الصوت'),
       h('button', { id: 'audio-waive', on: { click: () => { audioWaived = true; workshop(); } } }, 'تابع بلا صوت: سأقرأ له')));
   }
+  if (reason === 'menu') sections.push(boardSection());
   if (reason === 'menu') sections.push(backupSection(msg));
   if (reason === 'menu' && worker && worker.waiting) {    // إصدار جديد نُزّل وينتظر: يُطبَّق بطلب البالغ وحده
     sections.push(h('section', { id: 'update' }, h('p', {}, 'نسخة أحدث من التطبيق جاهزة.'),
@@ -472,13 +478,13 @@ function adultPanel(reason, detail = null) {
     const rest = p.decisions.filter((d) => !made.some((x) => x.skill === d.skill));
     const why2 = h('textarea', { id: 'decide-reason', rows: '2' });
     sections.push(h('section', { id: 'decisions' }, h('p', {}, 'قرارات الفتح في هذا الملف. قرار معلم يفتح التقدم، وليس دليل إتقان:'),
-      made.map((x) => h('p', { class: 'made', 'data-skill': x.skill }, `${x.skill} متجاوزًا ${x.bypass.join(' و')}. السبب: ${x.reason}`)),
+      made.map((x) => h('p', { class: 'made', 'data-skill': x.skill }, codes(`${x.skill} متجاوزًا ${x.bypass.join(' و')}. السبب: ${x.reason}`))),
       rest.length ? [h('label', {}, 'سبب القرار الجديد', why2), rest.map((d) => h('button', { 'data-decide': d.skill,
         disabled: link.sc.cur !== null, on: { click: async () => {
           if (!why2.value.trim()) { msg.textContent = 'السبب مطلوب'; return; }
           try { await link.decide(d, why2.value.trim()); } catch (err) { msg.textContent = String(err.message ?? err); return; }
           adultPanel(reason, detail);
-        } } }, `سجّل فتح ${d.skill} متجاوزًا ${d.bypass.join(' و')}`))] : null));
+        } } }, codes(`سجّل فتح ${d.skill} متجاوزًا ${d.bypass.join(' و')}`)))] : null));
   }
   for (const f of (link ? link.flagged() : [])) {
     sections.push(h('section', { 'data-flag': f.session }, h('p', { class: 'warn' },
@@ -490,11 +496,47 @@ function adultPanel(reason, detail = null) {
   }
   if (link && link.sc) {
     for (const [ses, code, skill, kind] of link.sc.halts) {
-      sections.push(h('section', {}, h('p', {}, `توقف نشاط (${kind}) للمهارة ${skill} في ${ses}: ${code}`)));
+      sections.push(h('section', {}, h('p', {}, codes(`توقف نشاط (${kind}) للمهارة ${skill} في ${ses}: ${code}`))));
     }
   }
   screen('adult', strip(), h('section', { class: 'adultbox', 'data-reason': reason }, h('h1', {}, REASON[reason] ?? reason),
     sections, msg, h('button', { id: 'adult-back', on: { click: () => (reason === 'menu' ? resumeChild() : who()) } }, 'رجوع')));
+}
+
+// ---------------------------------------------------------------- لوحة الوالد
+const CHECK = { pass: 'اجتاز', fail: 'لم يجتز', help: 'انتهى بطلب مساعدة', held: 'معلّق للمراجعة' };
+const RET = { help: 'طلب مساعدة', cut: 'قطعه السقف', referred: 'أُحيل إلى البالغ', no_alternate: 'لا بدائل' };
+const HOW = { back: 'قفز للخلف', up: 'أكمل من الأصغر', other: 'طريقة أخرى' };
+function boardSection() {
+  const box = h('section', { id: 'board' }, h('h2', {}, 'اللوحة'));
+  (async () => {
+    for (const [id, p] of Object.entries(PROFILES)) {
+      const rec = await loadRecord(db, id);
+      const head = h('h3', {}, `${p.avatar} ${nameOf(id) || id}`);
+      if (rec === null) { box.append(h('div', { class: 'board-child', 'data-child': id }, head, h('p', {}, 'لا ملف بعد.'))); continue; }
+      let b;
+      try {
+        const { e, sc } = readRecord(rec, { profile: p, pack, tz: TZ, now: nowMs });
+        b = summarize(e, sc, p, pack);
+      } catch (err) {
+        box.append(h('div', { class: 'board-child', 'data-child': id }, head, h('p', { class: 'warn' }, `تعذّرت قراءة الملف: ${err.detail ?? err}`)));
+        continue;
+      }
+      box.append(h('div', { class: 'board-child', 'data-child': id }, head,
+        h('p', {}, `أيام العمل: ${b.days}. أولها ${dayText(b.first)}، وآخرها ${dayText(b.last)}.`),
+        h('table', {}, h('tr', {}, ['المهارة', 'الحالة', 'فحوص الاستقلال', 'فحوص الاحتفاظ', 'بنود مسجلة', 'طلب مساعدة',
+          '«كيف حسبتها؟»'].map((x) => h('th', {}, x))),
+        b.skills.map((k) => h('tr', { 'data-skill': k.skill, 'data-state': k.state },
+          h('td', {}, codes(`${k.skill} ${k.name}`)),
+          h('td', {}, k.label, k.teacher ? h('small', {}, ' · فُتحت بقرار معلم، وليس دليل إتقان') : null),
+          h('td', {}, k.checks.map((c) => CHECK[c] ?? c).join('، ') || '—'),
+          h('td', {}, k.retention.map((t) => (/^\d+$/.test(t) ? `${t} من 5` : RET[t] ?? t)).join('، ') || '—'),
+          h('td', {}, String(k.items)), h('td', {}, String(k.help)),
+          h('td', {}, Object.entries(k.how).map(([c, n]) => `${HOW[c] ?? c}: ${n}`).join('، ') || '—'))))));
+    }
+    box.dataset.ready = 'true';
+  })();
+  return box;
 }
 
 // ---------------------------------------------------------------- النسخة الاحتياطية (9.2)
@@ -504,7 +546,7 @@ const BACKUP_NO = {
   unknown_child: 'في الملف ملف طفل لا يعرفه هذا التطبيق.', restore_rejected: 'سجل في الملف لا يُقبل عند الفتح.',
   content_changed: 'في الملف نشاط جارٍ على محتوى غير المحتوى الحالي.', unreadable: 'تعذّرت قراءة الملف.',
 };
-const when = (ms) => new Date(ms).toLocaleString('ar-EG', { timeZone: TZ, dateStyle: 'medium', timeStyle: 'short' });
+const when = (ms) => new Date(ms).toLocaleString('ar-EG-u-nu-latn', { timeZone: TZ, dateStyle: 'medium', timeStyle: 'short' });
 const nowMs = () => (T.now ?? Date.now)();
 
 function backupSection(msg) {

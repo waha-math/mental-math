@@ -90,3 +90,9 @@ button:focus-visible { outline: 4px solid var(--warm); outline-offset: 2px; }
 .cards button { font-size: 30px; padding: 18px 20px; }
 .cards button.right { outline: 4px solid #2e7d32; }
 .cards button.picked { opacity: .7; }
+
+/* لوحة الوالد */
+#board table { width: 100%; border-collapse: collapse; font-size: 15px; }
+#board th, #board td { border-bottom: 1px solid #ddd; padding: 6px 8px; text-align: start; vertical-align: top; }
+#board small { color: var(--soft); }
+.board-child { margin-block: 14px; }

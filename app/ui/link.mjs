@@ -254,6 +254,13 @@ export function checkRecord(record, { profile, pack, tz, now = () => Date.now() 
   new Link({ db: null, child: record.child, profile, pack, tz, now })._restore(record);
 }
 
+// المحرك والمجدول من سجل محفوظ، للقراءة وحدها (لوحة الوالد): بلا قفل ولا كتابة. يرمي Blocked إن لم يُستعد
+export function readRecord(record, opts) {
+  const l = new Link({ db: null, child: record.child, now: () => Date.now(), ...opts });
+  l._restore(record);
+  return { e: l.e, sc: l.sc };
+}
+
 // سجل الجهاز: رمز البالغ وأسماء الملفات. يُحفظ في مخزن الأطفال بمفتاحه، بالمعاملة نفسها وحارس rev
 export async function loadDevice(db, key) {
   return (await load(db, key)) ?? { child: key, rev: 0, pin: null, salt: null, names: {} };

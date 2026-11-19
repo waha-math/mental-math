@@ -209,6 +209,40 @@ check('اختيار بطاقة يعرض الجواب بعلامته ويقوله
   [shownAnswer, said, canonical(plain2) === canonical(C.st.snapshot('older2'))],
   [[cmp.answer], PACK.cards.compare[cmp.answer].ar, true]);
 if (process.env.SHOTS) await page.screenshot({ path: process.env.SHOTS + '/compare.png' });
+// ---------------------------------------------------------------- اللوحة (قرار الأب)
+// المتوقع من سجل الإعادة في Node مباشرة: لكل مهارة عدد سجلات بنودها غير المستبعدة، وطلبات المساعدة، واختيار البطاقة
+await page.goto(page.url());
+await page.waitForSelector('[data-screen="who"]');
+await page.click('#adult');
+await page.fill('#pin', '2468');
+await page.fill('#pin2', '2468');
+await page.click('#pin-ok');
+await page.waitForSelector('#board[data-ready="true"]');
+if (st.pending !== null) st.show(st.seq);   // الخانة 10 عُرضت قبل إعادة الفتح
+const board = await page.evaluate(() => [...document.querySelectorAll('#board .board-child')].map((c) => [c.dataset.child,
+  [...c.querySelectorAll('tr[data-skill]')].map((r) => [r.dataset.skill, r.dataset.state, ...[...r.cells].slice(4).map((x) => x.textContent)])]));
+// اللوحة تقرأ الملف كما يُفتح: البند المعروض بلا إجابة يُختم منقطعًا. فالمتوقع من استعادة اللقطة في Node، بعد أن
+// يُعرض فيها ما عرضته الشاشة (الخانة 10 للطفل الأول). كتبتُ المتوقع أول مرة من سجلات الإعادة بلا استعادة، فنقص بندًا
+const want = (st0, child) => [child, ['3-5-1', '3-5-2', '3-5-3'].map((k) => {
+  const r = persist.restore(JSON.parse(JSON.stringify(st0.snapshot(child))), { types: TYPES, source: src(), answer: null,
+    item_seconds: () => 0, records: [], today: null, content: IDENT });
+  const st = { e: r.engine, sc: r.scheduler };
+  const recs = st.sc.records.filter((r) => r.skill === k && !r.void);
+  const [status, und] = st.e.progress(k);
+  const state = status === 'met' ? 'met' : status === 'stumbled' ? 'stumbled' : status === 'exempt' ? 'exempt' : und ? 'understood' : 'none';
+  const how = recs.filter((r) => r.how).length;
+  return [k, state, String(recs.length), String(recs.filter((r) => (r.support ?? []).includes('requested')).length),
+    how ? `أكمل من الأصغر: ${how}` : '—'];
+})];
+check('اللوحة: لكل طفل ملفه، ولكل مهارة حالتها وعدد بنودها وطلبات المساعدة واختيار «كيف حسبتها؟»، كما في الإعادة في Node',
+  board, [['young', []], want(st, 'older1'), want(C.st, 'older2')]);
+if (process.env.SHOTS) await page.screenshot({ path: process.env.SHOTS + '/board.png', fullPage: true });
+const looks = await page.evaluate(() => {
+  const b = document.querySelector('#board tr[data-skill="3-5-1"] td bdi'), t = b.firstChild;
+  const at = (k) => { const r = document.createRange(); r.setStart(t, k); r.setEnd(t, k + 1); return r.getBoundingClientRect().left; };
+  return [b.textContent, at(0) < at(t.length - 1), /[٠-٩]/.test(document.getElementById('board').textContent)];
+});
+check('اللوحة تُقرأ: رمز المهارة من اليسار (3-5-1 لا 1-5-3)، والأرقام 0-9 لا الهندية في التواريخ', looks, ['3-5-1', true, false]);
 check('لا خطأ في الصفحة', errors, []);
 await browser.close();
 server.close();
