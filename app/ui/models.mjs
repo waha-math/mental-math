@@ -35,7 +35,7 @@ export function numberLine(m, { perf } = {}) {
   const back = m.line === 'back';
   const n = m.jumps.length, W = 720, pad = 70, y = 120;
   const xs = Array.from({ length: n + 1 }, (_, k) => (back ? W - pad - k * ((W - 2 * pad) / n) : pad + k * ((W - 2 * pad) / n)));
-  const hidden = (kind, k) => m.hide[0] === kind && m.hide[1] === k;
+  const hidden = (kind, k) => Array.isArray(m.hide) && m.hide[0] === kind && m.hide[1] === k;   // المقارنة: لا مخفي
   const stations = [m.start, ...m.stations].map((v, k) => {
     if (k === 0) return String(v);
     if (hidden('station', k - 1)) return BOX;
@@ -58,6 +58,23 @@ export function numberLine(m, { perf } = {}) {
     svg.append(text(mid, y + 82, jumps[k], 'size' + (jumps[k] === BOX ? ' ask' : '')));
   }
   return svg;
+}
+
+// بند المقارنة (10.2): الحلان اللذان يذكرهما نصه، كل على خط باسم بطاقته. labels: بطاقات المقارنة من المحتوى
+export function comparePair(model, labels) {
+  const box = document.createElement('div');
+  box.className = 'pair';
+  model.pair.forEach((m, k) => {
+    const row = document.createElement('div');
+    row.className = 'pair-row';
+    row.dataset.card = k === 0 ? 'A' : 'B';
+    const name = document.createElement('span');
+    name.className = 'pair-name';
+    name.textContent = labels[k === 0 ? 'A' : 'B'].ar;
+    row.append(name, numberLine(m, { perf: 'compare' }));
+    box.append(row);
+  });
+  return box;
 }
 
 // خط فارغ عليه أعداد المسألة وحدها: ما يعود بعد خطأ في مسألة طرح بلا نموذج (4.1)، مجهّزًا دون حلّها

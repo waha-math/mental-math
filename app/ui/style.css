@@ -79,3 +79,13 @@ button:focus-visible { outline: 4px solid var(--warm); outline-offset: 2px; }
 .adultbox label.pick { display: flex; gap: 12px; align-items: center; font-size: 20px; }
 .adultbox label.pick input { width: 28px; height: 28px; }
 @media (max-width: 820px) { .task { grid-template-columns: 1fr 300px; } .prompt { font-size: 26px; } .prompt bdi { font-size: 34px; } }
+
+/* بند المقارنة: حلّان على خطين، وبطاقات بدل لوحة الأرقام */
+.pair { display: grid; gap: 4px; width: 100%; }
+.pair-row { display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 10px; }
+.pair-row svg.line { height: 120px; }
+.pair-name { font-size: 24px; font-weight: 700; }
+.cards { display: grid; gap: 16px; }
+.cards button { font-size: 30px; padding: 18px 20px; }
+.cards button.right { outline: 4px solid #2e7d32; }
+.cards button.picked { opacity: .7; }

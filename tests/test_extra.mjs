@@ -256,10 +256,10 @@ const fresh = Object.entries(o.e.s.opened).filter(([, op]) => o.e.s.sessions[op.
 if (!eq(fresh, ['3-5-2'])) bad.push('الدروس التي فُتحت في إضافية: ' + dump(fresh));
 if (o.of({ kind: 'extra' }).some((t) => !TEACHING.includes(t[4]))) bad.push('في إضافيات الكبيرين نشاط غير تعليمي');
 const cd = (run) => ['3-5-1', '3-5-2', '3-5-3'].map((s) => run.firstDay(s, 'check'));
-if (!eq(cd(o), [2, 3, 5]) || !eq(cd(oc), [3, 6, 8])) bad.push(`أيام فحوص الاستقلال: ${cd(o)} و${cd(oc)}`);
+if (!eq(cd(o), [2, 3, 5]) || !eq(cd(oc), [3, 6, 9])) bad.push(`أيام فحوص الاستقلال: ${cd(o)} و${cd(oc)}`);
 if (!eq(o.e.derive(), oc.e.derive())) bad.push('حالة المهارات تختلف في النهاية');
 check('الكبيران: بوابة 3-5-2 تخفق في يوم ذهبت حصته لفحص 3-5-1، فيُفتح درسها في إضافية اليوم نفسه. درس جديد واحد في كل يوم '
-  + 'أسرة. وفحوص الاستقلال في الأيام 2 و3 و5 بدل 3 و6 و8، والحالة النهائية واحدة. ويطابق شريط المرجع', bad);
+  + 'أسرة. وفحوص الاستقلال في الأيام 2 و3 و5 بدل 3 و6 و9، والحالة النهائية واحدة. ويطابق شريط المرجع', bad);
 
 const okAll = results.every(Boolean);
 console.log(okAll ? `نجحت الاختبارات كلها: ${results.length}` : `أخفق ${results.filter((x) => !x).length} من ${results.length}`);

@@ -14,6 +14,7 @@ from collections import Counter, defaultdict
 
 LRI, PDI, MINUS, BOX = '⁦', '⁩', '−', '▢'
 SEED = 20261111
+HOW_SLOT = {'3-5-3': 8}                                 # بعد خانتين من خانات العبور الأربع (7-10) في فحص 3-5-3 (10.2)
 MORE_PRACTICE = 12                                     # بنود التدريب الإضافي لكل مهارة: مجموعتان من 6
 LEDGER = 'content-ledger.json'                         # سجل إصدارات المحتوى: رقم وبصمة لكل حزمة صدرت
 
@@ -288,6 +289,19 @@ def line_model(perf, n):
     t = b + 10 - b % 10
     return dict(line='up', start=b, jumps=[t - b, a - t], stations=[t, a],
                 hide=['total'] if perf == 'line_up' else ['jump', 1])
+
+
+def compare_model(n):
+    """رسم بند المقارنة: الحلان اللذان يذكرهما نصه، كل على خط. أ يقفز للخلف من المطروح منه، و ب يكمل من المطروح.
+    لا شيء مخفي: السؤال عن عدد القفزات لا عن عدد."""
+    a, b = n['a'], n['b']
+    sa, sb = back_steps(a, b), up_steps(a, b)
+    up, cur = [], b
+    for j in sb:
+        cur += j
+        up.append(cur)
+    return dict(pair=[dict(line='back', start=a, jumps=sa, stations=stations(a, sa), hide=None),
+                      dict(line='up', start=b, jumps=sb, stations=up, hide=None)])
 
 
 def wrong_answers(perf, n, ans):
@@ -799,8 +813,18 @@ def validate(items):
             bad['قالب لم يُملأ'] += int('{' in txt or '}' in txt)
         bad['حروف عربية في النص الإنجليزي'] += int(any('؀' <= ch <= 'ۿ' for ch in it['text_en']))
         m = it.get('model')
-        bad['بند خط أعداد بلا رسمه، أو رسم لغير بنده'] += int((m is None) != (it['performance'] not in LINES))
-        if m is not None:                                   # الرسم يُعاد حسابه هنا مستقلًا: المحطات من القفزات، وآخرها والمخفي
+        bad['بند خط أعداد بلا رسمه، أو رسم لغير بنده'] += int((m is None) != (it['performance'] not in LINES + ('compare',)))
+        if m is not None and it['performance'] == 'compare':  # الحلان يُعاد حسابهما: أ ينتهي عند الناتج، و ب عند المطروح منه
+            a, b = it['numbers']['a'], it['numbers']['b']
+            A, B = m['pair']
+            ends = (A['line'] == 'back' and A['start'] == a and a - sum(A['jumps']) == a - b and A['stations'][-1] == a - b
+                    and B['line'] == 'up' and B['start'] == b and b + sum(B['jumps']) == a and B['stations'][-1] == a
+                    and A['hide'] is None and B['hide'] is None)
+            n_a, n_b = len(A['jumps']), len(B['jumps'])
+            ans = 'A' if n_a < n_b else 'B' if n_b < n_a else 'same'
+            said = all(str(j) in it['text_ar'] and str(j) in it['text_en'] for j in A['jumps'] + B['jumps'])
+            bad['رسم الحلين يخالف أعداد بند المقارنة أو جوابه أو نصه'] += int(not (ends and ans == it['answer'] and said))
+        elif m is not None:                                   # الرسم يُعاد حسابه هنا مستقلًا: المحطات من القفزات، وآخرها والمخفي
             a, b, cur, seq = it['numbers']['a'], it['numbers']['b'], m['start'], []
             for j in m['jumps']:
                 cur += -j if m['line'] == 'back' else j
@@ -1072,7 +1096,15 @@ if __name__ == '__main__':
     for it in bank.items:                                   # بنود خط الأعداد تحمل ما يُرسم لها، بعد أن ثبتت أعدادها
         if it['performance'] in LINES:
             it['model'] = line_model(it['performance'], it['numbers'])
+        elif it['performance'] == 'compare':
+            it['model'] = compare_model(it['numbers'])
+    for it in bank.items:                                   # بطاقة «كيف حسبتها؟» (10.2): بند الخانة 8 في محاولات الفحص وبدائله
+        if it['role'] in ('check', 'check.alternate') and HOW_SLOT.get(it['skill']) == it['slot']:
+            it['how'] = True
     bad = validate(bank.items)
+    bad['بطاقة «كيف حسبتها؟» على غير خانتها أو غير بند فحص'] += sum(
+        1 for it in bank.items if it.get('how') and not (it['role'] in ('check', 'check.alternate')
+                                                         and HOW_SLOT.get(it['skill']) == it['slot']))
     from content_sequence import collect, violations
     seq_pairs, seq_by, seq_n = collect(bank.items, EVIDENCE)
     seq_bad = violations(seq_pairs, seq_by)

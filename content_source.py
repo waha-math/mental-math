@@ -11,7 +11,8 @@ import hashlib
 import json
 from collections import defaultdict
 
-LESSON_ROLES = ('lesson.watch', 'lesson.model', 'lesson.fade', 'lesson.nomodel')
+# مقارنة حلين معروضين نشاط في درس 3-5-3 (10.2، خ7)، بعد المشاهدة: يحل الطفل بعدها بأي الطريقتين. ولا بنود مقارنة لغيرها
+LESSON_ROLES = ('lesson.watch', 'lesson.compare', 'lesson.model', 'lesson.fade', 'lesson.nomodel')
 
 
 def load_items(path='slice-content.json'):

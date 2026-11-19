@@ -1,0 +1,195 @@
+// بطاقة «كيف حسبتها؟» وبند المقارنة في درس 3-5-3، من الشاشة في Chrome. المتوقع، مكتوبًا قبل التشغيل:
+//  1. بند الخانة 8 في فحص 3-5-3: بعد كتابة الجواب و«تأكيد» تظهر البطاقات الثلاث بنصوصها من المحتوى، ولا يُختم البند.
+//  2. اختيار بطاقة يختم البند بالجواب المكتوب، وفي سجله evidence.how بالبطاقة المختارة، ولا تصحيح ولا «التالي».
+//  3. المحفوظ بعدها يطابق الإعادة في Node بالأحداث نفسها حرفًا بحرف.
+//  4. بند فحص بلا البطاقة (الخانة 9) يُختم بالتأكيد وحده.
+// الحالة قبل الخانة 8 تُبنى في Node بوحدات التطبيق (طفل يتعلّم، يومًا بعد يوم)، وتُكتب في IndexedDB كما يكتبها التطبيق.
+//
+//     node tests/browser/test_how_browser.mjs [مسار Chrome]
+import { createServer } from 'node:http';
+import { readFile } from 'node:fs/promises';
+import { readFileSync } from 'node:fs';
+import { extname, join, normalize, resolve } from 'node:path';
+import { chromium } from 'playwright-core';
+import { Engine, canonical } from '../../app/engine.mjs';
+import { Scheduler } from '../../app/scheduler.mjs';
+import { ContentSource } from '../../app/items.mjs';
+import { Stepper } from '../../app/stepper.mjs';
+import * as persist from '../../app/persist.mjs';
+
+const ROOT = resolve(new URL('../..', import.meta.url).pathname);
+const CHROME = process.argv[2] || '/usr/bin/google-chrome';
+const PACK = JSON.parse(readFileSync(join(ROOT, 'slice-content.json'), 'utf8'));
+const IDENT = { version: PACK.version, digest: PACK.digest };
+const TYPES = { '3-5-1': ['ف1', 'ف2', 'ف3'], '3-5-2': ['ف1', 'ف2', 'ف3', 'ف4'], '3-5-3': ['ف3'] };
+const DAY0 = Date.UTC(2026, 10, 19, 8, 0, 0);
+const DAYNUM = Math.floor(Date.UTC(2026, 10, 19) / 86400000);
+const results = [];
+function check(name, got, want) {
+  const ok = canonical(got) === canonical(want);
+  results.push(ok);
+  console.log(`  ${ok ? 'نجح' : 'أخفق'}  ${results.length}. ${name}`);
+  if (!ok) console.log(`        المتوقع ${JSON.stringify(want).slice(0, 600)}\n        الناتج  ${JSON.stringify(got).slice(0, 600)}`);
+}
+
+// ---------------------------------------------------------------- الحالة في Node حتى يُطلب بند الخانة 8
+let secs = 0;
+const src = () => { const s = new ContentSource(PACK.items, true, IDENT); return (k, w) => s.pick(k, w); };
+// طفل يتعلّم يمضي يومًا بعد يوم حتى يُطلب بند يحقق stop. يعيد اللقطة قبل عرضه، وطبقة الخطوات واقفة عنده، ويومه
+function build(child, stop) {
+  const e = new Engine(undefined, { group: 'older' });
+  [['3-5-1', ['3-3-2', '3-2-3']], ['3-5-2', ['3-2-1', '3-3-1', '2-5-2']]].forEach(([skill, bypass], k) =>
+    e.apply({ id: 'd' + k, type: 'teacher_open', skill, bypass, reason: 'قرار الشريحة في 10.2' }));
+  const sc = new Scheduler(e, TYPES, src(), null, { group: 'older', scope: ['3-5-1', '3-5-2', '3-5-3'], learning: true, cap: 600,
+    item_seconds: () => { const x = secs; secs = 0; return x; }, records: [], retention: true, content: IDENT, day_cap: 3000 });
+  const known = new Set();
+  const events = (item, w) => {
+    const a = w.activity;
+    if (a === 'lesson' || a === 'practice') { if (a === 'lesson') known.add(item.skill); return [['end']]; }
+    const ans = known.has(item.skill) ? item.answer : (item.answer < 99 ? item.answer + 1 : item.answer - 1);
+    return [['confirm', ans], ...(['gate', 'short', 'check', 'retention'].includes(a) ? [] : [['end']])];
+  };
+  for (let d = 0; d < 60; d++) {
+    const day = DAYNUM + d, now = DAY0 + d * 86400000;
+    sc.today = day;
+    const st = new Stepper(e, sc, () => now);
+    st.open(sc.g_session());
+    while (st.pending !== null) {
+      const [item, w] = st.pending;
+      if (stop(item)) return { rec: st.snapshot(child), st, day };
+      st.show(st.seq);
+      for (const ev of events(item, w)) { secs = 10; st.event(st.seq, ev); }
+    }
+  }
+  throw new Error('لم يُطلب البند');
+}
+const H = build('older1', (it) => Boolean(it.how));
+const C = build('older2', (it) => it.role === 'lesson.compare');
+let { st } = H;
+const { rec, day } = H;
+const howItem = st.pending[0];
+
+// ---------------------------------------------------------------- الصفحة
+const MIME = { '.html': 'text/html; charset=utf-8', '.mjs': 'text/javascript', '.json': 'application/json', '.css': 'text/css' };
+const server = createServer(async (rq, rs) => {
+  const path = normalize(join(ROOT, decodeURIComponent(new URL(rq.url, 'http://x').pathname)));
+  try {
+    if (!path.startsWith(ROOT)) throw new Error('خارج المستودع');
+    rs.writeHead(200, { 'content-type': MIME[extname(path)] || 'application/octet-stream' }).end(await readFile(path));
+  } catch { rs.writeHead(404).end(); }
+});
+await new Promise((r) => server.listen(0, '127.0.0.1', r));
+const browser = await chromium.launch({ executablePath: CHROME, headless: true });
+const context = await browser.newContext({ viewport: { width: 1180, height: 820 }, hasTouch: true });
+const errors = [];
+const now = DAY0 + (day - DAYNUM) * 86400000;
+if (C.day !== H.day) console.log(`  (يوم المقارنة ${C.day - DAYNUM} ويوم البطاقة ${day - DAYNUM}: الساعة تُضبط لكلٍّ قبل فتحه)`);
+await context.addInitScript((t) => {
+  const T = { spoken: [], clock: { now: t, mono: 0 }, noWorker: true };
+  T.now = () => T.clock.now; T.mono = () => T.clock.mono;
+  T.speaker = { available: async () => true, say: (x) => T.spoken.push(x) };
+  window.MM_TEST = T;
+}, now);
+const page = await context.newPage();
+page.on('pageerror', (x) => errors.push(x.message));
+page.on('console', (m) => { if (m.type() === 'error' && !m.text().includes('404')) errors.push(m.text()); });
+await page.goto(`http://127.0.0.1:${server.address().port}/app/index.html`);
+await page.waitForSelector('[data-screen="who"]');
+const putRec = (r) => page.evaluate(async (r) => {
+  const s = await import('/app/store.mjs');
+  const db = await s.openDB();
+  const out = await s.commit(db, r, 0);
+  db.close();
+  return out;
+}, r);
+const put = await putRec(rec);
+await putRec(C.rec);
+const dbRec = (child = 'older1') => page.evaluate(async (c) => {
+  const s = await import('/app/store.mjs'); const db = await s.openDB(); const r = await s.load(db, c); db.close(); return r;
+}, child);
+console.log(`=== بطاقة «كيف حسبتها؟» في Chrome ${browser.version()}`);
+await page.click('[data-child="older1"]');
+await page.waitForSelector('[data-screen="workshop"]');
+await page.click('#start');
+await page.waitForSelector('.task[data-ready="true"]');
+const shown = await page.getAttribute('.task', 'data-item');
+st.show(st.seq);
+for (const d of String(howItem.answer)) await page.click(`[data-key="${d}"]`);
+await page.click('[data-key="ok"]');
+await page.waitForSelector('#how');
+const cards = await page.$$eval('#how [data-how]', (b) => b.map((x) => [x.dataset.how, x.textContent]));
+const before = await dbRec();
+check('بند الخانة 8: بعد «تأكيد» تظهر البطاقات الثلاث بنصوصها من المحتوى، والبند لم يُختم',
+  [put.ok, shown, cards, before.current?.journal?.item ?? null, (before.current?.journal?.raw ?? []).length],
+  [true, howItem.id, Object.entries(PACK.cards.how).map(([k, c]) => [k, c.ar]), howItem.id, 0]);
+await page.evaluate(() => { window.MM_TEST.clock.mono += 10000; });
+await page.click('[data-how="up"]');
+await page.waitForFunction((id) => document.querySelector('.task')?.dataset.item !== id, howItem.id);
+secs = 10;
+st.event(st.seq, ['how', 'up']);
+secs = 10;
+st.event(st.seq, ['confirm', howItem.answer]);
+await page.waitForSelector('.task[data-ready="true"]');            // الخانة 9 عُرضت وحُفظت معروضة
+st.show(st.seq);
+const after = await dbRec();
+const mine = after.records.filter((r) => r.item === howItem.id);
+const { rev, written_at, ...plain } = after;
+check('اختيار بطاقة يختم البند بجوابه، وفي سجله how، والمحفوظ يطابق الإعادة في Node',
+  [mine.length, mine[0]?.how, mine[0]?.values, canonical(plain) === canonical(st.snapshot('older1'))],
+  [1, 'up', [howItem.answer], true]);
+// الخانة التالية بلا بطاقة: «تأكيد» يختمها
+const id9 = await page.getAttribute('.task', 'data-item');
+const it9 = PACK.items.find((i) => i.id === id9);
+for (const d of String(it9.answer)) await page.click(`[data-key="${d}"]`);
+await page.click('[data-key="ok"]');
+await page.waitForFunction((id) => document.querySelector('.task')?.dataset.item !== id
+  || document.getElementById('app').dataset.screen !== 'item', id9);
+st.event(st.seq, ['confirm', it9.answer]);
+const r9 = (await dbRec()).records.filter((r) => r.item === id9);
+check('بند فحص بلا البطاقة يُختم بالتأكيد وحده، وسجله بلا how', [Boolean(it9.how), await page.$('#how'), r9.length, 'how' in (r9[0] ?? {})],
+  [false, null, 1, false]);
+// ---------------------------------------------------------------- المقارنة في درس 3-5-3
+await page.click('#exit').catch(() => {});
+await page.goto(page.url());
+await page.evaluate((t) => { window.MM_TEST.clock.now = t; }, DAY0 + (C.day - DAYNUM) * 86400000);
+await page.waitForSelector('[data-screen="who"]');
+await page.click('[data-child="older2"]');
+await page.waitForSelector('[data-screen="workshop"]');
+await page.click('#start');
+await page.waitForSelector('.task[data-ready="true"]');
+const cmp = C.st.pending[0];
+C.st.show(C.st.seq);
+const view = await page.evaluate(() => ({
+  id: document.querySelector('.task').dataset.item,
+  rows: [...document.querySelectorAll('#model .pair-row')].map((r) => [r.dataset.card, r.querySelector('.pair-name').textContent,
+    JSON.parse(r.querySelector('svg.line').dataset.shown)]),
+  cards: [...document.querySelectorAll('#cards [data-card]')].map((b) => [b.dataset.card, b.textContent]),
+  pad: Boolean(document.querySelector('[data-key="ok"]')), next: Boolean(document.getElementById('next')),
+  help: Boolean(document.getElementById('help')) }));
+const [A, B] = cmp.model.pair;
+check('بند المقارنة في الدرس: الحلان على خطين باسم بطاقتيهما، بقفزات المحتوى ومحطاته كلها، وبطاقات المحتوى الثلاث بدل لوحة الأرقام',
+  view, { id: cmp.id, rows: [['A', PACK.cards.compare.A.ar, { stations: [A.start, ...A.stations].map(String), jumps: A.jumps.map((j) => '−' + j) }],
+    ['B', PACK.cards.compare.B.ar, { stations: [B.start, ...B.stations].map(String), jumps: B.jumps.map((j) => '+' + j) }]],
+  cards: cmp.cards.map((k) => [k, PACK.cards.compare[k].ar]), pad: false, next: false, help: false });
+const wrongCard = cmp.cards.find((k) => k !== cmp.answer);
+await page.click(`#cards [data-card="${wrongCard}"]`);          // لا [data-card] وحده: صفّا الرسم يحملانه أيضًا
+await page.waitForSelector('#next');
+const shownAnswer = await page.evaluate(() => [...document.querySelectorAll('#cards button.right')].map((b) => b.dataset.card));
+const said = await page.evaluate(() => window.MM_TEST.spoken.at(-1));
+await page.click('#next');
+await page.waitForFunction((id) => document.querySelector('.task')?.dataset.item !== id, cmp.id);
+C.st.event(C.st.seq, ['end']);
+await page.waitForSelector('.task[data-ready="true"]');
+C.st.show(C.st.seq);
+const after2 = await dbRec('older2');
+const { rev: r2, written_at: w2, ...plain2 } = after2;
+check('اختيار بطاقة يعرض الجواب بعلامته ويقوله، ثم «التالي». والمحفوظ يطابق الإعادة في Node (بند عرض بلا سجل)',
+  [shownAnswer, said, canonical(plain2) === canonical(C.st.snapshot('older2'))],
+  [[cmp.answer], PACK.cards.compare[cmp.answer].ar, true]);
+if (process.env.SHOTS) await page.screenshot({ path: process.env.SHOTS + '/compare.png' });
+check('لا خطأ في الصفحة', errors, []);
+await browser.close();
+server.close();
+const ok = results.filter(Boolean).length;
+console.log(`\nالنتيجة: نجح ${ok} من ${results.length}`);
+process.exit(ok === results.length ? 0 : 1);

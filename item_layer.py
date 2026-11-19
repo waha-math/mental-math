@@ -22,6 +22,8 @@ from collections import Counter
 
 CALC = ('ف3', 'ف4')                      # بنود حساب. ما عداها بنود فهم (6.1)
 SUPPORT = ('hint', 'extra_model', 'someone', 'requested')
+# بطاقة «كيف حسبتها؟» (10.2، فحص 3-5-3): اختيار يُسجَّل في سجل البند ولا يُصحَّح ولا يدخل النتيجة
+HOW = ('back', 'up', 'other')
 # requested: ضغط الطفل «أحتاج مساعدة» في بوابة أو فحص، ولا يُعطى فيهما دعم. تفسير: ليست في قائمة 3.1
 
 
@@ -50,6 +52,9 @@ def fold_item(raw, answer, assess):
             else:
                 later.append(dict(correct=ok, support=pending))
             pending, last = [], ok
+        elif kind == 'how':                         # يُحفظ في evidence، ولا أثر له في الحقول المطوية
+            if ev[1] not in HOW:
+                raise ValueError('بطاقة غير معروفة: %r' % (ev[1],))
         elif kind == 'interrupt':
             interrupted = True
         elif kind == 'end':
@@ -95,6 +100,9 @@ def evidence(raw, key, v=None):
     الحقول الخمسة المطوية (fold_item) تُشتق من هذه ولا تغني عنها: منها يُعرف هل الإجابة صحيحة، لا ما هي."""
     d = dict(key=key, values=[ev[1] for ev in raw if ev[0] == 'confirm'],
              support=[ev[1] for ev in raw if ev[0] == 'support'])
+    how = [ev[1] for ev in raw if ev[0] == 'how']
+    if how:                                         # بطاقة «كيف حسبتها؟»: الحقل لا يُنشأ إلا لبند اختيرت فيه
+        d['how'] = how[0]
     if v is not None:
         d['v'] = v
     return d

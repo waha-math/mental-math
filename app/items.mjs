@@ -17,6 +17,8 @@
 
 export const CALC = ['ف3', 'ف4'];                 // بنود حساب. ما عداها بنود فهم (6.1)
 export const SUPPORT = ['hint', 'extra_model', 'someone', 'requested'];
+// بطاقة «كيف حسبتها؟» (10.2، فحص 3-5-3): اختيار يُسجَّل في سجل البند ولا يُصحَّح ولا يدخل النتيجة
+export const HOW = ['back', 'up', 'other'];
 // requested: ضغط الطفل «أحتاج مساعدة» في بوابة أو فحص، ولا يُعطى فيهما دعم
 
 const clone = (x) => JSON.parse(JSON.stringify(x));
@@ -47,6 +49,8 @@ export function foldItem(raw, answer, assess) {
       }
       pending = [];
       last = ok;
+    } else if (kind === 'how') {                    // يُحفظ في evidence، ولا أثر له في الحقول المطوية
+      if (!HOW.includes(ev[1])) throw new Error('بطاقة غير معروفة: ' + JSON.stringify(ev[1]));
     } else if (kind === 'interrupt') {
       interrupted = true;
     } else if (kind === 'end') {
@@ -87,6 +91,8 @@ export function classify(rec) {
 export function evidence(raw, key, v = null) {
   const d = { key, values: raw.filter((ev) => ev[0] === 'confirm').map((ev) => ev[1]),
     support: raw.filter((ev) => ev[0] === 'support').map((ev) => ev[1]) };
+  const how = raw.filter((ev) => ev[0] === 'how').map((ev) => ev[1]);
+  if (how.length) d.how = how[0];                   // الحقل لا يُنشأ إلا لبند اختيرت فيه البطاقة
   if (v !== null && v !== undefined) d.v = v;
   return d;
 }
@@ -879,7 +885,8 @@ export function drive(act, source, answer, records = null, pause = null) {
 // يحوّل ما تطلبه want() إلى بند بعينه من slice-content.json. يتحقق أن نوع دليل البند هو النوع المطلوب.
 // allowSameFact لبدائل المجال الصغير التي لا عدد آخر يحقق شرط خانتها: بقرار الأب (3.6) تُعاد الحقيقة نفسها بعد
 // الانقطاع، ويُعلَّم البند reshown_same_fact.
-const LESSON_ROLES = ['lesson.watch', 'lesson.model', 'lesson.fade', 'lesson.nomodel'];
+// مقارنة حلين معروضين نشاط في درس 3-5-3 (10.2، خ7)، بعد المشاهدة. ولا بنود مقارنة لغيرها
+const LESSON_ROLES = ['lesson.watch', 'lesson.compare', 'lesson.model', 'lesson.fade', 'lesson.nomodel'];
 
 export class ContentSource {
   constructor(items, allowSameFact = true, content = null) {

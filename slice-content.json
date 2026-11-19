@@ -1,6 +1,6 @@
 {
- "version": 7,
- "digest": "34863c80e60fef8cd402f61c704fb27e09a51ba7817e15be5f1e6ca2a23e0c1a",
+ "version": 9,
+ "digest": "a21988dcca0d9c10ea2e1663be3814bf9ccc0160b1011aad8b358e3db35a418d",
  "seed": 20261111,
  "texts": {
   "frame_empty": {
@@ -22802,7 +22802,8 @@
     58
    ],
    "fact_seen_before": false,
-   "v": "f3f6eb3a511aaf16"
+   "how": true,
+   "v": "8fa7f090efbe44d0"
   },
   {
    "id": "3-5-3/checkA/16",
@@ -22835,7 +22836,8 @@
     45
    ],
    "fact_seen_before": false,
-   "v": "6ca14601120b76be"
+   "how": true,
+   "v": "d6ef70f6243bc826"
   },
   {
    "id": "3-5-3/checkA/17",
@@ -23442,7 +23444,8 @@
     48
    ],
    "fact_seen_before": false,
-   "v": "af93f0236584c6ba"
+   "how": true,
+   "v": "79076458e2e4a50b"
   },
   {
    "id": "3-5-3/checkB/16",
@@ -23475,7 +23478,8 @@
     27
    ],
    "fact_seen_before": false,
-   "v": "341c6a847b61621b"
+   "how": true,
+   "v": "ee71767a2092641c"
   },
   {
    "id": "3-5-3/checkB/17",
@@ -24122,7 +24126,39 @@
     91,
     17
    ],
-   "v": "9c33b42f14dacc97"
+   "model": {
+    "pair": [
+     {
+      "line": "back",
+      "start": 91,
+      "jumps": [
+       10,
+       1,
+       6
+      ],
+      "stations": [
+       81,
+       80,
+       74
+      ],
+      "hide": null
+     },
+     {
+      "line": "up",
+      "start": 17,
+      "jumps": [
+       3,
+       71
+      ],
+      "stations": [
+       20,
+       91
+      ],
+      "hide": null
+     }
+    ]
+   },
+   "v": "cc673efe5649b0ed"
   },
   {
    "id": "3-5-3/compare/02",
@@ -24156,7 +24192,35 @@
     59,
     20
    ],
-   "v": "bf6d164b9f7b3a24"
+   "model": {
+    "pair": [
+     {
+      "line": "back",
+      "start": 59,
+      "jumps": [
+       20
+      ],
+      "stations": [
+       39
+      ],
+      "hide": null
+     },
+     {
+      "line": "up",
+      "start": 20,
+      "jumps": [
+       30,
+       9
+      ],
+      "stations": [
+       50,
+       59
+      ],
+      "hide": null
+     }
+    ]
+   },
+   "v": "5f705f95f694fe03"
   },
   {
    "id": "3-5-3/compare/03",
@@ -24190,7 +24254,37 @@
     97,
     62
    ],
-   "v": "8f23680a9fced545"
+   "model": {
+    "pair": [
+     {
+      "line": "back",
+      "start": 97,
+      "jumps": [
+       60,
+       2
+      ],
+      "stations": [
+       37,
+       35
+      ],
+      "hide": null
+     },
+     {
+      "line": "up",
+      "start": 62,
+      "jumps": [
+       8,
+       27
+      ],
+      "stations": [
+       70,
+       97
+      ],
+      "hide": null
+     }
+    ]
+   },
+   "v": "3f6f23bdcaf60fd4"
   },
   {
    "id": "3-5-3/compare/04",
@@ -24224,7 +24318,39 @@
     68,
     19
    ],
-   "v": "642c960cadadee9e"
+   "model": {
+    "pair": [
+     {
+      "line": "back",
+      "start": 68,
+      "jumps": [
+       10,
+       8,
+       1
+      ],
+      "stations": [
+       58,
+       50,
+       49
+      ],
+      "hide": null
+     },
+     {
+      "line": "up",
+      "start": 19,
+      "jumps": [
+       1,
+       48
+      ],
+      "stations": [
+       20,
+       68
+      ],
+      "hide": null
+     }
+    ]
+   },
+   "v": "1ccbb4454a0019f4"
   },
   {
    "id": "3-5-3/lesson/08",
@@ -24259,7 +24385,39 @@
     18
    ],
    "fact_seen_before": false,
-   "v": "867c930629adc623"
+   "model": {
+    "pair": [
+     {
+      "line": "back",
+      "start": 55,
+      "jumps": [
+       10,
+       5,
+       3
+      ],
+      "stations": [
+       45,
+       40,
+       37
+      ],
+      "hide": null
+     },
+     {
+      "line": "up",
+      "start": 18,
+      "jumps": [
+       2,
+       35
+      ],
+      "stations": [
+       20,
+       55
+      ],
+      "hide": null
+     }
+    ]
+   },
+   "v": "0186f6ea01c8be71"
   },
   {
    "id": "3-5-3/lesson/09",
@@ -24294,7 +24452,35 @@
     60
    ],
    "fact_seen_before": false,
-   "v": "46a85b95afede7bf"
+   "model": {
+    "pair": [
+     {
+      "line": "back",
+      "start": 72,
+      "jumps": [
+       60
+      ],
+      "stations": [
+       12
+      ],
+      "hide": null
+     },
+     {
+      "line": "up",
+      "start": 60,
+      "jumps": [
+       10,
+       2
+      ],
+      "stations": [
+       70,
+       72
+      ],
+      "hide": null
+     }
+    ]
+   },
+   "v": "e90ae05cd639b2ca"
   },
   {
    "id": "3-5-1/evidence/13",
@@ -27358,7 +27544,8 @@
     38
    ],
    "fact_seen_before": false,
-   "v": "b3e13481071c240a"
+   "how": true,
+   "v": "dd946d24eb69ad44"
   },
   {
    "id": "3-5-3/checkC/16",
@@ -27391,7 +27578,8 @@
     79
    ],
    "fact_seen_before": false,
-   "v": "48e27288ee2a489d"
+   "how": true,
+   "v": "3f15d72855abbc0e"
   },
   {
    "id": "3-5-3/checkC/17",

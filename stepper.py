@@ -11,6 +11,7 @@
 - استثناء داخل الانتقال يعطّل الطبقة (broken): لا لقطة ولا خطوة بعده، والحالة المحفوظة السابقة تبقى هي المرجع.
 """
 import persist
+from item_layer import HOW
 from scheduler import Void
 
 ASSESS = ('gate', 'short', 'check', 'retention')            # بنود التقييم: تنتهي بأول تأكيد
@@ -88,6 +89,7 @@ class Stepper:
         - بند عرض (درس، تدريب): ('end',) وحده.
         - بند تقييم (بوابة، تحقق قصير، فحص استقلال، فحص احتفاظ): ('confirm', عدد)، و('support', 'requested') وهو
           زر «أحتاج مساعدة»، ولا دعم آخر فيه (3.1).
+        - بند يحمل بطاقة «كيف حسبتها؟» (how): ('how', back أو up أو other) مرة واحدة قبل التأكيد.
         - بند تعليم (افتتاح، دليل فهم): ('confirm', عدد)، و('support', hint أو extra_model أو someone)، و('end',) بعد
           إجابة مؤكَّدة.
         """
@@ -96,6 +98,12 @@ class Stepper:
         kind, a = ev[0], self.pending[1]['activity']
         if a in SHOWN:
             return None if tuple(ev) == ('end',) else 'بند العرض يقبل الإنهاء وحده'
+        if kind == 'how':                                   # بطاقة «كيف حسبتها؟»: لبند يحملها، مرة واحدة قبل التأكيد
+            if not (isinstance(self.pending[0], dict) and self.pending[0].get('how')):
+                return 'بطاقة «كيف حسبتها؟» ليست لهذا البند'
+            if len(ev) != 2 or ev[1] not in HOW:
+                return 'بطاقة غير معروفة'
+            return None if not any(x[0] in ('how', 'confirm') for x in self.raw) else 'البطاقة مرة واحدة قبل التأكيد'
         if kind == 'confirm':
             ok = len(ev) == 2 and isinstance(ev[1], int) and not isinstance(ev[1], bool)
             return None if ok else 'التأكيد يحمل عددًا صحيحًا واحدًا'

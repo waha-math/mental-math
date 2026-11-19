@@ -142,7 +142,8 @@ const dbRec = (page, key = 'young') => page.evaluate(async (key) => {
 const shownItem = async (page) => {
   await page.waitForSelector('.task[data-ready="true"]');
   return page.evaluate(() => {
-    const t = document.querySelector('.task'), svg = document.querySelector('#model svg.frame'), ln = document.querySelector('#model svg.line');
+    const t = document.querySelector('.task'), svg = document.querySelector('#model svg.frame'),
+      ln = document.querySelector('#model > svg.line');                // خط البند وحده، لا خطّا المقارنة
     return { id: t.dataset.item, kind: t.dataset.kind, activity: t.dataset.activity,
       prompt: document.getElementById('prompt').textContent.replace(/\s+/g, ' ').trim(),
       // المعادلة من اليسار إلى اليمين فعلًا: أول محارفها على الشاشة يسار آخرها، لا صفة الاتجاه وحدها
@@ -152,6 +153,9 @@ const shownItem = async (page) => {
       }),
       model: svg ? { counters: Number(svg.dataset.counters), covered: svg.dataset.covered === 'true', ghost: svg.classList.contains('ghost') } : null,
       line: ln ? JSON.parse(ln.dataset.shown) : null,
+      // بند المقارنة: الحلان كلٌّ على خط باسم بطاقته، والبطاقات بدل لوحة الأرقام
+      pair: [...document.querySelectorAll('#model .pair-row')].map((r) => [r.dataset.card, JSON.parse(r.querySelector('svg.line').dataset.shown)]),
+      cards: [...document.querySelectorAll('#cards [data-card]')].map((b) => b.dataset.card),
       // الإشارة قبل العدد على الرسم («−40» لا «40−»): اتجاه نص الرسم من اليسار، وأول محرف مرسوم يسار آخره
       lineLtr: ln ? [...ln.querySelectorAll('text')].every((t) => getComputedStyle(t).direction === 'ltr'
         && (t.textContent.length < 2 || t.getStartPositionOfChar(0).x < t.getStartPositionOfChar(t.textContent.length - 1).x)) : null,
@@ -183,7 +187,13 @@ function inspect(v) {
       : it.performance === 'step_pair' ? { counters: 0, covered: false, ghost: true } : null;
   if (canonical(v.model) !== canonical(model)) bad.push('النموذج');
   // خط الأعداد: ما يُكتب عليه، من حقل model في المحتوى وبوصف المورد في 10.2. المسؤول عنه مربع، ولا يُكتب جوابه
-  const m = it.model ?? null;
+  const m = it.performance === 'compare' ? null : it.model ?? null;
+  if (it.performance === 'compare') {
+    const [A, B] = it.model.pair;
+    const pair = [['A', { stations: [A.start, ...A.stations].map(String), jumps: A.jumps.map((j) => '−' + j) }],
+      ['B', { stations: [B.start, ...B.stations].map(String), jumps: B.jumps.map((j) => '+' + j) }]];
+    if (canonical([v.pair, v.cards]) !== canonical([pair, it.cards])) bad.push('رسم المقارنة أو بطاقاتها');
+  } else if (v.pair.length || v.cards.length) bad.push('رسم مقارنة أو بطاقات في غير بند مقارنة');
   const line = m === null ? null : {
     line_back: { stations: [String(m.start), ...m.stations.map((_, k) => (k === m.stations.length - 1 ? '▢' : ''))],
       jumps: m.jumps.map((j) => '−' + j) },
@@ -226,13 +236,20 @@ async function play(page, { stopAt = null } = {}) {
     const role = it.role;
     if (v.kind === 'shown') {
       if (role.startsWith('lesson')) KNOWN.add(it.skill);
-      if (role !== 'lesson.watch') await type(page, it.answer), await page.click('[data-key="ok"]');
+      if (it.performance === 'compare') {                                // بطاقة، ثم يُعرض الجواب
+        await page.click(`#cards [data-card="${it.answer}"]`);
+        await page.waitForSelector('#next');
+      } else if (role !== 'lesson.watch') await type(page, it.answer), await page.click('[data-key="ok"]');
       await page.click('#next');
       rEvent(['end'], true);
     } else if (v.kind === 'assess') {
       const a = KNOWN.has(it.skill) ? it.answer : wrongOf(it);
       await type(page, a);
       await page.click('[data-key="ok"]');
+      if (it.how) {                                                      // «كيف حسبتها؟» قبل التأكيد (17.25)
+        await page.click('#how [data-how="back"]');
+        rEvent(['how', 'back'], false);
+      }
       rEvent(['confirm', a], true);
     } else {
       if (!KNOWN.has(it.skill)) {

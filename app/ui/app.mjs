@@ -6,7 +6,7 @@ import { Link, Blocked, familyDay, loadDevice, saveDevice, pinHash, checkRecord 
 import { readAll, makeBackup, checkBackup, importBackup, undoInfo, undoImport } from '../backup.mjs';
 import { PROFILES, TZ, DEVICE } from './config.mjs';
 import { spoken, browserSpeaker } from './speech.mjs';
-import { modelFor, supportFor } from './models.mjs';
+import { modelFor, supportFor, comparePair } from './models.mjs';
 
 const T = globalThis.MM_TEST ?? {};     // منفذ الاختبار: speaker و now و mono و hooks و db
 const root = document.getElementById('app');
@@ -168,7 +168,7 @@ async function item() {
   const { item: it, want, kind, seq } = v;
   const watch = want.role === 'lesson.watch' || it.role === 'lesson.watch';
   const s = { typed: '', tries: v.raw.filter((x) => x[0] === 'confirm').length, solved: false, support: false, ready: false,
-    sheet: null };
+    sheet: null, how: v.raw.some((x) => x[0] === 'how') };
 
   const send = async (ev) => {
     const r = await guard(() => link.press(seq, ev));
@@ -181,6 +181,23 @@ async function item() {
   const confirm = async () => {
     if (!s.ready || s.solved || s.typed === '') return;
     const val = Number(s.typed);
+    if (kind === 'assess' && it.how && !s.how) {   // «كيف حسبتها؟» (10.2): اختيار يُسجَّل قبل التأكيد، بلا تصحيح
+      say(ui('how.title'));
+      s.sheet = h('div', { id: 'how' }, h('h1', {}, ui('how.title')), h('div', { class: 'row' },
+        Object.entries(pack.cards.how).map(([k, c]) => h('button', { 'data-how': k, on: { click: async () => {
+          s.sheet = null;
+          s.ready = false;
+          draw();
+          const r = await send(['how', k]);
+          if (r === 'void') return after();
+          if (r !== 'open') { s.ready = true; draw(); return; }
+          s.how = true;
+          s.ready = true;
+          await confirm();
+        } } }, c.ar))));
+      draw();
+      return;
+    }
     if (kind === 'assess') {            // لا تغذية راجعة في التقييم (4.1): البند ينتهي بأول تأكيد
       s.ready = false;
       draw();
@@ -252,8 +269,18 @@ async function item() {
     draw();
   };
 
+  // بند المقارنة في الدرس: يختار الطفل بطاقة، ثم يُعرض الجواب لأن السؤال له جواب يُتحقق منه (ر7)، ولا سجل لبند عرض
+  const cards = it.performance === 'compare' ? it.cards : null;
+  const pick = (k) => {
+    if (!s.ready || s.solved) return;
+    s.picked = k;
+    s.solved = true;
+    say(pack.cards.compare[it.answer].ar);
+    draw();
+  };
+
   function draw() {
-    const model = (s.support && supportFor(it)) || modelFor(it);
+    const model = cards ? comparePair(it.model, pack.cards.compare) : (s.support && supportFor(it)) || modelFor(it);
     const canNext = kind !== 'assess' && s.ready && (watch || s.solved || s.tries >= 2);
     const padOff = !s.ready || s.solved || watch;
     screen('item', strip(),
@@ -263,19 +290,22 @@ async function item() {
         h('div', { class: 'model', id: 'model' }, model),
         h('div', { class: 'tools' },
           h('button', { id: 'listen', 'aria-label': ui('button.listen'), on: { click: speakItem } }, '🔊'),
-          !watch && !s.solved && h('button', { id: 'help', disabled: !s.ready, on: { click: help } },
+          !watch && !s.solved && !cards && h('button', { id: 'help', disabled: !s.ready, on: { click: help } },
             kind === 'shown' ? '🧰 ' + ui('button.tool') : '✋ ' + ui('button.help')),
           s.solved && h('span', { class: 'note', id: 'ok' }, '✓'),
           canNext && h('button', { class: 'next', id: 'next', on: { click: next } }, STR.next + ' ←'))),
       h('div', { class: 'side' },
-        h('div', { class: 'answer', id: 'answer' }, watch ? String(it.answer) : s.typed),
-        h('div', { class: 'pad' },
+        cards ? h('div', { class: 'cards', id: 'cards' }, cards.map((k) => h('button', { 'data-card': k,
+          class: s.solved && k === it.answer ? 'right' : s.picked === k ? 'picked' : null, disabled: !s.ready || s.solved,
+          on: { click: () => pick(k) } }, (s.solved && k === it.answer ? '✓ ' : '') + pack.cards.compare[k].ar)))
+          : [h('div', { class: 'answer', id: 'answer' }, watch ? String(it.answer) : s.typed),
+            h('div', { class: 'pad' },
           ['1', '2', '3', '4', '5', '6', '7', '8', '9'].map((d) => h('button', { 'data-key': d, disabled: padOff,
             on: { click: () => key(d) } }, d)),
           h('button', { 'data-key': 'del', disabled: padOff, 'aria-label': 'حذف', on: { click: () => key('del') } }, '⌫'),
           h('button', { 'data-key': '0', disabled: padOff, on: { click: () => key('0') } }, '0'),
           h('button', { class: 'ok', 'data-key': 'ok', disabled: padOff || s.typed === '', 'aria-label': 'تأكيد',
-            on: { click: confirm } }, '✓')))),
+            on: { click: confirm } }, '✓'))])),
       s.sheet && h('div', { class: 'sheet', id: 'sheet' }, s.sheet));
     showSave();
   }

@@ -10,6 +10,7 @@
 // - استثناء داخل الانتقال يعطّل الطبقة (broken): لا لقطة ولا خطوة بعده، والحالة المحفوظة السابقة تبقى هي المرجع.
 import { itemEnds, snapshot } from './persist.mjs';
 import { Void } from './scheduler.mjs';
+import { HOW } from './items.mjs';
 
 export const ASSESS = ['gate', 'short', 'check', 'retention'];   // بنود التقييم: تنتهي بأول تأكيد
 export const SHOWN = ['lesson', 'practice'];                     // بنود العرض: لا سجل لها
@@ -101,6 +102,11 @@ export class Stepper {
     if (!Array.isArray(ev) || !ev.length || typeof ev[0] !== 'string') return 'حدث غير مفهوم';
     const kind = ev[0], a = this.pending[1].activity;
     if (SHOWN.includes(a)) return ev.length === 1 && kind === 'end' ? null : 'بند العرض يقبل الإنهاء وحده';
+    if (kind === 'how') {                // بطاقة «كيف حسبتها؟»: لبند يحملها، مرة واحدة قبل التأكيد
+      if (!(this.pending[0] && this.pending[0].how)) return 'بطاقة «كيف حسبتها؟» ليست لهذا البند';
+      if (ev.length !== 2 || !HOW.includes(ev[1])) return 'بطاقة غير معروفة';
+      return this.raw.some((x) => x[0] === 'how' || x[0] === 'confirm') ? 'البطاقة مرة واحدة قبل التأكيد' : null;
+    }
     if (kind === 'confirm') {
       return ev.length === 2 && Number.isInteger(ev[1]) ? null : 'التأكيد يحمل عددًا صحيحًا واحدًا';
     }
