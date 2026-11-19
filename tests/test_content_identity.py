@@ -110,7 +110,7 @@ def build(pack):
 def answer(st):
     item, w = st.pending
     for ev in ([('end',)] if w['activity'] in ('lesson', 'practice') else [('confirm', item['answer'])] + (
-            [] if w['activity'] in ('gate', 'short', 'check', 'retention') else [('end',)])):
+            [] if w['activity'] in ('gate', 'short', 'check', 'retention', 'describe') else [('end',)])):
         st.event(st.seq, ev)
 
 

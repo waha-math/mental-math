@@ -49,7 +49,7 @@ class Child:
             if a == 'lesson':
                 self.known.add(item['skill'])
             return 'correct'
-        assess = a in ('gate', 'short', 'check', 'retention')
+        assess = a in ('gate', 'short', 'check', 'retention', 'describe')
         ans = item['answer'] if item['skill'] in self.known else item['answer'] + 1
         return [('confirm', ans)] + ([] if assess else [('end',)]), item['answer'], assess
 

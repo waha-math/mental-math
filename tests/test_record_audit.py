@@ -44,7 +44,7 @@ def expect(title, got, want):
 print('=== سجل البند وإبطال جلسة، بلغة بايثون')
 A = cs.load_pack(os.path.join(ROOT, 'slice-content.json'))
 IDA = cs.identity(A)
-ASSESS = ('gate', 'short', 'check', 'retention')
+ASSESS = ('gate', 'short', 'check', 'retention', 'describe')
 
 
 def play(sessions=4):

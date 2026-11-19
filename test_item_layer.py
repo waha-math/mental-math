@@ -213,7 +213,7 @@ class LearningChild:
             if a == 'lesson':
                 self.known.add(item['skill'])
             return 'correct'
-        assess = a in ('gate', 'short', 'check', 'retention')
+        assess = a in ('gate', 'short', 'check', 'retention', 'describe')
         tail = [] if assess else [('end',)]
         if item['id'] in self.slips:
             raw = self.slips.pop(item['id'])

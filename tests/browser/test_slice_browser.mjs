@@ -243,6 +243,11 @@ async function play(page, { stopAt = null } = {}) {
       await page.click('#next');
       rEvent(['end'], true);
     } else if (v.kind === 'assess') {
+      if (it.role === 'descriptive_check') {                            // الفحص الوصفي: بطاقة، بلا جواب يُعرض (17.27)
+        await page.click(`#cards [data-card="${it.answer}"]`);
+        rEvent(['confirm', it.answer], true);
+        continue;
+      }
       const a = KNOWN.has(it.skill) ? it.answer : wrongOf(it);
       await type(page, a);
       await page.click('[data-key="ok"]');

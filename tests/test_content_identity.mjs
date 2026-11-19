@@ -46,7 +46,7 @@ const IDB = ident(B);
 const oldIt = A.items.find((i) => i.id === TARGET);
 const newIt = B.items.find((i) => i.id === TARGET);
 const secs = (w) => (w.activity === 'check' ? 60 : 25);
-const ASSESS = ['gate', 'short', 'check', 'retention'];
+const ASSESS = ['gate', 'short', 'check', 'retention', 'describe'];
 const pickOf = (pack) => { const s = new ContentSource(pack.items, true, ident(pack)); return (k, w) => s.pick(k, w); };
 
 function build(pack) {

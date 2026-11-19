@@ -32,7 +32,7 @@ SCENE = {'1-4-2/gate/01': dict(numbers={'n': 7}, answer=3, fact=[3, 7]),
          '1-4-2/tryfirst/03': dict(numbers={'n': 8}, answer=2, fact=[2, 8]),
          '1-4-2/tryfirst/04': dict(numbers={'n': 6}, answer=4, fact=[4, 6])}
 DISPLAY = ('lesson', 'practice')
-ASSESS = ('gate', 'short', 'check', 'retention')
+ASSESS = ('gate', 'short', 'check', 'retention', 'describe')
 
 
 def fact(it):

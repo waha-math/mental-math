@@ -319,10 +319,18 @@ async function item() {
     draw();
   };
 
-  // بند المقارنة في الدرس: يختار الطفل بطاقة، ثم يُعرض الجواب لأن السؤال له جواب يُتحقق منه (ر7)، ولا سجل لبند عرض
+  // بند المقارنة في الدرس: يختار الطفل بطاقة، ثم يُعرض الجواب لأن السؤال له جواب يُتحقق منه (ر7)، ولا سجل لبند عرض.
+  // وفي الفحص الوصفي (بند تقييم) تُسجَّل البطاقة جوابًا، ولا يُعرض جواب
   const cards = it.performance === 'compare' ? it.cards : null;
-  const pick = (k) => {
+  const pick = async (k) => {
     if (!s.ready || s.solved) return;
+    if (kind === 'assess') {            // الفحص الوصفي: البطاقة جواب يُسجَّل، بلا جواب يُعرض ولا تغذية راجعة (4.1)
+      s.ready = false;
+      draw();
+      const r = await send(['confirm', k]);
+      if (r === 'next' || r === 'void') after();
+      return;
+    }
     s.picked = k;
     s.solved = true;
     say(L(pack.cards.compare[it.answer]));
@@ -340,7 +348,7 @@ async function item() {
         h('div', { class: 'model', id: 'model' }, model),
         h('div', { class: 'tools' },
           h('button', { id: 'listen', 'aria-label': ui('button.listen'), on: { click: speakItem } }, '🔊'),
-          !watch && !s.solved && !cards && h('button', { id: 'help', disabled: !s.ready, on: { click: help } },
+          !watch && !s.solved && !(cards && kind !== 'assess') && h('button', { id: 'help', disabled: !s.ready, on: { click: help } },
             kind === 'shown' ? '🧰 ' + ui('button.tool') : '✋ ' + ui('button.help')),
           s.solved && h('span', { class: 'note', id: 'ok' }, '✓'),
           canNext && h('button', { class: 'next', id: 'next', on: { click: next } }, STR.next + ' ←'))),
@@ -525,14 +533,15 @@ function boardSection() {
       box.append(h('div', { class: 'board-child', 'data-child': id }, head,
         h('p', {}, `أيام العمل: ${b.days}. أولها ${dayText(b.first)}، وآخرها ${dayText(b.last)}.`),
         h('table', {}, h('tr', {}, ['المهارة', 'الحالة', 'فحوص الاستقلال', 'فحوص الاحتفاظ', 'بنود مسجلة', 'طلب مساعدة',
-          '«كيف حسبتها؟»'].map((x) => h('th', {}, x))),
+          '«كيف حسبتها؟»', 'الفحص الوصفي'].map((x) => h('th', {}, x))),
         b.skills.map((k) => h('tr', { 'data-skill': k.skill, 'data-state': k.state },
           h('td', {}, codes(`${k.skill} ${k.name}`)),
           h('td', {}, k.label, k.teacher ? h('small', {}, ' · فُتحت بقرار معلم، وليس دليل إتقان') : null),
           h('td', {}, k.checks.map((c) => CHECK[c] ?? c).join('، ') || '—'),
           h('td', {}, k.retention.map((t) => (/^\d+$/.test(t) ? `${t} من 5` : RET[t] ?? t)).join('، ') || '—'),
           h('td', {}, String(k.items)), h('td', {}, String(k.help)),
-          h('td', {}, Object.entries(k.how).map(([c, n]) => `${HOW[c] ?? c}: ${n}`).join('، ') || '—'))))));
+          h('td', {}, Object.entries(k.how).map(([c, n]) => `${HOW[c] ?? c}: ${n}`).join('، ') || '—'),
+          h('td', {}, k.describe ? `${k.describe.correct} من ${k.describe.total} (وصفي، لا يُشترط لتقدم)` : '—'))))));
     }
     box.dataset.ready = 'true';
   })();

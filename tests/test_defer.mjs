@@ -118,7 +118,7 @@ const num = (k) => `1-4-2/gate/${String(k).padStart(2, '0')}`;
 const PLAIN = [1, 2, 3, 4, 5, 6, 7, 8, 9].map(num);
 const ORDER = [2, 1, 3, 4, 5, 6, 7, 8, 9].map(num);
 const secs = (w) => (w.activity === 'check' ? 60 : 25);
-const ASSESS = ['gate', 'short', 'check', 'retention'];
+const ASSESS = ['gate', 'short', 'check', 'retention', 'describe'];
 
 function scene(inject, closeAt = null) {
   const src = new ContentSource(ITEMS);

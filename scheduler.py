@@ -31,7 +31,7 @@ import functools
 import itertools
 from collections import Counter
 
-from item_layer import (CALC, Activity, GateRun, ShortCheckRun, OpeningRun, EvidenceRun, CheckRun, RetentionRun,
+from item_layer import (CALC, Activity, GateRun, ShortCheckRun, OpeningRun, EvidenceRun, CheckRun, RetentionRun, DescribeRun,
                         drive_steps, run_sync, gate_plan, fold_item, exposure, evidence, indicators, left_out)
 from transition_engine import OPEN_CHECK
 
@@ -121,6 +121,7 @@ class Scheduler:
         # الاستمرار بعد جلسة اليوم (قرار الأب، 19 نوفمبر): day_cap حد وقت يوم الأسرة كله بالثواني، وبلا قيمة لا جلسة
         # إضافية. used زمن جلسات اليوم المختومة، و free ما دُرّب في إضافيات اليوم. يُنشآن عند الحاجة ويُحفظان
         self.day_cap, self.used, self.free = day_cap, None, None
+        self.described = None                               # مهارات عُرض فحصها الوصفي، أو None قبل أولها
         self.intent, self.pending, self.proven, self.attempt = [], [], {}, {}
         self.ev_round = {}                  # جولات دليل الفهم التي عُرضت بنودها لكل مهارة
         self.last_items = []                # معرّفات بنود آخر نشاط، تُرفق بأحداثه فيُحفظ الدليل ببنوده (3.5)
@@ -306,7 +307,7 @@ class Scheduler:
                                          void.raw, void.answer, about.get('v')))))
         self.live, self.carried_items = None, []
         k, skill = refusal_kind(code), entry['skill']
-        if k == 'session' and started:
+        if k == 'session' and started and entry['kind'] != 'describe':
             self.save(entry)
             what = 'carry_kept'
         elif k == 'later' and entry['kind'] in TEACH_KINDS and started:
@@ -342,7 +343,7 @@ class Scheduler:
 
     def cut(self, act, kind, items):
         """السقف: يُحفظ النشاط الذي بدأ. الذي لم يُعرض منه بند لا يُحفظ، إلا الفحص لأن محاولته بدأت في المحرك."""
-        if sum(act.shown.values()) or kind == 'check':
+        if (sum(act.shown.values()) or kind == 'check') and kind != 'describe':   # الوصفي لا يُستأنف: ما أُجيب منه مسجَّل
             self.save(dict(kind=kind, skill=act.skill, act=act.to_dict(), items=items))
         self.carried_items = []
         self.log.append((self.sessions, 'capped', act.skill))
@@ -835,6 +836,29 @@ class Scheduler:
         return True
 
     # ---------------------------------------------------------------- مسار التعلّم
+    def describe_due(self):
+        """الفحص الوصفي للمقارنة (10.2، وموضعه بقرار الأب في 19 نوفمبر): مرة واحدة، في أول جلسة تلي اجتياز فحص
+        الاستقلال لمهارة لها بنوده، والاستقلال ما زال ساريًا. لا يُشترط لتقدم ولا حدث له في المحرك."""
+        out = []
+        for s in self.ids:
+            if s in (self.described or ()) or not self.e.progress(s)[2]:
+                continue
+            passed = [x[0] for x in self.log if x[1] == 'check_pass' and x[2] == s]
+            if not passed or min(passed) >= self.sessions:  # اجتاز في هذه الجلسة: الوصفي في التالية
+                continue
+            if self.source(s, dict(activity='describe', role='descriptive_check', pos=0, peek=True)) is None:
+                continue
+            out.append(s)
+        return out
+
+    def g_describe(self, s):
+        """يُعدّ معروضًا عند بدئه: إن قطعه السقف أو أُغلق التطبيق فما أُجيب منه مسجَّل، ولا يُعاد."""
+        self.described = (self.described or []) + [s]
+        self.log.append((self.sessions, 'describe', s))
+        act = DescribeRun(s)
+        (yield from self.g_run_act(act, 'describe'))
+        self.log.append((self.sessions, 'describe_%s' % act.result, s))
+
     def g_teach(self):
         """الحصة التعليمية في وضع التعلّم: درس جارٍ، ثم فحص مستحق أو جلسة تدريب قبله، ثم درس جديد."""
         for c in [c for c in self.saved if c['kind'] in TEACH_KINDS]:
@@ -843,6 +867,8 @@ class Scheduler:
             if r is not None:
                 return r
         teaching = any(c['kind'] in TEACH_KINDS for c in self.saved)
+        for s in self.describe_due() if not teaching else ():
+            (yield from self.g_describe(s))
         for s in self.e.consolidation_owed() if not teaching else ():
             # طُلبت مساعدة في فحص احتفاظ: التثبيت يسبق غيره في الحصة، فالطفل طلب العون ولا يُؤخَّر عنه (ت3)
             if self.entry('show', s) is None and self.send(dict(type='consolidation_started', skill=s))['ok']:
@@ -1209,7 +1235,7 @@ class Scheduler:
 # سلسلة الاستدعاء التي تعرض بنودًا مولّدات (g_*): تعطي (البند، المطلوب) وتستقبل ما كانت answer تعيده. والدوال
 # بأسمائها السابقة أغلفة متزامنة تشغّل المولّد بـ self.answer، فلا يتغير شيء لمن يستدعيها. والواجهة تشغّل المولّد
 # نفسه خطوة خطوة. حالة المولّد ليست مصدر الاستعادة: المتابعة بعد الإغلاق تُبنى من الحالة المحفوظة.
-STEPPED = ('run_act', 'show', 'consolidate', 'lesson_body', 'open_lesson', 'gate', 'short', 'opening', 'evidence', 'check', 'retention_check', 'recall', 'search', 'working_point', 'start_session', 'follow', 'teach', 'resume', 'run', 'follow_learning', 'resume_mine', 'extra', 'extra_body', 'extra_step')
+STEPPED = ('describe', 'run_act', 'show', 'consolidate', 'lesson_body', 'open_lesson', 'gate', 'short', 'opening', 'evidence', 'check', 'retention_check', 'recall', 'search', 'working_point', 'start_session', 'follow', 'teach', 'resume', 'run', 'follow_learning', 'resume_mine', 'extra', 'extra_body', 'extra_step')
 
 
 def _sync(name):

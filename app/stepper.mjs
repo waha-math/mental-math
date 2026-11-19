@@ -12,7 +12,7 @@ import { itemEnds, snapshot } from './persist.mjs';
 import { Void } from './scheduler.mjs';
 import { HOW } from './items.mjs';
 
-export const ASSESS = ['gate', 'short', 'check', 'retention'];   // بنود التقييم: تنتهي بأول تأكيد
+export const ASSESS = ['gate', 'short', 'check', 'retention', 'describe'];   // بنود التقييم: تنتهي بأول تأكيد
 export const SHOWN = ['lesson', 'practice'];                     // بنود العرض: لا سجل لها
 export const TEACH_SUPPORT = ['hint', 'extra_model', 'someone']; // الدعم المسموح في بنود التعليم
 
@@ -108,6 +108,11 @@ export class Stepper {
       return this.raw.some((x) => x[0] === 'how' || x[0] === 'confirm') ? 'البطاقة مرة واحدة قبل التأكيد' : null;
     }
     if (kind === 'confirm') {
+      if (ev.length === 2 && typeof ev[1] === 'string') {   // بند بطاقة (ج8): التأكيد بمعرّف إحدى بطاقاته
+        const cards = this.pending[0] && this.pending[0].cards;
+        return cards && cards.includes(ev[1]) ? null : 'بطاقة ليست من بطاقات البند';
+      }
+      if (this.pending[0] && this.pending[0].cards) return 'بند البطاقة يُجاب ببطاقة';
       return ev.length === 2 && Number.isInteger(ev[1]) ? null : 'التأكيد يحمل عددًا صحيحًا واحدًا';
     }
     if (kind === 'support') {

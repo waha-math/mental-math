@@ -841,6 +841,8 @@ class Engine:
         ev = dict(session=session, skill=skill, check_id=check_id, correct=0)
         if kind == 'show':
             return self._lesson(ev, ('opening', 'skipped', 'full')) or ok()
+        if kind == 'describe':                              # الفحص الوصفي: لا حدث له، فشرطه الجلسة الجارية وحدها
+            return self._need(ev) or ok()
         return getattr(self, 'can_' + CONTINUE[kind])(ev)
 
     def can_lesson_opening_result(self, ev):

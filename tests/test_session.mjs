@@ -39,7 +39,7 @@ class Kid {
       if (a === 'lesson') this.known.add(item.skill);
       return [['end']];
     }
-    const assess = ['gate', 'short', 'check', 'retention'].includes(a);
+    const assess = ['gate', 'short', 'check', 'retention', 'describe'].includes(a);
     const ok = this.known.has(item.skill) && !this.wrong.has(item.id);
     const ans = ok ? item.answer : (item.answer < 99 ? item.answer + 1 : item.answer - 1);
     return [...(this.help.has(item.id) ? [['support', 'hint']] : []), ['confirm', ans], ...(assess ? [] : [['end']])];

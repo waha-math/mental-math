@@ -593,6 +593,7 @@ export class Engine {
   may_continue(kind, session, skill, check_id = null) {
     const ev = { session, skill, check_id, correct: 0 };
     if (kind === 'show') return this._lesson(ev, ['opening', 'skipped', 'full']) || ok();
+    if (kind === 'describe') return this._need(ev) || ok();   // الفحص الوصفي: لا حدث له، فشرطه الجلسة الجارية
     return this['can_' + CONTINUE[kind]](ev);
   }
 

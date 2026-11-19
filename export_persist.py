@@ -55,14 +55,14 @@ class Child:
         a = want['activity']
         if a in ('lesson', 'practice'):
             return 'correct'
-        assess = a in ('gate', 'short', 'check', 'retention')
+        assess = a in ('gate', 'short', 'check', 'retention', 'describe')
         ans = item['answer']
         x = self.rng.random()
         tail = [] if assess else [('end',)]
         if x < 0.05:
             return [('interrupt',)], ans, assess
         if x < 0.2:
-            return [('confirm', ans + 1)] + tail, ans, assess
+            return [('confirm', next(c for c in item['cards'] if c != ans) if isinstance(ans, str) else ans + 1)] + tail, ans, assess
         return [('confirm', ans)] + tail, ans, assess
 
 
@@ -90,7 +90,7 @@ def make_current(rng, sc, src):
     if w is not None:
         it = src(act.skill, w)
         if it is not None:
-            assess = w['activity'] in ('gate', 'short', 'check', 'retention')
+            assess = w['activity'] in ('gate', 'short', 'check', 'retention', 'describe')
             raw = [['support', rng.choice(SUPPORT)] for _ in range(rng.randint(0, 2))]
             if not assess and rng.random() < 0.5:
                 raw.append(['confirm', it['answer'] + rng.choice([0, 1])])

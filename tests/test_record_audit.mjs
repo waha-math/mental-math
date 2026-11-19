@@ -17,7 +17,7 @@ const A = JSON.parse(readFileSync(new URL('../slice-content.json', import.meta.u
 const IDA = { version: A.version, digest: A.digest };
 const TYPES = { '1-4-1': ['ف1', 'ف3'], '1-4-2': ['ف2', 'ف3', 'ف4'], '3-5-1': ['ف1', 'ف2', 'ف3'],
   '3-5-2': ['ف1', 'ف2', 'ف3', 'ف4'], '3-5-3': ['ف3'] };
-const ASSESS = ['gate', 'short', 'check', 'retention'];
+const ASSESS = ['gate', 'short', 'check', 'retention', 'describe'];
 const secs = (w) => (w.activity === 'check' ? 60 : 25);
 const results = [];
 const canon = (x) => (Array.isArray(x) ? x.map(canon) : x && typeof x === 'object'

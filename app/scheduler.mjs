@@ -12,7 +12,7 @@
 //
 // المرجع هو scheduler.py: كل قرار هنا يطابقه في متجهات app/scheduler_vectors.json (app/test_scheduler_conformance.mjs).
 import { OPEN_CHECK } from './engine.mjs';
-import { CALC, Activity, GateRun, ShortCheckRun, OpeningRun, EvidenceRun, CheckRun, RetentionRun, driveSteps, runSync, gatePlan,
+import { CALC, Activity, GateRun, ShortCheckRun, OpeningRun, EvidenceRun, CheckRun, RetentionRun, DescribeRun, driveSteps, runSync, gatePlan,
   foldItem, exposure, evidence, indicators, leftOut }
   from './items.mjs';
 
@@ -126,6 +126,7 @@ export class Scheduler {
     // إضافية. used زمن جلسات اليوم المختومة، و free ما دُرّب في إضافيات اليوم. يُنشآن عند الحاجة ويُحفظان
     this.day_cap = day_cap;
     this.used = null;
+    this.described = null;              // مهارات عُرض فحصها الوصفي، أو null قبل أولها
     this.free = null;
     this.intent = [];
     this.pending = [];
@@ -349,7 +350,7 @@ export class Scheduler {
     this.carried_items = [];
     const k = refusalKind(code), skill = entry.skill;
     let what = 'carry_dropped';
-    if (k === 'session' && started) {
+    if (k === 'session' && started && entry.kind !== 'describe') {
       this.save(entry);
       what = 'carry_kept';
     } else if (k === 'later' && TEACH_KINDS.includes(entry.kind) && started) {
@@ -385,7 +386,7 @@ export class Scheduler {
 
   // السقف: يُحفظ النشاط الذي بدأ. الذي لم يُعرض منه بند لا يُحفظ، إلا الفحص لأن محاولته بدأت في المحرك
   cut(act, kind, items) {
-    if (sum(act.shown) || kind === 'check') {
+    if ((sum(act.shown) || kind === 'check') && kind !== 'describe') {   // الوصفي لا يُستأنف: ما أُجيب منه مسجَّل
       this.save({ kind, skill: act.skill, act: act.toDict(), items });
     }
     this.carried_items = [];
@@ -917,12 +918,36 @@ export class Scheduler {
 
   // ---------------------------------------------------------------- مسار التعلّم
   // الحصة التعليمية: درس جارٍ، ثم فحص مستحق أو جلسة تدريب قبله، ثم درس جديد
+  // الفحص الوصفي للمقارنة (10.2، وموضعه بقرار الأب في 19 نوفمبر): مرة واحدة، في أول جلسة تلي اجتياز فحص الاستقلال
+  // لمهارة لها بنوده، والاستقلال ما زال ساريًا. لا يُشترط لتقدم ولا حدث له في المحرك
+  describe_due() {
+    const out = [];
+    for (const s of this.ids) {
+      if ((this.described ?? []).includes(s) || !this.e.progress(s)[2]) continue;
+      const passed = this.log.filter((x) => x[1] === 'check_pass' && x[2] === s).map((x) => x[0]);
+      if (!passed.length || Math.min(...passed) >= this.sessions) continue;   // اجتاز في هذه الجلسة: الوصفي في التالية
+      if (isNone(this.source(s, { activity: 'describe', role: 'descriptive_check', pos: 0, peek: true }))) continue;
+      out.push(s);
+    }
+    return out;
+  }
+
+  // يُعدّ معروضًا عند بدئه: إن قطعه السقف أو أُغلق التطبيق فما أُجيب منه مسجَّل، ولا يُعاد
+  *g_describe(s) {
+    this.described = [...(this.described ?? []), s];
+    this.log.push([this.sessions, 'describe', s]);
+    const act = new DescribeRun({ skill: s });
+    (yield* this.g_run_act(act, 'describe'));
+    this.log.push([this.sessions, 'describe_' + act.result, s]);
+  }
+
   *g_teach() {
     for (const c of this.saved.filter((x) => TEACH_KINDS.includes(x.kind))) {
       const r = (yield* this.g_resume(c));                 // نشاط قطعه السقف: يُستأنف أولًا
       if (r !== null) return r;
     }
     const teaching = this.saved.some((x) => TEACH_KINDS.includes(x.kind));
+    for (const s of teaching ? [] : this.describe_due()) (yield* this.g_describe(s));
     for (const s of teaching ? [] : this.e.consolidationOwed()) {
       // طُلبت مساعدة في فحص احتفاظ: التثبيت يسبق غيره في الحصة، فالطفل طلب العون ولا يُؤخَّر عنه (ت3)
       if (this.entry('show', s) === null && this.send({ type: 'consolidation_started', skill: s }).ok) {
@@ -1307,7 +1332,7 @@ export class Scheduler {
 // سلسلة الاستدعاء التي تعرض بنودًا مولّدات (g_*): تعطي [البند، المطلوب] وتستقبل ما كانت answer تعيده. والدوال
 // بأسمائها السابقة أغلفة متزامنة تشغّل المولّد بـ this.answer، فلا يتغير شيء لمن يستدعيها. والواجهة تشغّل المولّد
 // نفسه خطوة خطوة. حالة المولّد ليست مصدر الاستعادة: المتابعة بعد الإغلاق تُبنى من الحالة المحفوظة.
-export const STEPPED = ['run_act', 'show', 'consolidate', 'lesson_body', 'open_lesson', 'gate', 'short', 'opening', 'evidence', 'check', 'retention_check', 'recall', 'search', 'working_point', 'start_session', 'follow', 'teach', 'resume', 'run', 'follow_learning', 'resume_mine', 'extra', 'extra_body', 'extra_step'];
+export const STEPPED = ['describe', 'run_act', 'show', 'consolidate', 'lesson_body', 'open_lesson', 'gate', 'short', 'opening', 'evidence', 'check', 'retention_check', 'recall', 'search', 'working_point', 'start_session', 'follow', 'teach', 'resume', 'run', 'follow_learning', 'resume_mine', 'extra', 'extra_body', 'extra_step'];
 for (const name of STEPPED) {
   Scheduler.prototype[name] = function sync(...args) {
     return runSync(this['g_' + name](...args), (item, w) => this.answer(item, w));

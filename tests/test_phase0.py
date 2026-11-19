@@ -58,7 +58,7 @@ class Kid:
             if a == 'lesson':
                 self.known.add(item['skill'])
             return [('end',)]
-        assess = a in ('gate', 'short', 'check', 'retention')
+        assess = a in ('gate', 'short', 'check', 'retention', 'describe')
         ok = item['skill'] in self.known and item['id'] not in self.wrong
         ans = item['answer'] if ok else (item['answer'] + 1 if item['answer'] < 99 else item['answer'] - 1)
         pre = [('support', 'hint')] if item['id'] in self.help else []
@@ -132,7 +132,7 @@ def sweep(name, wrong=(), help=()):
         evs = kid0.events(item, w)
         if w['activity'] in ('lesson', 'practice'):
             return 'correct'
-        return evs, item['answer'], w['activity'] in ('gate', 'short', 'check', 'retention')
+        return evs, item['answer'], w['activity'] in ('gate', 'short', 'check', 'retention', 'describe')
     sc0.answer = answer
     sc0.run(c['sessions'])
     bad = []

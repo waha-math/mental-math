@@ -78,7 +78,7 @@ def state_of(sc):
     d['next_id'] = next_id(sc)
     if sc.last is not None:                                 # آخر بند عُرض في الجلسة المفتوحة (R22-01)
         d['last'] = plain(sc.last)
-    for k in ('used', 'free'):                              # وقت اليوم وما دُرّب في إضافياته: حين وُجدا
+    for k in ('used', 'free', 'described'):                 # وقت اليوم وما دُرّب في إضافياته والفحص الوصفي: حين وُجدت
         if getattr(sc, k) is not None:
             d[k] = plain(getattr(sc, k))
     return d
@@ -271,8 +271,11 @@ def restore(record, net, types, source, answer, item_seconds=None, records=None,
                     session=st['cur'], skill=act.skill, activity=act.name, item=j.get('item'), fact=list(j['fact']),
                     counts=exposed(j['raw']))
             entry = dict(kind=cur['kind'], skill=act.skill, act=act.to_dict(), items=items)
-        st['saved'].append(entry)
-        notes.append(('current_saved', cur['kind'], cur['skill']))
+        if cur['kind'] == 'describe':                       # الوصفي لا يُستأنف: بنده الجاري خُتم، وما أُجيب منه مسجَّل
+            notes.append(('describe_dropped', cur['skill']))
+        else:
+            st['saved'].append(entry)
+            notes.append(('current_saved', cur['kind'], cur['skill']))
     notes += reconcile(e, st)
     bad = check_consistent(e, st)
     if bad:
@@ -280,7 +283,7 @@ def restore(record, net, types, source, answer, item_seconds=None, records=None,
     for k in STATE:
         setattr(sc, k, st[k])
     sc.last = st.get('last') if st['cur'] is not None else None
-    sc.used, sc.free = st.get('used'), st.get('free')
+    sc.used, sc.free, sc.described = st.get('used'), st.get('free'), st.get('described')
     from collections import Counter
     sc.n = Counter(st['n'])
     import itertools

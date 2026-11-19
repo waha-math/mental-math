@@ -101,6 +101,8 @@ class ContentSource:
                 it = self._at(self._typed(skill, g, 'gate.compensation', w['type']), w['pos'])
         elif a == 'short':
             it = self._at(self.by[(skill, 'short', 'short_check')], w['pos'])
+        elif a == 'describe':                               # الفحص الوصفي للمقارنة: بنوده الأربعة بترتيبها
+            it = self._at(self.by[(skill, 'compare', 'descriptive_check')], w['pos'])
         elif a == 'opening':
             if w.get('typed'):                              # 6.2: نوعا الخطأ في بوابة المهارة، بندان لكل نوع
                 it = self._at(self._typed(skill, 'tryfirst', 'opening.try', w['type']), w['type_index'])

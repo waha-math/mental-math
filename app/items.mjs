@@ -755,7 +755,37 @@ export class RetentionRun extends Activity {
   }
 }
 
-export const CLASSES = { GateRun, ShortCheckRun, OpeningRun, EvidenceRun, CheckRun, RetentionRun };
+// الفحص الوصفي للمقارنة (10.2، خ7): 4 بنود بطاقة بلا تغذية راجعة، نتيجتها في اللوحة ولا تُشترط لتقدم. لا حدث له في
+// المحرك. كل بند يُختم يُسجَّل، والمنقطع يُسجَّل منقطعًا ويمضي الفحص
+export class DescribeRun extends Activity {
+  static pyName = 'DescribeRun';
+  get name() { return 'describe'; }
+
+  constructor({ skill, size = 4 }) {
+    super(skill);
+    this.pos = 0;
+    this.size = size;
+  }
+
+  want() {
+    if (this.done) return null;
+    return { activity: this.name, role: 'descriptive_check', pos: this.pos };
+  }
+
+  unavailable() { this._finish('no_items'); }
+
+  feed(_outcome) {
+    if (this.done) throw new Error('النشاط انتهى');
+    this._count('describe');
+    this.pos += 1;
+    if (this.pos === this.size) this._finish('done');
+    return undefined;
+  }
+
+  events() { return []; }
+}
+
+export const CLASSES = { GateRun, ShortCheckRun, OpeningRun, EvidenceRun, CheckRun, RetentionRun, DescribeRun };
 export const ASSESSING = ['gate', 'short', 'check', 'retention'];   // أنشطة التقييم: علاج تكرار الحقيقة فيها تأخير البند
 export const ALT_PEEK = 8;                        // أقصى عدد بدائل يُسأل عنها لنوع عند تأخير بند
 
@@ -929,6 +959,8 @@ export class ContentSource {
       else it = at(this._typed(skill, g, 'gate.compensation', w.type), w.pos);
     } else if (a === 'short') {
       it = at(this._list(skill, 'short', 'short_check'), w.pos);
+    } else if (a === 'describe') {                // الفحص الوصفي للمقارنة: بنوده الأربعة بترتيبها
+      it = at(this._list(skill, 'compare', 'descriptive_check'), w.pos);
     } else if (a === 'opening') {
       if (w.typed) it = at(this._typed(skill, 'tryfirst', 'opening.try', w.type), w.type_index);   // 6.2
       else it = at(this._list(skill, 'opening', w.role), w.pos);

@@ -22,6 +22,7 @@ export function summarize(e, sc, profile, pack) {
     const recs = sc.records.filter((r) => r.skill === skill && !r.void);
     const how = {};
     for (const r of recs) if (r.how) how[r.how] = (how[r.how] ?? 0) + 1;
+    const desc = recs.filter((r) => r.activity === 'describe');   // الفحص الوصفي: الصحيح من المعروض، بلا حكم
     return {
       skill, name: pack.ui['skill.' + skill]?.ar ?? skill, state, label: STATE[state],
       teacher: e.decisions('open', skill).length > 0, ind,
@@ -31,6 +32,7 @@ export function summarize(e, sc, profile, pack) {
       help: recs.filter((r) => (r.support ?? []).includes('requested')).length,
       supported: recs.filter((r) => (r.support ?? []).some((x) => x !== 'requested')).length,
       how,
+      describe: desc.length ? { correct: desc.filter((r) => r.final === 'correct').length, total: desc.length } : null,
     };
   });
   return { days: days.length, first: days[0] ?? null, last: days[days.length - 1] ?? null, skills };

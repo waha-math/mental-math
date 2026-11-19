@@ -14,7 +14,7 @@ import persist
 from item_layer import HOW
 from scheduler import Void
 
-ASSESS = ('gate', 'short', 'check', 'retention')            # بنود التقييم: تنتهي بأول تأكيد
+ASSESS = ('gate', 'short', 'check', 'retention', 'describe')            # بنود التقييم: تنتهي بأول تأكيد
 SHOWN = ('lesson', 'practice')                              # بنود العرض: لا سجل لها
 TEACH_SUPPORT = ('hint', 'extra_model', 'someone')          # الدعم المسموح في بنود التعليم
 
@@ -105,6 +105,11 @@ class Stepper:
                 return 'بطاقة غير معروفة'
             return None if not any(x[0] in ('how', 'confirm') for x in self.raw) else 'البطاقة مرة واحدة قبل التأكيد'
         if kind == 'confirm':
+            if len(ev) == 2 and isinstance(ev[1], str):     # بند بطاقة (ج8): التأكيد بمعرّف إحدى بطاقاته
+                cards = self.pending[0].get('cards') if isinstance(self.pending[0], dict) else None
+                return None if cards and ev[1] in cards else 'بطاقة ليست من بطاقات البند'
+            if isinstance(self.pending[0], dict) and self.pending[0].get('cards'):
+                return 'بند البطاقة يُجاب ببطاقة'
             ok = len(ev) == 2 and isinstance(ev[1], int) and not isinstance(ev[1], bool)
             return None if ok else 'التأكيد يحمل عددًا صحيحًا واحدًا'
         if kind == 'support':

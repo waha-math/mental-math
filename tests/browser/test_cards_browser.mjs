@@ -37,7 +37,7 @@ function check(name, got, want) {
 let secs = 0;
 const src = () => { const s = new ContentSource(PACK.items, true, IDENT); return (k, w) => s.pick(k, w); };
 // طفل يتعلّم يمضي يومًا بعد يوم حتى يُطلب بند يحقق stop. يعيد اللقطة قبل عرضه، وطبقة الخطوات واقفة عنده، ويومه
-function build(child, stop) {
+function build(child, stop, untilDay = null) {
   const e = new Engine(undefined, { group: 'older' });
   [['3-5-1', ['3-3-2', '3-2-3']], ['3-5-2', ['3-2-1', '3-3-1', '2-5-2']]].forEach(([skill, bypass], k) =>
     e.apply({ id: 'd' + k, type: 'teacher_open', skill, bypass, reason: 'قرار الشريحة في 10.2' }));
@@ -48,10 +48,11 @@ function build(child, stop) {
     const a = w.activity;
     if (a === 'lesson' || a === 'practice') { if (a === 'lesson') known.add(item.skill); return [['end']]; }
     const ans = known.has(item.skill) ? item.answer : (item.answer < 99 ? item.answer + 1 : item.answer - 1);
-    return [['confirm', ans], ...(['gate', 'short', 'check', 'retention'].includes(a) ? [] : [['end']])];
+    return [['confirm', ans], ...(['gate', 'short', 'check', 'retention', 'describe'].includes(a) ? [] : [['end']])];
   };
   for (let d = 0; d < 60; d++) {
     const day = DAYNUM + d, now = DAY0 + d * 86400000;
+    if (day === untilDay) return { rec: persist.snapshot(e, sc, null, child), day };   // قبل جلسة ذلك اليوم
     sc.today = day;
     const st = new Stepper(e, sc, () => now);
     st.open(sc.g_session());
@@ -65,6 +66,8 @@ function build(child, stop) {
   throw new Error('لم يُطلب البند');
 }
 const H = build('older1', (it) => Boolean(it.how));
+// الفحص الوصفي يُعرض داخل جلسة ولا يُستأنف بعد إعادة فتح: فالحالة تُبنى إلى ما قبل جلسة يومه، والجلسة تبدأ من الشاشة
+const D = build('older1', () => false, build('older1', (it) => it.role === 'descriptive_check').day);
 const C = build('older2', (it) => it.role === 'lesson.compare');
 let { st } = H;
 const { rec, day } = H;
@@ -232,11 +235,72 @@ const want = (st0, child) => [child, ['3-5-1', '3-5-2', '3-5-3'].map((k) => {
   const state = status === 'met' ? 'met' : status === 'stumbled' ? 'stumbled' : status === 'exempt' ? 'exempt' : und ? 'understood' : 'none';
   const how = recs.filter((r) => r.how).length;
   return [k, state, String(recs.length), String(recs.filter((r) => (r.support ?? []).includes('requested')).length),
-    how ? `أكمل من الأصغر: ${how}` : '—'];
+    how ? `أكمل من الأصغر: ${how}` : '—', '—'];
 })];
 check('اللوحة: لكل طفل ملفه، ولكل مهارة حالتها وعدد بنودها وطلبات المساعدة واختيار «كيف حسبتها؟»، كما في الإعادة في Node',
   board, [['young', []], want(st, 'older1'), want(C.st, 'older2')]);
 if (process.env.SHOTS) await page.screenshot({ path: process.env.SHOTS + '/board.png', fullPage: true });
+
+// ---------------------------------------------------------------- الفحص الوصفي (17.27)، في جهاز آخر
+// المتوقع: البطاقات بدل لوحة الأرقام، و«أحتاج مساعدة» ظاهر لأنه بند تقييم، والاختيار يختم البند بلا جواب يُعرض.
+// يُجاب الثالث خطأً: اللوحة «3 من 4»، والمحفوظ يطابق الإعادة في Node
+const ctx2 = await browser.newContext({ viewport: { width: 1180, height: 820 }, hasTouch: true });
+await ctx2.addInitScript((t) => {
+  const T = { spoken: [], clock: { now: t, mono: 0 }, noWorker: true };
+  T.now = () => T.clock.now; T.mono = () => T.clock.mono;
+  T.speaker = { available: async () => true, say: (x) => T.spoken.push(x) };
+  window.MM_TEST = T;
+}, DAY0 + (D.day - DAYNUM) * 86400000);
+const p2 = await ctx2.newPage();
+p2.on('pageerror', (x) => errors.push(x.message));
+await p2.goto(page.url().replace(/#.*$/, ''));
+await p2.waitForSelector('[data-screen="who"]');
+await p2.evaluate(async (r) => { const s = await import('/app/store.mjs'); const db = await s.openDB(); await s.commit(db, r, 0); db.close(); }, D.rec);
+await p2.click('[data-child="older1"]');
+await p2.waitForSelector('[data-screen="workshop"]');
+await p2.click('#start');
+{
+  const r = persist.restore(JSON.parse(JSON.stringify(D.rec)), { types: TYPES, source: src(), answer: null,
+    item_seconds: () => { const x = secs; secs = 0; return x; }, records: [], today: D.day, content: IDENT });
+  r.scheduler.today = D.day;
+  D.st = new Stepper(r.engine, r.scheduler, () => DAY0 + (D.day - DAYNUM) * 86400000);
+  D.st.open(r.scheduler.g_session());
+}
+const seenD = [], feedback = [];
+for (let k = 0; k < 4; k++) {
+  await p2.waitForSelector('.task[data-ready="true"]');
+  const [id, kind, cardsD, help, pad] = await p2.evaluate(() => [document.querySelector('.task').dataset.item,
+    document.querySelector('.task').dataset.kind, [...document.querySelectorAll('#cards [data-card]')].map((b) => b.dataset.card),
+    Boolean(document.getElementById('help')), Boolean(document.querySelector('[data-key="ok"]'))]);
+  const it = PACK.items.find((i) => i.id === id);
+  seenD.push([id, kind, canonical(cardsD) === canonical(it.cards), help, pad]);
+  D.st.show(D.st.seq);
+  const pickD = k === 2 ? it.cards.find((c) => c !== it.answer) : it.answer;
+  await p2.click(`#cards [data-card="${pickD}"]`);
+  feedback.push(await p2.evaluate(() => Boolean(document.querySelector('#cards .right, #next, #ok'))));
+  await p2.waitForFunction((x) => document.querySelector('.task')?.dataset.item !== x || document.getElementById('app').dataset.screen !== 'item', id);
+  secs = 0;
+  D.st.event(D.st.seq, ['confirm', pickD]);
+}
+const descIds = PACK.items.filter((i) => i.role === 'descriptive_check').map((i) => i.id);
+if (await p2.evaluate(() => document.querySelector('.task[data-ready="true"]') !== null) && D.st.pending !== null) D.st.show(D.st.seq);
+const recD = await p2.evaluate(async () => { const s = await import('/app/store.mjs'); const db = await s.openDB(); const r = await s.load(db, 'older1'); db.close(); return r; });
+const { rev: r3, written_at: w3, ...plain3 } = recD;
+check('الفحص الوصفي: البنود الأربعة ببطاقاتها و«أحتاج مساعدة» بلا لوحة أرقام ولا جواب يُعرض، ونتيجتها في السجل، والمحفوظ يطابق الإعادة في Node',
+  [seenD, feedback, recD.records.filter((x) => x.activity === 'describe').map((x) => [x.item, x.final]),
+    canonical(plain3) === canonical(D.st.snapshot('older1'))],
+  [descIds.map((id) => [id, 'assess', true, true, false]), [false, false, false, false],
+    descIds.map((id, k) => [id, k === 2 ? 'wrong' : 'correct']), true]);
+await p2.goto(page.url().replace(/#.*$/, ''));
+await p2.waitForSelector('[data-screen="who"]');
+await p2.click('#adult');
+await p2.fill('#pin', '1357');
+await p2.fill('#pin2', '1357');
+await p2.click('#pin-ok');
+await p2.waitForSelector('#board[data-ready="true"]');
+check('اللوحة تعرض نتيجة الفحص الوصفي', [await p2.evaluate(() => document.querySelector('#board .board-child[data-child="older1"] tr[data-skill="3-5-3"]').lastChild.textContent)],
+  ['3 من 4 (وصفي، لا يُشترط لتقدم)']);
+await ctx2.close();
 const looks = await page.evaluate(() => {
   const b = document.querySelector('#board tr[data-skill="3-5-1"] td bdi'), t = b.firstChild;
   const at = (k) => { const r = document.createRange(); r.setStart(t, k); r.setEnd(t, k + 1); return r.getBoundingClientRect().left; };

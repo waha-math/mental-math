@@ -57,7 +57,7 @@ export function stateOf(sc) {
   d.n = Object.fromEntries(Object.entries(d.n).filter(([, v]) => v));
   d.next_id = sc._next;
   if (sc.last !== null && sc.last !== undefined) d.last = clone(sc.last);   // آخر بند عُرض في الجلسة المفتوحة (R22-01)
-  for (const k of ['used', 'free']) {             // وقت اليوم وما دُرّب في إضافياته: حين وُجدا
+  for (const k of ['used', 'free', 'described']) {   // وقت اليوم وما دُرّب في إضافياته والفحص الوصفي: حين وُجدت
     if (sc[k] !== null && sc[k] !== undefined) d[k] = clone(sc[k]);
   }
   return d;
@@ -227,8 +227,12 @@ export function restore(record, { types, source, answer, item_seconds = null, re
       }
       entry = { kind: cur.kind, skill: act.skill, act: act.toDict(), items };
     }
-    st.saved.push(entry);
-    notes.push(['current_saved', cur.kind, cur.skill]);
+    if (cur.kind === 'describe') {         // الوصفي لا يُستأنف: بنده الجاري خُتم، وما أُجيب منه مسجَّل
+      notes.push(['describe_dropped', cur.skill]);
+    } else {
+      st.saved.push(entry);
+      notes.push(['current_saved', cur.kind, cur.skill]);
+    }
   }
   notes.push(...reconcile(e, st));
   const bad = checkConsistent(e, st);
@@ -237,6 +241,7 @@ export function restore(record, { types, source, answer, item_seconds = null, re
   sc.last = st.cur !== null && st.last !== undefined && st.last !== null ? st.last : null;
   sc.used = st.used ?? null;
   sc.free = st.free ?? null;
+  sc.described = st.described ?? null;
   sc._next = st.next_id;
   // الجلسة التعليمية غير فتح التطبيق: إغلاقه لا يختمها، فتُكمَل بهويتها ووقتها وحصصها (المرحلة 0ج). تُختم هنا
   // فقط إن انتقل يوم الأسرة: today يوم الأسرة عند الفتح، وبلا قيمة تبقى الجلسة مفتوحة

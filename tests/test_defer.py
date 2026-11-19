@@ -251,7 +251,7 @@ def scene(inject, close_at=None):
         if w['activity'] in ('lesson', 'practice'):
             evs = [('end',)]
         else:
-            evs = [('confirm', item['answer'])] + ([] if w['activity'] in ('gate', 'short', 'check', 'retention') else [('end',)])
+            evs = [('confirm', item['answer'])] + ([] if w['activity'] in ('gate', 'short', 'check', 'retention', 'describe') else [('end',)])
         for ev in evs:
             st.event(st.seq, ev)
         if len(shown) == 9 and shown[-1][0] == item['id']:
@@ -285,7 +285,7 @@ def settled(pins, target):
             item, w = st.pending
             n += 1
             for ev in ([('end',)] if w['activity'] in ('lesson', 'practice') else [('confirm', item['answer'])] + (
-                    [] if w['activity'] in ('gate', 'short', 'check', 'retention') else [('end',)])):
+                    [] if w['activity'] in ('gate', 'short', 'check', 'retention', 'describe') else [('end',)])):
                 st.event(st.seq, ev)
         st.show(st.seq)
         e, sc, _notes = g['reopen']('young', st.snapshot())
@@ -339,7 +339,7 @@ def scene_t1(inject):
         elif w['activity'] in ('lesson', 'practice'):
             evs = [('end',)]
         else:
-            evs = [('confirm', item['answer'])] + ([] if w['activity'] in ('gate', 'short', 'check', 'retention') else [('end',)])
+            evs = [('confirm', item['answer'])] + ([] if w['activity'] in ('gate', 'short', 'check', 'retention', 'describe') else [('end',)])
         for ev in evs:
             st.event(st.seq, ev)
     att = [a['result'] for a in e.s['attempts'] if a['skill'] == '1-4-2' and a['what'] == 'gate']
@@ -394,7 +394,7 @@ def scene_t2(no_alts):
             if item['id'].startswith('1-4-2/gate/'):
                 shown.append((item['id'], bool(w.get('fact_just_seen'))))
             for ev in ([('end',)] if w['activity'] in ('lesson', 'practice') else [('confirm', item['answer'])] + (
-                    [] if w['activity'] in ('gate', 'short', 'check', 'retention') else [('end',)])):
+                    [] if w['activity'] in ('gate', 'short', 'check', 'retention', 'describe') else [('end',)])):
                 st.event(st.seq, ev)
         return dict(shown=[i for i, _m in shown], marked=[i for i, m in shown if m],
                     weak=[r['item'] for r in sc.records if r.get('after_exposure')], attempts=tries(),

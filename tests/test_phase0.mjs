@@ -42,7 +42,7 @@ class Kid {
       if (a === 'lesson') this.known.add(item.skill);
       return [['end']];
     }
-    const assess = ['gate', 'short', 'check', 'retention'].includes(a);
+    const assess = ['gate', 'short', 'check', 'retention', 'describe'].includes(a);
     const ok = this.known.has(item.skill) && !this.wrong.has(item.id);
     const ans = ok ? item.answer : (item.answer < 99 ? item.answer + 1 : item.answer - 1);
     return [...(this.help.has(item.id) ? [['support', 'hint']] : []), ['confirm', ans], ...(assess ? [] : [['end']])];
@@ -106,7 +106,7 @@ function sweep(name, wrong = [], help = []) {
   b0.sc.answer = (item, w) => {
     const evs = kid0.events(item, w);
     if (w.activity === 'lesson' || w.activity === 'practice') return 'correct';
-    return [evs, item.answer, ['gate', 'short', 'check', 'retention'].includes(w.activity)];
+    return [evs, item.answer, ['gate', 'short', 'check', 'retention', 'describe'].includes(w.activity)];
   };
   b0.sc.run(c.sessions);
   if (dump(final(b0.e, b0.sc)) !== dump(base)) bad.push('التشغيل خطوة خطوة يخالف الغلاف المتزامن');

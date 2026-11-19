@@ -698,7 +698,35 @@ class RetentionRun(Activity):
         return []
 
 
-CLASSES = {c.__name__: c for c in (GateRun, ShortCheckRun, OpeningRun, EvidenceRun, CheckRun, RetentionRun)}
+class DescribeRun(Activity):
+    """الفحص الوصفي للمقارنة (10.2، خ7): 4 بنود بطاقة بلا تغذية راجعة، تُعرض نتيجتها في اللوحة ولا تُشترط لتقدم.
+    لا حدث له في المحرك. كل بند يُختم يُسجَّل، والمنقطع يُسجَّل منقطعًا ويمضي الفحص: هو وصف لا حكم."""
+    name = 'describe'
+
+    def __init__(self, skill, size=4):
+        super().__init__(skill)
+        self.pos, self.size = 0, size
+
+    def want(self):
+        if self.done:
+            return None
+        return dict(activity=self.name, role='descriptive_check', pos=self.pos)
+
+    def unavailable(self):
+        self._finish('no_items')
+
+    def feed(self, outcome):
+        assert not self.done
+        self.shown['describe'] += 1
+        self.pos += 1
+        if self.pos == self.size:
+            self._finish('done')
+
+    def events(self):
+        return []
+
+
+CLASSES = {c.__name__: c for c in (GateRun, ShortCheckRun, OpeningRun, EvidenceRun, CheckRun, RetentionRun, DescribeRun)}
 ASSESSING = ('gate', 'short', 'check', 'retention')         # أنشطة التقييم: علاج تكرار الحقيقة فيها تأخير البند
 
 

@@ -269,9 +269,10 @@ class RandomChild:
         a = want['activity']
         if a in ('lesson', 'practice'):
             return 'correct'
-        assess = a in ('gate', 'short', 'check', 'retention')
+        assess = a in ('gate', 'short', 'check', 'retention', 'describe')
         ans, x = item['answer'], self.rng.random()
-        wrong = ans + 1 if ans < 99 else ans - 1
+        # بند بطاقة (الفحص الوصفي): الخطأ بطاقة أخرى. بلا استهلاك من المولّد العشوائي، فلا تتغير المسارات الأخرى
+        wrong = next(c for c in item['cards'] if c != ans) if isinstance(ans, str) else ans + 1 if ans < 99 else ans - 1
         tail = [] if assess else [('end',)]
         if x < self.p_cut:
             return [('interrupt',)], ans, assess
