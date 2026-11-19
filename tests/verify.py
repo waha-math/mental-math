@@ -112,6 +112,7 @@ def main(argv):
                 return fail('اختبارات Chrome', 'لا node_modules في الشجرة: شغّل npm install')
             os.symlink(os.path.join(tree, 'node_modules'), os.path.join(work, 'node_modules'))
             steps.append(('اختبارات Chrome للحفظ', [node, 'tests/browser/test_store_browser.mjs'], all_passed, ()))
+            steps.append(('تجربة الشريحة في Chrome', [node, 'tests/browser/test_slice_browser.mjs'], all_passed, ()))
         print('التحقق من %s في مجلد مؤقت نظيف (%d خطوة)' % (tree, len(steps)))
         for step in steps:
             if run(*step):

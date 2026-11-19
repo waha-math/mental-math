@@ -75,7 +75,9 @@ export function commit(db, record, expectRev, hooks = {}) {
         };
       } catch (err) {
         outcome = { ok: false, code: err.name === 'QuotaExceededError' ? 'quota' : 'write_failed', detail: String(err) };
-        tx.abort();
+        try {
+          tx.abort();
+        } catch { /* المعاملة أُلغيت أو انتهت قبل الكتابة: النتيجة مسجَّلة، و onabort يحسمها */ }
       }
     };
     tx.oncomplete = () => resolve({ ok: true, rev: expectRev + 1 });
