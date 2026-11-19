@@ -1,0 +1,49 @@
+حالات tests/test_defer بعد ت2 على شجرة 77cd0ae (قبل الإصلاح، بمحتوى الحزمة 4):
+  أخفق  ع1 (ت2). تحقق قصير، والثالث بحقيقة الأول: لا موضع، فيُعرض الأول موسومًا. إجابته الصحيحة أداء بعد تعرض مباشر: لا نتيجة ولا حدث، ولا يُعرض ما بعده، ويُعاد في جلسة لاحقة
+        {'shown': ['short:0', 'short:1', 'short:2'], 'marked': ['short:0'], 'result': True, 'defer': None, 'records': ['short:0', 'short:1', 'short:2'], 'ahead': {}, 'weak': []}، والمتوقع {'shown': ['short:0'], 'marked': ['short:0'], 'result': None, 'defer': None, 'ahead': {}, 'weak': ['short:0'], 'records': ['short:0']}
+--
+  أخفق  ع4 (ت2). بوابة، وأولها لا موضع يُؤخَّر إليه (كل موضع يجاور حقيقته): يُعرض موسومًا. إجابته الصحيحة لا تُحتسب: تُستكمل خانته ببديل نوعه، ثم تمضي البوابة وتُجتاز بالبنود المستقلة
+        {'shown': ['gate:0', 'gate:1', 'gate:2', 'gate:3', 'gate:4', 'gate:5', 'gate:6'], 'marked': ['gate:0'], 'result': 'pass', 'defer': None, 'errors': [], 'records': ['gate:0', 'gate:1', 'gate:2', 'gate:3', 'gate:4', 'gate:5', 'gate:6'], 'ahead': {}, 'weak': []}، والمتوقع {'shown': ['gate:0', 'alt:ف3:0', 'gate:1', 'gate:2', 'gate:3', 'gate:4', 
+  أخفق  ع5 (ت2). البوابة نفسها ولا بديل في المحتوى: نقص البدائل لا يُحسب إخفاقًا. تُعلَّق بلا نتيجة
+        {'shown': ['gate:0', 'gate:1', 'gate:2', 'gate:3', 'gate:4', 'gate:5', 'gate:6'], 'marked': ['gate:0'], 'result': 'pass', 'defer': None, 'errors': [], 'records': ['gate:0', 'gate:1', 'gate:2', 'gate:3', 'gate:4', 'gate:5', 'gate:6'], 'ahead': {}, 'weak': []}، والمتوقع {'shown': ['gate:0'], 'marked': ['gate:0'], 'result': 'interrupted', 'defe
+  أخفق  ع6 (ت2). البوابة نفسها، والبديل يحمل الحقيقة نفسها: يوسَم هو أيضًا، وإجابته الصحيحة لا تُحتسب، ثم بديل ثانٍ بحقيقة أخرى يكمل الخانة
+        {'shown': ['gate:0', 'gate:1', 'gate:2', 'gate:3', 'gate:4', 'gate:5', 'gate:6'], 'marked': ['gate:0'], 'result': 'pass', 'defer': None, 'errors': [], 'records': ['gate:0', 'gate:1', 'gate:2', 'gate:3', 'gate:4', 'gate:5', 'gate:6'], 'ahead': {}, 'weak': []}، والمتوقع {'shown': ['gate:0', 'alt:ف3:0', 'alt:ف3:1', 'gate:1', 'gate:2', 'gate:3
+--
+  أخفق  ع7 (ت2). فحص استقلال: «أداء بعد تعرض مباشر» في الخانة 1 يطلب بديلها بلا عدّ انقطاع، والصحيح في البديل يكمل الخانة
+        {'result': None, 'slot': 3, 'total_cuts': 0, 'correct': 1, 'hold': None, 'role': 'check'}، والمتوقع {'result': None, 'slot': 2, 'total_cuts': 0, 'correct': 1, 'hold': None, 'role': 'check'}
+  أخفق  ع8 (ت2). فحص استقلال: «أداء بعد تعرض مباشر» في الخانة ثم في بديلها: لا بديل ثانٍ يُعاد، فتُعلَّق للمراجعة بلا إخفاق
+        {'result': None, 'slot': 3, 'total_cuts': 0, 'correct': 0, 'hold': None, 'role': 'check'}، والمتوقع {'result': 'held', 'slot': 1, 'total_cuts': 0, 'correct': 0, 'hold': 'no_alternate', 'role': None}
+  أخفق  ع9 (ت2). فحص استقلال: ثلاث مرات «أداء بعد تعرض مباشر» في خانات مختلفة لا تعلّقه كما تعلّقه ثلاثة انقطاعات
+        {'result': None, 'slot': 7, 'total_cuts': 0, 'correct': 3, 'hold': None, 'role': 'check'}، والمتوقع {'result': None, 'slot': 4, 'total_cuts': 0, 'correct': 3, 'hold': None, 'role': 'check'}
+  أخفق  ع10 (ت2). فحص احتفاظ: «أداء بعد تعرض مباشر» ينهي الجولة بلا نتيجة ولا حدث، لا «طلب مساعدة»
+        {'result': None, 'events': [], 'done': False}، والمتوقع {'result': None, 'events': [], 'done': True}
+--
+  أخفق  ع11 (ت2). على المجدول: الأول موسوم وإجابته الصحيحة «أداء بعد تعرض مباشر» لا تدخل عدّ الصحيح المستقل. يُطلب بديل نوعه، وتُجتاز البوابة بالبنود المستقلة، فالمهارة معفاة
+        {'shown': ['1-4-2/gate/01', '1-4-2/gate/02', '1-4-2/gate/03', '1-4-2/gate/04', '1-4-2/gate/05', '1-4-2/gate/06', '1-4-2/gate/07', '1-4-2/gate/08', '1-4-2/gate/09'], 'marked': ['1-4-2/gate/01'], 'weak': [], 'attempts': ['pass'], 'status': 'exempt', 'stumbles': 0, 'independent': 0}، والمتوقع {'shown': ['1-4-2/gate/01', '1-4-2/gate/18', '1-4-2/
+  أخفق  ع12 (ت2). والبدائل محجوبة: البوابة تُعلَّق بلا نتيجة بعد بندها الأول. لا إعفاء ولا تعثّر: نقص البدائل ليس إخفاقًا
+        {'shown': ['1-4-2/gate/01', '1-4-2/gate/02', '1-4-2/gate/03', '1-4-2/gate/04', '1-4-2/gate/05', '1-4-2/gate/06', '1-4-2/gate/07', '1-4-2/gate/08', '1-4-2/gate/09'], 'marked': ['1-4-2/gate/01'], 'weak': [], 'attempts': ['pass'], 'status': 'exempt', 'stumbles': 0, 'independent': 0}، والمتوقع {'shown': ['1-4-2/gate/01'], 'marked': ['1-4-2/gate/
+النتيجة: نجح 32 من 42
+  أخفق  ع1 (ت2). تحقق قصير، والثالث بحقيقة الأول: لا موضع، فيُعرض الأول موسومًا. إجابته الصحيحة أداء بعد تعرض مباشر: لا نتيجة ولا حدث، ولا يُعرض ما بعده، ويُعاد في جلسة لاحقة
+        {"shown":["short:0","short:1","short:2"],"marked":["short:0"],"result":true,"defer":null,"records":["short:0","short:1","short:2"],"ahead":{},"weak":[]}، والمتوقع {"records":["short:0"],"shown":["short:0"],"marked":["short:0"],"result":null,"defer":null,"ahead":{},"weak":["short:0"]}
+--
+  أخفق  ع4 (ت2). بوابة، وأولها لا موضع يُؤخَّر إليه (كل موضع يجاور حقيقته): يُعرض موسومًا. إجابته الصحيحة لا تُحتسب: تُستكمل خانته ببديل نوعه، ثم تمضي البوابة وتُجتاز بالبنود المستقلة
+        {"shown":["gate:0","gate:1","gate:2","gate:3","gate:4","gate:5","gate:6"],"marked":["gate:0"],"result":"pass","defer":null,"records":["gate:0","gate:1","gate:2","gate:3","gate:4","gate:5","gate:6"],"ahead":{},"errors":[],"weak":[]}، والمتوقع {"records":["gate:0","alt:ف3:0","gate:1","gate:2","gate:3","gate:4","gate:5","gate:6"],"shown":["gat
+  أخفق  ع5 (ت2). البوابة نفسها ولا بديل في المحتوى: نقص البدائل لا يُحسب إخفاقًا. تُعلَّق بلا نتيجة
+        {"shown":["gate:0","gate:1","gate:2","gate:3","gate:4","gate:5","gate:6"],"marked":["gate:0"],"result":"pass","defer":null,"records":["gate:0","gate:1","gate:2","gate:3","gate:4","gate:5","gate:6"],"ahead":{},"errors":[],"weak":[]}، والمتوقع {"records":["gate:0"],"shown":["gate:0"],"marked":["gate:0"],"result":"interrupted","defer":null,"err
+  أخفق  ع6 (ت2). البوابة نفسها، والبديل يحمل الحقيقة نفسها: يوسَم هو أيضًا، وإجابته الصحيحة لا تُحتسب، ثم بديل ثانٍ بحقيقة أخرى يكمل الخانة
+        {"shown":["gate:0","gate:1","gate:2","gate:3","gate:4","gate:5","gate:6"],"marked":["gate:0"],"result":"pass","defer":null,"records":["gate:0","gate:1","gate:2","gate:3","gate:4","gate:5","gate:6"],"ahead":{},"errors":[],"weak":[]}، والمتوقع {"records":["gate:0","alt:ف3:0","alt:ف3:1","gate:1","gate:2","gate:3","gate:4","gate:5","gate:6"],"
+--
+  أخفق  ع7 (ت2). فحص استقلال: «أداء بعد تعرض مباشر» في الخانة 1 يطلب بديلها بلا عدّ انقطاع، والصحيح في البديل يكمل الخانة
+        {"result":null,"slot":3,"total_cuts":0,"correct":1,"hold":null,"role":"check"}، والمتوقع {"result":null,"slot":2,"total_cuts":0,"correct":1,"hold":null,"role":"check"}
+  أخفق  ع8 (ت2). فحص استقلال: «أداء بعد تعرض مباشر» في الخانة ثم في بديلها: لا بديل ثانٍ يُعاد، فتُعلَّق للمراجعة بلا إخفاق
+        {"result":null,"slot":3,"total_cuts":0,"correct":0,"hold":null,"role":"check"}، والمتوقع {"result":"held","slot":1,"total_cuts":0,"correct":0,"hold":"no_alternate","role":null}
+  أخفق  ع9 (ت2). فحص استقلال: ثلاث مرات «أداء بعد تعرض مباشر» في خانات مختلفة لا تعلّقه كما تعلّقه ثلاثة انقطاعات
+        {"result":null,"slot":7,"total_cuts":0,"correct":3,"hold":null,"role":"check"}، والمتوقع {"result":null,"slot":4,"total_cuts":0,"correct":3,"hold":null,"role":"check"}
+  أخفق  ع10 (ت2). فحص احتفاظ: «أداء بعد تعرض مباشر» ينهي الجولة بلا نتيجة ولا حدث، لا «طلب مساعدة»
+        {"result":null,"events":[],"done":false}، والمتوقع {"result":null,"events":[],"done":true}
+--
+  أخفق  ع11 (ت2). على المجدول: الأول موسوم وإجابته الصحيحة «أداء بعد تعرض مباشر» لا تدخل عدّ الصحيح المستقل. يُطلب بديل نوعه، وتُجتاز البوابة بالبنود المستقلة، فالمهارة معفاة
+        {"shown":["1-4-2/gate/01","1-4-2/gate/02","1-4-2/gate/03","1-4-2/gate/04","1-4-2/gate/05","1-4-2/gate/06","1-4-2/gate/07","1-4-2/gate/08","1-4-2/gate/09"],"marked":["1-4-2/gate/01"],"weak":[],"attempts":["pass"],"status":"exempt","stumbles":0,"independent":0}، والمتوقع {"shown":["1-4-2/gate/01","1-4-2/gate/18","1-4-2/gate/02","1-4-2/gate/03"
+  أخفق  ع12 (ت2). والبدائل محجوبة: البوابة تُعلَّق بلا نتيجة بعد بندها الأول. لا إعفاء ولا تعثّر: نقص البدائل ليس إخفاقًا
+        {"shown":["1-4-2/gate/01","1-4-2/gate/02","1-4-2/gate/03","1-4-2/gate/04","1-4-2/gate/05","1-4-2/gate/06","1-4-2/gate/07","1-4-2/gate/08","1-4-2/gate/09"],"marked":["1-4-2/gate/01"],"weak":[],"attempts":["pass"],"status":"exempt","stumbles":0,"independent":0}، والمتوقع {"shown":["1-4-2/gate/01"],"marked":["1-4-2/gate/01"],"weak":["1-4-2/gate
+النتيجة: نجح 25 من 35

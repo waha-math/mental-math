@@ -48,6 +48,9 @@ QUOTA = {
     'search': {'gate': {'older': 2, 'young': 1}, 'short': 0, 'teach': 0},
     'start': {'gate': 0, 'short': 4, 'teach': 1},
     'follow': {'gate': 1, 'short': 2, 'teach': 1},
+    # الجلسة الإضافية (قرار الأب، 19 نوفمبر): تعليم وتدريب لمن أراد أن يستمر بعد جلسة يومه. لا تشخيص فيها، وحصتها
+    # غير معدودة (None): يحدّها وقت اليوم في المجدول، ودرس جديد واحد في يوم الأسرة
+    'extra': {'gate': 0, 'short': 0, 'teach': None},
 }
 SEARCH_CAP = 4
 # 3.7: فواصل فحوص الاحتفاظ بالأيام. الأول من يوم اجتياز الاستقلال، وكل فاصل بعده من يوم الفحص السابق الفعلي
@@ -61,7 +64,10 @@ REASONS = {
     'unknown_skill': 'المهارة ليست في المحتوى المسلَّم',
     'no_session': 'لا جلسة مفتوحة بهذا المعرّف',
     'session_open': 'جلسة أخرى مفتوحة ولم تُختم',
-    'session_order': 'نوع الجلسة لا يأتي في هذا الموضع: بحث (4 على الأكثر) ثم بدء واحدة ثم متابعة',
+    'session_order': 'نوع الجلسة لا يأتي في هذا الموضع: بحث (4 على الأكثر) ثم بدء واحدة ثم متابعة أو إضافية',
+    'no_session_today': 'الجلسة الإضافية تأتي بعد جلسة في يوم الأسرة نفسه',
+    'extra_session': 'الجلسة الإضافية تعليم وتدريب: لا فحص استقلال ولا فحص احتفاظ فيها',
+    'lesson_today': 'درس جديد واحد في يوم الأسرة: فُتح اليوم درس، والباقي تدريب',
     'quota_gate': 'استُهلكت بوابات هذه الجلسة، أو لا بوابة في هذا النوع من الجلسات',
     'quota_short': 'استُهلكت التحققات القصيرة في هذه الجلسة',
     'quota_teach': 'استُهلكت الحصة التعليمية الواحدة في هذه الجلسة',
@@ -97,13 +103,18 @@ REASONS = {
     'not_met': 'فحص الاحتفاظ لمهارة مستوفاة باجتياز فحص الاستقلال',
     'retention_done': 'أُجريت فحوص الاحتفاظ الثلاثة لهذه المهارة',
     'retention_early': 'لم يحِن موعد فحص الاحتفاظ: الفاصل يُحسب من يوم الاجتياز ثم من يوم الفحص السابق',
+    'retention_round': 'ليست هذه الجولة التالية من فحص الاحتفاظ لهذه المهارة',
+    'retention_referred': 'جولة فحص الاحتفاظ أُحيلت إلى البالغ: نفدت بدائلها بعد طلب مساعدة، وتنتظر قراره',
+    'not_referred': 'لا جولة احتفاظ محالة إلى البالغ لهذه المهارة',
+    'consolidation_first': 'جولة فحص الاحتفاظ تنتظر تثبيتًا لم يكتمل بعد طلب مساعدة فيها',
+    'no_consolidation': 'لا تثبيت مستحق لهذه المهارة، أو لم يبدأ في هذه الجلسة',
 }
 
 RESULTS = ('pass', 'fail', 'help')
 OPEN_CHECK = ('pending', 'held', 'needs_restart')        # محاولة لم تُغلق ولم تُترك: تمنع بدء أخرى
 # مخطط كل حدث: الحقول المطلوبة وأنواعها وقيمها. الحقل المنتهي بعلامة ? اختياري. لا يُقبل حقل غيرها.
 SCHEMA = {
-    'session_start': {'session': str, 'kind': ('search', 'start', 'follow'), 'day': int},
+    'session_start': {'session': str, 'kind': ('search', 'start', 'follow', 'extra'), 'day': int},
     'date_confirmed': {'target': str},
     'session_end': {'session': str},
     'gate_result': {'session': str, 'skill': str, 'result': RESULTS + ('interrupted',),
@@ -126,6 +137,11 @@ SCHEMA = {
     'recheck_result': {'session': str, 'skill': str, 'ok': bool, 'items?': [str]},
     'invalidate_session': {'target': str},
     'retention_result': {'session': str, 'skill': str, 'correct': int, 'exposed?': bool, 'items?': [str]},
+    'retention_help': {'session': str, 'skill': str, 'round': int, 'items?': [str]},
+    'retention_referred': {'session': str, 'skill': str, 'round': int, 'items?': [str]},
+    'retention_release': {'skill': str, 'reason': str},
+    'consolidation_started': {'session': str, 'skill': str},
+    'consolidation_done': {'session': str, 'skill': str, 'items?': [str]},
 }
 
 
@@ -142,11 +158,11 @@ def _fits(v, rule):
 TABLE = [
     ('session_start', 'بدء جلسة',
      'لا جلسة مفتوحة. يوم الأسرة عدد صحيح غير سالب. بحث: أقل من 4 جلسات بحث ولم تقع جلسة البدء. بدء: مرة '
-     'واحدة. متابعة: بعد جلسة البدء',
+     'واحدة. متابعة: بعد جلسة البدء. إضافية: بعد جلسة البدء، ويوم آخر جلسة هو يومها',
      'تُفتح الجلسة بنوعها ويومها وعدّاداتها صفر. مرجع التاريخ يوم آخر جلسة، بترتيب الجلسات، تاريخها موثوق: لم '
      'تُعلَّم بتنبيه، أو عُلّمت ثم أكّد الوالد تاريخها. الجلسة المبطلة تبقى مرجعًا لأن الإبطال يخص الطفل لا ساعة '
      'الجهاز. إن جاء يومها قبل المرجع، أو بعده بأكثر من 30 يومًا، عُلّمت بتنبيه تاريخ (9.1)',
-     'session_open، session_order، bad_event', 'لا أثر'),
+     'session_open، session_order، no_session_today، bad_event', 'لا أثر'),
     ('session_end', 'ختم الجلسة', 'هي الجلسة المفتوحة', 'تُختم. ما لم يكتمل يبقى في حالته',
      'no_session', 'لا أثر'),
     ('date_confirmed', 'تأكيد التاريخ من الوالد', 'الجلسة معلَّمة بتنبيه تاريخ',
@@ -168,10 +184,10 @@ TABLE = [
      'صحّت الثلاثة: دليل تحقق قصير. غير ذلك: تُسجَّل بوابتها',
      'no_session، unknown_skill، quota_short، blocked، not_checkable', 'لا يغيّر الحالات. يدخل أهلية جلسة البدء'),
     ('open_lesson', 'فتح درس',
-     'جلسة بدء أو متابعة وفيها الحصة التعليمية. الدرس غير مفتوح. المهارة غير مجتازة. دالة الأهلية تجيز',
+     'جلسة بدء أو متابعة أو إضافية وفيها الحصة التعليمية. في الإضافية: لم يُفتح اليوم درس. الدرس غير مفتوح. المهارة غير مجتازة. دالة الأهلية تجيز',
      'يُسجَّل الفتح بجلسته وطوره، ويصير الدرس نشطًا في هذه الجلسة وتُسجَّل في جلسات تدريسه، وتُستهلك الحصة '
      'التعليمية',
-     'no_session، unknown_skill، quota_teach، already_open، already_satisfied، suspended، prerequisite',
+     'no_session، unknown_skill، quota_teach، already_open، already_satisfied، suspended، lesson_today، prerequisite',
      'لا أثر'),
     ('resume_lesson', 'استئناف درس',
      'جلسة فيها الحصة التعليمية. الدرس مفتوح، في الافتتاح أو كامل أو ينتظر حصة، وليس نشطًا في هذه '
@@ -194,7 +210,7 @@ TABLE = [
      'ليوم إغلاقها، وبعد الإخفاق جلسة نشط فيها الدرس بعدها (3.6). في الجلسة حصة تعليمية، لأن الفحص هو نشاط '
      '«تعلّم أو أصلح» في يومه (7.1)',
      'محاولة «معلَّقة» بمعرّفها ومهارتها وإصدار تعريفاتها، نشطة في هذه الجلسة، وتُستهلك الحصة التعليمية',
-     'no_session، not_open، suspended، lesson_idle، understanding_first، already_satisfied، check_state، '
+     'no_session، not_open، suspended، lesson_idle، extra_session، understanding_first، already_satisfied، check_state، '
      'check_pending، version_unavailable، date_unconfirmed، check_same_day، check_needs_practice، quota_teach',
      'لا أثر'),
     ('check_resumed', 'استئناف محاولة فحص في جلسة لاحقة',
@@ -203,7 +219,7 @@ TABLE = [
      'تعليمية (7.1: ما لم يكتمل يُستأنف في الجلسة التالية)',
      'تصير المحاولة نشطة في هذه الجلسة وتُضاف إلى جلساتها المساهمة، وتُستهلك الحصة التعليمية. إجابات خاناتها '
      'السابقة تبقى',
-     'no_session، not_open، suspended، lesson_idle، understanding_first، no_check، check_state، already_active، '
+     'no_session، not_open، suspended، lesson_idle، extra_session، understanding_first، no_check، check_state، already_active، '
      'version_unavailable، date_unconfirmed، check_same_day، check_needs_practice، quota_teach', 'لا أثر'),
     ('check_held', 'تعليق محاولة فحص للمراجعة',
      'المحاولة موجودة، لهذه المهارة، «معلَّقة»، ونشطة في هذه الجلسة. السبب: انقطاعان في خانة أو 3 في الفحص، '
@@ -217,7 +233,7 @@ TABLE = [
      'تعريفاتها متاح',
      'تُغلق المحاولة بنتيجتها. اجتاز: دليل استقلال، وبه مع الفهم الساري تصير المهارة مستوفاة، ويوم هذه الجلسة '
      'مرجع أول فحص احتفاظ',
-     'no_session، not_open، suspended، lesson_idle، understanding_first، no_check، check_state، date_unconfirmed، '
+     'no_session، not_open، suspended، lesson_idle، extra_session، understanding_first، no_check، check_state، date_unconfirmed، '
      'check_idle، check_same_day، check_needs_practice، version_unavailable', 'المستوفاة تفكّ انتظار توابعها، وتصير متطلبًا مستوفى في دالة الأهلية'),
     ('check_abandoned', 'ترك محاولة فحص',
      'المحاولة «معلَّقة» أو «معلَّقة للمراجعة» أو «تحتاج إعادة بدء». سبب مكتوب',
@@ -252,9 +268,43 @@ TABLE = [
      'بعد دليل استقلالها الساري. يوم الجلسة بلغ الموعد: 7 أيام بعد يوم الاجتياز، ثم 21 يومًا بعد يوم الفحص '
      'السابق الفعلي، ثم 60 (3.7). عدد الصحيح من 0 إلى 5',
      'تُحفظ النتيجة بجولتها ويومها وموعدها ومدتها منذ الاجتياز أو الفحص السابق وبنودها. توصف «احتفاظ»، أو «أداء '
-     'مؤجل» إن نشط درس المهارة داخل الفاصل أو أبلغ التطبيق عن تدريب مباشر فيه. أقل من 4 من 5: تُعلَّم «تحتاج '
-     'تثبيتًا». ليست دليلًا، ولا تغيّر حالة',
-     'no_session، unknown_skill، bad_event، not_met، retention_done، date_unconfirmed، retention_early',
+     'مؤجل» إن نشط درس المهارة داخل الفاصل أو أبلغ التطبيق عن تدريب مباشر فيه أو جرى فيه تثبيت. أقل من 4 من 5: '
+     'تُعلَّم «تحتاج تثبيتًا» ويُستحق للمهارة تثبيت، ولا تُعاد الجولة ولا يتغير موعد التالية. ليست دليلًا، ولا تغيّر حالة',
+     'no_session، unknown_skill، bad_event، extra_session، not_met، retention_done، date_unconfirmed، retention_early، '
+     'retention_referred، consolidation_first',
+     'لا أثر: لا تُغلق ما فُتح'),
+    ('retention_help', 'طلب مساعدة في فحص احتفاظ',
+     'شروط نتيجة فحص الاحتفاظ نفسها، والجولة المذكورة هي الجولة التالية للمهارة',
+     'تنتهي الجولة بلا حكم احتفاظ ولا تُعدّ إخفاقًا (قرار 18 نوفمبر، ت3). يُحفظ الطلب بجولته ويومه وبنوده. '
+     'يُستحق للمهارة تثبيت، ولا تُطلب الجولة قبل اكتماله ولا في يومه ولا في يوم الطلب: موعدها اليوم التالي لهما '
+     'على الأقل، ببنود بديلة. ونتيجتها حين تُجرى توصف «أداء مؤجل»',
+     'no_session، unknown_skill، extra_session، not_met، retention_done، date_unconfirmed، retention_early، retention_round، '
+     'retention_referred، consolidation_first',
+     'لا أثر: لا تُغلق ما فُتح'),
+    ('retention_referred', 'إحالة جولة احتفاظ إلى البالغ',
+     'شروط طلب المساعدة نفسها',
+     'لا بنود بديلة مناسبة للجولة بعد طلب مساعدة: تُسجَّل الإحالة ولا يُعدّ ذلك إخفاقًا. لا تُطلب فحوص احتفاظ '
+     'لهذه المهارة حتى يقرر البالغ',
+     'no_session، unknown_skill، extra_session، not_met، retention_done، date_unconfirmed، retention_early، retention_round، '
+     'retention_referred، consolidation_first',
+     'لا أثر: لا تُغلق ما فُتح'),
+    ('consolidation_started', 'بدء تثبيت بعد طلب مساعدة أو نتيجة منخفضة في فحص احتفاظ',
+     'جلسة فيها حصة تعليمية، والمهارة مستوفاة، ويُستحق لها تثبيت لم يكتمل: آخر نتيجة احتفاظ لها أقل من 4 من 5، أو '
+     'آخر ما سُجّل على جولة احتفاظها التالية طلب مساعدة أو تثبيت بدأ في جلسة أخرى',
+     'يستهلك الحصة التعليمية للجلسة (7.1: درس جديد أو تثبيت أو فحص). يُسجَّل بدء التثبيت بجلسته ويومه. به يحق عرض '
+     'تدريب المهارة في هذه الجلسة وهي مستوفاة، بلا إعادة فتح درسها ولا تغيير حالتها',
+     'no_session، unknown_skill، quota_teach، not_met، no_consolidation',
+     'لا أثر: لا تُغلق ما فُتح'),
+    ('consolidation_done', 'اكتمال التثبيت',
+     'التثبيت بدأ في هذه الجلسة ولم يكتمل',
+     'يُسجَّل اكتماله بيومه وبنوده. بعد طلب مساعدة تعود جولة الاحتفاظ مستحقة من اليوم التالي. وبعد نتيجة منخفضة '
+     'توصف نتيجة الجولة التالية «أداء مؤجل»',
+     'no_session، unknown_skill، not_met، no_consolidation',
+     'لا أثر: لا تُغلق ما فُتح'),
+    ('retention_release', 'قرار البالغ في جولة احتفاظ محالة',
+     'للمهارة جولة احتفاظ محالة تنتظر القرار، وللقرار سبب مكتوب',
+     'تعود الجولة مستحقة ببنودها الأصلية، ونتيجتها توصف «أداء مؤجل» لأن بنودها عُرضت من قبل',
+     'unknown_skill، bad_event، not_referred',
      'لا أثر: لا تُغلق ما فُتح'),
 ]
 
@@ -264,6 +314,12 @@ def ok(**kw):
 
 def no(code, missing=None):
     return dict(ok=False, code=code, reason=REASONS[code], missing=missing)
+
+
+# حدث ختام كل نشاط: قاعدة قبوله هي قاعدة استمرار النشاط (may_continue)
+CONTINUE = dict(gate='gate_result', short='short_check_result', opening='lesson_opening_result',
+                evidence='understanding_proved', check='independence_result', retention='retention_result',
+                consolidate='consolidation_done')
 
 
 class Engine:
@@ -278,7 +334,8 @@ class Engine:
         self.versions = None if versions is None else set(versions)   # إصدارات التعريفات المتاحة
         self.s = dict(group=group, regate=regate, seq=0, log=[], applied={}, evidence=[], decisions=[],
                       attempts=[], sessions={}, order=[], current=None, opened={}, queue=[], gates={},
-                      checked=[], checks={}, suspended={}, history=[], retention=[], migration=MIGRATION)
+                      checked=[], checks={}, suspended={}, history=[], retention=[], retention_notes=[],
+                      migration=MIGRATION)
 
     def _has_version(self, v):
         return self.versions is None or v in self.versions
@@ -295,6 +352,7 @@ class Engine:
         e = cls(net, st['group'], st['regate'], content_versions)
         e.s = st
         st.setdefault('retention', [])                     # حالة حُفظت قبل إضافة فحوص الاحتفاظ
+        st.setdefault('retention_notes', [])               # وقبل طلب المساعدة والإحالة فيها (ت3)
         if st.get('migration', 0) < MIGRATION:
             e._migrate_checks()
             st['migration'] = MIGRATION
@@ -569,9 +627,20 @@ class Engine:
             limit = QUOTA[ses['kind']][quota]
             if isinstance(limit, dict):
                 limit = limit[self.s['group']]
-            if ses[quota] >= limit:
+            if limit is not None and ses[quota] >= limit:
                 return no('quota_' + quota)
         return None
+
+    @staticmethod
+    def _has_teach(ses):
+        """هل بقيت في الجلسة حصة تعليمية؟ حصة الجلسة الإضافية غير معدودة."""
+        limit = QUOTA[ses['kind']]['teach']
+        return limit is None or ses['teach'] < limit
+
+    def _extra(self, ev):
+        """هل الحدث في جلسة إضافية؟ لا تقييم فيها: لا فحص استقلال ولا فحص احتفاظ."""
+        ses = self._session(ev)
+        return ses is not None and ses['kind'] == 'extra'
 
     def _blocked(self, skill, st):
         for p in sorted(self.pre[skill], key=self.idx.get):
@@ -602,8 +671,14 @@ class Engine:
         kinds = [self.s['sessions'][x]['kind'] for x in self.s['order']]
         k = ev['kind']
         fine = ((k == 'search' and 'start' not in kinds and kinds.count('search') < SEARCH_CAP)
-                or (k == 'start' and 'start' not in kinds) or (k == 'follow' and 'start' in kinds))
-        return ok() if fine and ev['session'] not in self.s['sessions'] else no('session_order')
+                or (k == 'start' and 'start' not in kinds) or (k in ('follow', 'extra') and 'start' in kinds))
+        if not fine or ev['session'] in self.s['sessions']:
+            return no('session_order')
+        if k == 'extra':                                    # بعد جلسة مختومة في يوم الأسرة نفسه: التشخيص والحصة أولًا
+            last = self.s['sessions'][self.s['order'][-1]]
+            if last['day'] != ev['day']:
+                return no('no_session_today')
+        return ok()
 
     def date_reference(self):
         """مرجع التاريخ (9.1): يوم آخر جلسة، بترتيب الجلسات، تاريخها موثوق، أي لم تُعلَّم بتنبيه أو أكّد الوالد
@@ -685,7 +760,7 @@ class Engine:
                       treatment='regular' if calc or not ev.get('has_calc', True) else 'structure')
         o = self.s['opened'].get(skill)
         if o and res in ('fail', 'help'):                   # يمضي الدرس كاملًا. طلب الدعم بلا دليل
-            if ses['teach'] < QUOTA[ses['kind']]['teach']:
+            if self._has_teach(ses):
                 ses['teach'] += 1
                 o['phase'], o['active'] = 'full', ev['session']
                 o['taught'].append(ev['session'])
@@ -724,7 +799,11 @@ class Engine:
             return no('already_open')
         if st[skill] in SATISFIED:
             return no('already_satisfied')
-        return self.eligible(skill, self.s['sessions'][ev['session']]['kind'], st)
+        ses = self.s['sessions'][ev['session']]
+        if ses['kind'] == 'extra' and any(self.s['sessions'][o['session']]['day'] == ses['day']
+                                          for o in self.s['opened'].values()):
+            return no('lesson_today')                       # درس جديد واحد في يوم الأسرة، والباقي تدريب
+        return self.eligible(skill, ses['kind'], st)
 
     def do_open_lesson(self, ev):
         ses = self.s['sessions'][ev['session']]
@@ -753,6 +832,18 @@ class Engine:
             o['phase'] = 'full'
         o['active'] = ev['session']
         o['taught'].append(ev['session'])
+
+    def may_continue(self, kind, session, skill, check_id=None):
+        """هل يستمر نشاط جارٍ في هذه الجلسة؟ يسأله المجدول قبل عرض كل بند وقبل تطبيق كل إجابة (المراجعة 16)، فقرار
+        يقع أثناء النشاط، كإبطال جلسة أو ترك محاولة، يوقفه قبل أن يُعرض بند أو تُحتسب إجابة. لا يكتب شيئًا ولا يستهلك
+        حصة. القاعدة هي قاعدة قبول حدث ختام النشاط نفسها، وهي لا تقرأ نتيجته: فالحكم واحد مهما كانت الإجابة المقبلة
+        (تفحصه الحالة 13 في tests/test_phase0). وبنود الدرس والتدريب (show) لا حدث لها، فشرطها شرط الدرس النشط في الجلسة."""
+        ev = dict(session=session, skill=skill, check_id=check_id, correct=0)
+        if kind == 'show':
+            return self._lesson(ev, ('opening', 'skipped', 'full')) or ok()
+        if kind == 'describe':                              # الفحص الوصفي: لا حدث له، فشرطه الجلسة الجارية وحدها
+            return self._need(ev) or ok()
+        return getattr(self, 'can_' + CONTINUE[kind])(ev)
 
     def can_lesson_opening_result(self, ev):
         return self._lesson(ev, ('opening',)) or ok()
@@ -786,6 +877,8 @@ class Engine:
         bad = self._lesson(ev, ('opening', 'skipped', 'full'), active=False)
         if bad:
             return bad
+        if self._extra(ev):
+            return no('extra_session')
         return None if self.progress(ev['skill'])[1] else no('understanding_first')
 
     def can_check_started(self, ev):
@@ -806,7 +899,7 @@ class Engine:
         bad = self._check_timing(skill, ses['day'])
         if bad:
             return bad
-        return ok() if ses['teach'] < QUOTA[ses['kind']]['teach'] else no('quota_teach')
+        return ok() if self._has_teach(ses) else no('quota_teach')
 
     def _check_timing(self, skill, day):
         """3.6: في يوم بعد يوم الدرس، والإعادة في يوم لاحق، وبعد الإخفاق جلسة تدريب. الأيام أيام الأسرة.
@@ -856,7 +949,7 @@ class Engine:
         bad = self._check_timing(ev['skill'], ses['day'])
         if bad:
             return bad
-        return ok() if ses['teach'] < QUOTA[ses['kind']]['teach'] else no('quota_teach')
+        return ok() if self._has_teach(ses) else no('quota_teach')
 
     def do_check_resumed(self, ev):
         self.s['sessions'][ev['session']]['teach'] += 1
@@ -998,8 +1091,8 @@ class Engine:
         for cid, c in self.s['checks'].items():            # محاولة فحص أسهمت فيها الجلسة
             if ev['target'] in c['sessions']:
                 self._taint_check(cid, ev['target'], 'session_invalidated')
-        for r in self.s['retention']:                       # فحص الاحتفاظ في الجلسة المبطلة لا يُعدّ، ويبقى في السجل
-            if r['session'] == ev['target'] and r['valid']:
+        for r in self.s['retention'] + self.s['retention_notes']:   # ما وقع في الجلسة المبطلة لا يُعدّ، ويبقى في السجل
+            if r.get('session') == ev['target'] and r['valid']:
                 r['valid'] = False
                 self.s['history'].append(dict(seq=self.s['seq'], what='retention_invalidated', retention=r['id']))
         for skill, o in self.s['opened'].items():           # الدرس المفتوح فيها: يبقى، ويعود إلى الافتتاح
@@ -1021,7 +1114,81 @@ class Engine:
             return None
         ref = (done[-1] if done else ind)['session']
         day = self.s['sessions'][ref]['day']
-        return len(done) + 1, day + RETENTION_GAPS[len(done)], day, ref
+        rnd, due = len(done) + 1, day + RETENTION_GAPS[len(done)]
+        notes = self._retention_notes(skill, rnd, ind['seq'])
+        if notes and notes[-1]['what'] == 'referred':       # أُحيلت إلى البالغ: لا تُطلب حتى يقرر (ت3)
+            return None
+        if self._owed(notes):                               # طُلبت مساعدة ولم يكتمل التثبيت: لا تُطلب الجولة قبله
+            return None
+        after = [n['day'] for n in notes if n['what'] in ('help', 'consolidated')]
+        if after:                                           # ثم في يوم لاحق ليوم الطلب وليوم التثبيت
+            due = max(due, max(after) + 1)
+        return rnd, due, day, ref
+
+    @staticmethod
+    def _owed(notes):
+        """هل على الجولة تثبيت لم يكتمل؟ آخر طلب مساعدة فيها لم يتبعه تثبيت مكتمل ولا إحالة ولا قرار بالغ."""
+        for n in reversed(notes):
+            if n['what'] in ('consolidated', 'referred', 'released'):
+                return False
+            if n['what'] == 'help':
+                return True
+        return False
+
+    def _consolidation(self, skill):
+        """ما يُستحق له تثبيت في مهارة مستوفاة: (الجولة، ما سُجّل عليها منذ سببه)، أو None. سببان:
+        - آخر نتيجة احتفاظ صالحة أقل من 4 من 5 ولم يكتمل بعدها تثبيت (3.7، بقرار الأب في 18 نوفمبر). التثبيت يُسجَّل على
+          جولة النتيجة نفسها، فيُستحق بعد الجولة الثالثة أيضًا ولا جولة بعدها. لا يوقف الجولة التالية ولا يغيّر موعدها.
+        - طلب مساعدة في الجولة التالية لم يكتمل بعده تثبيت (ت3). هذا يوقف الجولة حتى يكتمل.
+        النتيجة المنخفضة أقدم فتُقدَّم."""
+        if self.direct(skill) != 'met':
+            return None
+        ind = self.valid_evidence(skill, INDEPENDENT)[-1]
+        done = [r for r in self.s['retention'] if r['skill'] == skill and r['valid'] and r['seq'] > ind['seq']]
+        if done and done[-1]['consolidate']:
+            notes = self._retention_notes(skill, done[-1]['round'], done[-1]['seq'])
+            if not any(n['what'] == 'consolidated' for n in notes):
+                return done[-1]['round'], notes
+        if len(done) < len(RETENTION_GAPS):
+            notes = self._retention_notes(skill, len(done) + 1, ind['seq'])
+            if self._owed(notes):
+                return len(done) + 1, notes
+        return None
+
+    def consolidation_owed(self):
+        """المهارات التي يُستحق لها تثبيت لم يكتمل (نتيجة احتفاظ منخفضة، أو طلب مساعدة في جولة)، بترتيب الشبكة."""
+        return [s for s in self.ids if self._consolidation(s)]
+
+    def consolidating(self, skill):
+        """جلسة التثبيت الجاري للمهارة (بدأ ولم يكتمل)، أو None."""
+        t = self._consolidation(skill)
+        notes = t[1] if t else []
+        return notes[-1]['session'] if notes and notes[-1]['what'] == 'consolidating' else None
+
+    def _retention_notes(self, skill, rnd, after):
+        """ما سُجّل على جولة احتفاظ دون أن يكون نتيجة: طلب مساعدة، أو إحالة، أو قرار البالغ فيها. الصالح منها، بترتيبه."""
+        return [n for n in self.s['retention_notes']
+                if n['skill'] == skill and n['round'] == rnd and n['valid'] and n['seq'] > after]
+
+    def retention_attempt(self, skill):
+        """رقم محاولة الجولة التالية: 1 لبنودها الأصلية، ويزيد واحدًا بكل طلب مساعدة فيها (بنود بديلة). قرار البالغ
+        بعد الإحالة يعيدها إلى بنودها الأصلية."""
+        if self.direct(skill) != 'met':
+            return 1
+        ind = self.valid_evidence(skill, INDEPENDENT)[-1]
+        done = [r for r in self.s['retention'] if r['skill'] == skill and r['valid'] and r['seq'] > ind['seq']]
+        n = 1
+        for x in self._retention_notes(skill, len(done) + 1, ind['seq']):
+            n = 1 if x['what'] == 'released' else n + (x['what'] == 'help')
+        return n
+
+    def _retention_round(self, skill):
+        """الجولة التالية ولو كانت محالة: (الجولة، بصمة دليل الاستقلال الساري)، أو None إن لم تبقَ جولة."""
+        if self.direct(skill) != 'met':
+            return None
+        ind = self.valid_evidence(skill, INDEPENDENT)[-1]
+        done = [r for r in self.s['retention'] if r['skill'] == skill and r['valid'] and r['seq'] > ind['seq']]
+        return None if len(done) >= len(RETENTION_GAPS) else (len(done) + 1, ind['seq'])
 
     def retention_due(self, day):
         """ما استحق من فحوص الاحتفاظ حتى هذا اليوم، الأقدم استحقاقًا أولًا (3.7)."""
@@ -1033,7 +1200,8 @@ class Engine:
         return sorted(out, key=lambda x: (x[2], self.idx[x[0]]))
 
     def retention_pending(self):
-        return [s for s in self.ids if self.retention_next(s)]
+        owed = set(self.consolidation_owed())               # تثبيت مستحق يُبقي الجولة منتظرة، فلا يُعدّ المسار منتهيًا
+        return [s for s in self.ids if s in owed or self.retention_next(s)]
 
     def can_retention_result(self, ev):
         bad = self._need(ev)
@@ -1041,15 +1209,94 @@ class Engine:
             return bad
         if not 0 <= ev['correct'] <= RETENTION_ITEMS:
             return dict(no('bad_event'), field='correct')
+        if self._extra(ev):
+            return no('extra_session')
         if self.direct(ev['skill']) != 'met':
             return no('not_met')
+        return self._retention_open(ev)
+
+    def _retention_open(self, ev):
         nxt = self.retention_next(ev['skill'])
         if nxt is None:
-            return no('retention_done')
+            r = self._retention_round(ev['skill'])
+            if r is None:
+                return no('retention_done')
+            # الجولة باقية ولا تُطلب: تنتظر تثبيتًا لم يكتمل، أو قرار البالغ بعد الإحالة
+            return no('consolidation_first' if self._owed(self._retention_notes(ev['skill'], r[0], r[1]))
+                      else 'retention_referred')
         ses = self.s['sessions'][ev['session']]
         if ses['clock']:
             return no('date_unconfirmed')
         return ok() if ses['day'] >= nxt[1] else no('retention_early')
+
+    def _can_retention_note(self, ev):
+        bad = self._need(ev)
+        if bad:
+            return bad
+        if self._extra(ev):
+            return no('extra_session')
+        if self.direct(ev['skill']) != 'met':
+            return no('not_met')
+        v = self._retention_open(ev)
+        if not v['ok']:
+            return v
+        return ok() if ev['round'] == self.retention_next(ev['skill'])[0] else no('retention_round')
+
+    def _retention_note(self, ev, what, rnd=None):
+        if rnd is None:
+            rnd = self._retention_round(ev['skill'])[0]
+        ses = ev.get('session')
+        self.s['retention_notes'].append(dict(
+            id='N%d' % (len(self.s['retention_notes']) + 1), skill=ev['skill'], round=rnd, what=what, session=ses,
+            day=None if ses is None else self.s['sessions'][ses]['day'], valid=True, seq=self.s['seq'],
+            items=list(self._items), reason=ev.get('reason')))
+        self.s['history'].append(dict(seq=self.s['seq'], what='retention_' + what, skill=ev['skill'], round=rnd))
+
+    def can_retention_help(self, ev):
+        return self._can_retention_note(ev)
+
+    def do_retention_help(self, ev):
+        self._retention_note(ev, 'help')
+
+    def can_retention_referred(self, ev):
+        return self._can_retention_note(ev)
+
+    def do_retention_referred(self, ev):
+        self._retention_note(ev, 'referred')
+
+    def can_consolidation_started(self, ev):
+        bad = self._need(ev, 'teach')
+        if bad:
+            return bad
+        if self.direct(ev['skill']) != 'met':
+            return no('not_met')
+        # تثبيت بدأ في هذه الجلسة نفسها لا يُبدأ ثانية: حصتها مستهلكة به، فالرفض quota_teach قبل أن يُبلغ هذا السطر
+        return ok() if ev['skill'] in self.consolidation_owed() else no('no_consolidation')
+
+    def do_consolidation_started(self, ev):
+        self.s['sessions'][ev['session']]['teach'] += 1
+        self._retention_note(ev, 'consolidating', self._consolidation(ev['skill'])[0])
+
+    def can_consolidation_done(self, ev):
+        bad = self._need(ev)
+        if bad:
+            return bad
+        if self.direct(ev['skill']) != 'met':
+            return no('not_met')
+        return ok() if self.consolidating(ev['skill']) == ev['session'] else no('no_consolidation')
+
+    def do_consolidation_done(self, ev):
+        self._retention_note(ev, 'consolidated', self._consolidation(ev['skill'])[0])
+
+    def can_retention_release(self, ev):
+        if ev.get('skill') not in self.idx:              # سبب فارغ يرفضه المخطط قبل هذا (bad_event)
+            return no('unknown_skill')
+        nxt = self._retention_round(ev['skill'])
+        notes = self._retention_notes(ev['skill'], nxt[0], nxt[1]) if nxt else []
+        return ok() if notes and notes[-1]['what'] == 'referred' else no('not_referred')
+
+    def do_retention_release(self, ev):
+        self._retention_note(ev, 'released')
 
     def do_retention_result(self, ev):
         skill = ev['skill']
@@ -1057,6 +1304,14 @@ class Engine:
         day, at = self.s['sessions'][ev['session']]['day'], self.s['order'].index(ref)
         o = self.s['opened'].get(skill)
         practised = ev.get('exposed', False) or bool(o and any(self.s['order'].index(x) > at for x in o['taught']))
+        ind = self.valid_evidence(skill, INDEPENDENT)[-1]
+        # طُلبت مساعدة في هذه الجولة من قبل، أو أعادها البالغ ببنودها: ليست احتفاظًا مستقلًا جديدًا (ت3)
+        practised = practised or bool(self._retention_notes(skill, rnd, ind['seq']))
+        # تثبيت بعد نتيجة منخفضة في الجولة السابقة تدريب مباشر داخل الفاصل (3.7): «أداء مؤجل». بدؤه يكفي، فبنوده عُرضت
+        done = [r for r in self.s['retention'] if r['skill'] == skill and r['valid'] and r['seq'] > ind['seq']]
+        if done:
+            practised = practised or any(n['what'] in ('consolidating', 'consolidated')
+                                         for n in self._retention_notes(skill, done[-1]['round'], done[-1]['seq']))
         low = ev['correct'] < RETENTION_OK
         self.s['retention'].append(dict(
             id='R%d' % (len(self.s['retention']) + 1), skill=skill, round=rnd, session=ev['session'], day=day,

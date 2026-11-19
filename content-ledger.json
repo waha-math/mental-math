@@ -1,0 +1,45 @@
+{
+ "note": "سجل إصدارات حزمة محتوى الشريحة. كل مدخل رقم إصدار وبصمة الحزمة. يكتبه slice_content.py حين تتغير البصمة، ولا يُعاد رقم. الرقمان 1 و2 سبقا هذا السجل، والرقم 2 استُعمل لمحتويين مختلفين (f2db9b9 و04e0168)، فلا يُميَّز أحدهما بالرقم.",
+ "packs": [
+  {
+   "version": 2,
+   "digest": "(قبل السجل، غير مميَّز)",
+   "items": 830
+  },
+  {
+   "version": 3,
+   "digest": "43d211ccad55501a542c9932703eb00170fc2108b887dc0fa415480f1cdc4a00",
+   "items": 830
+  },
+  {
+   "version": 4,
+   "digest": "cb780a22bd349ca5e061975cda9835b7280d16f50e4fa001810e7eefe6214440",
+   "items": 905
+  },
+  {
+   "version": 5,
+   "digest": "724437e3c73434cbd3f9cc35f6dc8fe2d2f2d0e16f70ae12d0c3928a7c2f5298",
+   "items": 905
+  },
+  {
+   "version": 6,
+   "digest": "22522e46010a60172e78e929c2a73ef64c223452f10e120d9f70e76e3374b3f4",
+   "items": 965
+  },
+  {
+   "version": 7,
+   "digest": "34863c80e60fef8cd402f61c704fb27e09a51ba7817e15be5f1e6ca2a23e0c1a",
+   "items": 965
+  },
+  {
+   "version": 8,
+   "digest": "14dbe84ed44348567d4da2fae53b1e26d404b7dc1f7a1808ab0a0ce6e7d18c2b",
+   "items": 965
+  },
+  {
+   "version": 9,
+   "digest": "a21988dcca0d9c10ea2e1663be3814bf9ccc0160b1011aad8b358e3db35a418d",
+   "items": 965
+  }
+ ]
+}

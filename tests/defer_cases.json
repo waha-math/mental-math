@@ -1,0 +1,819 @@
+{
+ "comment": "حالات تأخير بند التقييم، تُشغَّل في اللغتين (tests/test_defer.py و tests/test_defer.mjs). facts: حقيقة كل بند بمفتاحه في المصدر المصنوع. prev: حقيقة آخر بند عُرض من نشاط آخر. script: نتيجة كل بند معروض بترتيبه (c صحيح، w خطأ، i انقطاع)، وما زاد عنها صحيح. المتوقع مكتوب من القاعدة قبل التشغيل. by_id: نتيجة البند بمعرّفه أيًّا كان موضع عرضه (h طلب دعم)، وتتقدم على script. ahead: لكل بند عُرض قبل بنود أُخّرت، ما أُخّر (الحقل ahead_of في سجله).",
+ "cases": [
+  {
+   "name": "ب1. بوابة، وأول بنودها يكرر الحقيقة: يُبدأ بالثاني ثم يُعرض الأول. كل الإجابات صحيحة: اجتياز",
+   "act": "gate",
+   "types": [
+    "ف1",
+    "ف3"
+   ],
+   "prev": "A",
+   "facts": {
+    "gate:0": "A",
+    "gate:1": "B",
+    "gate:2": "C",
+    "gate:3": "D",
+    "gate:4": "E",
+    "gate:5": "F",
+    "gate:6": "G"
+   },
+   "script": "",
+   "shown": [
+    "gate:1",
+    "gate:0",
+    "gate:2",
+    "gate:3",
+    "gate:4",
+    "gate:5",
+    "gate:6"
+   ],
+   "marked": [],
+   "result": "pass",
+   "defer": {
+    "main0": 1,
+    "main1": 0
+   },
+   "ahead": {
+    "gate:1": [
+     "gate:0"
+    ]
+   }
+  },
+  {
+   "name": "ب2. الموضع التالي يجاور الحقيقة (البند الثالث بحقيقة الأول): يُؤخَّر إلى أقرب موضع لا يجاورها",
+   "act": "gate",
+   "types": [
+    "ف1",
+    "ف3"
+   ],
+   "prev": "A",
+   "facts": {
+    "gate:0": "A",
+    "gate:1": "B",
+    "gate:2": "A",
+    "gate:3": "C",
+    "gate:4": "D",
+    "gate:5": "E",
+    "gate:6": "F"
+   },
+   "script": "",
+   "shown": [
+    "gate:1",
+    "gate:2",
+    "gate:3",
+    "gate:0",
+    "gate:4",
+    "gate:5",
+    "gate:6"
+   ],
+   "marked": [],
+   "result": "pass",
+   "defer": {
+    "main0": 1,
+    "main1": 2,
+    "main2": 3,
+    "main3": 0
+   },
+   "ahead": {
+    "gate:1": [
+     "gate:0"
+    ]
+   }
+  },
+  {
+   "name": "ب3. خطأ في البند المؤجَّل: نوع الخطأ نوع بنده، والتعويض ببندي نوعه، كما لو لم يُؤخَّر",
+   "act": "gate",
+   "types": [
+    "ف1",
+    "ف3"
+   ],
+   "prev": "A",
+   "facts": {
+    "gate:0": "A",
+    "gate:1": "B",
+    "gate:2": "C",
+    "gate:3": "D",
+    "gate:4": "E",
+    "gate:5": "F",
+    "gate:6": "G",
+    "comp:ف3:0": "X",
+    "comp:ف3:1": "Y"
+   },
+   "script": "cw",
+   "shown": [
+    "gate:1",
+    "gate:0",
+    "gate:2",
+    "gate:3",
+    "gate:4",
+    "gate:5",
+    "gate:6",
+    "comp:ف3:0",
+    "comp:ف3:1"
+   ],
+   "marked": [],
+   "result": "pass",
+   "errors": [
+    "ف3"
+   ],
+   "defer": {
+    "main0": 1,
+    "main1": 0
+   },
+   "ahead": {
+    "gate:1": [
+     "gate:0"
+    ]
+   }
+  },
+  {
+   "name": "ب4. البند الذي قبل المؤجَّل ينقطع وبديله بحقيقة المؤجَّل: يُؤخَّر المؤجَّل ثانية",
+   "act": "gate",
+   "types": [
+    "ف1",
+    "ف3"
+   ],
+   "prev": "A",
+   "facts": {
+    "gate:0": "A",
+    "gate:1": "B",
+    "gate:2": "C",
+    "gate:3": "D",
+    "gate:4": "E",
+    "gate:5": "F",
+    "gate:6": "G",
+    "alt:ف3:0": "A"
+   },
+   "script": "i",
+   "shown": [
+    "gate:1",
+    "alt:ف3:0",
+    "gate:2",
+    "gate:0",
+    "gate:3",
+    "gate:4",
+    "gate:5",
+    "gate:6"
+   ],
+   "marked": [],
+   "result": "pass",
+   "defer": {
+    "main0": 1,
+    "main1": 2,
+    "main2": 0
+   },
+   "ahead": {
+    "gate:1": [
+     "gate:0"
+    ],
+    "gate:2": [
+     "gate:0"
+    ]
+   }
+  },
+  {
+   "name": "ب5. آخر بند عُرض لا يكرر حقيقة أول البوابة: الترتيب كما هو، ولا حقل defer",
+   "act": "gate",
+   "types": [
+    "ف1",
+    "ف3"
+   ],
+   "prev": "Z",
+   "facts": {
+    "gate:0": "A",
+    "gate:1": "B",
+    "gate:2": "C",
+    "gate:3": "D",
+    "gate:4": "E",
+    "gate:5": "F",
+    "gate:6": "G"
+   },
+   "script": "",
+   "shown": [
+    "gate:0",
+    "gate:1",
+    "gate:2",
+    "gate:3",
+    "gate:4",
+    "gate:5",
+    "gate:6"
+   ],
+   "marked": [],
+   "result": "pass",
+   "defer": null,
+   "ahead": {}
+  },
+  {
+   "name": "ب6. بديل المؤجَّل يحمل حقيقة ما بعد الموضع القريب: يُتخطى ذلك الموضع",
+   "act": "gate",
+   "types": [
+    "ف1",
+    "ف3"
+   ],
+   "prev": "A",
+   "facts": {
+    "gate:0": "A",
+    "gate:1": "B",
+    "gate:2": "C",
+    "gate:3": "D",
+    "gate:4": "E",
+    "gate:5": "F",
+    "gate:6": "G",
+    "alt:ف3:0": "C"
+   },
+   "script": "",
+   "shown": [
+    "gate:1",
+    "gate:2",
+    "gate:0",
+    "gate:3",
+    "gate:4",
+    "gate:5",
+    "gate:6"
+   ],
+   "marked": [],
+   "result": "pass",
+   "defer": {
+    "main0": 1,
+    "main1": 2,
+    "main2": 0
+   },
+   "ahead": {
+    "gate:1": [
+     "gate:0"
+    ]
+   }
+  },
+  {
+   "name": "ت1. تحقق قصير بثلاث حقائق: يُبدأ بالثاني ثم الأول",
+   "act": "short",
+   "types": [
+    "ف1",
+    "ف3"
+   ],
+   "prev": "A",
+   "facts": {
+    "short:0": "A",
+    "short:1": "B",
+    "short:2": "C"
+   },
+   "script": "",
+   "shown": [
+    "short:1",
+    "short:0",
+    "short:2"
+   ],
+   "marked": [],
+   "result": true,
+   "defer": {
+    "0": 1,
+    "1": 0
+   },
+   "ahead": {
+    "short:1": [
+     "short:0"
+    ]
+   }
+  },
+  {
+   "name": "ت2. تحقق قصير، وخطأ في أول ما يُعرض: يتوقف عنده، والمؤجَّل لا يُعرض",
+   "act": "short",
+   "types": [
+    "ف1",
+    "ف3"
+   ],
+   "prev": "A",
+   "facts": {
+    "short:0": "A",
+    "short:1": "B",
+    "short:2": "C"
+   },
+   "script": "w",
+   "shown": [
+    "short:1"
+   ],
+   "marked": [],
+   "result": false,
+   "defer": {
+    "0": 1,
+    "1": 0
+   },
+   "ahead": {
+    "short:1": [
+     "short:0"
+    ]
+   }
+  },
+  {
+   "name": "ع1 (ت2). تحقق قصير، والثالث بحقيقة الأول: لا موضع، فيُعرض الأول موسومًا. إجابته الصحيحة أداء بعد تعرض مباشر: لا نتيجة ولا حدث، ولا يُعرض ما بعده، ويُعاد في جلسة لاحقة",
+   "act": "short",
+   "types": [
+    "ف1",
+    "ف3"
+   ],
+   "prev": "A",
+   "facts": {
+    "short:0": "A",
+    "short:1": "B",
+    "short:2": "A"
+   },
+   "script": "",
+   "shown": [
+    "short:0"
+   ],
+   "marked": [
+    "short:0"
+   ],
+   "result": null,
+   "defer": null,
+   "ahead": {},
+   "weak": [
+    "short:0"
+   ]
+  },
+  {
+   "name": "ع2 (ت2). البند الموسوم نفسه، والإجابة خطأ: الخطأ يُحتسب كما هو، فالنتيجة لا",
+   "act": "short",
+   "types": [
+    "ف1",
+    "ف3"
+   ],
+   "prev": "A",
+   "facts": {
+    "short:0": "A",
+    "short:1": "B",
+    "short:2": "A"
+   },
+   "script": "w",
+   "shown": [
+    "short:0"
+   ],
+   "marked": [
+    "short:0"
+   ],
+   "result": false,
+   "defer": null,
+   "ahead": {},
+   "weak": []
+  },
+  {
+   "name": "ع3 (ت2). البند الموسوم نفسه، وطلب دعم: كما هو، فالنتيجة لا",
+   "act": "short",
+   "types": [
+    "ف1",
+    "ف3"
+   ],
+   "prev": "A",
+   "facts": {
+    "short:0": "A",
+    "short:1": "B",
+    "short:2": "A"
+   },
+   "script": "h",
+   "shown": [
+    "short:0"
+   ],
+   "marked": [
+    "short:0"
+   ],
+   "result": false,
+   "defer": null,
+   "ahead": {},
+   "weak": []
+  },
+  {
+   "name": "ع4 (ت2). بوابة، وأولها لا موضع يُؤخَّر إليه (كل موضع يجاور حقيقته): يُعرض موسومًا. إجابته الصحيحة لا تُحتسب: تُستكمل خانته ببديل نوعه، ثم تمضي البوابة وتُجتاز بالبنود المستقلة",
+   "act": "gate",
+   "types": [
+    "ف1",
+    "ف3"
+   ],
+   "prev": "A",
+   "facts": {
+    "gate:0": "A",
+    "gate:1": "B",
+    "gate:2": "A",
+    "gate:3": "C",
+    "gate:4": "A",
+    "gate:5": "D",
+    "gate:6": "A",
+    "comp:ف3:0": "X",
+    "comp:ف3:1": "Y",
+    "comp:ف1:0": "X",
+    "comp:ف1:1": "Y",
+    "alt:ف3:0": "M"
+   },
+   "script": "",
+   "shown": [
+    "gate:0",
+    "alt:ف3:0",
+    "gate:1",
+    "gate:2",
+    "gate:3",
+    "gate:4",
+    "gate:5",
+    "gate:6"
+   ],
+   "marked": [
+    "gate:0"
+   ],
+   "result": "pass",
+   "defer": null,
+   "ahead": {},
+   "weak": [
+    "gate:0"
+   ],
+   "errors": []
+  },
+  {
+   "name": "ع5 (ت2). البوابة نفسها ولا بديل في المحتوى: نقص البدائل لا يُحسب إخفاقًا. تُعلَّق بلا نتيجة",
+   "act": "gate",
+   "types": [
+    "ف1",
+    "ف3"
+   ],
+   "prev": "A",
+   "facts": {
+    "gate:0": "A",
+    "gate:1": "B",
+    "gate:2": "A",
+    "gate:3": "C",
+    "gate:4": "A",
+    "gate:5": "D",
+    "gate:6": "A",
+    "comp:ف3:0": "X",
+    "comp:ف3:1": "Y",
+    "comp:ف1:0": "X",
+    "comp:ف1:1": "Y"
+   },
+   "script": "",
+   "shown": [
+    "gate:0"
+   ],
+   "marked": [
+    "gate:0"
+   ],
+   "result": "interrupted",
+   "defer": null,
+   "ahead": {},
+   "weak": [
+    "gate:0"
+   ],
+   "errors": []
+  },
+  {
+   "name": "ع6 (ت2). البوابة نفسها، والبديل يحمل الحقيقة نفسها: يوسَم هو أيضًا، وإجابته الصحيحة لا تُحتسب، ثم بديل ثانٍ بحقيقة أخرى يكمل الخانة",
+   "act": "gate",
+   "types": [
+    "ف1",
+    "ف3"
+   ],
+   "prev": "A",
+   "facts": {
+    "gate:0": "A",
+    "gate:1": "B",
+    "gate:2": "A",
+    "gate:3": "C",
+    "gate:4": "A",
+    "gate:5": "D",
+    "gate:6": "A",
+    "comp:ف3:0": "X",
+    "comp:ف3:1": "Y",
+    "comp:ف1:0": "X",
+    "comp:ف1:1": "Y",
+    "alt:ف3:0": "A",
+    "alt:ف3:1": "M"
+   },
+   "script": "",
+   "shown": [
+    "gate:0",
+    "alt:ف3:0",
+    "alt:ف3:1",
+    "gate:1",
+    "gate:2",
+    "gate:3",
+    "gate:4",
+    "gate:5",
+    "gate:6"
+   ],
+   "marked": [
+    "gate:0",
+    "alt:ف3:0"
+   ],
+   "result": "pass",
+   "defer": null,
+   "ahead": {},
+   "weak": [
+    "gate:0",
+    "alt:ف3:0"
+   ],
+   "errors": []
+  },
+  {
+   "name": "ف1. فحص استقلال: تُبدَّل الخانتان 1 و2، والأجوبة تُحفظ بخاناتها",
+   "act": "check",
+   "prev": "A",
+   "facts": {
+    "check:1": "A",
+    "check:2": "B",
+    "check:3": "C",
+    "check:4": "D",
+    "check:5": "E",
+    "check:6": "F",
+    "check:7": "G",
+    "check:8": "H",
+    "check:9": "I",
+    "check:10": "J"
+   },
+   "script": "wc",
+   "shown": [
+    "check:2",
+    "check:1",
+    "check:3",
+    "check:4",
+    "check:5",
+    "check:6",
+    "check:7",
+    "check:8",
+    "check:9",
+    "check:10"
+   ],
+   "marked": [],
+   "result": "pass",
+   "answers": {
+    "2": "wrong",
+    "1": "correct"
+   },
+   "defer": {
+    "1": 2,
+    "2": 1
+   },
+   "ahead": {
+    "check:2": [
+     "check:1"
+    ]
+   }
+  },
+  {
+   "name": "ف2. فحص استقلال، وبديل الخانة 1 بحقيقة الخانة 3: يُتخطى الموضع الأول إلى ما بعد الخانة 3",
+   "act": "check",
+   "prev": "A",
+   "facts": {
+    "check:1": "A",
+    "check:2": "B",
+    "check:3": "C",
+    "check:4": "D",
+    "check:5": "E",
+    "check:6": "F",
+    "check:7": "G",
+    "check:8": "H",
+    "check:9": "I",
+    "check:10": "J",
+    "checkalt:1": "C"
+   },
+   "script": "",
+   "shown": [
+    "check:2",
+    "check:3",
+    "check:1",
+    "check:4",
+    "check:5",
+    "check:6",
+    "check:7",
+    "check:8",
+    "check:9",
+    "check:10"
+   ],
+   "marked": [],
+   "result": "pass",
+   "defer": {
+    "1": 2,
+    "2": 3,
+    "3": 1
+   },
+   "ahead": {
+    "check:2": [
+     "check:1"
+    ]
+   }
+  },
+  {
+   "name": "ح1. فحص احتفاظ: يُبدأ بالثاني ثم الأول، والعدّ نفسه",
+   "act": "retention",
+   "prev": "A",
+   "facts": {
+    "ret:0": "A",
+    "ret:1": "B",
+    "ret:2": "C",
+    "ret:3": "D",
+    "ret:4": "E"
+   },
+   "script": "cw",
+   "shown": [
+    "ret:1",
+    "ret:0",
+    "ret:2",
+    "ret:3",
+    "ret:4"
+   ],
+   "marked": [],
+   "result": "done",
+   "correct": 4,
+   "defer": {
+    "0": 1,
+    "1": 0
+   },
+   "ahead": {
+    "ret:1": [
+     "ret:0"
+    ]
+   }
+  },
+  {
+   "name": "س1. حفظ النشاط بعد بندين واستعادته من لقطته: الترتيب يُكمَل كما هو",
+   "act": "gate",
+   "types": [
+    "ف1",
+    "ف3"
+   ],
+   "prev": "A",
+   "roundtrip": 2,
+   "facts": {
+    "gate:0": "A",
+    "gate:1": "B",
+    "gate:2": "A",
+    "gate:3": "C",
+    "gate:4": "D",
+    "gate:5": "E",
+    "gate:6": "F"
+   },
+   "script": "",
+   "shown": [
+    "gate:1",
+    "gate:2",
+    "gate:3",
+    "gate:0",
+    "gate:4",
+    "gate:5",
+    "gate:6"
+   ],
+   "marked": [],
+   "result": "pass",
+   "defer": {
+    "main0": 1,
+    "main1": 2,
+    "main2": 3,
+    "main3": 0
+   },
+   "ahead": {
+    "gate:1": [
+     "gate:0"
+    ]
+   }
+  },
+  {
+   "name": "ث1. الإجابات بمعرّف البند (دعم في الأول، خطأ في الثاني والثالث)، ولا تأخير: يُعرض الأول وتنتهي البوابة بطلب الدعم",
+   "act": "gate",
+   "types": [
+    "ف1",
+    "ف3"
+   ],
+   "prev": "Z",
+   "facts": {
+    "gate:0": "A",
+    "gate:1": "B",
+    "gate:2": "A",
+    "gate:3": "C",
+    "gate:4": "D",
+    "gate:5": "E",
+    "gate:6": "F"
+   },
+   "script": "",
+   "by_id": {
+    "gate:0": "h",
+    "gate:1": "w",
+    "gate:2": "w"
+   },
+   "shown": [
+    "gate:0"
+   ],
+   "marked": [],
+   "result": "help",
+   "defer": null,
+   "ahead": {}
+  },
+  {
+   "name": "ث2. الإجابات نفسها بمعرّف البند، والأول يُؤخَّر: قاعدة التوقف على ترتيب العرض الفعلي، فتنتهي البوابة بالإخفاق بعد خطأين ولا يُعرض الأول",
+   "act": "gate",
+   "types": [
+    "ف1",
+    "ف3"
+   ],
+   "prev": "A",
+   "facts": {
+    "gate:0": "A",
+    "gate:1": "B",
+    "gate:2": "A",
+    "gate:3": "C",
+    "gate:4": "D",
+    "gate:5": "E",
+    "gate:6": "F"
+   },
+   "script": "",
+   "by_id": {
+    "gate:0": "h",
+    "gate:1": "w",
+    "gate:2": "w"
+   },
+   "shown": [
+    "gate:1",
+    "gate:2"
+   ],
+   "marked": [],
+   "result": "fail",
+   "errors": [
+    "ف3",
+    "ف3"
+   ],
+   "defer": {
+    "main0": 1,
+    "main1": 2,
+    "main2": 3,
+    "main3": 0
+   },
+   "ahead": {
+    "gate:1": [
+     "gate:0"
+    ]
+   }
+  }
+ ],
+ "feeds": [
+  {
+   "name": "ع7 (ت2). فحص استقلال: «أداء بعد تعرض مباشر» في الخانة 1 يطلب بديلها بلا عدّ انقطاع، والصحيح في البديل يكمل الخانة",
+   "act": "check",
+   "feeds": [
+    "exposed",
+    "correct"
+   ],
+   "want": {
+    "result": null,
+    "slot": 2,
+    "total_cuts": 0,
+    "correct": 1,
+    "hold": null,
+    "role": "check"
+   }
+  },
+  {
+   "name": "ع8 (ت2). فحص استقلال: «أداء بعد تعرض مباشر» في الخانة ثم في بديلها: لا بديل ثانٍ يُعاد، فتُعلَّق للمراجعة بلا إخفاق",
+   "act": "check",
+   "feeds": [
+    "exposed",
+    "exposed"
+   ],
+   "want": {
+    "result": "held",
+    "slot": 1,
+    "total_cuts": 0,
+    "correct": 0,
+    "hold": "no_alternate",
+    "role": null
+   }
+  },
+  {
+   "name": "ع9 (ت2). فحص استقلال: ثلاث مرات «أداء بعد تعرض مباشر» في خانات مختلفة لا تعلّقه كما تعلّقه ثلاثة انقطاعات",
+   "act": "check",
+   "feeds": [
+    "exposed",
+    "correct",
+    "exposed",
+    "correct",
+    "exposed",
+    "correct"
+   ],
+   "want": {
+    "result": null,
+    "slot": 4,
+    "total_cuts": 0,
+    "correct": 3,
+    "hold": null,
+    "role": "check"
+   }
+  },
+  {
+   "name": "ع10 (ت2). فحص احتفاظ: «أداء بعد تعرض مباشر» ينهي الجولة بلا نتيجة ولا حدث، لا «طلب مساعدة»",
+   "act": "retention",
+   "feeds": [
+    "correct",
+    "exposed"
+   ],
+   "want": {
+    "result": null,
+    "events": [],
+    "done": true
+   }
+  }
+ ]
+}

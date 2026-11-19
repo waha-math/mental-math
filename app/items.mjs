@@ -17,6 +17,8 @@
 
 export const CALC = ['ف3', 'ف4'];                 // بنود حساب. ما عداها بنود فهم (6.1)
 export const SUPPORT = ['hint', 'extra_model', 'someone', 'requested'];
+// بطاقة «كيف حسبتها؟» (10.2، فحص 3-5-3): اختيار يُسجَّل في سجل البند ولا يُصحَّح ولا يدخل النتيجة
+export const HOW = ['back', 'up', 'other'];
 // requested: ضغط الطفل «أحتاج مساعدة» في بوابة أو فحص، ولا يُعطى فيهما دعم
 
 const clone = (x) => JSON.parse(JSON.stringify(x));
@@ -47,6 +49,8 @@ export function foldItem(raw, answer, assess) {
       }
       pending = [];
       last = ok;
+    } else if (kind === 'how') {                    // يُحفظ في evidence، ولا أثر له في الحقول المطوية
+      if (!HOW.includes(ev[1])) throw new Error('بطاقة غير معروفة: ' + JSON.stringify(ev[1]));
     } else if (kind === 'interrupt') {
       interrupted = true;
     } else if (kind === 'end') {
@@ -81,7 +85,32 @@ export function classify(rec) {
 // النجاح بمساعدة: البنود التي سبق دعمٌ إحدى إجاباتها وبلغت نتيجة نهائية. والمدعومة غير المكتملة: كل بند فيه دعم،
 // في أي موضع، ونتيجته النهائية غير مكتملة، ويُعدّ مرة واحدة. الدعم بعد آخر إجابة في بند انتهى بنتيجة يُحفظ ولا
 // يدخل المؤشرين، لأن الإجابة لم تأتِ بعده
-export function indicators(records) {
+// والسجل المستبعد (void: بند توقف نشاطه لتغيّر صلاحيته، R17-01) تاريخ محفوظ لا يدخل أي مؤشر
+// ما وقع في البند كما وقع، لتدقيق النتيجة لاحقًا (ك2 في مراجعة 04e0168، وهو P0-04): الجواب الذي صُحّح به (key)، وقيم
+// الإجابات المؤكدة بترتيبها (values)، وأنواع الدعم بترتيبها (support)، وبصمة تعريف البند (v) إن عُرفت
+export function evidence(raw, key, v = null) {
+  const d = { key, values: raw.filter((ev) => ev[0] === 'confirm').map((ev) => ev[1]),
+    support: raw.filter((ev) => ev[0] === 'support').map((ev) => ev[1]) };
+  const how = raw.filter((ev) => ev[0] === 'how').map((ev) => ev[1]);
+  if (how.length) d.how = how[0];                   // الحقل لا يُنشأ إلا لبند اختيرت فيه البطاقة
+  if (v !== null && v !== undefined) d.v = v;
+  return d;
+}
+
+// ما لا تحسبه المؤشرات ولماذا (ك2): void سجلات استُبعدت لتغيّر صلاحية نشاطها، session سجلات جلسات أُبطلت، و unlinked
+// سجلات بلا معرّف جلسة: تُحسب في المؤشرات لأنها لا تُنسب إلى جلسة تخمينًا، ويُذكر عددها
+export function leftOut(all, invalid = []) {
+  const bad = new Set(invalid);
+  const live = all.filter((r) => !r.void);
+  return { void: all.length - live.length, session: live.filter((r) => bad.has(r.session)).length,
+    unlinked: live.filter((r) => r.session === null || r.session === undefined).length };
+}
+
+// invalid: معرّفات الجلسات المبطلة (ك2). سجل بند من جلسة مبطلة يبقى في التاريخ ولا يدخل أي مؤشر. والسجل الذي لا يحمل
+// معرّف جلسته لا يُنسب تخمينًا: يبقى في المؤشرات
+export function indicators(all, invalid = []) {
+  const bad = new Set(invalid);
+  const records = all.filter((r) => !r.void && !bad.has(r.session));
   const complete = records.filter((r) => r.status === 'complete');
   const used = records.filter((r) => r.support_before.length || r.later.some((a) => a.support.length));
   const reached = used.filter((r) => r.final === 'correct' || r.final === 'wrong');
@@ -93,7 +122,8 @@ export function indicators(records) {
   return {
     first_answer: { ...rate(count(complete, (r) => r.first), complete.length),
       after_support: count(complete, (r) => r.support_before.length) },
-    independent: rate(count(complete, correctIndependent), complete.length),
+    // «أداء بعد تعرض مباشر» (ت2) إجابة أولى صحيحة، وليس صحيحًا مستقلًا
+    independent: rate(count(complete, (r) => correctIndependent(r) && !r.after_exposure), complete.length),
     assisted: { ...rate(count(reached, (r) => r.final === 'correct'), reached.length),
       supported_unfinished: unfinished.length },
     interrupted: { count: cut.length, with_support: count(cut, (r) => r.support_before.length) },
@@ -144,6 +174,47 @@ export class Activity {
     throw new Error(this.name + ': لا يُطلب بديل في هذا النشاط');
   }
 
+  // البند المعروض استُبعد لتغيّر صلاحية النشاط (R17-01). exposed: هل أُجيب عنه أو طُلب فيه دعم قبل التغيّر؟ الاستبعاد من
+  // التقييم لا يمحو التعرّض (R18-01). الأنشطة التي يغيّر التعرّض بندها التالي تعيد تعريفها. تعيد صحيحًا إن كان البند لا
+  // يُعرض ثانية (يُطلب غيره)، وغير ذلك إن جاز عرضه
+  voided(_itemId, _exposed) { return false; }
+
+  // أول بند يُطلب للنشاط حقيقته حقيقة آخر بند عُرض للمهارة نفسها في الجلسة نفسها من نشاط آخر (R22-01). تعيد صحيحًا إن
+  // غيّر النشاط ما يطلبه (فيُطلب من جديد)، وغير ذلك إن عُرض البند كما هو، فيوسَم بأن حقيقته عُرضت للتو
+  // factAt(want): حقيقة البند الذي يُعرض لطلب، دون عرضه
+  repeated(_itemId, _factAt = null) { return false; }
+
+  // علاج أنشطة التقييم (قرار الأب، 18 نوفمبر): البند الذي يكرر حقيقة ما عُرض قبله يُؤخَّر، ولا يُستبدل. تُعرض البنود
+  // التي تليه في مرحلته، ثم يُعرض هو عند أقرب موضع لا تجاور فيه حقيقتُه حقيقةَ بند الموضع الذي قبله ولا ما بعده:
+  // تبقى هوية البنود وخاناتها، ويتغير ترتيب عرضها. قاعدة التوقف تُطبَّق على ترتيب العرض الفعلي، فقد يغيّر التأخير
+  // البنود التي يصل إليها الطفل وسبب انتهاء النشاط (ت1 في مراجعة 04e0168). pos موضع الترتيب الجاري و last آخر موضع في مرحلته، و key(q) مفتاح الموضع،
+  // و plain(q) ما يُطلب لبند موضع بلا بديل، و after(q) ما قد يُعرض بعد موضع q. alts(q): بدائل بند موضع عند الانقطاع:
+  // بديل المؤجَّل، إن انقطع في موضعه الجديد، لا تجاور حقيقتُه ما بعده. والبند المؤجَّل قد يُؤخَّر ثانية، فالفحص يجري
+  // قبل كل بند تقييم (driveSteps). تعيد غير صحيح إن لم يوجد موضع، أو كان موضع لاحق طرفًا في تأخير سابق: يُعرض البند
+  // موسومًا. الحقل defer لا يُنشأ إلا عند التأخير: مفاتيحه مواضع الترتيب، وقيمه مواضع البنود التي تُعرض فيها
+  _defer(pos, last, key, plain, after, factAt, alts = null) {
+    if (!factAt || pos >= last) return false;
+    const d = this.defer ?? {};
+    const cur = get(d, key(pos), pos);            // موضع البند المعروض الآن: قد يكون مؤجَّلًا من قبل
+    const same = (f, g) => f !== null && g !== null && JSON.stringify(f) === JSON.stringify(g);
+    const fact = factAt(plain(cur));
+    if (fact === null) return false;
+    for (let q = pos + 1; q <= last; q += 1) if (key(q) in d) return false;
+    if (same(factAt(plain(pos + 1)), fact)) return false;
+    const mine = [fact, ...(alts ? alts(cur).map((w) => factAt(w)).filter((f) => f !== null) : [])];
+    for (let j = 1; j <= last - pos; j += 1) {
+      if (same(factAt(plain(pos + j)), fact)) continue;
+      if (after(pos + j).some((w) => { const f = factAt(w); return mine.some((m) => same(m, f)); })) continue;
+      if (this.defer === undefined) this.defer = {};
+      for (let i = 0; i < j; i += 1) this.defer[key(pos + i)] = pos + i + 1;
+      this.defer[key(pos + j)] = cur;
+      return true;
+    }
+    return false;
+  }
+
+  _at(key, pos) { return get(this.defer ?? {}, key, pos); }
+
   toDict() {
     return clone({ ...this, _class: this.constructor.pyName });
   }
@@ -177,16 +248,38 @@ export class GateRun extends Activity {
     this.alt_index = {};                          // وبديل كل موضع من بدائل نوعه
   }
 
-  _key() { return this.stage + this.pos; }
+  // موضع البند المعروض الآن: موضع الترتيب، إلا إن أُخّر بند (defer)
+  _p() { return this._at(this.stage + this.pos, this.pos); }
 
-  _type() { return this.stage === 'main' ? this.plan[this.pos] : this.errors[0]; }
+  _key() { return this.stage + this._p(); }
+
+  _type() { return this.stage === 'main' ? this.plan[this._p()] : this.errors[0]; }
+
+  // ما يُطلب لموضع في المرحلة الجارية بلا بديل
+  _plain(q) {
+    return {
+      activity: this.name, role: this.stage === 'main' ? 'gate' : 'gate.compensation',
+      type: this.stage === 'main' ? this.plan[q] : this.errors[0], pos: q, alternate: 0, alt_index: null,
+      attempt: this.attempt,
+    };
+  }
+
+  repeated(_itemId, factAt = null) {
+    if (get(this.alt, this._key(), 0)) return false;   // بديل بند منقطع: ليس بند موضعه، فلا يُؤخَّر
+    const last = this.stage === 'main' ? this.plan.length - 1 : 1;
+    // ما بعد آخر المرحلة (أول التعويضية) يُفحص عند عرضه، لا هنا
+    const after = (q) => (q < last ? [this._plain(q + 1)] : []);
+    const alts = (q) => Array.from({ length: ALT_PEEK }, (_, k) => (
+      { ...this._plain(q), role: 'gate.alternate', alternate: 1, alt_index: k }));
+    return this._defer(this.pos, last, (q) => this.stage + q, (q) => this._plain(q), after, factAt, alts);
+  }
 
   want() {
     if (this.done) return null;
     const k = this._key();
     return {
       activity: this.name, role: this.stage === 'main' ? 'gate' : 'gate.compensation', type: this._type(),
-      pos: this.pos, alternate: get(this.alt, k, 0), alt_index: get(this.alt_index, k, null), attempt: this.attempt,
+      pos: this._p(), alternate: get(this.alt, k, 0), alt_index: get(this.alt_index, k, null), attempt: this.attempt,
     };
   }
 
@@ -194,10 +287,14 @@ export class GateRun extends Activity {
     if (this.done) throw new Error('النشاط انتهى');
     const k = this._key();
     this._count(this.stage === 'main' ? 'gate' : 'comp');
-    if (outcome === 'interrupted') {              // يُستبدل ببديل من نوعه
-      this.cuts[k] = get(this.cuts, k, 0) + 1;
-      this.total_cuts += 1;
-      if (this.cuts[k] >= 2 || this.total_cuts >= 3) return this._finish('interrupted');   // تُعلَّق بلا نتيجة
+    if (outcome === 'interrupted' || outcome === 'exposed') {   // يُستبدل ببديل من نوعه
+      // exposed (ت2): إجابة صحيحة عن حقيقة عُرضت للتو. أداء بعد تعرض مباشر، لا دليل: تُستكمل الخانة ببديل نوعها. ليست
+      // انقطاعًا، فلا تدخل عدّ الانقطاعات. ونفاد البدائل يعلّق البوابة بلا نتيجة (unavailable)، لا إخفاق
+      if (outcome === 'interrupted') {
+        this.cuts[k] = get(this.cuts, k, 0) + 1;
+        this.total_cuts += 1;
+        if (this.cuts[k] >= 2 || this.total_cuts >= 3) return this._finish('interrupted');   // تُعلَّق بلا نتيجة
+      }
       const t = this._type();
       this.alt[k] = get(this.alt, k, 0) + 1;
       this.alt_index[k] = get(this.alt_used, t, 0);
@@ -249,13 +346,20 @@ export class ShortCheckRun extends Activity {
 
   want() {
     if (this.done) return null;
-    return { activity: this.name, role: 'short_check', type: this.types[this.pos], pos: this.pos, alternate: 0 };
+    return this._w(this._at(String(this.pos), this.pos));
+  }
+
+  _w(q) { return { activity: this.name, role: 'short_check', type: this.types[q], pos: q, alternate: 0 }; }
+
+  repeated(_itemId, factAt = null) {
+    return this._defer(this.pos, 2, String, (q) => this._w(q), (q) => (q < 2 ? [this._w(q + 1)] : []), factAt);
   }
 
   feed(outcome) {
     if (this.done) throw new Error('النشاط انتهى');
     this._count('short');
-    if (outcome === 'interrupted') return this._finish(null);
+    // exposed (ت2): لا بدائل هنا، فبلا نتيجة ويُعاد في جلسة لاحقة
+    if (outcome === 'interrupted' || outcome === 'exposed') return this._finish(null);
     if (outcome !== 'correct') {
       this.failed = true;
       if (this.stop_early) return this._finish(false);
@@ -297,9 +401,64 @@ export class OpeningRun extends Activity {
       pos: this.pos, alternate: 0, reshown: this.reshown };
     if (this.stage === 'try' && this.typed) {
       w.typed = true;
-      w.type_index = this.try_types.slice(0, this.pos).filter((x) => x === t).length;
+      let k = this.try_types.slice(0, this.pos).filter((x) => x === t).length;
+      if ((this.flip ?? {})[t]) k = 1 - k;        // لكل نوع بندان: بدأ بالثاني لأن الأول يكرر حقيقة ما عُرض للتو
+      w.type_index = k;
     }
     return w;
+  }
+
+  // البند المستهلك (أُجيب عنه أو طُلب فيه دعم ثم استُبعد لتغيّر الصلاحية، R18-01): إعادته للتعليم غير استعماله دليلًا
+  // لقرار. بند «جرّب أولًا» المستهلك لا بديل له، فلا يُعرض ثانية ونتيجته void: لا يتخطى الشرح ولا يُعدّ خطأ. والبند
+  // الموجَّه المستهلك يُعاد عرضه للتعليم موسومًا بأنه مكرر، ونتيجته أيًّا كانت لا تُستعمل: لا ينهي الدرس مبكرًا ولا
+  // يُسجَّل تعثّرًا، فيمضي الدرس كاملًا (full_help). الحقلان spent و taint لا يُنشآن إلا عند الاستبعاد
+  voided(itemId, exposed) {
+    if (!exposed) {
+      this.reshown += 1;
+      return false;
+    }
+    if (this.stage === 'guided') {
+      this.taint = itemId;
+      return false;
+    }
+    if (this.spent === undefined) this.spent = [];
+    if (!this.spent.includes(itemId)) {
+      this.spent.push(itemId);
+      this.try_out.push('void');
+      this.reshown = 0;
+      this._afterTry();
+    }
+    return true;
+  }
+
+  // R22-01: بند الافتتاح الأول يكرر حقيقة آخر بند عُرض (آخر بند في البوابة مثلًا). في «جرّب أولًا» بنوعي الخطأ يُبدأ
+  // بالبند الآخر من نوعه. وإن لم يكن له آخر، أو كرر الآخر الحقيقة أيضًا، لا يُعرض ونتيجته void: لا يُتخذ منه قرار
+  // اختصار ولا يُعدّ خطأ. والبند الموجَّه يُعرض للتعليم ولا تُستعمل نتيجته
+  repeated(itemId, _factAt = null) {
+    if (this.stage === 'guided') {
+      this.taint = itemId;
+      return false;
+    }
+    const t = this.try_types[this.pos];
+    if (this.typed && !(this.flip ?? {})[t] && this.try_types.slice(0, this.pos).filter((x) => x === t).length === 0) {
+      if (this.flip === undefined) this.flip = {};
+      this.flip[t] = true;
+      return true;
+    }
+    this.try_out.push('void');
+    this.reshown = 0;
+    this._afterTry();
+    return true;
+  }
+
+  _afterTry() {
+    this.pos += 1;
+    if (this.pos === 2) {
+      if (this.try_out.every((o) => o === 'correct')) return this._finish('skip');
+      this.stage = 'guided';
+      this.pos = 0;
+    }
+    return undefined;
   }
 
   feed(outcome) {
@@ -310,15 +469,13 @@ export class OpeningRun extends Activity {
       return undefined;
     }
     this.reshown = 0;
+    if (this.stage === 'guided' && this.taint !== undefined) {
+      delete this.taint;
+      return this._finish('full_help');          // بند مكرر عُرض للتعليم: نتيجته ليست دليلًا لقرار
+    }
     if (this.stage === 'try') {
       this.try_out.push(outcome);
-      this.pos += 1;
-      if (this.pos === 2) {
-        if (this.try_out.every((o) => o === 'correct')) return this._finish('skip');
-        this.stage = 'guided';
-        this.pos = 0;
-      }
-      return undefined;
+      return this._afterTry();
     }
     if (outcome === 'correct') {
       this.pos += 1;
@@ -361,11 +518,49 @@ export class EvidenceRun extends Activity {
 
   want() {
     if (this.done) return null;
-    return {
+    const w = {
       activity: this.name, role: this.stage === 'first' ? 'evidence' : 'evidence.reserve', type: this._current(),
       pos: this.pos, alternate: 0, reshown: this.reshown, round: this.round,
       short_lesson_before: this.stage === 'reserve' && this.pos === 0,
     };
+    const swap = (this.swap ?? {})[this._key()];
+    if (swap) {                                   // موضع استُهلك بنده: بديل النوع، ومعه البند الذي يحل محله
+      w.role = 'evidence.alternate';
+      w.alternate = swap.n;
+      w.replaces = swap.item;
+    }
+    return w;
+  }
+
+  _key() {
+    return `${this._current()}/${this.stage}/${this.pos}`;
+  }
+
+  // R22-01: أول بند يُطلب عند دخول دليل الفهم يكرر حقيقة آخر بند عُرض من نشاط آخر: لا يُعرض الآن، ويُطلب لموضعه بديل
+  // نوعه في الجولة. وإن لم يوجد بديل، أو كرر الحقيقة هو أيضًا، انتهت الجولة no_alternate بلا حكم
+  repeated(itemId, _factAt = null) {
+    if (this.swap === undefined) this.swap = {};
+    const t = this._current();
+    this.swap[this._key()] = { n: 1 + Object.keys(this.swap).filter((k) => k.split('/')[0] === t).length, item: itemId };
+    return true;
+  }
+
+  // البند المستبعد لتغيّر الصلاحية (R18-01): إن لم يقع فيه إلا العرض أُعيد عرضه كالمنقطع، فلم تُقبل فيه إجابة في محاولة صالحة. وإن أُجيب عنه
+  // أو طُلب فيه دعم فقد استُهلك: لا يُحتسب إخفاقًا ولا يُعرض ثانية، ويُطلب لموضعه بديل نوعه في الجولة. swap و spent لا
+  // يُنشآن إلا عند أول استبعاد، فلا تتغير صورة النشاط المحفوظ في غير ذلك
+  voided(itemId, exposed) {
+    if (!exposed) {
+      this.reshown += 1;
+      return false;
+    }
+    if (this.swap === undefined) this.swap = {};
+    if (this.spent === undefined) this.spent = [];
+    if (this.spent.includes(itemId)) return true; // سُجّل عند التوقف، ثم وجده تاريخ السجلات عند الاستئناف: مرة واحدة
+    this.spent.push(itemId);
+    const t = this._current();
+    this.swap[this._key()] = { n: 1 + Object.keys(this.swap).filter((k) => k.split('/')[0] === t).length, item: itemId };
+    this.reshown = 0;
+    return true;
   }
 
   feed(outcome) {
@@ -398,6 +593,10 @@ export class EvidenceRun extends Activity {
   }
 
   unavailable() {
+    if ((this.swap ?? {})[this._key()]) {
+      this._finish('no_alternate');               // لا بديل لبند استُهلك: بلا حكم، ويظهر للبالغ. لا يُعاد البند سرًا
+      return;
+    }
     this.failed = this._current();
     this._finish('no_items');                     // لا بنود جديدة في البنك: يحتاج مراجعة المعلم
   }
@@ -432,15 +631,31 @@ export class CheckRun extends Activity {
 
   want() {
     if (this.done) return null;
-    const a = get(this.alt, String(this.slot), 0);
-    return { activity: this.name, role: a === 0 ? 'check' : 'check.alternate', slot: this.slot, alternate: a,
+    const a = get(this.alt, this._k(), 0);
+    return { activity: this.name, role: a === 0 ? 'check' : 'check.alternate', slot: Number(this._k()), alternate: a,
       attempt: this.attempt };
+  }
+
+  // خانة البند المعروض الآن: خانة الترتيب، إلا إن أُخّر بند (defer)
+  _k() { return String(this._at(String(this.slot), this.slot)); }
+
+  repeated(_itemId, factAt = null) {
+    if (get(this.alt, this._k(), 0)) return false;   // بديل بند منقطع: ليس بند خانته، فلا يُؤخَّر
+    const w = (q) => ({ activity: this.name, role: 'check', slot: q, alternate: 0, attempt: this.attempt });
+    return this._defer(this.slot, this.slots, String, w, (q) => (q < this.slots ? [w(q + 1)] : []), factAt,
+      (q) => [{ ...w(q), role: 'check.alternate', alternate: 1 }]);
   }
 
   feed(outcome) {
     if (this.done) throw new Error('النشاط انتهى');
     this._count('check');
-    const k = String(this.slot);
+    const k = this._k();
+    if (outcome === 'exposed') {                  // ت2: تُستكمل الخانة ببديلها، بلا عدّ انقطاع. ولا بديل: تعليق للمراجعة
+      // للخانة بديل واحد وقد عُرض: لا يُعاد عرضه، ولا يُعدّ إخفاقًا
+      if (get(this.alt, k, 0)) return this._hold('no_alternate');
+      this.alt[k] = 1;
+      return undefined;
+    }
     if (outcome === 'interrupted') {
       this.cuts[k] = get(this.cuts, k, 0) + 1;
       this.total_cuts += 1;
@@ -465,7 +680,7 @@ export class CheckRun extends Activity {
   }
 
   unavailable() {
-    this._hold(get(this.alt, String(this.slot), 0) ? 'no_alternate' : 'no_items');   // لا بنود لهذه المحاولة
+    this._hold(get(this.alt, this._k(), 0) ? 'no_alternate' : 'no_items');   // لا بنود لهذه المحاولة
   }
 
   startEvent() {
@@ -487,23 +702,45 @@ export class RetentionRun extends Activity {
   static pyName = 'RetentionRun';
   get name() { return 'retention'; }
 
-  constructor({ skill, round, size = 5 }) {
+  // طلب المساعدة ينهي الجولة بلا حكم احتفاظ ولا يُعدّ إخفاقًا (قرار الأب في 18 نوفمبر، ت3): النتيجة help وحدثها
+  // retention_help، لا retention_result. attempt: 1 لبنود الجولة الأصلية، وما فوقه لبنود بديلة بعد طلب مساعدة، والحقل
+  // لا يُنشأ إلا لما فوق 1. وإن لم تتوفر بدائل: النتيجة no_alternate وحدثها retention_referred، إحالة بلا إخفاق
+  constructor({ skill, round, size = 5, attempt = 1 }) {
     super(skill);
     this.round = round;
     this.size = size;
     this.pos = 0;
     this.correct = 0;
+    if (attempt !== 1) this.attempt = attempt;
   }
 
   want() {
     if (this.done) return null;
-    return { activity: this.name, role: 'deferred_check', round: this.round, pos: this.pos, alternate: 0 };
+    return this._w(this._at(String(this.pos), this.pos));
+  }
+
+  _w(q) {
+    const a = (this.attempt ?? 1) - 1;
+    return { activity: this.name, role: a ? 'deferred_check.alternate' : 'deferred_check', round: this.round, pos: q,
+      alternate: a };
+  }
+
+  unavailable() {
+    if ((this.attempt ?? 1) === 1) throw new Error(`${this.name}: لا بنود لجولة الاحتفاظ ${this.round}`);
+    this._finish('no_alternate');               // لا بدائل مناسبة: يُحال القرار إلى البالغ، بلا إخفاق
+  }
+
+  repeated(_itemId, factAt = null) {
+    const last = this.size - 1;
+    return this._defer(this.pos, last, String, (q) => this._w(q), (q) => (q < last ? [this._w(q + 1)] : []), factAt);
   }
 
   feed(outcome) {
     if (this.done) throw new Error('النشاط انتهى');
     this._count('retention');
-    if (outcome === 'interrupted') return this._finish(null);
+    // exposed (ت2): بلا نتيجة، وتُعاد الجولة في جلسة لاحقة
+    if (outcome === 'interrupted' || outcome === 'exposed') return this._finish(null);
+    if (outcome === 'help' || outcome === 'supported') return this._finish('help');
     if (outcome === 'correct') this.correct += 1;
     this.pos += 1;
     if (this.pos === this.size) this._finish('done');
@@ -511,52 +748,179 @@ export class RetentionRun extends Activity {
   }
 
   events() {
-    return this.result === null ? [] : [{ type: 'retention_result', skill: this.skill, correct: this.correct }];
+    if (this.result === 'done') return [{ type: 'retention_result', skill: this.skill, correct: this.correct }];
+    if (this.result === 'help') return [{ type: 'retention_help', skill: this.skill, round: this.round }];
+    if (this.result === 'no_alternate') return [{ type: 'retention_referred', skill: this.skill, round: this.round }];
+    return [];
   }
 }
 
-export const CLASSES = { GateRun, ShortCheckRun, OpeningRun, EvidenceRun, CheckRun, RetentionRun };
+// الفحص الوصفي للمقارنة (10.2، خ7): 4 بنود بطاقة بلا تغذية راجعة، نتيجتها في اللوحة ولا تُشترط لتقدم. لا حدث له في
+// المحرك. كل بند يُختم يُسجَّل، والمنقطع يُسجَّل منقطعًا ويمضي الفحص
+export class DescribeRun extends Activity {
+  static pyName = 'DescribeRun';
+  get name() { return 'describe'; }
+
+  constructor({ skill, size = 4 }) {
+    super(skill);
+    this.pos = 0;
+    this.size = size;
+  }
+
+  want() {
+    if (this.done) return null;
+    return { activity: this.name, role: 'descriptive_check', pos: this.pos };
+  }
+
+  unavailable() { this._finish('no_items'); }
+
+  feed(_outcome) {
+    if (this.done) throw new Error('النشاط انتهى');
+    this._count('describe');
+    this.pos += 1;
+    if (this.pos === this.size) this._finish('done');
+    return undefined;
+  }
+
+  events() { return []; }
+}
+
+export const CLASSES = { GateRun, ShortCheckRun, OpeningRun, EvidenceRun, CheckRun, RetentionRun, DescribeRun };
+export const ASSESSING = ['gate', 'short', 'check', 'retention'];   // أنشطة التقييم: علاج تكرار الحقيقة فيها تأخير البند
+export const ALT_PEEK = 8;                        // أقصى عدد بدائل يُسأل عنها لنوع عند تأخير بند
 
 // ---------------------------------------------------------------- التشغيل
-// يعرض بنود النشاط حتى ينتهي. source(skill, want) يعيد البند أو null. answer(item, want) يعيد
+// مولّد يعرض بنود النشاط حتى ينتهي. source(skill, want) يعيد البند أو null. يعطي [البند، المطلوب] ويستقبل
 // [أحداث البند الخام، جوابه الصحيح، هل هو بند تقييم]، أو نتيجة جاهزة نصًّا.
 // pause(want) تُسأل بعد كل بند اكتمل: إن أعادت صحيحًا توقف العرض والنشاط غير منتهٍ، ليُحفظ ويُستأنف في جلسة
 // لاحقة. بها يُنفَّذ سقف الوقت الذي لا يقطع بندًا جاريًا (7.1).
-export function drive(act, source, answer, records = null, pause = null) {
+// تاريخ التعرّض لبنود نشاط مهارة من السجلات المستبعدة (void) وحدها: لكل بند هل أُجيب عنه أو طُلب فيه دعم قبل استبعاده
+// (exposed)، وكم مرة استُبعد (n). السجلات باقية بعد إسقاط النشاط وإنشاء غيره وبعد الحفظ والاستعادة، فهي المرجع، لا حالة
+// كائن النشاط (R19-01)
+export function exposure(records, skill, activity) {
+  const out = {};
+  for (const r of records || []) {
+    if (r.void && r.item && r.skill === skill && r.activity === activity) {
+      const h = out[r.item] ?? (out[r.item] = { exposed: false, n: 0 });
+      h.n += 1;
+      if (r.first !== null || (r.support_before || []).length || (r.support_unanswered || []).length) h.exposed = true;
+    }
+  }
+  return out;
+}
+
+// حقيقة البند الذي يعرضه المصدر لطلب، دون عرضه: الطلب يحمل peek فلا يُعدّ البند معروضًا
+export function peekFact(source, skill, want) {
+  const it = source(skill, { ...want, peek: true });
+  const ok = it !== null && it !== undefined && typeof it === 'object' && !Array.isArray(it);
+  return ok && it.fact !== undefined && it.fact !== null ? [...it.fact] : null;
+}
+
+export function* driveSteps(act, source, records = null, pause = null, history = null, prev = null) {
+  let entry = true;                               // أول بند يُعرض في هذا الدخول إلى النشاط
+  let inner = null;                               // آخر بند عُرض من هذا النشاط في هذا الدخول، إن احتُسب تعرّضًا
+  let moved = [];                                 // بنود تقييم أُخّرت قبل البند الذي سيُعرض الآن
   for (;;) {
-    const w = act.want();
+    let w = act.want();
     if (w === null) return act;
     const item = source(act.skill, w);
     if (item === null || item === undefined) {
       act.unavailable();
       continue;
     }
-    const got = answer(item, w);
+    // history(act): تاريخ التعرّض لبنود هذا النشاط (exposure). بند استُهلك من قبل لا يُعرض ثانية ولو أُنشئ النشاط من
+    // جديد: يُطلب بديله. وبند عُرض ولم تُقبل فيه إجابة في محاولة صالحة يُعاد عرضه موسومًا بالإعادة (R19-01)
+    const known = history && typeof item === 'object' && !Array.isArray(item) ? history(act)[item.id] : undefined;
+    if (known && known.exposed && act.voided(item.id, true)) continue;
+    if (known) {                                  // يُعرض ثانية: موسوم بالإعادة، وبأنه مكرر إن كان مستهلكًا
+      w = { ...w, reshown: Math.max(w.reshown ?? 0, known.n) };
+      if (known.exposed) w.repeated = true;
+    }
+    // prev(): آخر بند عُرض للمهارة نفسها في الجلسة نفسها من نشاط آخر، [معرّفه، حقيقته]، إن كان يُحتسب تعرّضًا. الحقيقة
+    // نفسها لا تُعرض في بندين متتاليين (3.5) ولو كانا من نشاطين (R22-01): النشاط يغيّر ما يطلبه إن كان له علاج، وإلا
+    // عُرض البند موسومًا بأن حقيقته عُرضت للتو. داخل النشاط الواحد يضمن المحتوى ذلك (content_sequence)
+    const isItem = item !== null && typeof item === 'object' && !Array.isArray(item);
+    // وفي أنشطة التقييم العلاج تأخير البند، والتأخير يغيّر الترتيب الذي ضمنه المحتوى، فيُفحص كل بند فيها مع البند
+    // الذي عُرض قبله من النشاط نفسه أيضًا (بديل بند انقطع قد يجاور بندًا مؤجَّلًا)
+    const facted = isItem && item.fact !== undefined && item.fact !== null;
+    const p = entry && prev && facted ? prev() : (facted && ASSESSING.includes(act.name) ? inner : null);
+    if (p && p[0] !== item.id && JSON.stringify(p[1]) === JSON.stringify(item.fact)) {
+      if (act.repeated(item.id, (q) => peekFact(source, act.skill, q))) {
+        if (ASSESSING.includes(act.name)) moved.push(item.id);
+        continue;
+      }
+      w = { ...w, fact_just_seen: p[0] };
+    }
+    if (moved.length) {                           // يُحفظ أن الترتيب تغيّر ولماذا: هذا البند عُرض قبل ما أُخّر
+      w = { ...w, ahead_of: moved };
+      moved = [];
+    }
+    entry = false;
+    const got = yield [item, w];
+    if (facted) {                                 // قاعدة Scheduler.seen نفسها: المنقطع بلا إجابة ولا دعم لا يُحتسب
+      const raw = typeof got === 'string' ? null : got[0];
+      const counts = raw === null ? got !== 'interrupted'
+        : raw.some((ev) => ev[0] === 'confirm' || ev[0] === 'support')
+          || !(raw.length && raw[raw.length - 1][0] === 'interrupt');
+      inner = counts ? [item.id, item.fact] : null;
+    } else {
+      inner = null;
+    }
+    // ت2 (قرار الأب في 18 نوفمبر): الإجابة الصحيحة عن حقيقة عُرضت للتو أداءٌ بعد تعرض مباشر. في أنشطة التقييم لا تُعطى
+    // للنشاط دليلًا: نتيجتها exposed، فيستكمل النشاط خانتها ببند مستقل لاحق أو ينتهي بلا حكم. الخطأ وطلب الدعم كما هما
+    const weak = Boolean(w.fact_just_seen) && ASSESSING.includes(act.name);
     if (typeof got === 'string') {
-      act.feed(got);
+      act.feed(weak && got === 'correct' ? 'exposed' : got);
     } else {
       const [raw, correct, assess] = got;
       const rec = foldItem(raw, correct, assess);
       if (records !== null) {
         const isObj = item !== null && typeof item === 'object' && !Array.isArray(item);
-        const r = { ...rec, skill: act.skill, activity: act.name, role: w.role, item: isObj ? (item.id ?? null) : null };
+        const r = { ...rec, skill: act.skill, activity: act.name, role: w.role, item: isObj ? (item.id ?? null) : null,
+          ...evidence(raw, correct, isObj ? (item.v ?? null) : null) };
+        if (got.length > 3 && got[3]) Object.assign(r, got[3]);   // ما تعرفه الواجهة وحدها عن الحدث: وقته
         if (isObj && item.reshown_same_fact) r.reshown_after_interrupt = true;   // 3.6: «أُعيد عرضه بعد انقطاع»
+        if (w.fact_just_seen) {                   // حقيقته حقيقة آخر بند عُرض من نشاط آخر، ولا علاج له
+          r.fact_just_seen = w.fact_just_seen;
+          if (weak && classify(rec) === 'correct') r.after_exposure = true;   // ت2: «أداء بعد تعرض مباشر»
+        }
+        if (w.ahead_of) r.ahead_of = [...w.ahead_of];   // عُرض قبل بنود أُخّرت لأنها تكرر حقيقة ما سبقها
+        if (w.repeated) r.repeated_after_void = true;   // بند مستهلك أُعيد للتعليم، لا دليلًا لقرار
+        if (w.replaces) {                         // R18-01: بديل بند استُهلك، ووصف التعرّض السابق لحقيقته (3.5)
+          r.replaces = w.replaces;
+          r.fact_seen_before = Boolean(isObj && item.fact_seen_before);
+        }
         records.push(r);
       }
-      act.feed(classify(rec));
+      const out = classify(rec);
+      act.feed(weak && out === 'correct' ? 'exposed' : out);
     }
     if (pause && pause(w) && !act.done) return act;
   }
+}
+
+// يشغّل مولّد خطوات حتى نهايته، ويجيب عن كل بند بـ answer(item, want). يعيد قيمة المولّد.
+export function runSync(gen, answer) {
+  let r = gen.next();
+  while (!r.done) r = gen.next(answer(...r.value));
+  return r.value;
+}
+
+// الغلاف المتزامن لـ driveSteps
+export function drive(act, source, answer, records = null, pause = null) {
+  return runSync(driveSteps(act, source, records, pause), answer);
 }
 
 // ---------------------------------------------------------------- مصدر البنود من محتوى الشريحة
 // يحوّل ما تطلبه want() إلى بند بعينه من slice-content.json. يتحقق أن نوع دليل البند هو النوع المطلوب.
 // allowSameFact لبدائل المجال الصغير التي لا عدد آخر يحقق شرط خانتها: بقرار الأب (3.6) تُعاد الحقيقة نفسها بعد
 // الانقطاع، ويُعلَّم البند reshown_same_fact.
-const LESSON_ROLES = ['lesson.watch', 'lesson.model', 'lesson.fade', 'lesson.nomodel'];
+// مقارنة حلين معروضين نشاط في درس 3-5-3 (10.2، خ7)، بعد المشاهدة. ولا بنود مقارنة لغيرها
+const LESSON_ROLES = ['lesson.watch', 'lesson.compare', 'lesson.model', 'lesson.fade', 'lesson.nomodel'];
 
 export class ContentSource {
-  constructor(items, allowSameFact = true) {
+  constructor(items, allowSameFact = true, content = null) {
+    this.content = content;                       // هوية الحزمة التي منها البنود: {version, digest}، إن عُرفت
     this.by = new Map();
     for (const it of items) {
       const k = it.skill + '|' + it.group + '|' + it.role;
@@ -585,7 +949,9 @@ export class ContentSource {
     if (a === 'lesson') {
       it = at(LESSON_ROLES.flatMap((r) => this._list(skill, 'lesson', r)), w.pos);
     } else if (a === 'practice') {
-      it = at(this._list(skill, 'practice', 'practice'), w.pos);
+      // التدريب الإضافي (more) يلي بنود التدريب الستة، لمن أراد أن يستمر بعد جلسة يومه. بلا الطلب: الستة وحدها
+      const more = w.more ? this._list(skill, 'more', 'practice.more') : [];
+      it = at([...this._list(skill, 'practice', 'practice'), ...more], w.pos);
     } else if (a === 'gate') {
       const g = (w.attempt ?? 1) === 1 ? 'gate' : 'regate';       // الإعادة وإعادة التحقق ببنود جديدة
       if (w.alternate) it = at(this._typed(skill, g, 'gate.alternate', w.type), w.alt_index);
@@ -593,18 +959,23 @@ export class ContentSource {
       else it = at(this._typed(skill, g, 'gate.compensation', w.type), w.pos);
     } else if (a === 'short') {
       it = at(this._list(skill, 'short', 'short_check'), w.pos);
+    } else if (a === 'describe') {                // الفحص الوصفي للمقارنة: بنوده الأربعة بترتيبها
+      it = at(this._list(skill, 'compare', 'descriptive_check'), w.pos);
     } else if (a === 'opening') {
       if (w.typed) it = at(this._typed(skill, 'tryfirst', 'opening.try', w.type), w.type_index);   // 6.2
       else it = at(this._list(skill, 'opening', w.role), w.pos);
     } else if (a === 'evidence') {                // كل جولة ببنودها الجديدة (3.5)
-      it = at(this._typed(skill, 'evidence', w.role, w.type).filter((i) => (i.round ?? 1) === (w.round ?? 1)), w.pos);
+      // البديل (R18-01) برقمه بين بدائل النوع في الجولة، لا بموضع البند الذي يحل محله
+      it = at(this._typed(skill, 'evidence', w.role, w.type).filter((i) => (i.round ?? 1) === (w.round ?? 1)),
+        w.alternate ? w.alternate - 1 : w.pos);
     } else if (a === 'check') {
       it = this._list(skill, 'check' + w.attempt, w.role).find((i) => i.slot === w.slot) ?? null;
       if (it && (it.note || '').startsWith('لا قيمة أخرى')) {
         it = this.allowSameFact ? { ...it, reshown_same_fact: true } : null;
       }
     } else if (a === 'retention') {               // 3.7: خمسة بنود جديدة لكل جولة
-      it = at(this._list(skill, 'deferred', 'deferred_check').filter((i) => i.slot === w.round), w.pos);
+      it = at(this._list(skill, 'deferred', w.role ?? 'deferred_check')
+        .filter((i) => i.slot === w.round && (i.set ?? 0) === (w.alternate ?? 0)), w.pos);
     } else {
       throw new Error('نشاط غير معروف: ' + a);
     }
@@ -612,7 +983,7 @@ export class ContentSource {
       if ('type' in w && it.evidence !== w.type && a !== 'lesson' && a !== 'practice') {
         throw new Error(`المحتوى يخالف الطبقة: ${it.id} يُطلب ${w.type} والبند ${it.evidence}`);
       }
-      this.served.push(it.id);
+      if (!w.peek) this.served.push(it.id);         // سؤال عن بند دون عرضه (تأخير بند التقييم)
     }
     return it;
   }

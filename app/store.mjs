@@ -6,6 +6,9 @@
 //
 // الضمانات:
 // - «تم الحفظ» لا يظهر إلا بعد complete المعاملة التي تحمل الحالة المطلوبة أو أحدث منها.
+// - «تم الحفظ» حالة عامة: تعني أن أحدث ما طُلب حفظه محفوظ (done === seq). كتابة اكتملت وطلب أحدث منها معلّق تُعلَن
+//   «أُقرّت» (acked) برقمها وعدد ما بقي، والحالة العامة باقية «جارٍ الحفظ» (ك3 في مراجعة 04e0168). وعد الطلب الأقدم
+//   يتحقق عندها، وهو صادق عن نسخته.
 // - المعاملة التي تفشل (امتلاء التخزين، فشل الكتابة، إغلاق التطبيق قبل complete) لا تغيّر السجل المحفوظ، والحالة
 //   تبقى في الذاكرة غير محفوظة، والفشل يظهر للوالد.
 // - كل سجل يحمل rev يزيد بواحد مع كل كتابة. الكتابة تقرأ rev المحفوظ في المعاملة نفسها، وتُلغى إن خالف ما يتوقعه
@@ -72,7 +75,9 @@ export function commit(db, record, expectRev, hooks = {}) {
         };
       } catch (err) {
         outcome = { ok: false, code: err.name === 'QuotaExceededError' ? 'quota' : 'write_failed', detail: String(err) };
-        tx.abort();
+        try {
+          tx.abort();
+        } catch { /* المعاملة أُلغيت أو انتهت قبل الكتابة: النتيجة مسجَّلة، و onabort يحسمها */ }
       }
     };
     tx.oncomplete = () => resolve({ ok: true, rev: expectRev + 1 });
@@ -85,7 +90,9 @@ export function commit(db, record, expectRev, hooks = {}) {
 }
 
 // يحفظ حالة طفل واحد من نافذة واحدة. snap(): السجل الحالي من الذاكرة (persist.snapshot).
-// onStatus(status): 'saving' أثناء الكتابة، و'saved' بعد complete وحده ومعه rev، و'failed' ومعه السبب.
+// onStatus(status): 'saving' أثناء الكتابة، و'saved' بعد complete ومعه rev حين لا طلب أحدث معلّق، و'acked' بعد
+// complete لكتابة يليها طلب معلّق (معه rev و upto و pending)، و'failed' ومعه السبب.
+// state: الحالة العامة التي تعرضها الواجهة: 'idle' قبل أي طلب، و'saving'، و'saved'، و'failed'، و'read_only'.
 // request() يعيد وعدًا يتحقق بعد أن تُقَرّ كتابة تحمل حالة لا تقل عن حالة لحظة الطلب، أو يفشل بسببها.
 export class Saver {
   constructor(db, child, snap, { rev = 0, onStatus = () => {}, hooks = {} } = {}) {
@@ -102,6 +109,15 @@ export class Saver {
     this.readOnly = false;
     this.commits = 0;
     this.last = null;
+    this.unsaved = null;                // سبب آخر فشل ما دامت الحالة في الذاكرة غير محفوظة
+  }
+
+  // الحالة العامة: «تم الحفظ» فقط حين أُقرّ أحدث ما طُلب. فشلٌ بعد إقرار نسخة أقدم يُبقيها «فشل» لا «تم الحفظ»
+  get state() {
+    if (this.readOnly) return 'read_only';
+    if (this.seq === 0) return 'idle';
+    if (this.unsaved) return 'failed';
+    return this.done === this.seq ? 'saved' : 'saving';
   }
 
   request() {
@@ -138,6 +154,7 @@ export class Saver {
           this._fail({ ok: false, code: 'snapshot_failed', detail: String(err) });
           break;
         }
+        this.unsaved = null;
         this._status({ status: 'saving', upto });
         let r;
         try {
@@ -150,7 +167,9 @@ export class Saver {
         if (r.ok) {
           this.rev = r.rev;
           this.done = upto;
-          this._status({ status: 'saved', rev: r.rev, upto });
+          // طلب أحدث جاء أثناء الكتابة: هذه النسخة أُقرّت، وأحدث حالة لم تُحفظ بعد (ك3)
+          const pending = this.seq - upto;
+          this._status(pending ? { status: 'acked', rev: r.rev, upto, pending } : { status: 'saved', rev: r.rev, upto });
           this._settle(upto, r);
         } else {
           if (r.code === 'conflict') this.readOnly = true;   // نافذة أخرى كتبت: تُعاد القراءة قبل أي كتابة
@@ -168,6 +187,7 @@ export class Saver {
   // الحالة في الذاكرة غير محفوظة: يُرفض كل طلب معلّق بسببه، والطلب التالي يعيد المحاولة بأحدث حالة
   _fail(r) {
     this.last = r;
+    this.unsaved = r.code;              // قبل الإشعار: الواجهة التي تقرأ state عند «فشل» تراها «فشل»
     this._status({ status: 'failed', code: r.code, upto: this.seq });
     this._settle(this.seq, r);
   }

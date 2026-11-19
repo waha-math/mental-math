@@ -55,14 +55,14 @@ class Child:
         a = want['activity']
         if a in ('lesson', 'practice'):
             return 'correct'
-        assess = a in ('gate', 'short', 'check', 'retention')
+        assess = a in ('gate', 'short', 'check', 'retention', 'describe')
         ans = item['answer']
         x = self.rng.random()
         tail = [] if assess else [('end',)]
         if x < 0.05:
             return [('interrupt',)], ans, assess
         if x < 0.2:
-            return [('confirm', ans + 1)] + tail, ans, assess
+            return [('confirm', next(c for c in item['cards'] if c != ans) if isinstance(ans, str) else ans + 1)] + tail, ans, assess
         return [('confirm', ans)] + tail, ans, assess
 
 
@@ -90,11 +90,13 @@ def make_current(rng, sc, src):
     if w is not None:
         it = src(act.skill, w)
         if it is not None:
-            assess = w['activity'] in ('gate', 'short', 'check', 'retention')
+            assess = w['activity'] in ('gate', 'short', 'check', 'retention', 'describe')
             raw = [['support', rng.choice(SUPPORT)] for _ in range(rng.randint(0, 2))]
             if not assess and rng.random() < 0.5:
                 raw.append(['confirm', it['answer'] + rng.choice([0, 1])])
             journal = dict(item=it['id'], want=w, answer=it['answer'], assess=assess, raw=raw)
+            if it.get('fact') is not None:                  # كما تكتبه طبقة الخطوات (R23-01)
+                journal['fact'] = list(it['fact'])
     return dict(kind=c['kind'], skill=c['skill'], act=act.to_dict(), items=items, journal=journal)
 
 
@@ -113,17 +115,18 @@ def corrupt(rng, rec):
     return r
 
 
-def outcome(rec):
+def outcome(rec, today=None):
+    """today=None: الاستعادة في اليوم نفسه، فالجلسة المفتوحة تبقى. وبيوم آخر تُختم (المرحلة 0ج)."""
     src = ContentSource(ITEMS)
     try:
         e, sc, notes = persist.restore(copy.deepcopy(rec), NET, TYPES, src, lambda i, w: 'correct',
-                                       item_seconds=lambda w: 0, records=[])
+                                       item_seconds=lambda w: 0, records=[], today=today)
     except persist.Inconsistent:
         return dict(refused=True)
     return dict(h=digest(e), state=persist.state_of(sc), notes=[list(n) for n in notes], records=sc.records,
                 again=persist.snapshot(e, sc) == persist.snapshot(*persist.restore(
                     json.loads(json.dumps(persist.snapshot(e, sc))), NET, TYPES, ContentSource(ITEMS),
-                    lambda i, w: 'correct', item_seconds=lambda w: 0, records=[])[:2]))
+                    lambda i, w: 'correct', item_seconds=lambda w: 0, records=[], today=today)[:2]))
 
 
 vectors, kinds = [], dict(boundary=0, open_session=0, current=0, journal=0, refused=0, abandoned=0, invalidated=0)
@@ -166,6 +169,8 @@ for seed in range(160):
             kinds['current'] += cur is not None
             kinds['journal'] += bool(cur and cur.get('journal'))
             vectors.append(dict(record=rec, expect=outcome(rec)))
+            if json.loads(rec['engine'])['current'] is not None:   # جلسة مفتوحة: تُستعاد أيضًا في يوم جديد فتُختم
+                vectors.append(dict(record=rec, today=10 ** 6, expect=outcome(rec, 10 ** 6)))
             if rng.random() < 0.2:
                 bad = corrupt(rng, rec)
                 vectors.append(dict(record=bad, expect=outcome(bad)))

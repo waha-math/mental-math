@@ -20,7 +20,12 @@ export const DATA = {
   "teacher_revoke",
   "recheck_result",
   "invalidate_session",
-  "retention_result"
+  "retention_result",
+  "retention_help",
+  "retention_referred",
+  "consolidation_started",
+  "consolidation_done",
+  "retention_release"
  ],
  "migration": 1,
  "network": {
@@ -256,6 +261,11 @@ export const DATA = {
   }
  },
  "quota": {
+  "extra": {
+   "gate": 0,
+   "short": 0,
+   "teach": null
+  },
   "follow": {
    "gate": 1,
    "short": 2,
@@ -288,20 +298,26 @@ export const DATA = {
   "check_pending": "للمهارة محاولة فحص لم تُغلق: تُتمّ، أو يتركها المعلم بحدث صريح، قبل بدء أخرى",
   "check_same_day": "فحص الاستقلال في يوم بعد يوم آخر دليل فهم، والإعادة في يوم بعد يوم المحاولة السابقة",
   "check_state": "محاولة الفحص أُغلقت، أو تُركت، أو عُلّقت للمراجعة، أو تحتاج إعادة بدء، أو معرّفها مستعمل",
+  "consolidation_first": "جولة فحص الاحتفاظ تنتظر تثبيتًا لم يكتمل بعد طلب مساعدة فيها",
   "date_unconfirmed": "تاريخ الجلسة يحتاج تأكيد الوالد: جاء قبل يوم آخر جلسة أو بعده بأكثر من 30 يومًا",
   "event_id_conflict": "المعرّف نفسه وصل من قبل بمحتوى مختلف",
+  "extra_session": "الجلسة الإضافية تعليم وتدريب: لا فحص استقلال ولا فحص احتفاظ فيها",
   "gate_limit": "للمهارة بوابة وإعادة واحدة على الأكثر",
   "internal_error": "تعطّل التنفيذ، وأُعيدت الحالة كما كانت قبل الطلب",
   "lesson_idle": "الدرس ليس نشطًا في هذه الجلسة أو ينتظر حصة تعليمية: يُستأنف بحدث صريح",
+  "lesson_today": "درس جديد واحد في يوم الأسرة: فُتح اليوم درس، والباقي تدريب",
   "no_check": "لا محاولة فحص بهذا المعرّف لهذه المهارة",
+  "no_consolidation": "لا تثبيت مستحق لهذه المهارة، أو لم يبدأ في هذه الجلسة",
   "no_decision": "لا قرار سارٍ بهذا المعرّف",
   "no_recheck": "لا مهارة معلَّقة تنتظر هذا المتطلب، ولا دليل استيفاء مُبطَل لهذه المهارة يُعاد بناؤه",
   "no_session": "لا جلسة مفتوحة بهذا المعرّف",
+  "no_session_today": "الجلسة الإضافية تأتي بعد جلسة في يوم الأسرة نفسه",
   "not_checkable": "التحقق القصير للمؤجَّلة أو لمتطلب غير مفحوص، ومرة واحدة",
   "not_deferrable": "للمهارة دليل مباشر، فلا تؤجَّل بقرار",
   "not_flagged": "الجلسة ليست معلَّمة بتنبيه تاريخ",
   "not_met": "فحص الاحتفاظ لمهارة مستوفاة باجتياز فحص الاستقلال",
   "not_open": "درس المهارة غير مفتوح، أو ليس في الطور المطلوب",
+  "not_referred": "لا جولة احتفاظ محالة إلى البالغ لهذه المهارة",
   "prerequisite": "متطلب مباشر غير مستوفى",
   "quota_gate": "استُهلكت بوابات هذه الجلسة، أو لا بوابة في هذا النوع من الجلسات",
   "quota_short": "استُهلكت التحققات القصيرة في هذه الجلسة",
@@ -309,8 +325,10 @@ export const DATA = {
   "regate_not_allowed": "الإعادة بعد فتح الدرس واختصاره، وفي جلسة لاحقة، وإن سُمح بها",
   "retention_done": "أُجريت فحوص الاحتفاظ الثلاثة لهذه المهارة",
   "retention_early": "لم يحِن موعد فحص الاحتفاظ: الفاصل يُحسب من يوم الاجتياز ثم من يوم الفحص السابق",
+  "retention_referred": "جولة فحص الاحتفاظ أُحيلت إلى البالغ: نفدت بدائلها بعد طلب مساعدة، وتنتظر قراره",
+  "retention_round": "ليست هذه الجولة التالية من فحص الاحتفاظ لهذه المهارة",
   "session_open": "جلسة أخرى مفتوحة ولم تُختم",
-  "session_order": "نوع الجلسة لا يأتي في هذا الموضع: بحث (4 على الأكثر) ثم بدء واحدة ثم متابعة",
+  "session_order": "نوع الجلسة لا يأتي في هذا الموضع: بحث (4 على الأكثر) ثم بدء واحدة ثم متابعة أو إضافية",
   "suspended": "الوصول إلى المهارة معلَّق حتى إعادة التحقق أو قرار المعلم",
   "understanding_first": "فحص الاستقلال بعد ثبوت الفهم",
   "unknown_skill": "المهارة ليست في المحتوى المسلَّم",
@@ -350,6 +368,15 @@ export const DATA = {
   "check_started": {
    "check_id": "str",
    "content_version": "int",
+   "session": "str",
+   "skill": "str"
+  },
+  "consolidation_done": {
+   "items?": "strlist",
+   "session": "str",
+   "skill": "str"
+  },
+  "consolidation_started": {
    "session": "str",
    "skill": "str"
   },
@@ -410,6 +437,22 @@ export const DATA = {
    "session": "str",
    "skill": "str"
   },
+  "retention_help": {
+   "items?": "strlist",
+   "round": "int",
+   "session": "str",
+   "skill": "str"
+  },
+  "retention_referred": {
+   "items?": "strlist",
+   "round": "int",
+   "session": "str",
+   "skill": "str"
+  },
+  "retention_release": {
+   "reason": "str",
+   "skill": "str"
+  },
   "retention_result": {
    "correct": "int",
    "exposed?": "bool",
@@ -426,7 +469,8 @@ export const DATA = {
     "enum",
     "search",
     "start",
-    "follow"
+    "follow",
+    "extra"
    ],
    "session": "str"
   },

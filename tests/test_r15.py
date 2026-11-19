@@ -22,6 +22,10 @@ from content_source import ContentSource  # noqa: E402
 from item_layer import fold_item, indicators, RetentionRun  # noqa: E402
 import persist  # noqa: E402
 
+# الاستعادة في يوم أسرة جديد تختم الجلسة المفتوحة (المرحلة 0ج). هذه الحالات كُتبت للجلسة التالية بعد الاستعادة،
+# فتمرّ بهذا المسار. والكود السابق للمرحلة 0 لا يعرف today، فلا يُمرَّر له
+NEXT_DAY = dict(today=10 ** 6) if 'today' in __import__('inspect').signature(persist.restore).parameters else {}
+
 MAP = args[0]
 NET = load_network(MAP)
 TYPES = {'1-4-1': ['ف1', 'ف3']}                             # من صف المهارة في الخريطة
@@ -39,7 +43,7 @@ class Child:
             if a == 'lesson':
                 self.known.add(item['skill'])
             return 'correct'
-        assess = a in ('gate', 'short', 'check', 'retention')
+        assess = a in ('gate', 'short', 'check', 'retention', 'describe')
         ans = item['answer'] if item['skill'] in self.known else item['answer'] + 1
         return [('confirm', ans)] + ([] if assess else [('end',)]), item['answer'], assess
 
@@ -62,7 +66,8 @@ def setup():
 
 def reopen(rec):
     src = ContentSource(ITEMS)
-    return persist.restore(json.loads(json.dumps(rec)), NET, TYPES, src, Child(['1-4-1']), item_seconds=secs, records=[])
+    return persist.restore(json.loads(json.dumps(rec)), NET, TYPES, src, Child(['1-4-1']), item_seconds=secs, records=[],
+                           **NEXT_DAY)
 
 
 def crafted():
@@ -100,7 +105,8 @@ def live():
 
 
 def open_into(rec, arr):
-    return persist.restore(rec, NET, TYPES, ContentSource(ITEMS), Child(['1-4-1']), item_seconds=secs, records=arr)
+    return persist.restore(rec, NET, TYPES, ContentSource(ITEMS), Child(['1-4-1']), item_seconds=secs, records=arr,
+                           **NEXT_DAY)
 
 
 def refused(mutate, label, want_error=persist.Inconsistent):

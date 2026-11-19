@@ -1,0 +1,50 @@
+# يبني ملف APK للتجربة من التطبيق كما هو في الفرع، وينشره إصدارًا على صفحة Releases.
+# المفتاح الثابت (ليُثبَّت كل تحديث فوق السابق وتبقى بيانات الأطفال) من أسرار المستودع إن وُجدت:
+#   MM_KEYSTORE_B64 و MM_KEYSTORE_PASSWORD و MM_KEY_ALIAS و MM_KEY_PASSWORD
+# وبدونها يُوقَّع بمفتاح تصحيح يتغير من بناء إلى بناء: التحديث يحتاج حذف القديم، وتُحذف معه البيانات.
+name: apk
+on:
+  push:
+    branches: [phase0]
+    paths: ['app/**', 'slice-content.json', 'android/**', '.github/workflows/apk.yml']
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: '17' }
+      - uses: gradle/actions/setup-gradle@v4
+        with: { gradle-version: '8.7' }
+      - name: أصول التطبيق
+        run: |
+          A=android/app/src/main/assets
+          mkdir -p $A/app
+          cp -r app/index.html app/manifest.webmanifest app/icons app/ui $A/app/
+          cp app/*.mjs $A/app/
+          rm -f $A/app/test_*.mjs
+          cp slice-content.json $A/
+      - name: المفتاح الثابت
+        env: { B64: '${{ secrets.MM_KEYSTORE_B64 }}' }
+        run: |
+          if [ -n "$B64" ]; then echo "$B64" | base64 -d > $RUNNER_TEMP/mm.jks; echo "MM_KEYSTORE=$RUNNER_TEMP/mm.jks" >> $GITHUB_ENV; fi
+      - name: البناء
+        working-directory: android
+        env:
+          MM_KEYSTORE_PASSWORD: ${{ secrets.MM_KEYSTORE_PASSWORD }}
+          MM_KEY_ALIAS: ${{ secrets.MM_KEY_ALIAS }}
+          MM_KEY_PASSWORD: ${{ secrets.MM_KEY_PASSWORD }}
+        run: gradle --no-daemon assembleDebug
+      - name: الإصدار
+        run: cp android/app/build/outputs/apk/debug/app-debug.apk mental-math-${{ github.run_number }}.apk
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: apk-${{ github.run_number }}
+          target_commitish: ${{ github.sha }}
+          name: تجربة ${{ github.run_number }}
+          body: "ملف APK للتجربة من ${{ github.sha }}. ${{ secrets.MM_KEYSTORE_B64 != '' && 'موقّع بالمفتاح الثابت.' || 'موقّع بمفتاح تصحيح: لتثبيت تحديث احذف السابق أولًا، وتُحذف معه البيانات.' }}"
+          files: mental-math-${{ github.run_number }}.apk
+          make_latest: true

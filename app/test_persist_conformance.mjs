@@ -25,17 +25,17 @@ function check(name, cond, detail = '') {
 
 console.log('=== مطابقة الاستعادة في التطبيق بالمرجع');
 const bad = [];
-const n = { refused: 0, journal: 0, current: 0, closed: 0, reconciled: 0, unstable: 0 };
+const n = { refused: 0, journal: 0, current: 0, closed: 0, kept: 0, reconciled: 0, unstable: 0 };
 for (const [i, v] of V.vectors.entries()) {
   const src = new ContentSource(ITEMS);
   let got;
   try {
     const r = restore(structuredClone(v.record), { types: V.types, source: (s, w) => src.pick(s, w),
-      answer: () => 'correct', item_seconds: () => 0, records: [] });
+      answer: () => 'correct', item_seconds: () => 0, records: [], today: v.today ?? null });
     const src2 = new ContentSource(ITEMS);
     const once = snapshot(r.engine, r.scheduler);
     const r2 = restore(JSON.parse(JSON.stringify(once)), { types: V.types, source: (s, w) => src2.pick(s, w),
-      answer: () => 'correct', item_seconds: () => 0, records: [] });
+      answer: () => 'correct', item_seconds: () => 0, records: [], today: v.today ?? null });
     got = { h: digest(r.engine), state: stateOf(r.scheduler), notes: r.notes, records: r.scheduler.records,
       again: same(snapshot(r2.engine, r2.scheduler), once) };
   } catch (err) {
@@ -50,6 +50,7 @@ for (const [i, v] of V.vectors.entries()) {
   }
   if (got.notes) for (const x of got.notes) if (x[0] === 'reconciled') n.reconciled += 1;
   if (got.again === false) n.unstable += 1;
+  if (got.state && got.state.cur !== null) n.kept += 1;
   for (const k of ['refused', 'h', 'state', 'notes', 'records', 'again']) {
     if (!same(got[k] ?? null, v.expect[k] ?? null)) {
       bad.push(`السجل ${i + 1}: ${k} يخالف المرجع: ${canonical(got[k] ?? null).slice(0, 200)}`);
@@ -58,7 +59,7 @@ for (const [i, v] of V.vectors.entries()) {
   }
 }
 check(`${V.vectors.length} سجل حفظ: الاستعادة تطابق المرجع في بصمة المحرك وحالة المجدول والملاحظات وسجلات البنود. `
-  + `منها ${n.journal} ببند جارٍ خُتم «غير محسوم»، و${n.current} بنشاط جارٍ حُفظ، و${n.closed} بجلسة خُتمت، `
+  + `منها ${n.journal} ببند جارٍ خُتم «غير محسوم»، و${n.current} بنشاط جارٍ حُفظ، و${n.closed} بجلسة خُتمت ليوم جديد، و${n.kept} بجلسة بقيت مفتوحة بموضعها، `
   + `و${n.reconciled} بمحاولة تركها المعلم سُوّيت، و${n.refused} رُفضت لأن المجدول فيها يخالف المحرك`,
 !bad.length, bad.slice(0, 3).join('\n'));
 check('حفظ الحالة المستعادة ثم استعادتها مرة ثانية يعطي اللقطة نفسها حرفًا بحرف، في كل سجل قُبل: لا فقد ولا تكرار',

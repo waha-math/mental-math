@@ -10,14 +10,28 @@
 // من المخزن)، والبند الجاري يُختم بانقطاع ويُعلَّم «غير محسوم»، والنشاط الجاري يُحفظ في saved، والجلسة التي لم تُختم
 // تُختم، ولا يُقبل سجل يخالف فيه المجدولُ المحرك.
 import { Engine } from './engine.mjs';
-import { Activity, foldItem, classify } from './items.mjs';
-import { Scheduler } from './scheduler.mjs';
+import { Activity, foldItem, classify, evidence } from './items.mjs';
+import { Scheduler, exposed } from './scheduler.mjs';
 
-export const SCHEMA = 2;                // 2: ومعه سجل محاولات البنود (المراجعة 14)
+export const SCHEMA = 5;                // 2: سجل محاولات البنود (المراجعة 14). 3: موضع الجلسة الجارية (المرحلة 0). 4: هوية المحتوى (ك1).
+                                        // 5: سجل البند يحمل جلسته وإصدار حزمته وقيم إجاباته (ك2)
 export const STATE = ['saved', 'parked', 'carried_items', 'intent', 'pending', 'proven', 'attempt', 'ev_round',
   'last_items', 'n', 'gates_run', 'searches', 'sessions', 'day', 'cur', 'log', 'refused', 'stalled', 'elapsed',
-  'start_at', 'items_before', 'start_w', 'start_what'];
+  'start_at', 'items_before', 'start_w', 'start_what', 'stage'];
 const TERMINAL = ['end', 'interrupt'];
+
+// اللقطة فيها نشاط جارٍ بدأ بحزمة محتوى غير المتاحة الآن (ك1). لا يُستأنف ببنك آخر بصمت: إما أن تُتاح الحزمة القديمة
+// (packs)، أو تُطلب إعادة بدء صريحة (restart) تحفظ ما وقع وتُسقط الأنشطة الجارية.
+// bound: هوية الحزمة التي رُبطت بها المحاولة. offered: هوية المتاحة. pending: [النوع، المهارة] لكل نشاط جارٍ
+export class ContentChanged extends Error {
+  constructor(bound, offered, pending) {
+    super(`نشاط جارٍ بدأ بإصدار المحتوى ${bound === null ? null : bound.version}، والمتاح ${offered.version}`);
+    this.name = 'ContentChanged';
+    this.bound = bound;
+    this.offered = offered;
+    this.pending = pending;
+  }
+}
 
 export class Inconsistent extends Error {
   constructor(msg) {
@@ -31,7 +45,10 @@ const clone = (x) => JSON.parse(JSON.stringify(x, (k, v) => (v instanceof Set ? 
 export function options(sc) {
   return { group: sc.group, start: sc.start, scope: sc.ids.length === sc.e.ids.length ? null : [...sc.ids],
     learning: sc.learning, tolerant: sc.tolerant, compat: sc.compat, content_version: sc.content_version,
-    no_short: [...sc.no_short].sort(), try_from_gate: sc.try_from_gate, cap: sc.cap, retention: sc.retention };
+    no_short: [...sc.no_short].sort(), try_from_gate: sc.try_from_gate, cap: sc.cap, retention: sc.retention,
+    content: sc.content === null ? null : { ...sc.content },
+    // حد وقت اليوم: يُحفظ حين يُضبط، فلا تتغير اللقطات القائمة
+    ...(sc.day_cap !== null && sc.day_cap !== undefined ? { day_cap: sc.day_cap } : {}) };
 }
 
 export function stateOf(sc) {
@@ -39,6 +56,10 @@ export function stateOf(sc) {
   for (const k of STATE) d[k] = clone(sc[k] === undefined ? null : sc[k]);
   d.n = Object.fromEntries(Object.entries(d.n).filter(([, v]) => v));
   d.next_id = sc._next;
+  if (sc.last !== null && sc.last !== undefined) d.last = clone(sc.last);   // آخر بند عُرض في الجلسة المفتوحة (R22-01)
+  for (const k of ['used', 'free', 'described']) {   // وقت اليوم وما دُرّب في إضافياته والفحص الوصفي: حين وُجدت
+    if (sc[k] !== null && sc[k] !== undefined) d[k] = clone(sc[k]);
+  }
   return d;
 }
 
@@ -97,50 +118,146 @@ export function checkConsistent(engine, st) {
 
 // يعيد { engine, scheduler, notes }. يرفع Inconsistent إن خالف المجدولُ المحرك
 export function restore(record, { types, source, answer, item_seconds = null, records = null, contentVersions = null,
-  net = undefined } = {}) {
+  net = undefined, today = null, content = null, packs = null, restart = false } = {}) {
   if (record.schema !== SCHEMA) throw new Inconsistent(`نسخة سجل غير معروفة: ${record.schema}`);
-  const e = Engine.restore(net, record.engine, contentVersions);
   const o = { ...record.scheduler.opts };
+  // هوية المحتوى (ك1)، كما في persist.restore المرجعي: content هوية الحزمة التي منها source. واحدة: لا شيء. مختلفة
+  // ولا نشاط جارٍ: تُربط المحاولة بالمتاحة. مختلفة ونشاط جارٍ: يُستأنف من الحزمة القديمة إن كانت في packs ببصمتها،
+  // وإلا يُرفع ContentChanged، وبـrestart تُعاد البداية صراحةً
+  const bound = o.content ?? null;
+  const sameId = (a, b) => a !== null && b !== null && a.version === b.version && a.digest === b.digest;
+  let fresh = false;
+  if (content !== null) {
+    content = { version: content.version, digest: content.digest };
+    const stx = record.scheduler.state;
+    const pending = [...(record.current ? [[record.current.kind, record.current.skill]] : []),
+      ...[...stx.saved, ...Object.values(stx.parked)].map((c) => [c.kind, c.skill])];
+    if (sameId(bound, content)) {
+      // لا شيء
+    } else if (!pending.length) {
+      o.content = content;
+      o.content_version = content.version;
+    } else if (bound !== null && packs && Object.prototype.hasOwnProperty.call(packs, bound.digest)) {
+      source = packs[bound.digest];               // الحزمة التي بدأ بها النشاط: تعريفات بنودها كما كانت
+    } else if (restart) {
+      fresh = true;
+      o.content = content;
+      o.content_version = content.version;
+      contentVersions = [content.version];        // فحص معلّق بإصدار آخر: needs_restart في المحرك
+    } else {
+      throw new ContentChanged(bound, content, pending);
+    }
+  }
+  const e = Engine.restore(net, record.engine, contentVersions);
   // الحالة المرشحة تُبنى في نسخ مستقلة، ولا يتغير شيء مما مرّره المستدعي إلا بعد نجاح كل المراحل (R15-01)
   const local = (record.records !== null && record.records !== undefined) ? clone(record.records)   // كما حُفظ
     : (records === null ? null : clone(records));
   const sc = new Scheduler(e, types, source, answer, { ...o, records: local, item_seconds });
   const st = clone(record.scheduler.state);
   const notes = [];
-  const cur = record.current ? clone(record.current) : null;
+  // رابطة السجل الذي تكتبه الاستعادة وما وقع فيه، كما يكتبهما المجدول في الجلسة (Scheduler.stamp، ك2)
+  const linked = (j) => ({ id: `i${sc.records.length}`, session: st.cur,
+    pack: (o.content ?? null) === null ? null : o.content.version, ...evidence(j.raw, j.answer, j.v ?? null) });
+  if (content !== null && !sameId(bound, content) && sameId(o.content ?? null, content) && !fresh) {
+    notes.push(['content_upgraded', bound === null ? null : bound.version, content.version]);
+  }
+  let cur = record.current ? clone(record.current) : null;
+  if (fresh) {                                  // إعادة بدء صريحة بعد تغيّر المحتوى (ك1)
+    if (cur && cur.kind !== 'show' && cur.journal) {
+      const j = cur.journal;                    // ما وقع في البند المعروض يبقى، مستبعدًا من التقييم
+      const rec = foldItem([...j.raw, ['interrupt']], j.answer, j.assess);
+      if (sc.records !== null) {
+        sc.records.push({ ...rec, ...linked(j), skill: cur.skill, activity: Activity.fromDict(cur.act).name, role: j.want.role ?? null,
+          item: j.item ?? null, unsettled: true, void: 'content_changed' });
+      }
+      notes.push(['void_item', cur.skill, j.item ?? null, 'content_changed']);
+    }
+    for (const c of [...(cur ? [cur] : []), ...st.saved, ...Object.values(st.parked)]) {
+      st.log.push([st.sessions, 'carry_dropped:content_changed', c.skill]);
+      notes.push(['content_restart', c.kind, c.skill]);
+    }
+    st.saved = [];
+    st.parked = {};
+    st.carried_items = [];
+    cur = null;
+    notes.push(['content_changed', bound === null ? null : bound.version, content.version]);
+  }
   if (cur) {                                    // النشاط الجاري يُضم إلى المخزن قبل التسوية والفحص
     let entry;
     if (cur.kind === 'show') {
       entry = { kind: 'show', skill: cur.skill, activity: cur.activity, pos: cur.pos, items: [] };
+      if (cur.consolidate) entry.consolidate = true;   // عرض التثبيت بعد طلب مساعدة في فحص احتفاظ (ت3)
     } else {
       const act = Activity.fromDict(cur.act);
       const items = [...cur.items];
       const j = cur.journal;
       if (j) {                                  // البند الجاري: يُختم بانقطاع، «غير محسوم»
         const rec = foldItem([...j.raw, ['interrupt']], j.answer, j.assess);
-        act.feed(classify(rec));
-        if (j.item) items.push(j.item);
-        if (sc.records !== null) {
-          sc.records.push({ ...rec, skill: act.skill, activity: act.name, role: j.want.role ?? null, item: j.item ?? null,
-            unsettled: true });
+        // إن تغيّرت صلاحية النشاط قبل الاستعادة فالبند تاريخ يُحفظ مع سبب استبعاده، ولا يُعطى للنشاط ولا يدخل عدّادًا
+        // (R17-01). الحكم حكم المحرك في الجلسة المفتوحة، كما في الجلسة الحية
+        const v = e.s.current !== null ? e.may_continue(cur.kind, e.s.current, act.skill, act.check_id ?? null)
+          : { ok: true };
+        const more = { skill: act.skill, activity: act.name, role: j.want.role ?? null, item: j.item ?? null,
+          unsettled: true };
+        // ما حمله طلب البند من وسوم يبقى في سجله كما يبقى لو خُتم في الجلسة (driveSteps)
+        if (j.want.fact_just_seen) more.fact_just_seen = j.want.fact_just_seen;
+        if (j.want.ahead_of) more.ahead_of = [...j.want.ahead_of];
+        if (j.want.repeated) more.repeated_after_void = true;
+        if (j.want.replaces) more.replaces = j.want.replaces;
+        if (v.ok) {
+          const shown = { ...act.shown };
+          act.feed(classify(rec));
+          for (const [k, n] of Object.entries(act.shown)) {   // البند المختوم هنا يدخل العدّاد كما لو خُتم في الجلسة (R16-03)
+            const d = n - (shown[k] ?? 0);
+            if (d > 0) st.n[k] = (st.n[k] ?? 0) + d;
+          }
+          if (j.item) items.push(j.item);
+          notes.push(['unsettled_item', act.skill, j.item ?? null, classify(rec)]);
+        } else {
+          act.voided(j.item ?? null, exposed(j.raw));   // التعرّض باقٍ وإن استُبعد البند (R18-01)
+          more.void = v.code;
+          notes.push(['void_item', act.skill, j.item ?? null, v.code]);
         }
-        notes.push(['unsettled_item', act.skill, j.item ?? null, classify(rec)]);
+        if (sc.records !== null) sc.records.push({ ...rec, ...linked(j), ...more });
+        // البند خُتم هنا، فهو آخر بند عُرض في الجلسة (R23-01)، بقاعدة التعرّض نفسها في Scheduler.seen: خُتم بانقطاع،
+        // فيُحتسب تعرّضًا إن أُكدت فيه إجابة أو طُلب فيه دعم. لقطة قديمة بلا حقيقة البند: لا يُعرف
+        st.last = j.fact === undefined || j.fact === null || st.cur === null ? null
+          : { session: st.cur, skill: act.skill, activity: act.name, item: j.item ?? null, fact: [...j.fact],
+            counts: exposed(j.raw) };
       }
       entry = { kind: cur.kind, skill: act.skill, act: act.toDict(), items };
     }
-    st.saved.push(entry);
-    notes.push(['current_saved', cur.kind, cur.skill]);
+    if (cur.kind === 'describe') {         // الوصفي لا يُستأنف: بنده الجاري خُتم، وما أُجيب منه مسجَّل
+      notes.push(['describe_dropped', cur.skill]);
+    } else {
+      st.saved.push(entry);
+      notes.push(['current_saved', cur.kind, cur.skill]);
+    }
   }
   notes.push(...reconcile(e, st));
   const bad = checkConsistent(e, st);
   if (bad.length) throw new Inconsistent(bad.join('؛ '));
   for (const k of STATE) sc[k] = st[k];
+  sc.last = st.cur !== null && st.last !== undefined && st.last !== null ? st.last : null;
+  sc.used = st.used ?? null;
+  sc.free = st.free ?? null;
+  sc.described = st.described ?? null;
   sc._next = st.next_id;
-  if (e.s.current !== null) {                   // التطبيق أُغلق في جلسة لم تُختم
+  // الجلسة التعليمية غير فتح التطبيق: إغلاقه لا يختمها، فتُكمَل بهويتها ووقتها وحصصها (المرحلة 0ج). تُختم هنا
+  // فقط إن انتقل يوم الأسرة: today يوم الأسرة عند الفتح، وبلا قيمة تبقى الجلسة مفتوحة
+  if (e.s.current !== null && today !== null && today !== e.s.sessions[e.s.current].day) {
     const ses = e.s.current;
     const r = e.apply({ id: `restore-end-${ses}`, type: 'session_end', session: ses });
     if (!r.ok) throw new Inconsistent(`تعذر ختم الجلسة ${ses}: ${r.code}`);
+    if (sc.stage !== null && sc.stage.free) {      // تدريب حر قطعه انتهاء اليوم: لا يأخذ حصة جلسة لاحقة
+      for (const c of sc.saved.filter((x) => x.kind === 'show' && x.skill === sc.stage.free && x.activity === 'practice')) {
+        sc.saved.splice(sc.saved.indexOf(c), 1);
+        notes.push(['free_practice_dropped', c.skill]);
+      }
+    }
     sc.cur = null;
+    sc.stage = null;
+    sc.last = null;                               // الجلسة خُتمت: لا «آخر بند» لها بعد (R23-01)
     notes.push(['session_closed', ses]);
   }
   if (records !== null && local !== null) {     // نجحت الاستعادة: تُحدَّث مصفوفة المستدعي بهويتها

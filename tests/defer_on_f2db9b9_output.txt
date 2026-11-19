@@ -1,0 +1,65 @@
+الكود والمحتوى من الالتزام f2db9b9، والاختباران من الالتزام الحالي
+=== تأخير بند التقييم، بلغة بايثون
+  أخفق  ب1. بوابة، وأول بنودها يكرر الحقيقة: يُبدأ بالثاني ثم يُعرض الأول. النتيجة نفسها
+        {'shown': ['gate:0', 'gate:1', 'gate:2', 'gate:3', 'gate:4', 'gate:5', 'gate:6'], 'marked': ['gate:0'], 'result': 'pass', 'defer': None, 'records': ['gate:0', 'gate:1', 'gate:2', 'gate:3', 'gate:4', 'gate:5', 'gate:6']}، والمتوقع {'shown': ['gate:1', 'gate:0', 'gate:2', 'gate:3', 'gate:4', 'gate:5', 'gate:6'], 'marked': [], 'result': 'pass', 'defer': {'main0': 1, 'main1': 0}, 'rec
+  أخفق  ب2. الموضع التالي يجاور الحقيقة (البند الثالث بحقيقة الأول): يُؤخَّر إلى أقرب موضع لا يجاورها
+        {'shown': ['gate:0', 'gate:1', 'gate:2', 'gate:3', 'gate:4', 'gate:5', 'gate:6'], 'marked': ['gate:0'], 'result': 'pass', 'defer': None, 'records': ['gate:0', 'gate:1', 'gate:2', 'gate:3', 'gate:4', 'gate:5', 'gate:6']}، والمتوقع {'shown': ['gate:1', 'gate:2', 'gate:3', 'gate:0', 'gate:4', 'gate:5', 'gate:6'], 'marked': [], 'result': 'pass', 'defer': {'main0': 1, 'main1': 2, 'main
+  أخفق  ب3. خطأ في البند المؤجَّل: نوع الخطأ نوع بنده، والتعويض ببندي نوعه، كما لو لم يُؤخَّر
+        {'shown': ['gate:0', 'gate:1', 'gate:2', 'gate:3', 'gate:4', 'gate:5', 'gate:6', 'comp:ف3:0', 'comp:ف3:1'], 'marked': ['gate:0'], 'result': 'pass', 'defer': None, 'errors': ['ف3'], 'records': ['gate:0', 'gate:1', 'gate:2', 'gate:3', 'gate:4', 'gate:5', 'gate:6', 'comp:ف3:0', 'comp:ف3:1']}، والمتوقع {'shown': ['gate:1', 'gate:0', 'gate:2', 'gate:3', 'gate:4', 'gate:5', 'gate:6
+  أخفق  ب4. البند الذي قبل المؤجَّل ينقطع وبديله بحقيقة المؤجَّل: يُؤخَّر المؤجَّل ثانية
+        {'shown': ['gate:0', 'alt:ف3:0', 'gate:1', 'gate:2', 'gate:3', 'gate:4', 'gate:5', 'gate:6'], 'marked': ['gate:0'], 'result': 'pass', 'defer': None, 'records': ['gate:0', 'alt:ف3:0', 'gate:1', 'gate:2', 'gate:3', 'gate:4', 'gate:5', 'gate:6']}، والمتوقع {'shown': ['gate:1', 'alt:ف3:0', 'gate:2', 'gate:0', 'gate:3', 'gate:4', 'gate:5', 'gate:6'], 'marked': [], 'result': 'pass', 
+  نجح  ب5. آخر بند عُرض لا يكرر حقيقة أول البوابة: الترتيب كما هو، ولا حقل defer
+  أخفق  ب6. بديل المؤجَّل يحمل حقيقة ما بعد الموضع القريب: يُتخطى ذلك الموضع
+        {'shown': ['gate:0', 'gate:1', 'gate:2', 'gate:3', 'gate:4', 'gate:5', 'gate:6'], 'marked': ['gate:0'], 'result': 'pass', 'defer': None, 'records': ['gate:0', 'gate:1', 'gate:2', 'gate:3', 'gate:4', 'gate:5', 'gate:6']}، والمتوقع {'shown': ['gate:1', 'gate:2', 'gate:0', 'gate:3', 'gate:4', 'gate:5', 'gate:6'], 'marked': [], 'result': 'pass', 'defer': {'main0': 1, 'main1': 2, 'main
+  أخفق  ت1. تحقق قصير بثلاث حقائق: يُبدأ بالثاني ثم الأول
+        {'shown': ['short:0', 'short:1', 'short:2'], 'marked': ['short:0'], 'result': True, 'defer': None, 'records': ['short:0', 'short:1', 'short:2']}، والمتوقع {'shown': ['short:1', 'short:0', 'short:2'], 'marked': [], 'result': True, 'defer': {'0': 1, '1': 0}, 'records': ['short:1', 'short:0', 'short:2']}
+  أخفق  ت2. تحقق قصير، وخطأ في أول ما يُعرض: يتوقف كما يتوقف بلا تأخير، والمؤجَّل لا يُعرض
+        {'shown': ['short:0'], 'marked': ['short:0'], 'result': False, 'defer': None, 'records': ['short:0']}، والمتوقع {'shown': ['short:1'], 'marked': [], 'result': False, 'defer': {'0': 1, '1': 0}, 'records': ['short:1']}
+  نجح  ت3. تحقق قصير، والثالث بحقيقة الأول: لا موضع، فيُعرض الأول موسومًا بالبند الذي سبقه
+  أخفق  ف1. فحص استقلال: تُبدَّل الخانتان 1 و2، والأجوبة تُحفظ بخاناتها
+        {'shown': ['check:1', 'check:2', 'check:3', 'check:4', 'check:5', 'check:6', 'check:7', 'check:8', 'check:9', 'check:10'], 'marked': ['check:1'], 'result': 'pass', 'defer': None, 'answers': {'2': 'correct', '1': 'wrong'}, 'records': ['check:1', 'check:2', 'check:3', 'check:4', 'check:5', 'check:6', 'check:7', 'check:8', 'check:9', 'check:10']}، والمتوقع {'shown': ['check:2', 'chec
+  أخفق  ف2. فحص استقلال، وبديل الخانة 1 بحقيقة الخانة 3: يُتخطى الموضع الأول إلى ما بعد الخانة 3
+        {'shown': ['check:1', 'check:2', 'check:3', 'check:4', 'check:5', 'check:6', 'check:7', 'check:8', 'check:9', 'check:10'], 'marked': ['check:1'], 'result': 'pass', 'defer': None, 'records': ['check:1', 'check:2', 'check:3', 'check:4', 'check:5', 'check:6', 'check:7', 'check:8', 'check:9', 'check:10']}، والمتوقع {'shown': ['check:2', 'check:3', 'check:1', 'check:4', 'check:5', 'che
+  أخفق  ح1. فحص احتفاظ: يُبدأ بالثاني ثم الأول، والعدّ نفسه
+        {'shown': ['ret:0', 'ret:1', 'ret:2', 'ret:3', 'ret:4'], 'marked': ['ret:0'], 'result': 'done', 'defer': None, 'correct': 4, 'records': ['ret:0', 'ret:1', 'ret:2', 'ret:3', 'ret:4']}، والمتوقع {'shown': ['ret:1', 'ret:0', 'ret:2', 'ret:3', 'ret:4'], 'marked': [], 'result': 'done', 'defer': {'0': 1, '1': 0}, 'correct': 4, 'records': ['ret:1', 'ret:0', 'ret:2', 'ret:3', 'ret:4']}
+  أخفق  س1. حفظ النشاط بعد بندين واستعادته من لقطته: الترتيب يُكمَل كما هو
+        {'shown': ['gate:0', 'gate:1', 'gate:2', 'gate:3', 'gate:4', 'gate:5', 'gate:6'], 'marked': ['gate:0'], 'result': 'pass', 'defer': None, 'records': ['gate:0', 'gate:1', 'gate:2', 'gate:3', 'gate:4', 'gate:5', 'gate:6']}، والمتوقع {'shown': ['gate:1', 'gate:2', 'gate:3', 'gate:0', 'gate:4', 'gate:5', 'gate:6'], 'marked': [], 'result': 'pass', 'defer': {'main0': 1, 'main1': 2, 'main
+  نجح  م1. بلا حقن: بوابة 1-4-2 بترتيب المحتوى، بلا وسم
+  أخفق  م2. بالحقن: يُبدأ بالبند الثاني ثم الأول، بلا وسم، وسجل لكل بند بترتيب عرضه
+        [['1-4-2/gate/01', '1-4-2/gate/02', '1-4-2/gate/03', '1-4-2/gate/04', '1-4-2/gate/05', '1-4-2/gate/06', '1-4-2/gate/07', '1-4-2/gate/08', '1-4-2/gate/09'], ['1-4-2/lesson/x'], ['1-4-2/gate/01', '1-4-2/gate/02', '1-4-2/gate/03', '1-4-2/gate/04', '1-4-2/gate/05', '1-4-2/gate/06', '1-4-2/gate/07', '1-4-2/gate/08', '1-4-2/gate/09']]، والمتوقع [['1-4-2/gate/02', '1-4-2/gate/01', '1-4-2
+  نجح  م3. حالة المهارة بعد البوابة واحدة بالتأخير وبدونه، وهي الإعفاء
+  نجح  م4. إغلاق والبند المؤجَّل مطلوب لم يُعرض، ثم استعادة: الترتيب والسجلات وحالة المهارة كالمتصل
+النتيجة: نجح 5 من 17
+رمز الخروج: 1
+=== تأخير بند التقييم، بلغة JavaScript
+  أخفق  ب1. بوابة، وأول بنودها يكرر الحقيقة: يُبدأ بالثاني ثم يُعرض الأول. النتيجة نفسها
+        {"shown":["gate:0","gate:1","gate:2","gate:3","gate:4","gate:5","gate:6"],"marked":["gate:0"],"result":"pass","defer":null,"records":["gate:0","gate:1","gate:2","gate:3","gate:4","gate:5","gate:6"]}، والمتوقع {"records":["gate:1","gate:0","gate:2","gate:3","gate:4","gate:5","gate:6"],"shown":["gate:1","gate:0","gate:2","gate:3","gate:4","gate:5","gate:6"],"marked":[],"result":"pas
+  أخفق  ب2. الموضع التالي يجاور الحقيقة (البند الثالث بحقيقة الأول): يُؤخَّر إلى أقرب موضع لا يجاورها
+        {"shown":["gate:0","gate:1","gate:2","gate:3","gate:4","gate:5","gate:6"],"marked":["gate:0"],"result":"pass","defer":null,"records":["gate:0","gate:1","gate:2","gate:3","gate:4","gate:5","gate:6"]}، والمتوقع {"records":["gate:1","gate:2","gate:3","gate:0","gate:4","gate:5","gate:6"],"shown":["gate:1","gate:2","gate:3","gate:0","gate:4","gate:5","gate:6"],"marked":[],"result":"pas
+  أخفق  ب3. خطأ في البند المؤجَّل: نوع الخطأ نوع بنده، والتعويض ببندي نوعه، كما لو لم يُؤخَّر
+        {"shown":["gate:0","gate:1","gate:2","gate:3","gate:4","gate:5","gate:6","comp:ف3:0","comp:ف3:1"],"marked":["gate:0"],"result":"pass","defer":null,"records":["gate:0","gate:1","gate:2","gate:3","gate:4","gate:5","gate:6","comp:ف3:0","comp:ف3:1"],"errors":["ف3"]}، والمتوقع {"records":["gate:1","gate:0","gate:2","gate:3","gate:4","gate:5","gate:6","comp:ف3:0","comp:ف3:1"],"sh
+  أخفق  ب4. البند الذي قبل المؤجَّل ينقطع وبديله بحقيقة المؤجَّل: يُؤخَّر المؤجَّل ثانية
+        {"shown":["gate:0","alt:ف3:0","gate:1","gate:2","gate:3","gate:4","gate:5","gate:6"],"marked":["gate:0"],"result":"pass","defer":null,"records":["gate:0","alt:ف3:0","gate:1","gate:2","gate:3","gate:4","gate:5","gate:6"]}، والمتوقع {"records":["gate:1","alt:ف3:0","gate:2","gate:0","gate:3","gate:4","gate:5","gate:6"],"shown":["gate:1","alt:ف3:0","gate:2","gate:0","gate:3","gate
+  نجح  ب5. آخر بند عُرض لا يكرر حقيقة أول البوابة: الترتيب كما هو، ولا حقل defer
+  أخفق  ب6. بديل المؤجَّل يحمل حقيقة ما بعد الموضع القريب: يُتخطى ذلك الموضع
+        {"shown":["gate:0","gate:1","gate:2","gate:3","gate:4","gate:5","gate:6"],"marked":["gate:0"],"result":"pass","defer":null,"records":["gate:0","gate:1","gate:2","gate:3","gate:4","gate:5","gate:6"]}، والمتوقع {"records":["gate:1","gate:2","gate:0","gate:3","gate:4","gate:5","gate:6"],"shown":["gate:1","gate:2","gate:0","gate:3","gate:4","gate:5","gate:6"],"marked":[],"result":"pas
+  أخفق  ت1. تحقق قصير بثلاث حقائق: يُبدأ بالثاني ثم الأول
+        {"shown":["short:0","short:1","short:2"],"marked":["short:0"],"result":true,"defer":null,"records":["short:0","short:1","short:2"]}، والمتوقع {"records":["short:1","short:0","short:2"],"shown":["short:1","short:0","short:2"],"marked":[],"result":true,"defer":{"0":1,"1":0}}
+  أخفق  ت2. تحقق قصير، وخطأ في أول ما يُعرض: يتوقف كما يتوقف بلا تأخير، والمؤجَّل لا يُعرض
+        {"shown":["short:0"],"marked":["short:0"],"result":false,"defer":null,"records":["short:0"]}، والمتوقع {"records":["short:1"],"shown":["short:1"],"marked":[],"result":false,"defer":{"0":1,"1":0}}
+  نجح  ت3. تحقق قصير، والثالث بحقيقة الأول: لا موضع، فيُعرض الأول موسومًا بالبند الذي سبقه
+  أخفق  ف1. فحص استقلال: تُبدَّل الخانتان 1 و2، والأجوبة تُحفظ بخاناتها
+        {"shown":["check:1","check:2","check:3","check:4","check:5","check:6","check:7","check:8","check:9","check:10"],"marked":["check:1"],"result":"pass","defer":null,"records":["check:1","check:2","check:3","check:4","check:5","check:6","check:7","check:8","check:9","check:10"],"answers":{"1":"wrong","2":"correct"}}، والمتوقع {"records":["check:2","check:1","check:3","check:4","check:
+  أخفق  ف2. فحص استقلال، وبديل الخانة 1 بحقيقة الخانة 3: يُتخطى الموضع الأول إلى ما بعد الخانة 3
+        {"shown":["check:1","check:2","check:3","check:4","check:5","check:6","check:7","check:8","check:9","check:10"],"marked":["check:1"],"result":"pass","defer":null,"records":["check:1","check:2","check:3","check:4","check:5","check:6","check:7","check:8","check:9","check:10"]}، والمتوقع {"records":["check:2","check:3","check:1","check:4","check:5","check:6","check:7","check:8","chec
+  أخفق  ح1. فحص احتفاظ: يُبدأ بالثاني ثم الأول، والعدّ نفسه
+        {"shown":["ret:0","ret:1","ret:2","ret:3","ret:4"],"marked":["ret:0"],"result":"done","defer":null,"records":["ret:0","ret:1","ret:2","ret:3","ret:4"],"correct":4}، والمتوقع {"records":["ret:1","ret:0","ret:2","ret:3","ret:4"],"shown":["ret:1","ret:0","ret:2","ret:3","ret:4"],"marked":[],"result":"done","defer":{"0":1,"1":0},"correct":4}
+  أخفق  س1. حفظ النشاط بعد بندين واستعادته من لقطته: الترتيب يُكمَل كما هو
+        {"shown":["gate:0","gate:1","gate:2","gate:3","gate:4","gate:5","gate:6"],"marked":["gate:0"],"result":"pass","defer":null,"records":["gate:0","gate:1","gate:2","gate:3","gate:4","gate:5","gate:6"]}، والمتوقع {"records":["gate:1","gate:2","gate:3","gate:0","gate:4","gate:5","gate:6"],"shown":["gate:1","gate:2","gate:3","gate:0","gate:4","gate:5","gate:6"],"marked":[],"result":"pas
+  نجح  م1. بلا حقن: بوابة 1-4-2 بترتيب المحتوى، بلا وسم
+  أخفق  م2. بالحقن: يُبدأ بالبند الثاني ثم الأول، بلا وسم، وسجل لكل بند بترتيب عرضه
+        [["1-4-2/gate/01","1-4-2/gate/02","1-4-2/gate/03","1-4-2/gate/04","1-4-2/gate/05","1-4-2/gate/06","1-4-2/gate/07","1-4-2/gate/08","1-4-2/gate/09"],["1-4-2/lesson/x"],["1-4-2/gate/01","1-4-2/gate/02","1-4-2/gate/03","1-4-2/gate/04","1-4-2/gate/05","1-4-2/gate/06","1-4-2/gate/07","1-4-2/gate/08","1-4-2/gate/09"]]، والمتوقع [["1-4-2/gate/02","1-4-2/gate/01","1-4-2/gate/03","1-4-2/gat
+  نجح  م3. حالة المهارة بعد البوابة واحدة بالتأخير وبدونه، وهي الإعفاء
+  نجح  م4. إغلاق والبند المؤجَّل مطلوب لم يُعرض، ثم استعادة: الترتيب والسجلات وحالة المهارة كالمتصل
+النتيجة: نجح 5 من 17
+رمز الخروج: 1
