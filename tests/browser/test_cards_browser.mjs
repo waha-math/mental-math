@@ -307,6 +307,29 @@ const looks = await page.evaluate(() => {
   return [b.textContent, at(0) < at(t.length - 1), /[٠-٩]/.test(document.getElementById('board').textContent)];
 });
 check('اللوحة تُقرأ: رمز المهارة من اليسار (3-5-1 لا 1-5-3)، والأرقام 0-9 لا الهندية في التواريخ', looks, ['3-5-1', true, false]);
+// ---------------------------------------------------------------- شاشة اللوح الأفقي القصير (صورة الأب، 19 نوفمبر)
+// لوح الأب نحو 923×415 نقطة: كانت لوحة الأرقام تنزل تحت الشاشة فيختفي ✓. المتوقع: كل زر داخل الشاشة، في بند أرقام
+// وفي بند بطاقات، وعلى أصغر من ذلك (800×360)
+for (const [vw, vh] of [[923, 415], [800, 360]]) {
+  const ctx3 = await browser.newContext({ viewport: { width: vw, height: vh }, hasTouch: true });
+  await ctx3.addInitScript((t) => {
+    window.MM_TEST = { noWorker: true, clock: { now: t, mono: 0 }, speaker: { available: async () => true, say() {} } };
+    window.MM_TEST.now = () => window.MM_TEST.clock.now; window.MM_TEST.mono = () => 0;
+  }, now);
+  const p3 = await ctx3.newPage();
+  p3.on('pageerror', (x) => errors.push(x.message));
+  await p3.goto(page.url().replace(/#.*$/, ''));
+  await p3.waitForSelector('[data-screen="who"]');
+  await p3.evaluate(async (r) => { const s = await import('/app/store.mjs'); const db = await s.openDB(); await s.commit(db, r, 0); db.close(); }, H.rec);
+  await p3.click('[data-child="older1"]');
+  await p3.click('#start');
+  await p3.waitForSelector('.task[data-ready="true"]');
+  const outside = await p3.evaluate(() => [...document.querySelectorAll('button')].filter((x) => {
+    const r = x.getBoundingClientRect(); return r.bottom > innerHeight + 1 || r.right > innerWidth + 1 || r.top < 0 || r.left < 0;
+  }).map((x) => x.dataset.key || x.id));
+  check(`شاشة ${vw}×${vh}: كل أزرار البند داخل الشاشة، ومنها ✓`, [outside, await p3.$('[data-key="ok"]') !== null], [[], true]);
+  await ctx3.close();
+}
 check('لا خطأ في الصفحة', errors, []);
 await browser.close();
 server.close();

@@ -306,7 +306,7 @@ await page.fill('#decision-reason', 'قرار الشريحة في 10.2');
 await page.click('#setup-ok');                                           // بلا قرار مختار: لا يُنشأ ملف
 check('مدخل البالغ: لا قرار مختار سلفًا، وبلا اختيار لا يُنشأ ملف', [await page.evaluate(() => document.getElementById('dec-0').checked),
   await page.evaluate(() => document.getElementById('adult-msg').textContent), await dbRec(page)],
-[false, 'اختر قرارًا واحدًا على الأقل', null]);
+[false, 'اختر من أين يبدأ الطفل', null]);
 await page.click('#dec-0');
 await page.click('#setup-ok');
 await page.waitForSelector('[data-screen="workshop"]');

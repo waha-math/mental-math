@@ -6,7 +6,7 @@ import { Link, Blocked, familyDay, loadDevice, saveDevice, pinHash, checkRecord,
 import { summarize, dayText } from './dashboard.mjs';
 import { load as loadRecord } from '../store.mjs';
 import { readAll, makeBackup, checkBackup, importBackup, undoInfo, undoImport } from '../backup.mjs';
-import { PROFILES, TZ, DEVICE } from './config.mjs';
+import { PROFILES, TZ, DEVICE, SKILLS } from './config.mjs';
 import { spoken, browserSpeaker, androidSpeaker } from './speech.mjs';
 import { modelFor, supportFor, comparePair } from './models.mjs';
 
@@ -45,7 +45,7 @@ function setLang(l) {
 }
 
 const REASON = {
-  setup: 'لا ملف لهذا الطفل بعد. يُنشأ بقرار الفتح في 10.2.',
+  setup: 'لا ملف لهذا الطفل بعد. أنشئه هنا.',
   save: 'تعذّر الحفظ. ما أجابه الطفل باقٍ في هذه النافذة، ولن يُعرض بند جديد قبل أن يُحفظ.',
   conflict: 'نافذة أخرى كتبت في ملف هذا الطفل. هذه النافذة توقفت.',
   other_window: 'ملف هذا الطفل مفتوح في نافذة أخرى.',
@@ -84,6 +84,12 @@ const ui = (key) => L(pack.ui[key]);
 const nameOf = (c) => dev.names[c] ?? '';
 // رموز المهارات (3-5-1) معزولة من اليسار داخل نص عربي. قواعد الاتجاه تُبقيها من اليسار بلا عزل أيضًا (أرقام بينها
 // شرطات)، والعزل صريح لا يعتمد على ذلك. ظننتُها معكوسة في صورة اللوحة، والقياس في الاختبار أثبت أنها لم تكن
+// المهارة باسمها ومثالها، والمثال من اليسار
+const skillText = (s) => { const [name, eg] = SKILLS[s] ?? [s, null]; return eg ? [name, ' (مثل ', h('bdi', { dir: 'ltr' }, eg), ')'] : name; };
+const listText = (xs) => xs.flatMap((x, k) => [k ? '، و' : '', ...[skillText(x)].flat()]);
+// قرار الفتح كما يقرؤه البالغ: من أين يبدأ الطفل، وما الذي يُفترض أنه يتقنه قبلها
+const decisionText = (d) => [h('strong', {}, 'يبدأ من: ', skillText(d.skill)),
+  h('small', {}, 'يُفترض أنه يتقن قبلها: ', listText(d.bypass), '.')];
 const codes = (text) => String(text).split(/(\d+-\d+-\d+)/).map((x, k) => (k % 2 ? h('bdi', { dir: 'ltr' }, x) : x));
 
 function strip({ adult = null } = {}) {
@@ -437,16 +443,17 @@ function adultPanel(reason, detail = null) {
   const sections = [];
   if (reason === 'setup') {
     const name = h('input', { id: 'child-name', maxlength: '20', value: nameOf(child) });
-    const why = h('textarea', { id: 'decision-reason', rows: '2' }, 'قرار الشريحة في 10.2');
+    const why = h('textarea', { id: 'decision-reason', rows: '2' }, 'رأي المعلم أنه يتقن ما قبلها');
     // القرارات لهذا الطفل وحده: يُسجَّل منها ما يختاره البالغ، ولا قرار مختار سلفًا
     const boxes = p.decisions.map((d, k) => h('input', { type: 'checkbox', id: 'dec-' + k, 'data-skill': d.skill }));
     sections.push(h('section', {}, h('label', {}, 'اسم الطفل كما يظهر له (يُحفظ على هذا الجهاز وحده)', name),
-      h('p', {}, 'قرارات الفتح في الشريحة (10.2)، لهذا الطفل وحده. كل قرار يُسجَّل قرارًا للمعلم باسم مهارته، ولا يغيّر وصف الأدلة:'),
-      p.decisions.map((d, k) => h('label', { class: 'pick' }, boxes[k], codes(`فتح ${d.skill} متجاوزًا ${d.bypass.join(' و')}`))),
-      h('label', {}, 'سبب القرار', why),
+      h('p', {}, 'من أين يبدأ هذا الطفل؟ كل وحدة في التطبيق تفترض مهارات قبلها لم يُدرّسها التطبيق بعد. اختر ما يراه المعلم، '
+        + 'فيبدأ الطفل منه مباشرة. اختيارك يُسجَّل قرارًا للمعلم، والتطبيق لا يعدّه إتقانًا: يبقى يختبر الطفل ويراقبه.'),
+      p.decisions.map((d, k) => h('label', { class: 'pick' }, boxes[k], h('span', {}, decisionText(d)))),
+      h('label', {}, 'لماذا؟ (يُحفظ مع القرار)', why),
       h('button', { id: 'setup-ok', on: { click: async () => {
         const chosen = p.decisions.filter((_, k) => boxes[k].checked);
-        if (!chosen.length) { msg.textContent = 'اختر قرارًا واحدًا على الأقل'; return; }
+        if (!chosen.length) { msg.textContent = 'اختر من أين يبدأ الطفل'; return; }
         if (!why.value.trim()) { msg.textContent = 'السبب مطلوب'; return; }
         try {
           dev.names[child] = name.value.trim();
@@ -454,7 +461,7 @@ function adultPanel(reason, detail = null) {
           await link.setup(chosen, why.value.trim());
         } catch (err) { msg.textContent = String(err.detail ?? err.message ?? err); return; }
         await ready();
-      } } }, 'سجّل وأنشئ الملف')));
+      } } }, 'أنشئ الملف')));
   }
   if (reason === 'save') {
     sections.push(h('section', {}, h('p', {}, `سبب الفشل: ${detail}`),
@@ -485,18 +492,18 @@ function adultPanel(reason, detail = null) {
     const made = link.decisions();
     const rest = p.decisions.filter((d) => !made.some((x) => x.skill === d.skill));
     const why2 = h('textarea', { id: 'decide-reason', rows: '2' });
-    sections.push(h('section', { id: 'decisions' }, h('p', {}, 'قرارات الفتح في هذا الملف. قرار معلم يفتح التقدم، وليس دليل إتقان:'),
-      made.map((x) => h('p', { class: 'made', 'data-skill': x.skill }, codes(`${x.skill} متجاوزًا ${x.bypass.join(' و')}. السبب: ${x.reason}`))),
-      rest.length ? [h('label', {}, 'سبب القرار الجديد', why2), rest.map((d) => h('button', { 'data-decide': d.skill,
+    sections.push(h('section', { id: 'decisions' }, h('p', {}, 'من أين يبدأ هذا الطفل (قرار المعلم، وليس دليل إتقان):'),
+      made.map((x) => h('p', { class: 'made', 'data-skill': x.skill }, decisionText(x), h('small', {}, ` السبب: ${x.reason}`))),
+      rest.length ? [h('label', {}, 'لماذا؟ (للقرار الجديد)', why2), rest.map((d) => h('button', { 'data-decide': d.skill,
         disabled: link.sc.cur !== null, on: { click: async () => {
           if (!why2.value.trim()) { msg.textContent = 'السبب مطلوب'; return; }
           try { await link.decide(d, why2.value.trim()); } catch (err) { msg.textContent = String(err.message ?? err); return; }
           adultPanel(reason, detail);
-        } } }, codes(`سجّل فتح ${d.skill} متجاوزًا ${d.bypass.join(' و')}`)))] : null));
+        } } }, 'ابدأ أيضًا من: ', skillText(d.skill)))] : null));
   }
   for (const f of (link ? link.flagged() : [])) {
     sections.push(h('section', { 'data-flag': f.session }, h('p', { class: 'warn' },
-      `الجلسة ${f.session}: تاريخ الجهاز يومها بعيد عن آخر جلسة (9.1). القرارات المعتمدة على التاريخ معلّقة حتى تؤكده.`),
+      `الجلسة ${f.session}: تاريخ الجهاز يومها بعيد عن آخر جلسة. القرارات المعتمدة على التاريخ معلّقة حتى تؤكده.`),
     h('button', { on: { click: async () => {
       try { await link.confirmDate(f.session); } catch (err) { msg.textContent = String(err.message); return; }
       adultPanel(reason, detail);
