@@ -1,0 +1,38 @@
+// غلاف أندرويد للتطبيق: WebView يعرض app/ من أصول الحزمة، ونطق أندرويد بدل نطق المتصفح، وحفظ النسخة الاحتياطية
+// في التنزيلات. الأصول تُنسخ في سير العمل (.github/workflows/apk.yml)، لا تُحفظ هنا.
+plugins { id 'com.android.application' }
+
+def keystore = System.getenv('MM_KEYSTORE')                 // مفتاح ثابت إن وُجد: التحديث يُثبَّت فوق السابق وتبقى البيانات
+
+android {
+    namespace 'net.wahamath.mentalmath'
+    compileSdk 34
+    defaultConfig {
+        applicationId 'net.wahamath.mentalmath'
+        minSdk 24
+        targetSdk 34
+        versionCode((System.getenv('GITHUB_RUN_NUMBER') ?: '1') as Integer)
+        versionName "0.1.${System.getenv('GITHUB_RUN_NUMBER') ?: '0'}"
+    }
+    signingConfigs {
+        if (keystore) {
+            stable {
+                storeFile file(keystore)
+                storePassword System.getenv('MM_KEYSTORE_PASSWORD')
+                keyAlias System.getenv('MM_KEY_ALIAS')
+                keyPassword System.getenv('MM_KEY_PASSWORD')
+            }
+        }
+    }
+    buildTypes {
+        debug { if (keystore) signingConfig signingConfigs.stable }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
+
+dependencies {
+    implementation 'androidx.webkit:webkit:1.11.0'
+}

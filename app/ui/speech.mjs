@@ -29,3 +29,15 @@ export function browserSpeaker(lang = 'ar', synth = globalThis.speechSynthesis) 
     },
   };
 }
+
+// داخل تطبيق أندرويد (android/): نطق المتصفح لا يعمل في WebView، فالنطق من TextToSpeech عبر الجسر AndroidTTS.
+// available: ينتظر تهيئة المحرك حتى 3 ثوانٍ، ثم يسأل هل للغة صوت مثبت
+export function androidSpeaker(lang = 'ar', bridge = globalThis.AndroidTTS) {
+  return {
+    async available() {
+      for (let k = 0; k < 30 && !bridge.ready(); k++) await new Promise((r) => setTimeout(r, 100));
+      return bridge.has(lang);
+    },
+    say(text) { bridge.speak(text, lang); },
+  };
+}

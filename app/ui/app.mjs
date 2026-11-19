@@ -7,7 +7,7 @@ import { summarize, dayText } from './dashboard.mjs';
 import { load as loadRecord } from '../store.mjs';
 import { readAll, makeBackup, checkBackup, importBackup, undoInfo, undoImport } from '../backup.mjs';
 import { PROFILES, TZ, DEVICE } from './config.mjs';
-import { spoken, browserSpeaker } from './speech.mjs';
+import { spoken, browserSpeaker, androidSpeaker } from './speech.mjs';
 import { modelFor, supportFor, comparePair } from './models.mjs';
 
 const T = globalThis.MM_TEST ?? {};     // منفذ الاختبار: speaker و now و mono و hooks و db
@@ -599,6 +599,15 @@ function backupSection(msg) {
       const made = nowMs();
       const obj = makeBackup(await readAll(db), { content: { version: pack.version, digest: pack.digest }, made_at: made });
       const day = new Date(made).toLocaleDateString('en-CA', { timeZone: TZ });
+      if (globalThis.AndroidFiles) {     // تطبيق أندرويد: التنزيل من WebView لا يعمل، فالملف يُكتب في مجلد التنزيلات
+        const where = globalThis.AndroidFiles.save(`mental-math-backup-${day}.json`, JSON.stringify(obj));
+        if (where.startsWith('!')) { msg.textContent = `لم تُحفظ النسخة: ${where.slice(1)}`; return; }
+        dev.backup_at = made;
+        try { await saveDevice(db, dev); } catch { /* التاريخ للتذكير وحده */ }
+        adultPanel('menu');
+        document.getElementById('adult-msg').textContent = `حُفظت في ${where}`;
+        return;
+      }
       const a = h('a', { href: URL.createObjectURL(new Blob([JSON.stringify(obj)], { type: 'application/json' })),
         download: `mental-math-backup-${day}.json` });
       document.body.append(a);
@@ -623,9 +632,11 @@ try {
   pack = await (await fetch(new URL('../../slice-content.json', import.meta.url))).json();
   db = await openDB(T.db);
   dev = await loadDevice(db, DEVICE);
-  speakers.ar = T.speaker ?? browserSpeaker('ar');
-  speakers.en = T.speakerEn ?? T.speaker ?? browserSpeaker('en');
-  if ('serviceWorker' in navigator && !T.noWorker) {   // العمل دون اتصال (9.2). فشل التسجيل لا يوقف التطبيق
+  const native = Boolean(globalThis.AndroidTTS);          // داخل تطبيق أندرويد (android/)
+  const voice = native ? androidSpeaker : browserSpeaker;
+  speakers.ar = T.speaker ?? voice('ar');
+  speakers.en = T.speakerEn ?? T.speaker ?? voice('en');
+  if ('serviceWorker' in navigator && !T.noWorker && !native) {   // التطبيق يحمل ملفاته: لا عامل خدمة   // العمل دون اتصال (9.2). فشل التسجيل لا يوقف التطبيق
     navigator.serviceWorker.register(new URL('../sw.js', import.meta.url)).then((r) => { worker = r; }, () => {});
   }
   who();
