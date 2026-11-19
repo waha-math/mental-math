@@ -16,6 +16,7 @@ const STR = {
   lookFrame: 'انظر إلى الإطار، وجرّب مرة أخرى', tryAgain: 'جرّب مرة أخرى', askHelp: 'هل تحتاج مساعدة؟',
   yes: 'نعم', no: 'لا', someone: 'أحد الكبار', back: 'عدنا', exit: 'خروج', soon: 'قريبًا',
   doneToday: 'انتهت مهمة اليوم. نلتقي غدًا', nothing: 'لا مهمة جديدة الآن',
+  more: { resume: 'أكمل الدرس', lesson: 'أكمل الدرس', practice: 'تدريب أكثر', open: 'درس جديد' }, askMore: 'هل تريد المزيد؟',
   answered: (n) => (n === 0 ? 'انتهت مهمة اليوم' : n === 1 ? 'أجبتَ عن سؤال واحد اليوم' : n === 2 ? 'أجبتَ عن سؤالين اليوم'
     : n <= 10 ? `أجبتَ عن ${n} أسئلة اليوم` : `أجبتَ عن ${n} سؤالًا اليوم`),
   save: { idle: '', saving: 'جارٍ الحفظ', saved: 'تم الحفظ', failed: 'لم يُحفظ', read_only: 'لم يُحفظ' },
@@ -112,17 +113,26 @@ async function ready() {
 // ---------------------------------------------------------------- الورشة
 function workshop() {
   const today = familyDay((T.now ?? Date.now)(), TZ);
-  const done = link.e.s.order.some((s) => link.e.s.sessions[s].ended && link.e.s.sessions[s].day === today);
+  // جلسة مفتوحة، ولو إضافية، تُكمَل بـ«ابدأ». وبعد ختم جلسة اليوم لا «ابدأ»: يُعرض «أريد المزيد» إن كان عندنا ما يُعرض
+  const done = link.sc.cur === null
+    && link.e.s.order.some((s) => link.e.s.sessions[s].ended && link.e.s.sessions[s].day === today);
   screen('workshop', strip({ adult: () => pinGate(() => adultPanel('menu')) }),
     h('section', { class: 'center' },
-      done ? [h('div', { class: 'icon' }, '🌙'), h('h1', { id: 'done-today' }, STR.doneToday),
+      done ? [h('div', { class: 'icon' }, '🌙'), h('h1', { id: 'done-today' }, STR.doneToday), moreButton(),
         h('button', { id: 'exit', on: { click: who } }, STR.exit)]
-        : h('button', { class: 'big', id: 'start', on: { click: begin } }, '▶ ' + STR.start)));
-  say(done ? STR.doneToday : STR.tapStart);
+        : h('button', { class: 'big', id: 'start', on: { click: () => begin() } }, '▶ ' + STR.start)));
+  say(done ? STR.doneToday + (link.more().length ? '. ' + STR.askMore : '') : STR.tapStart);
 }
 
-async function begin() {
-  const r = await guard(() => link.start());
+// «أريد المزيد»: يظهر حين يعرض المجدول جلسة إضافية، باسم أول ما فيها. لا يظهر زر لا شيء وراءه
+function moreButton() {
+  const plan = link.more();
+  return plan.length ? h('button', { class: 'big', id: 'more', 'data-plan': plan[0][0], on: { click: () => begin(true) } },
+    '▶ ' + STR.more[plan[0][0]]) : null;
+}
+
+async function begin(more = false) {
+  const r = await guard(() => link.start(more));
   if (r === null || r === 'busy') return;
   if (r === 'done') {
     screen('nothing', strip({ adult: () => pinGate(() => adultPanel('menu')) }),
@@ -280,9 +290,9 @@ async function item() {
 function endScreen() {
   const { answered } = link.summary();
   screen('end', strip(), h('section', { class: 'center' }, h('div', { class: 'icon' }, '⭐'),
-    h('h1', { id: 'end-message' }, STR.answered(answered)),
+    h('h1', { id: 'end-message' }, STR.answered(answered)), moreButton(),
     h('button', { id: 'exit', on: { click: who } }, STR.exit)));
-  say(STR.answered(answered));
+  say(STR.answered(answered) + (link.more().length ? '. ' + STR.askMore : ''));
   showSave();
 }
 

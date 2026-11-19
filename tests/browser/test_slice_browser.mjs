@@ -66,16 +66,16 @@ function rSetup(reason) {
   R.e = new Engine(undefined, { group: 'young' });
   R.e.apply({ id: 'd0', type: 'teacher_open', skill: '1-4-1', bypass: ['1-3-3'], reason });
   R.sc = new Scheduler(R.e, TYPES, source(), null, { group: 'young', scope: ['1-4-1', '1-4-2'], learning: true, cap: 360,
-    item_seconds: secs, records: [], retention: true, content: IDENT });
+    item_seconds: secs, records: [], retention: true, content: IDENT, day_cap: 1800 });
   R.rec = rSnap();
 }
-function rStart(now) {
+function rStart(now, more = false) {
   const day = Math.floor((now + 2 * 3600000) / 86400000);                 // القاهرة UTC+2 في نوفمبر
   const r = persist.restore(JSON.parse(JSON.stringify(R.rec)), { types: TYPES, source: source(), answer: null,
     item_seconds: secs, records: [], today: day, content: IDENT });
   R.e = r.engine; R.sc = r.scheduler; R.sc.today = day;
   R.st = new Stepper(R.e, R.sc, () => now);
-  R.st.open(R.sc.g_session());
+  R.st.open(more ? R.sc.g_extra() : R.sc.g_session());
   R.rec = rSnap();
 }
 function rShow(id) {
@@ -389,6 +389,42 @@ v = await shownItem(page);
 await play(page);
 await page.waitForSelector('[data-screen="end"]');
 await sameAsReplay(page, 'بعد جلسة قُطعت بإغلاق');
+
+// ---------------------------------------------------------------- 5ب) يريد أن يستمر (قرار الأب، 19 نوفمبر)
+// القاعدة: الدرس اكتمل وثبت الفهم اليوم، فالمهارة تنتظر فحص استقلالها غدًا. الإضافية تعرض تدريبها مرة، ولا تقييم فيها
+const PRACTICE = PACK.items.filter((i) => i.skill === '1-4-1' && i.role === 'practice').map((i) => i.id);
+const moreBtn = (p) => p.evaluate(() => { const b = document.getElementById('more'); return b ? [b.dataset.plan, b.textContent] : null; });
+check('ختام جلسة اليوم: يُعرض «تدريب أكثر»، ويُسأل الطفل بصوت «هل تريد المزيد؟»', [await moreBtn(page),
+  (await page.evaluate(() => window.MM_TEST.spoken.slice(-1)[0])).endsWith('هل تريد المزيد؟')], [['practice', '▶ تدريب أكثر'], true]);
+await page.click('#exit');
+await page.click('[data-child="young"]');
+await page.waitForSelector('[data-screen="workshop"]');
+check('خرج ثم عاد في اليوم نفسه: لا «ابدأ»، و«تدريب أكثر» ما زال معروضًا', [await page.evaluate(() => Boolean(document.getElementById('start'))),
+  await moreBtn(page)], [false, ['practice', '▶ تدريب أكثر']]);
+await page.click('#more');
+await page.waitForFunction(() => document.getElementById('app').dataset.screen !== 'workshop');
+rStart(NOW.t, true);
+const more1 = await play(page, { stopAt: 3 });                            // ثالث بنود التدريب معروض
+{
+  const rec = await dbRec(page), cur = eng(rec).current;
+  check('الجلسة الإضافية: نوعها extra في يوم الأسرة نفسه، وبنودها تدريب 1-4-1 بترتيبه، بلا سجل تقييم',
+    [eng(rec).sessions[cur].kind, eng(rec).sessions[cur].day, more1, rec.records.filter((x) => x.session === cur && !x.void).length],
+    ['extra', DAYNUM + 1, PRACTICE.slice(0, 3), 0]);
+  await page.close();                                                     // إغلاق في منتصف الإضافية
+  page = await open();
+  await page.click('[data-child="young"]');
+  await page.waitForSelector('[data-screen="workshop"]');
+  check('العودة والإضافية مفتوحة: «ابدأ» يكملها، لا «تدريب أكثر»', [await page.evaluate(() => Boolean(document.getElementById('start'))),
+    await moreBtn(page)], [true, null]);
+  await press(page);
+  rStart(NOW.t);
+  const more2 = await play(page);
+  await page.waitForSelector('[data-screen="end"]');
+  const rec2 = await dbRec(page);
+  check('تُكمَل الإضافية نفسها من البند الذي أُغلق عليه حتى آخر التدريب، ثم لا يُعرض المزيد: ما عندنا اليوم انتهى',
+    [more2, eng(rec2).sessions[cur].ended, eng(rec2).current, await moreBtn(page)], [PRACTICE.slice(2), true, null, null]);
+  await sameAsReplay(page, 'بعد الإضافية');
+}
 await page.close();
 
 // ---------------------------------------------------------------- 6) فشل الحفظ

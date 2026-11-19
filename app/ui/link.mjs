@@ -104,7 +104,7 @@ export class Link {
     this.e = e;
     this.sc = new Scheduler(e, this.profile.types, this._source(), null, { group: this.profile.group,
       scope: this.profile.scope, learning: true, cap: this.profile.cap, item_seconds: () => this._seconds(),
-      records: [], retention: true, content: this.content });
+      records: [], retention: true, content: this.content, day_cap: this.profile.day_cap ?? null });
     this.saver = new Saver(this.db, this.child, () => this._snap(), { rev: 0, hooks: this.hooks,
       onStatus: (s) => this.onStatus(s) });
     await this.save();
@@ -118,8 +118,9 @@ export class Link {
     }
   }
 
-  // «ابدأ»: يبني من المحفوظ، ثم يكمل الجلسة الجارية أو يعقد التالية. يعيد 'item' أو 'ended' أو 'done' (لا جلسة باقية)
-  async start() {
+  // «ابدأ»: يبني من المحفوظ، ثم يكمل الجلسة الجارية أو يعقد التالية. يعيد 'item' أو 'ended' أو 'done' (لا جلسة باقية).
+  // more: جلسة إضافية لمن أراد أن يستمر بعد جلسة يومه. جلسة جارية، ولو إضافية، تُكمَل بالطريق العادي
+  async start(more = false) {
     if (this.busy) return 'busy';
     this.busy = true;
     try {
@@ -128,7 +129,7 @@ export class Link {
       this._restore(record);
       this.sc.today = familyDay(this.now(), this.tz);
       const st = new Stepper(this.e, this.sc, () => this.now());
-      st.open(this.sc.g_session());
+      st.open(more && this.sc.cur === null ? this.sc.g_extra() : this.sc.g_session());
       this.st = st;
       this.sessionOf = this.sc.cur ?? this.e.s.order[this.e.s.order.length - 1] ?? null;
       if (st.finished && st.result === false) {
@@ -198,6 +199,14 @@ export class Link {
 
   ended() {
     return this.st !== null && this.st.finished;
+  }
+
+  // ما تعرضه جلسة إضافية الآن، بترتيبه: [['resume'|'lesson'|'practice'|'open'، المهارة]، ...]. فارغة: لا تُعرض.
+  // الحكم حكم المجدول (can_extra): بعد جلسة مختومة اليوم، وفي اليوم وقت، وعندنا ما يُعرض
+  more() {
+    if (this.sc === null || (this.st !== null && !this.st.finished)) return [];
+    const day = familyDay(this.now(), this.tz);
+    return this.sc.can_extra(day) ? this.sc.extra_plan(day) : [];
   }
 
   // ما أنجزه الطفل في الجلسة، لرسالة الختام (7.1): عدد البنود التي أكّد فيها إجابة
