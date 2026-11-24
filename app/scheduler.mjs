@@ -751,8 +751,10 @@ export class Scheduler {
     const verified = new Set(this.e.validEvidence(null, 'short_ok').map((x) => x.skill));
     for (;;) {
       let moved = false;
+      // متطلب تجاوزه قرار المعلم لهذه المهارة لا يُتحقق منه (كما في المرجع)
+      const skip = new Set(this.e.decisions('open', w).flatMap((d) => d.bypass));
       for (const p of [...this.pre[w]].sort((a, b) => this.idx[a] - this.idx[b])) {
-        if (DONE.includes(st[p]) || verified.has(p) || !this.inscope.has(p)) continue;
+        if (DONE.includes(st[p]) || verified.has(p) || !this.inscope.has(p) || skip.has(p)) continue;
         if (sg.shorts === SHORT_START) return w;
         sg.w = w;
         const res = (yield* this.g_short(p));
@@ -825,6 +827,12 @@ export class Scheduler {
     }
   }
 
+  // أسلاف مهارات قرارات البداية: لا تدخل البحث الحر ولا البوابة الاحتياطية
+  assumed() {
+    const chosen = this.ids.filter((x) => this.e.decisions('open', x).length);
+    return new Set(chosen.flatMap((x) => [...this.anc[x]]));
+  }
+
   pick_gate() {
     const [st, helped, gated] = this.view();
     const opened = this.e.s.opened;
@@ -853,8 +861,10 @@ export class Scheduler {
       const g = this.next_gate();
       if (g !== null && !(g in opened) && !helped.has(g) && get(gated, g) === 0 && !this.blocked(g, st)) return g;
     }
+    // البوابة الاحتياطية: إلا ما تحت قرار البداية (كما في المرجع)
+    const assumed = this.assumed();
     for (const x of this.ids) {
-      if (isNone(st[x]) && !(x in opened) && !helped.has(x)) return x;
+      if (isNone(st[x]) && !(x in opened) && !helped.has(x) && !assumed.has(x)) return x;
     }
     return null;
   }
@@ -862,7 +872,8 @@ export class Scheduler {
   pick_short() {
     const st = this.e.derive();
     const checked = new Set(this.e.s.checked);
-    return this.ids.find((x) => st[x] === 'deferred' && !checked.has(x) && !this.no_short.has(x)) ?? null;
+    const assumed = this.assumed();                    // ما تحت قرار البداية لا يُتحقق منه (كما في المرجع)
+    return this.ids.find((x) => st[x] === 'deferred' && !checked.has(x) && !this.no_short.has(x) && !assumed.has(x)) ?? null;
   }
 
   pick_lesson() {

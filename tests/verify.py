@@ -105,7 +105,7 @@ def main(argv):
                       ('تتابع البنود أثناء التشغيل', [py, 'content_sequence.py'], None, ()),
                       ('اختبار فحص التتابع', [py, 'tests/test_content_sequence.py', m], all_passed, ())]
             for t in ('r10', 'r11', 'r13', 'r14', 'r15', 'phase0', 'r22', 'defer', 'content_identity', 'record_audit',
-                      'retention_help', 'session', 'extra', 'how', 'describe'):
+                      'retention_help', 'session', 'extra', 'how', 'describe', 'start_decision'):
                 steps.append(('حالات %s، بايثون' % t, [py, 'tests/test_%s.py' % t, m], all_passed, ()))
                 steps.append(('حالات %s، JavaScript' % t, [node, 'tests/test_%s.mjs' % t], all_passed, ()))
         if browser:

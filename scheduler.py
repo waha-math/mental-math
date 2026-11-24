@@ -698,8 +698,11 @@ class Scheduler:
         verified = {x['skill'] for x in self.e.valid_evidence(kind='short_ok')}
         while True:
             moved = False
+            # متطلب تجاوزه قرار المعلم لهذه المهارة لا يُتحقق منه: القرار «يبدأ من w» كما يقرؤه البالغ. قبل هذا، حين صار
+            # 1-3-3 في نطاق الصغير، كان إخفاق تحققه القصير ينزل بالطفل إلى درس 1-1-1 (tests/karim_start.mjs)
+            skip = set().union(*(set(d['bypass']) for d in self.e.decisions('open', w)))
             for p in sorted(self.pre[w], key=self.idx.get):
-                if st[p] in DONE or p in verified or p not in self.inscope:
+                if st[p] in DONE or p in verified or p not in self.inscope or p in skip:
                     continue
                 if sg['shorts'] == SHORT_START:
                     return w
@@ -784,16 +787,25 @@ class Scheduler:
             g = self.next_gate()
             if g is not None and g not in opened and g not in helped and gated[g] == 0 and not self.blocked(g, st):
                 return g
+        # البوابة الاحتياطية: أول مهارة لم يُعرف عنها شيء، إلا ما تحت قرار البداية (يُفترض متقنًا، كما في next_gate).
+        # قبل هذا عرضت للصغير بوابة 1-1-1 في يومه الثاني وهو في درس 1-4-1 (tests/karim_start.mjs)
+        assumed = self.assumed()
         for x in self.ids:
-            if st[x] is None and x not in opened and x not in helped:
+            if st[x] is None and x not in opened and x not in helped and x not in assumed:
                 return x
         return None
+
+    def assumed(self):
+        """أسلاف مهارات قرارات البداية: لا تدخل البحث الحر ولا البوابة الاحتياطية."""
+        chosen = [x for x in self.ids if self.e.decisions('open', x)]
+        return set().union(*(self.anc[x] for x in chosen)) if chosen else set()
 
     def pick_short(self):
         st = self.e.derive()
         checked = set(self.e.s['checked'])
-        return next((x for x in self.ids if st[x] == 'deferred' and x not in checked and x not in self.no_short),
-                    None)
+        assumed = self.assumed()                            # ما تحت قرار البداية لا يُتحقق منه، كما لا يُبحث فيه
+        return next((x for x in self.ids if st[x] == 'deferred' and x not in checked and x not in self.no_short
+                     and x not in assumed), None)
 
     def pick_lesson(self):
         st, helped, gated = self.view()
