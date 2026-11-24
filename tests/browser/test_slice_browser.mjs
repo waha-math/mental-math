@@ -247,9 +247,10 @@ function inspect(v) {
 const KNOWN = new Set(STAGE1.slice(0, STAGE1.indexOf('1-4-1')));
 const SHOT = new Set();
 const wrongOf = (it) => (it.cards ? it.cards.find((c) => c !== it.answer) : it.answer === 9 ? 8 : it.answer + 1);
-async function play(page, { stopAt = null } = {}) {
+async function play(page, { stopAt = null, until = null } = {}) {
   const seen = [];
   for (;;) {
+    if (until && seen.length && until(BY.get(seen[seen.length - 1]))) return seen;   // بعد إجابة البند المطلوب
     await settled(page);
     if (await scr(page) !== 'item') return seen;
     const v = await shownItem(page);
@@ -675,6 +676,30 @@ await page.close();
 use('older1');
 const perfs = new Set(), olderActs = new Set();
 let olderMore = 0;
+// مهارة جديدة من المرحلة 3 (لا من 3-5) في بند درس بنموذج: عند أول بند منها يُجاب، ثم يُغلق التطبيق والجلسة مفتوحة،
+// ويُفتح فتُستأنف الجلسة نفسها (8ج)
+const NEW3 = (it) => it.skill.startsWith('3-') && !it.skill.startsWith('3-5') && it.role.startsWith('lesson')
+  && Boolean(it.model && it.model.kind);
+let hit = null, resumedOk = null;
+const perfs3 = new Set();
+async function playOlder(page) {
+  let seen = await play(page, { until: hit === null ? NEW3 : null });
+  const last = seen.length ? BY.get(seen[seen.length - 1]) : null;
+  if (hit === null && last && NEW3(last)) {
+    hit = last.id;
+    const ses = eng(await dbRec(page, 'older1')).current;
+    await page.close();
+    page = await open();
+    await page.click('[data-child="older1"]');
+    await page.waitForSelector('[data-screen="workshop"]');
+    await press(page);
+    rStart(NOW.t);
+    const v = await shownItem(page);
+    resumedOk = [ses !== null && eng(await dbRec(page, 'older1')).current === ses, BY.get(v.id).skill === last.skill];
+    seen = [...seen, ...await play(page)];
+  }
+  return [page, seen];
+}
 for (let d = 50; d <= 58; d++) {
   NOW.t = DAY0 + d * 86400000;
   page = await open();
@@ -683,25 +708,37 @@ for (let d = 50; d <= 58; d++) {
   if (!(await page.evaluate(() => Boolean(document.getElementById('start'))))) { await page.close(); continue; }
   await press(page);
   rStart(NOW.t);
-  let seen = await play(page);
+  let seen;
+  [page, seen] = await playOlder(page);
   await page.waitForFunction(() => ['end', 'nothing'].includes(document.getElementById('app').dataset.screen));
   while (await page.evaluate(() => Boolean(document.getElementById('more')))) {
     await page.click('#more');
     // جلسة لم تعرض بندًا تعود إلى الختام بلا «المزيد»: لا يُنتظر خروج الشاشة منه
     await page.waitForFunction(() => document.getElementById('app').dataset.screen !== 'end' || !document.getElementById('more'));
     rStart(NOW.t, true);
-    const extra = await play(page);
+    let extra;
+    [page, extra] = await playOlder(page);
     olderMore += extra.length;
     seen = [...seen, ...extra];
     await page.waitForSelector('[data-screen="end"]');
   }
-  for (const id of seen) { perfs.add(BY.get(id).performance); olderActs.add(BY.get(id).role.split('.')[0]); }
+  for (const id of seen) {
+    perfs.add(BY.get(id).performance); olderActs.add(BY.get(id).role.split('.')[0]);
+    if (NEW3(BY.get(id))) perfs3.add(BY.get(id).skill);
+  }
   await sameAsReplay2(`الطفل الأول، اليوم ${d - 49}`, 'older1');
   await page.close();
 }
 check('الطفل الأول بلغ الأداءات الأربعة على خط الأعداد، والمسألة السياقية، والحساب بلا نموذج، وفحص الاستقلال، وطلب المزيد',
   [['line_back', 'station_back', 'line_up', 'jump_missing', 'context_sub', 'solve'].filter((x) => !perfs.has(x)), olderActs.has('check'),
     olderMore > 0], [[], true, true]);
+{
+  const reached = [...perfs3].sort();
+  check('من الأزرار بلغ الطفل الأول درس مهارة جديدة من المرحلة 3 بنموذجها، فأجاب، وأُغلق التطبيق والجلسة مفتوحة، '
+    + 'ففُتح فاستُؤنفت الجلسة نفسها بالمهارة نفسها. والرسم يطابق المحتوى في كل بند عُرض',
+    [hit !== null, resumedOk, FAULTS.length], [true, [true, true], 0]);
+  console.log(`        أول بند: ${hit}. المهارات الجديدة من المرحلة 3 التي عُرض درسها: ${reached.join('، ')}`);
+}
 check('ملف الطفل الثاني وملف الصغير لم يتغيرا أثناء أيام الأول', [strip(await (async () => { const p = await open(); const r = await dbRec(p, 'older2');
   const y = await dbRec(p); await p.close(); return { ...r, y: y.rev }; })())], [{ ...RS.older2.rec, y: youngRev }]);
 
