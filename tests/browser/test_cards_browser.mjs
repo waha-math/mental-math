@@ -239,6 +239,26 @@ const want = (st0, child) => [child, ['3-5-1', '3-5-2', '3-5-3'].map((k) => {
 })];
 check('اللوحة: لكل طفل ملفه، ولكل مهارة حالتها وعدد بنودها وطلبات المساعدة واختيار «كيف حسبتها؟»، كما في الإعادة في Node',
   board, [['young', []], want(st, 'older1'), want(C.st, 'older2')]);
+// ما تحت قرار البداية بلا دليل: سطر «تُخطيت بقرار تحديد نقطة البداية»، والمهارات فيه أسلاف 3-5-1 و3-5-2 في نطاق الملف
+// إلا ما له صف. المتوقع من شبكة المحرك ونطاق الملف في إعداد التطبيق
+const { PROFILES: PR } = await import('../../app/ui/config.mjs');
+const skippedWant = (child, rows) => {
+  const e0 = new Engine(undefined, { group: 'older' });
+  const below = new Set(['3-5-1', '3-5-2'].flatMap((x) => [...e0.anc[x]]));
+  return PR[child].scope.filter((x) => below.has(x) && !rows.includes(x)).join(' ');
+};
+const skippedGot = await page.evaluate(() => [...document.querySelectorAll('#board .board-child')].map((c) =>
+  [c.dataset.child, c.querySelector('.skipped')?.dataset.skipped ?? null]));
+const skipLtr = await page.evaluate(() => [...document.querySelectorAll('#board .skipped bdi')].map((b) => {
+  const t = b.firstChild;
+  const at = (k) => { const r = document.createRange(); r.setStart(t, k); r.setEnd(t, k + 1); return r.getBoundingClientRect().left; };
+  return t.length < 2 || at(0) < at(t.length - 1);
+}));
+check('سطر «تُخطيت»: كل رمز مهارة فيه من اليسار (أول محرف يسار آخره، مقيسًا لا من الصورة)',
+  [skipLtr.length > 10, skipLtr.every(Boolean)], [true, true]);
+check('اللوحة: ما تحت قرار البداية بلا دليل في سطر «تُخطيت بقرار تحديد نقطة البداية»، لا صفًّا ولا إتقانًا',
+  skippedGot, [['young', null], ['older1', skippedWant('older1', board[1][1].map((r) => r[0]))],
+    ['older2', skippedWant('older2', board[2][1].map((r) => r[0]))]]);
 if (process.env.SHOTS) await page.screenshot({ path: process.env.SHOTS + '/board.png', fullPage: true });
 
 // ---------------------------------------------------------------- الفحص الوصفي (17.27)، في جهاز آخر

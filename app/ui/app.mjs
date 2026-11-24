@@ -566,7 +566,9 @@ function boardSection() {
           h('td', {}, k.retention.map((t) => (/^\d+$/.test(t) ? `${t} من 5` : RET[t] ?? t)).join('، ') || '—'),
           h('td', {}, String(k.items)), h('td', {}, String(k.help)),
           h('td', {}, Object.entries(k.how).map(([c, n]) => `${HOW[c] ?? c}: ${n}`).join('، ') || '—'),
-          h('td', {}, k.describe ? `${k.describe.correct} من ${k.describe.total} (وصفي، لا يُشترط لتقدم)` : '—'))))));
+          h('td', {}, k.describe ? `${k.describe.correct} من ${k.describe.total} (وصفي، لا يُشترط لتقدم)` : '—')))),
+        b.skipped.length ? h('p', { class: 'skipped', 'data-skipped': b.skipped.join(' ') },
+          'تُخطيت بقرار تحديد نقطة البداية، ولا دليل عليها من الطفل: ', codes(b.skipped.join('، '))) : null));
     }
     box.dataset.ready = 'true';
   })();

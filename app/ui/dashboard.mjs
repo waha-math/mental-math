@@ -5,16 +5,16 @@
 // قرار المعلم يُعرض منفصلًا عن الحالة: يفتح التقدم وليس دليل إتقان.
 
 const STATE = {
-  met: 'أتقنها: فهم واستقلال',
+  met: 'أثبتها الطفل: فهم واستقلال',
   understood: 'فهم، ولم يثبت استقلاله بعد',
   stumbled: 'تعثّر فيها',
-  exempt: 'أُعفي منها ببوابة',
+  exempt: 'أثبتها الطفل ببوابة',
   none: 'لم يثبت فيها شيء بعد',
 };
 
 export function summarize(e, sc, profile, pack) {
   const days = [...new Set(e.s.order.map((s) => e.s.sessions[s].day))].sort((a, b) => a - b);
-  const skills = profile.scope.map((skill) => {
+  const all = profile.scope.map((skill) => {
     const [status, und, ind] = e.progress(skill);
     const state = status === 'met' ? 'met' : status === 'stumbled' ? 'stumbled' : status === 'exempt' ? 'exempt'
       : und ? 'understood' : 'none';
@@ -34,9 +34,14 @@ export function summarize(e, sc, profile, pack) {
       how,
       describe: desc.length ? { correct: desc.filter((r) => r.final === 'correct').length, total: desc.length } : null,
     };
-  }).filter((x) => x.state !== 'none' || x.teacher || x.items > 0 || x.checks.length || x.retention.length);
-  // النطاق صار المراحل 1 إلى 3 (50 مهارة): اللوحة تعرض ما جرى فيه شيء وحده، لا صفوف «لم يثبت فيها شيء» لمهارات لم تُمسّ
-  return { days: days.length, first: days[0] ?? null, last: days[days.length - 1] ?? null, skills };
+  });
+  // النطاق صار المراحل 1 إلى 3 (50 مهارة): صفوف اللوحة لما جرى فيه شيء وحده. وما تحت قرار البداية بلا دليل من الطفل يُذكر
+  // في سطر واحد «تُخطيت بقرار تحديد نقطة البداية»، فلا يُقرأ إتقانًا ولا يختفي. ما له دليل يبقى صفًّا بحالته من الدليل
+  const touched = (x) => x.state !== 'none' || x.teacher || x.items > 0 || x.checks.length || x.retention.length;
+  const below = new Set(profile.scope.filter((x) => e.decisions('open', x).length).flatMap((x) => [...e.anc[x]]));
+  const skills = all.filter(touched);
+  const skipped = all.filter((x) => !touched(x) && below.has(x.skill)).map((x) => x.skill);
+  return { skipped, days: days.length, first: days[0] ?? null, last: days[days.length - 1] ?? null, skills };
 }
 
 // يوم الأسرة (عدد الأيام منذ 1970 بمنطقة الأسرة) تاريخًا يُقرأ
