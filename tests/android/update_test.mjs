@@ -38,7 +38,14 @@ async function open() {
   await sh(`am start -n ${PKG}/.MainActivity`);
   const wv = await device.webView({ pkg: PKG }, { timeout: 60000 });
   const page = await wv.page();
-  await page.waitForSelector('[data-screen="who"]', { timeout: 60000 });
+  // أول تشغيل بعد إقلاع المحاكي بطيء (تحميل WebView والمحتوى). وعند الإخفاق تُطبع الشاشة التي ظهرت بدلها
+  try {
+    await page.waitForSelector('[data-screen="who"]', { timeout: 180000 });
+  } catch (err) {
+    console.log('        الشاشة:', await page.evaluate(() => [location.href, document.getElementById('app')?.dataset.screen,
+      document.body.innerText.slice(0, 300)]).catch((x) => String(x)));
+    throw err;
+  }
   return page;
 }
 const all = (page) => page.evaluate(async () => {
