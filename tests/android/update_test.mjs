@@ -37,18 +37,30 @@ await sh('input keyevent KEYCODE_WAKEUP');
 await sh('wm dismiss-keyguard');
 for (const f of [A, B, C]) await device.push(readFileSync(f), `/data/local/tmp/${f.split('/').pop()}`);
 
+// يفتح التطبيق من جديد، ويأخذ WebView العملية الجديدة لا ما بقي من تشغيل سابق (playwright يحفظ قائمة ما رآه)
 async function open() {
   await sh(`am force-stop ${PKG}`);
   await sh('input keyevent KEYCODE_WAKEUP');
-  await sh(`am start -n ${PKG}/.MainActivity`);
-  const wv = await device.webView({ pkg: PKG }, { timeout: 60000 });
+  await sh('wm dismiss-keyguard');
+  await sh(`am start -W -n ${PKG}/.MainActivity`);
+  let pid = '';
+  for (let k = 0; k < 60 && !pid; k++) { pid = await sh(`pidof ${PKG}`); if (!pid) await new Promise((r) => setTimeout(r, 500)); }
+  let wv = null;
+  for (let k = 0; k < 120 && !wv; k++) {
+    wv = device.webViews().find((w) => w.pkg() === PKG && String(w.pid()) === pid) ?? null;
+    if (!wv) await new Promise((r) => setTimeout(r, 500));
+  }
+  if (!wv) throw new Error(`لا WebView للعملية ${pid}`);
   const page = await wv.page();
-  // أول تشغيل بعد إقلاع المحاكي بطيء (تحميل WebView والمحتوى). وعند الإخفاق تُطبع الشاشة التي ظهرت بدلها
+  // أول تشغيل بعد إقلاع المحاكي بطيء. وعند الإخفاق تُطبع الشاشة وحالة النافذة
   try {
-    await page.waitForSelector('[data-screen="who"]', { timeout: 180000 });
+    await page.waitForFunction(() => document.getElementById('app')?.dataset.screen === 'who' && window.innerWidth > 0,
+      null, { timeout: 180000, polling: 500 });
+    await page.waitForSelector('[data-screen="who"]', { timeout: 60000 });
   } catch (err) {
     console.log('        الشاشة:', await page.evaluate(() => [location.href, document.getElementById('app')?.dataset.screen,
-      document.body.innerText.slice(0, 300)]).catch((x) => String(x)));
+      window.innerWidth, window.innerHeight, document.visibilityState, document.body.innerText.slice(0, 200)]).catch((x) => String(x)));
+    console.log('        النافذة:', await sh("dumpsys window | grep -E 'mCurrentFocus|mFocusedApp|KeyguardShowing|mAwake' | head -5"));
     throw err;
   }
   return page;
