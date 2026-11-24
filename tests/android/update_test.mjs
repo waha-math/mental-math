@@ -4,7 +4,7 @@
 //
 // A و B موقّعان بمفتاح واحد ورقما نسختيهما 1 و2. C بمفتاح آخر. المتوقع مكتوب من قواعد أندرويد والتطبيق قبل التشغيل:
 //  1. بعد تثبيت A وكتابة ملف طفل فيه فحص استقلال معلّق، يُثبَّت B فوقه تحديثًا (رقم النسخة 2)، وسجلات الجهاز بعده هي
-//     سجلات ما قبله حرفًا بحرف، ويفتح الطفل ملفه فيُعرض بند من فحص الاستقلال.
+//     سجلات ما قبله حرفًا بحرف، ويفتح الطفل ملفه ويجيب فيصل إلى فحص الاستقلال المعلّق.
 //  2. C لا يُثبَّت فوق B: أندرويد يرفضه لاختلاف الشهادة، وتبقى B وبياناتها.
 //  3. النسخة الاحتياطية تُكتب في التنزيلات (AndroidFiles.save)، وبعد حذف B وتثبيت C الجهاز فارغ، واستيراد الملف يعيد
 //     السجلات (إلا rev ووقت الكتابة، كما في 9.2)، ويُعرض للطفل بند من فحص الاستقلال.
@@ -61,13 +61,37 @@ const all = (page) => page.evaluate(async () => {
   db.close();
   return r;
 });
-// الطفل يفتح ملفه من الشاشة: معرّف البند الأول المعروض
-async function firstItem(page) {
+// الطفل يفتح ملفه من الشاشة ويجيب صحيحًا حتى يُعرض بند من فحص الاستقلال. الجلسة في يوم جديد قد تبدأ ببوابات قبل
+// الحصة التعليمية التي فيها الفحص (كتبتُ التوقع أول مرة «البند الأول من الفحص»، وأخفق حين تغيّرت البوابة الاحتياطية)
+const ITEM = new Map(PACK.items.map((i) => [i.id, i]));
+async function untilCheck(page) {
   await page.click('[data-child="older1"]');
   await page.waitForSelector('[data-screen="workshop"]', { timeout: 30000 });
   await page.click('#start');
-  await page.waitForSelector('.task[data-ready="true"]', { timeout: 30000 });
-  return page.getAttribute('.task', 'data-item');
+  const seen = [];
+  for (let n = 0; n < 80; n++) {
+    await page.waitForFunction(() => {
+      const a = document.getElementById('app').dataset.screen, t = document.querySelector('.task');
+      return a !== 'workshop' && (a !== 'item' || (t && t.dataset.ready === 'true'));
+    }, null, { timeout: 30000 });
+    if (await page.evaluate(() => document.getElementById('app').dataset.screen) !== 'item') break;
+    const [id, kind] = await page.evaluate(() => [document.querySelector('.task').dataset.item, document.querySelector('.task').dataset.kind]);
+    const it = ITEM.get(id);
+    seen.push(id);
+    if (it.role.startsWith('check')) return { id, seen };
+    if (it.cards) {
+      await page.click(`#cards [data-card="${it.answer}"]`);
+      if (kind !== 'assess') { await page.waitForSelector('#next'); await page.click('#next'); }
+      continue;
+    }
+    if (!(kind === 'shown' && it.role === 'lesson.watch')) {
+      for (const d of String(it.answer)) await page.click(`[data-key="${d}"]`);
+      await page.click('[data-key="ok"]');
+      if (it.how) await page.click('#how [data-how="back"]');
+    }
+    if (kind !== 'assess') { await page.waitForSelector('#next'); await page.click('#next'); }
+  }
+  return { id: null, seen };
 }
 const strip = (rs) => rs.map(({ rev, written_at, ...r }) => r);
 
@@ -91,9 +115,10 @@ page = await open();
 const after = await all(page);
 check('B تُثبَّت فوق A تحديثًا (رقم النسخة 2)، والسجلات بعده هي سجلات ما قبله حرفًا بحرف',
   [await version(), JSON.stringify(after) === JSON.stringify(before)], ['versionCode=2', true]);
-const shown = await firstItem(page);
-check('بعد التحديث يفتح الطفل ملفه فيُعرض بند من فحص الاستقلال', ROLE.get(shown)?.startsWith('check'), true);
-console.log(`        البند: ${shown}، والمعلّق في الملف: ${fx.check}`);
+const u1 = await untilCheck(page);
+check('بعد التحديث يفتح الطفل ملفه فيصل من الشاشة إلى فحص الاستقلال المعلّق (المهارة نفسها)',
+  ITEM.get(u1.id ?? '')?.skill, ITEM.get(fx.check).skill);
+console.log(`        البند: ${u1.id} بعد ${u1.seen.length - 1} بندًا، والمعلّق في الملف: ${fx.check}`);
 
 const refused = await install(C);
 check('C (شهادة أخرى) لا تُثبَّت فوق B، وتبقى B', [/INSTALL_FAILED_UPDATE_INCOMPATIBLE/.test(refused), await version()],
@@ -133,8 +158,9 @@ await page.waitForSelector('[data-screen="who"]', { timeout: 60000 });
 const restored = await all(page);
 check('بعد حذف B وتثبيت C الجهاز فارغ، والاستيراد من الشاشة يعيد السجلات إلا rev ووقت الكتابة',
   [empty, strip(restored)], [[], strip(JSON.parse(file).records)]);
-const shown2 = await firstItem(page);
-check('بعد الاستيراد يفتح الطفل ملفه فيُعرض بند من فحص الاستقلال', ROLE.get(shown2)?.startsWith('check'), true);
+const u2 = await untilCheck(page);
+check('بعد الاستيراد يفتح الطفل ملفه فيصل من الشاشة إلى فحص الاستقلال المعلّق (المهارة نفسها)',
+  ITEM.get(u2.id ?? '')?.skill, ITEM.get(fx.check).skill);
 
 await device.close();
 console.log(results.every(Boolean) ? `نجحت الاختبارات كلها: ${results.length}` : `النتيجة: نجح ${results.filter(Boolean).length} من ${results.length}`);
