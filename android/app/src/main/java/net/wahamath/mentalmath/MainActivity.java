@@ -42,6 +42,7 @@ public class MainActivity extends Activity {
     @Override
     protected void onCreate(Bundle saved) {
         super.onCreate(saved);
+        if (BuildConfig.MM_INSPECT) WebView.setWebContentsDebuggingEnabled(true);   // بناء الاختبار وحده
         tts = new TextToSpeech(this, status -> ttsReady = status == TextToSpeech.SUCCESS);
         web = new WebView(this);
         setContentView(web);

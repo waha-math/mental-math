@@ -11,9 +11,14 @@ android {
         applicationId 'net.wahamath.mentalmath'
         minSdk 24
         targetSdk 34
-        versionCode((System.getenv('GITHUB_RUN_NUMBER') ?: '1') as Integer)
-        versionName "0.1.${System.getenv('GITHUB_RUN_NUMBER') ?: '0'}"
+        // رقم النسخة يزيد من بناء إلى بناء (أندرويد لا يثبّت تحديثًا رقمه أصغر). اختبار التحديث يعطيه صريحًا
+        def code = System.getenv('MM_VERSION_CODE') ?: System.getenv('GITHUB_RUN_NUMBER') ?: '1'
+        versionCode(code as Integer)
+        versionName "0.1.${code}"
+        // فحص WebView من خارجه (أدوات Chrome) لاختبار التحديث على المحاكي وحده. نسخة الأسرة تُبنى بلا MM_INSPECT
+        buildConfigField 'boolean', 'MM_INSPECT', System.getenv('MM_INSPECT') == '1' ? 'true' : 'false'
     }
+    buildFeatures { buildConfig true }
     signingConfigs {
         if (keystore) {
             stable {
@@ -24,8 +29,12 @@ android {
             }
         }
     }
+    // نسخة الأسرة release موقّعة بالمفتاح الثابت. بلا مفتاح يخرج الملف غير موقّع، وسير العمل لا ينشره
     buildTypes {
-        debug { if (keystore) signingConfig signingConfigs.stable }
+        release {
+            minifyEnabled false
+            if (keystore) signingConfig signingConfigs.stable
+        }
     }
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17
