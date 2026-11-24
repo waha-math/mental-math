@@ -663,7 +663,10 @@ export class Scheduler {
     const c = this.candidate(st, helped);
     if (this.group === 'young') {
       if (c !== null) return null;
-      return this.ids.find(freshOk) ?? null;
+      // قرار البداية يُبحث فيه أولًا، وما تحته من متطلباته يُفترض متقنًا فلا يُبحث فيه (كما في المرجع)
+      const chosen = this.ids.filter((x) => this.e.decisions('open', x).length);
+      const assumed = new Set(chosen.flatMap((x) => [...this.anc[x]]));
+      return chosen.find(freshOk) ?? this.ids.find((x) => freshOk(x) && !assumed.has(x) && !chosen.includes(x)) ?? null;
     }
     if (this.gates_run === 0 && this.inscope.has(this.start) && isNone(st[this.start])) return this.start;
     const inScope = (set) => [...set].filter((a) => this.inscope.has(a)).sort((a, b) => this.idx[a] - this.idx[b]);
@@ -681,7 +684,12 @@ export class Scheduler {
         .filter((p) => !DONE.includes(st[p]) && this.inscope.has(p));
       return need.length ? need[0] : null;
     }
-    const fresh = this.ids.filter(freshOk);
+    // قرار البداية أولًا، وما تحته من متطلباته خارج البحث الحر (كما في المرجع)
+    const chosen = this.ids.filter((x) => this.e.decisions('open', x).length);
+    const first = chosen.find(freshOk);
+    if (first !== undefined) return first;
+    const assumed = new Set(chosen.flatMap((x) => [...this.anc[x]]));
+    const fresh = this.ids.filter((x) => freshOk(x) && !assumed.has(x));
     if (!fresh.length) return null;
     const desc = {};
     for (const x of fresh) desc[x] = this.ids.filter((d) => this.anc[d].has(x));

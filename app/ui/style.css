@@ -103,3 +103,28 @@ button:focus-visible { outline: 4px solid var(--warm); outline-offset: 2px; }
 .pick span, .made { display: grid; gap: 4px; }
 .pick small, .made small { color: var(--soft); font-size: 15px; }
 .adultbox bdi, #board bdi { white-space: nowrap; }   /* المثال لا ينقسم بين سطرين */
+
+/* نماذج المرحلة 1 */
+svg.m { max-height: 100%; width: min(100%, 560px); direction: ltr; }
+svg.m text { direction: ltr; unicode-bidi: isolate; font-size: 40px; fill: var(--ink); }
+svg.m .cell { fill: #fffdf7; stroke: var(--ink); stroke-width: 4; }
+svg.m .cell.mark { fill: #fde9c8; }
+svg.m .counter, svg.m .blue { fill: var(--calm); }
+svg.m .red { fill: #d9534f; }
+svg.m .die { fill: #fffdf7; stroke: var(--ink); stroke-width: 6; }
+svg.m .node { fill: #fffdf7; stroke: var(--ink); stroke-width: 4; }
+svg.m .link { stroke: var(--ink); stroke-width: 4; }
+svg.m .ask { fill: var(--warm); }
+svg.m .jump { fill: none; stroke: var(--calm); stroke-width: 4; }
+svg.m .head { fill: var(--calm); }
+svg.m .size { font-size: 30px; fill: var(--calm); }
+svg.m .cupshape { fill: #8a6d4b; stroke: var(--ink); stroke-width: 4; }
+.model.flashed svg { visibility: hidden; }
+svg.k-jumps .axis { stroke: var(--ink); stroke-width: 4; stroke-linecap: round; }
+svg.k-jumps .tick { stroke: var(--ink); stroke-width: 4; }
+svg.k-jumps .station { font-size: 34px; }
+svg.k-jumps .size { font-size: 30px; fill: var(--calm); }
+svg.m .rod { fill: #f3c969; stroke: var(--ink); stroke-width: 3; }
+svg.m .rod.add { fill: #8fc3e8; }
+svg.m .rodline { stroke: var(--ink); stroke-width: 1.5; }
+svg.m .cross { stroke: #d9534f; stroke-width: 7; stroke-linecap: round; }

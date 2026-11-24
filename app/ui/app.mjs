@@ -10,7 +10,8 @@ import { PROFILES, TZ, DEVICE, SKILLS } from './config.mjs';
 import { spoken, browserSpeaker, androidSpeaker } from './speech.mjs';
 import { modelFor, supportFor, comparePair } from './models.mjs';
 
-const T = globalThis.MM_TEST ?? {};     // منفذ الاختبار: speaker و now و mono و hooks و db
+const T = globalThis.MM_TEST ?? {};
+const FLASH_MS = 1500;                  // مدة الومضة (1-1)، قيمة ابتدائية تُراجع بتجربة الأطفال     // منفذ الاختبار: speaker و now و mono و hooks و db
 const root = document.getElementById('app');
 
 // نصوص الواجهة التي ليست في ملف المحتوى بعد (7.6). العربية وحدها في هذه الجولة
@@ -327,7 +328,8 @@ async function item() {
 
   // بند المقارنة في الدرس: يختار الطفل بطاقة، ثم يُعرض الجواب لأن السؤال له جواب يُتحقق منه (ر7)، ولا سجل لبند عرض.
   // وفي الفحص الوصفي (بند تقييم) تُسجَّل البطاقة جوابًا، ولا يُعرض جواب
-  const cards = it.performance === 'compare' ? it.cards : null;
+  const cards = it.cards ?? null;
+  const CARDSET = pack.cards[it.card_set ?? 'compare'];     // بطاقات البند: مقارنة الحلين، أو نعم ولا (ج11)
   const pick = async (k) => {
     if (!s.ready || s.solved) return;
     if (kind === 'assess') {            // الفحص الوصفي: البطاقة جواب يُسجَّل، بلا جواب يُعرض ولا تغذية راجعة (4.1)
@@ -337,21 +339,32 @@ async function item() {
       if (r === 'next' || r === 'void') after();
       return;
     }
+    if (kind === 'teach') {             // بند تعليم ببطاقة (نعم ولا، 1-5-3): تأكيد كالعدد، ثم «التالي» بعد صحيح أو محاولتين
+      s.picked = k;
+      const r = await send(['confirm', k]);
+      if (r !== 'open') { if (r === 'void' || r === 'next') after(); return; }
+      s.tries += 1;
+      if (k === it.answer) s.solved = true;
+      else say(STR.tryAgain);
+      draw();
+      return;
+    }
     s.picked = k;
     s.solved = true;
-    say(L(pack.cards.compare[it.answer]));
+    say(L(CARDSET[it.answer]));
     draw();
   };
 
   function draw() {
-    const model = cards ? comparePair(it.model, pack.cards.compare, lang) : (s.support && supportFor(it)) || modelFor(it);
+    const model = it.model && it.model.pair ? comparePair(it.model, pack.cards.compare, lang)
+      : (s.support && supportFor(it)) || modelFor(it);
     const canNext = kind !== 'assess' && s.ready && (watch || s.solved || s.tries >= 2);
     const padOff = !s.ready || s.solved || watch;
     screen('item', strip(),
       h('section', { class: 'task', 'data-item': it.id, 'data-kind': kind, 'data-activity': want.activity,
         'data-ready': String(s.ready) },
       h('div', { class: 'stage' }, promptOf(it['text_' + lang] ?? it.text_ar),
-        h('div', { class: 'model', id: 'model' }, model),
+        h('div', { class: 'model' + (s.flashed && !s.support ? ' flashed' : ''), id: 'model' }, model),
         h('div', { class: 'tools' },
           h('button', { id: 'listen', 'aria-label': ui('button.listen'), on: { click: speakItem } }, '🔊'),
           !watch && !s.solved && !(cards && kind !== 'assess') && h('button', { id: 'help', disabled: !s.ready, on: { click: help } },
@@ -361,7 +374,7 @@ async function item() {
       h('div', { class: 'side' },
         cards ? h('div', { class: 'cards', id: 'cards' }, cards.map((k) => h('button', { 'data-card': k,
           class: s.solved && k === it.answer ? 'right' : s.picked === k ? 'picked' : null, disabled: !s.ready || s.solved,
-          on: { click: () => pick(k) } }, (s.solved && k === it.answer ? '✓ ' : '') + L(pack.cards.compare[k]))))
+          on: { click: () => pick(k) } }, (s.solved && k === it.answer ? '✓ ' : '') + L(CARDSET[k]))))
           : [h('div', { class: 'answer', id: 'answer' }, watch ? String(it.answer) : s.typed),
             h('div', { class: 'pad' },
           ['1', '2', '3', '4', '5', '6', '7', '8', '9'].map((d) => h('button', { 'data-key': d, disabled: padOff,
@@ -380,6 +393,11 @@ async function item() {
   if (ok === false) return after();
   s.ready = true;
   draw();
+  // بومضة (1-1): النموذج يُرى لحظة ثم يُخفى، ليُعرف العدد دون عدّ. «أرني الأداة» في بنود التعليم يعيده ظاهرًا
+  if (it.model && it.model.flash) setTimeout(() => {
+    const v2 = link && link.view();   // البند نفسه ما زال معروضًا: لا يُرسم بند قديم فوق جديد
+    if (root.dataset.screen === 'item' && v2 && v2.seq === seq) { s.flashed = true; draw(); }
+  }, FLASH_MS);
   const intro = want.activity !== lastActivity && pack.ui[want.activity + '.intro'];
   lastActivity = want.activity;
   say((intro ? L(intro) + ' ' : '') + (it['audio_' + lang] ?? it.audio_ar) + (watch ? ' ' + it.answer : ''));

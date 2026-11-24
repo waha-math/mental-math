@@ -29,6 +29,7 @@ ROOT = os.path.dirname(HERE)
 sys.path.insert(0, ROOT)
 import content_sequence as cs  # noqa: E402
 from slice_content import zero_step, SLOTS  # noqa: E402
+import units  # noqa: E402
 
 MAP = sys.argv[1]
 items = json.load(open(os.path.join(ROOT, 'slice-content.json'), encoding='utf-8'))['items']
@@ -62,6 +63,7 @@ def planted(change):
 def same_as(target, source):
     def change(d):
         d[target]['numbers']['n'] = 10 - d[source]['numbers']['n']
+        d[target]['fact'] = list(d[source]['fact'])     # الحقيقة يحملها البند (content_sequence.fact)
     return change
 
 
@@ -78,8 +80,11 @@ expect('3أ. بديل الخانة بعد بندها المنقطع: الحقي�
        [cs.fact(a) == cs.fact(b), how, any((x, y) == (a['id'], b['id']) for x, y, _h, _l, _f in bad)],
        [True, ['interrupted'], False])
 got = planted(same_as('1-4-2/checkA/03', '1-4-2/checkA/01'))
-expect('3ب. بند الخانة 2 زُرع بحقيقة الخانة 1: مخالفة بعد بند الخانة 1 المجاب وبعد بديلها المجاب',
-       [('1-4-2/checkA/01', '1-4-2/checkA/03') in got, ('1-4-2/checkA/02', '1-4-2/checkA/03') in got], [True, True])
+# كان الزرع يغيّر أعداد البند وحدها، فيرى الفحص حقيقة جديدة ويرى التشغيل (item['fact']) حقيقته القديمة فلا يؤخّره، فتظهر
+# مخالفة. صار الفحص يقرأ حقيقة البند نفسها التي يقرؤها التشغيل (content_sequence.fact)، والزرع يغيّرهما معًا: فيؤخّر
+# التشغيل البند المزروع، ولا مخالفة. المتوقع تغيّر لهذا، لا لتغيّر المحتوى
+expect('3ب. بند الخانة 2 زُرع بحقيقة الخانة 1: يؤخّره التشغيل، فلا مخالفة بعد بند الخانة 1 المجاب ولا بعد بديلها المجاب',
+       [('1-4-2/checkA/01', '1-4-2/checkA/03') in got, ('1-4-2/checkA/02', '1-4-2/checkA/03') in got], [False, False])
 
 # 4) التغطية: ما يعرضه المجدول فعلًا
 src = open(os.path.join(HERE, 'test_phase0.py'), encoding='utf-8').read()
@@ -181,9 +186,13 @@ expect('6. البنود الأصلية التي لا موضع يُؤخَّر إ�
 # ويُستكمل ببديل تالٍ أو ينتهي النشاط بلا حكم. أول الزوج فيه قد يكون بندًا أصليًا. بمحتوى الحزمة 4 كانت 7 أزواج
 # (والمجموع 23). المولّد يأخذ أزواجه من هذا الفحص، فأعاد اختيار أعداد 29 بند بوابة في الحزمة 5 وبقي منها 3: الخانة
 # العاشرة في محاولات فحص 1-4-2 الثلاث، وبديلها يعيد الحقيقة نفسها بقرار الأب (3.6). والأولى صارت 14. الأعداد مقيسة
-rest = sorted({(a, b) for a, b, _h, _l, _f in cs.marked(pairs, by_id)})
+# مهارات الشريحة وحدها، كما كُتب الاختبار. ومهارات المولّد العام (units.py) تُطبع أعدادها مقيسة
+rest_all = sorted({(a, b) for a, b, _h, _l, _f in cs.marked(pairs, by_id)})
+rest = [p for p in rest_all if p[0].split('/')[0] not in units.SKILLS]
+print('        ومنها في مهارات الوحدات الجديدة (units.py): %d' % (len(rest_all) - len(rest)))
 print('        أزواج تبقى بلا علاج بعد تأخير وانقطاع (البند يوسَم): %d' % len(rest))
-after_exposed = sorted({(a, b) for a, b, h, _l, _f in cs.marked(pairs, by_id) if h.startswith('exposed')})
+after_exposed = sorted({(a, b) for a, b, h, _l, _f in cs.marked(pairs, by_id) if h.startswith('exposed')
+                        and a.split('/')[0] not in units.SKILLS})
 only_cut = [p for p in rest if p not in after_exposed]
 expect('7. ما يبقى موسومًا: بعد تأخير وانقطاع، أوله بديل دائمًا، 14 زوجًا. وبعد «أداء بعد تعرض مباشر» (ت2)، ثانيه بديل '
        'خانة الفحص دائمًا، 3 أزواج. وكله في الوحدة 1-4 (الأعداد مقيسة)',

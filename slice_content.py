@@ -8,6 +8,7 @@
 يُفحصان. البذرة ثابتة، فالمخرجات واحدة في كل تشغيل. هذا ملف محتوى، وليس واجهة ولا تسجيل صوت.
 """
 import json
+import units
 import random
 import sys
 from collections import Counter, defaultdict
@@ -66,6 +67,7 @@ T = {
 }
 CARDS = {
     'compare': {'A': ('الحل أ', 'Solution A'), 'B': ('الحل ب', 'Solution B'), 'same': ('متساويان', 'The same')},
+    'yesno': {'yes': ('نعم', 'Yes'), 'no': ('لا', 'No')},
     'how': {'back': ('قفزت للخلف', 'I jumped back'), 'up': ('أكملت من العدد الأصغر',
                                                            'I counted up from the smaller number'),
             'other': ('بطريقة أخرى', 'Another way')},
@@ -804,6 +806,10 @@ def validate(items):
     by = defaultdict(list)
     for it in items:
         by[(it['skill'], it['group'])].append(it)
+        if it['skill'] in units.SKILLS:                     # مهارات المولّد العام: تحققه المستقل (units.check)
+            for p in units.check(it):
+                bad[p] += 1
+            continue
         bad['جواب لا يطابق إعادة الحساب'] += int(truth(it) != it['answer'])
         for txt in (it['text_ar'], it['text_en']):
             bad['نص ناقص'] += int(not txt.strip())
@@ -1088,6 +1094,7 @@ if __name__ == '__main__':
     respaced = respace_small(bank.items)
     more_small(bank)
     mark_seen(bank.items)
+    bank.items += units.build()                              # بقية المراحل 1 إلى 3 (UNITS-PLAN.md)، بعد الشريحة كلها
     for it in bank.items:                                   # كل بند يحمل حقيقته: يقرؤها المجدول للتتابع بين الأنشطة
         if 'fact' not in it:
             n = it['numbers']
@@ -1106,7 +1113,7 @@ if __name__ == '__main__':
         1 for it in bank.items if it.get('how') and not (it['role'] in ('check', 'check.alternate')
                                                          and HOW_SLOT.get(it['skill']) == it['slot']))
     from content_sequence import collect, violations
-    seq_pairs, seq_by, seq_n = collect(bank.items, EVIDENCE)
+    seq_pairs, seq_by, seq_n = collect(bank.items, dict(EVIDENCE, **units.TYPES))
     seq_bad = violations(seq_pairs, seq_by)
     bad['الحقيقة نفسها في بندين متتاليين أثناء التشغيل (3.5)'] += len(seq_bad)
     cases, accepted = rejected_examples()

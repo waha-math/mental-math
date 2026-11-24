@@ -24,12 +24,17 @@ const CHROME = process.argv[2] || '/usr/bin/google-chrome';
 const PACK = JSON.parse(readFileSync(join(ROOT, 'slice-content.json'), 'utf8'));
 const BY = new Map(PACK.items.map((i) => [i.id, i]));
 const IDENT = { version: PACK.version, digest: PACK.digest };
-const TYPES = { '1-4-1': ['ف1', 'ف3'], '1-4-2': ['ف2', 'ف3', 'ف4'], '3-5-1': ['ف1', 'ف2', 'ف3'],
-  '3-5-2': ['ف1', 'ف2', 'ف3', 'ف4'], '3-5-3': ['ف3'] };                   // من صفوف المهارات في الخريطة
+// من صفوف المهارات في الخريطة: المرحلتان 1 و2 (UNITS-PLAN.md) والوحدة 3-5
+const STAGE1 = ["1-1-1", "1-1-2", "1-2-1", "1-2-2", "1-3-1", "1-3-2", "1-3-3", "1-4-1", "1-4-2", "1-5-1", "1-5-2", "1-5-3", "2-1-1", "2-1-2", "2-2-1", "2-2-2", "2-3-1", "2-3-2", "2-4-1", "2-4-2", "2-5-1", "2-5-2", "2-5-3", "2-6-1", "2-6-2", "2-6-3", "2-6-4"];
+const TYPES = { ...{"1-1-1": ["ف1", "ف3"], "1-1-2": ["ف1", "ف3"], "1-2-1": ["ف2", "ف3"], "1-2-2": ["ف1", "ف3"], "1-3-1": ["ف1", "ف3"], "1-3-2": ["ف1", "ف3"], "1-3-3": ["ف1", "ف2", "ف3"], "1-4-1": ["ف1", "ف3"], "1-4-2": ["ف2", "ف3", "ف4"], "1-5-1": ["ف1", "ف3", "ف4"], "1-5-2": ["ف2", "ف3", "ف4"], "1-5-3": ["ف2", "ف5"], "2-1-1": ["ف1", "ف3"], "2-1-2": ["ف1", "ف3"], "2-2-1": ["ف1", "ف3"], "2-2-2": ["ف1", "ف3", "ف4"], "2-3-1": ["ف2", "ف3"], "2-3-2": ["ف2", "ف3", "ف5"], "2-4-1": ["ف1", "ف2", "ف3"], "2-4-2": ["ف2", "ف3", "ف4"], "2-5-1": ["ف1", "ف2", "ف3"], "2-5-2": ["ف1", "ف2", "ف3"], "2-5-3": ["ف3"], "2-6-1": ["ف2", "ف3"], "2-6-2": ["ف3", "ف5"], "2-6-3": ["ف3", "ف4"], "2-6-4": ["ف3", "ف4"]}, '3-5-1': ['ف1', 'ف2', 'ف3'], '3-5-2': ['ف1', 'ف2', 'ف3', 'ف4'], '3-5-3': ['ف3'] };
 // ملفات الأطفال كما في 10.2 وقرار الأب: السقف وحد اليوم بالثواني، وقرارات الفتح. مكتوبة هنا يدويًا، لا من إعداد التطبيق
-const OLDER = { group: 'older', scope: ['3-5-1', '3-5-2', '3-5-3'], cap: 600, day_cap: 86400,
+// المرحلة 3 للكبيرين، ونطاقهما المراحل 1 إلى 3 لأن متطلباتها تنزل إليها (UNITS-PLAN.md)
+const STAGE3 = ["3-1-1", "3-1-2", "3-1-3", "3-1-4", "3-2-1", "3-2-2", "3-2-3", "3-3-1", "3-3-2", "3-4-1", "3-4-2", "3-5-1", "3-5-2", "3-5-3", "3-6-1", "3-6-2", "3-6-3", "3-6-4", "3-7-1", "3-7-2", "3-8-1", "3-8-2", "3-8-3"];
+const STAGE3_TYPES = {"3-1-1": ["ف1", "ف3"], "3-1-2": ["ف1", "ف3"], "3-1-3": ["ف1", "ف3"], "3-1-4": ["ف1", "ف3"], "3-2-1": ["ف1", "ف3"], "3-2-2": ["ف2", "ف3", "ف4"], "3-2-3": ["ف2", "ف3", "ف4"], "3-3-1": ["ف1", "ف2", "ف3"], "3-3-2": ["ف1", "ف2", "ف3", "ف4"], "3-4-1": ["ف1", "ف3"], "3-4-2": ["ف2", "ف3", "ف5"], "3-5-1": ["ف1", "ف2", "ف3"], "3-5-2": ["ف1", "ف2", "ف3", "ف4"], "3-5-3": ["ف3"], "3-6-1": ["ف2", "ف3"], "3-6-2": ["ف2", "ف3", "ف5"], "3-6-3": ["ف1", "ف2", "ف3"], "3-6-4": ["ف1", "ف2", "ف3"], "3-7-1": ["ف1", "ف2", "ف3"], "3-7-2": ["ف4"], "3-8-1": ["ف2", "ف3"], "3-8-2": ["ف2", "ف3", "ف4"], "3-8-3": ["ف1", "ف3"]};
+Object.assign(TYPES, STAGE3_TYPES);
+const OLDER = { group: 'older', scope: [...STAGE1, ...STAGE3], cap: 600, day_cap: 86400,
   decisions: [['3-5-1', ['3-3-2', '3-2-3']], ['3-5-2', ['3-2-1', '3-3-1', '2-5-2']]] };
-const PROF = { young: { child: 'young', avatar: '🦊', group: 'young', scope: ['1-4-1', '1-4-2'], cap: 360, day_cap: 86400,
+const PROF = { young: { child: 'young', avatar: '🦊', group: 'young', scope: STAGE1, cap: 360, day_cap: 86400,
   decisions: [['1-4-1', ['1-3-3']]] }, older1: { child: 'older1', avatar: '🐬', ...OLDER },
 older2: { child: 'older2', avatar: '🦉', ...OLDER } };
 const DAY0 = Date.UTC(2026, 10, 19, 8, 0, 0);                             // 10 صباحًا في القاهرة، 19 نوفمبر 2026
@@ -158,6 +163,8 @@ const shownItem = async (page) => {
       }),
       model: svg ? { counters: Number(svg.dataset.counters), covered: svg.dataset.covered === 'true', ghost: svg.classList.contains('ghost') } : null,
       line: ln ? JSON.parse(ln.dataset.shown) : null,
+      drawn: document.querySelector('#model svg.m') ? [document.querySelector('#model svg.m').dataset.kind,
+        JSON.parse(document.querySelector('#model svg.m').dataset.shown)] : null,
       // بند المقارنة: الحلان كلٌّ على خط باسم بطاقته، والبطاقات بدل لوحة الأرقام
       pair: [...document.querySelectorAll('#model .pair-row')].map((r) => [r.dataset.card, JSON.parse(r.querySelector('svg.line').dataset.shown)]),
       cards: [...document.querySelectorAll('#cards [data-card]')].map((b) => b.dataset.card),
@@ -192,13 +199,29 @@ function inspect(v) {
       : it.performance === 'step_pair' ? { counters: 0, covered: false, ghost: true } : null;
   if (canonical(v.model) !== canonical(model)) bad.push('النموذج');
   // خط الأعداد: ما يُكتب عليه، من حقل model في المحتوى وبوصف المورد في 10.2. المسؤول عنه مربع، ولا يُكتب جوابه
-  const m = it.performance === 'compare' ? null : it.model ?? null;
+  const m = it.performance === 'compare' || (it.model && it.model.kind) ? null : it.model ?? null;
+  // نماذج المرحلة 1: ما يُكتب أو يُعدّ عليها، من حقل model وبقاعدة كل نوع. المسؤول عنه مربع، ولا يُكتب جوابه
+  const k = it.model && it.model.kind ? it.model : null;
+  const drawn = k === null ? null : [k.kind, {
+    dots: () => ({ n: k.n }), frame: () => ({ n: k.n, size: k.size }), discs: () => ({ red: k.red, blue: k.blue }),
+    bond: () => ({ whole: String(k.whole), parts: [String(k.part), '▢'] }), cup: () => ({ shown: k.shown, total: k.total }),
+    frames2: () => ({ n: k.n }), beads: () => ({ rows: k.rows, hide: k.hide ?? null }),
+    tens: () => ({ tens: k.tens, ones: k.ones, plus: k.plus ?? 0, minus: k.minus ?? 0 }), tens2: () => ({ a: k.a, b: k.b }),
+    round: () => ({ lo: k.lo, hi: k.hi, v: k.v }), slide: () => ({ rows: [[k.b, k.a], [k.b + k.d, k.a + k.d]], d: k.d }),
+    bar: () => ({ whole: String(k.whole), parts: ['▢', '▢'] }),
+    jumps: () => ({ stations: [k.start, ...k.stations].map((x, j) => (j > 0 && Array.isArray(k.hide) && k.hide[0] === 'station'
+      && k.hide[1] === j - 1 ? '▢' : String(x))), jumps: k.jumps.map((x, j) => (Array.isArray(k.hide) && k.hide[0] === 'jump' && k.hide[1] === j ? '▢'
+      : (k.line === 'back' ? '−' : '+') + x)) }),
+    path: () => ({ nums: Array.from({ length: k.len }, (_, j) => k.start + j * k.step)
+      .map((x, j) => (j === k.hide || (k.jump !== undefined && x === k.mark + k.jump) ? '▢' : String(x))),
+    mark: k.mark ?? null, jump: k.jump ?? null }) }[k.kind]()];
+  if (canonical(v.drawn) !== canonical(drawn)) bad.push('رسم نموذج المرحلة 1');
   if (it.performance === 'compare') {
     const [A, B] = it.model.pair;
     const pair = [['A', { stations: [A.start, ...A.stations].map(String), jumps: A.jumps.map((j) => '−' + j) }],
       ['B', { stations: [B.start, ...B.stations].map(String), jumps: B.jumps.map((j) => '+' + j) }]];
     if (canonical([v.pair, v.cards]) !== canonical([pair, it.cards])) bad.push('رسم المقارنة أو بطاقاتها');
-  } else if (v.pair.length || v.cards.length) bad.push('رسم مقارنة أو بطاقات في غير بند مقارنة');
+  } else if (v.pair.length || canonical(v.cards) !== canonical(it.cards ?? [])) bad.push('رسم مقارنة، أو بطاقات غير بطاقات البند');
   const line = m === null ? null : {
     line_back: { stations: [String(m.start), ...m.stations.map((_, k) => (k === m.stations.length - 1 ? '▢' : ''))],
       jumps: m.jumps.map((j) => '−' + j) },
@@ -219,9 +242,11 @@ function inspect(v) {
 
 // طفل الاختبار يتعلّم: لا يعرف المهارة حتى يرى درسها. قبله يخطئ في بنود التقييم، وفي بنود التعليم يخطئ أولًا ثم يصيب على
 // النموذج. بعده يجيب صحيحًا. يعيد معرّفات ما عُرض، ويتوقف عند stopAt والبند معروض لم يُجب
-const KNOWN = new Set();
+// طفل الاختبار يعرف مهارات المرحلة 1 التي قبل 1-4-1 (يجتاز بواباتها)، ولا يعرف ما بعدها حتى يرى درسه. فيصل بحث
+// البوابات إلى 1-4-1 كما كان قبل أن يتسع نطاق الصغير إلى المرحلة 1 (UNITS-PLAN.md)
+const KNOWN = new Set(STAGE1.slice(0, STAGE1.indexOf('1-4-1')));
 const SHOT = new Set();
-const wrongOf = (it) => (it.answer === 9 ? 8 : it.answer + 1);
+const wrongOf = (it) => (it.cards ? it.cards.find((c) => c !== it.answer) : it.answer === 9 ? 8 : it.answer + 1);
 async function play(page, { stopAt = null } = {}) {
   const seen = [];
   for (;;) {
@@ -241,16 +266,17 @@ async function play(page, { stopAt = null } = {}) {
     const role = it.role;
     if (v.kind === 'shown') {
       if (role.startsWith('lesson')) KNOWN.add(it.skill);
-      if (it.performance === 'compare') {                                // بطاقة، ثم يُعرض الجواب
+      if (it.cards) {                                                    // بطاقة، ثم يُعرض الجواب
         await page.click(`#cards [data-card="${it.answer}"]`);
         await page.waitForSelector('#next');
       } else if (role !== 'lesson.watch') await type(page, it.answer), await page.click('[data-key="ok"]');
       await page.click('#next');
       rEvent(['end'], true);
     } else if (v.kind === 'assess') {
-      if (it.role === 'descriptive_check') {                            // الفحص الوصفي: بطاقة، بلا جواب يُعرض (17.27)
-        await page.click(`#cards [data-card="${it.answer}"]`);
-        rEvent(['confirm', it.answer], true);
+      if (it.cards) {                                                    // بطاقة، بلا جواب يُعرض (17.27)
+        const c = it.role === 'descriptive_check' || KNOWN.has(it.skill) ? it.answer : wrongOf(it);
+        await page.click(`#cards [data-card="${c}"]`);
+        rEvent(['confirm', c], true);
         continue;
       }
       const a = KNOWN.has(it.skill) ? it.answer : wrongOf(it);
@@ -261,6 +287,18 @@ async function play(page, { stopAt = null } = {}) {
         rEvent(['how', 'back'], false);
       }
       rEvent(['confirm', a], true);
+    } else if (it.cards) {                                               // بند تعليم ببطاقة: خطأ ثم صحيح، ثم «التالي»
+      if (!KNOWN.has(it.skill)) {
+        const w = wrongOf(it);
+        await page.click(`#cards [data-card="${w}"]`);
+        rEvent(['confirm', w], false);
+        await page.waitForFunction(() => !document.querySelector('#cards button:disabled'));
+      }
+      await page.click(`#cards [data-card="${it.answer}"]`);
+      await page.waitForSelector('#next');
+      rEvent(['confirm', it.answer], false);
+      await page.click('#next');
+      rEvent(['end'], true);
     } else {
       if (!KNOWN.has(it.skill)) {
         const w = wrongOf(it);
@@ -325,6 +363,8 @@ rSetup('قرار الشريحة في 10.2');
 }
 
 // ---------------------------------------------------------------- 2) يسمع التعليمة
+// قرار البداية (1-4-1) يُبحث فيه أولًا، وما تحته يُفترض متقنًا (UNITS-PLAN.md)
+const G0 = BY.get('1-4-1/gate/01');
 await press(page);
 rStart(NOW.t);
 let v = await shownItem(page);
@@ -332,30 +372,30 @@ inspect(v);
 rShow(v.id);
 {
   const rec = await dbRec(page);
-  check('«ابدأ»: جلسة البحث S1 بيوم الأسرة، وأول بند بوابة 1-4-1، ونُطق تمهيد البوابة ثم السؤال، والبند محفوظ معروضًا قبل أي إجابة',
+  check('«ابدأ»: جلسة البحث S1 بيوم الأسرة، وأول بند بوابة مهارة قرار البداية (1-4-1)، ونُطق تمهيد البوابة ثم السؤال، والبند محفوظ معروضًا قبل أي إجابة',
     [v.id, v.prompt, v.said, eng(rec).sessions.S1.kind, eng(rec).sessions.S1.day, rec.current?.journal?.item ?? null, rec.current?.journal?.raw ?? null,
       rec.records.length],
-    ['1-4-1/gate/01', '6 وكم تصير 10؟', 'أسئلة قصيرة لنعرف من أين نبدأ. 6 وكم تصير 10؟', 'search', DAYNUM, '1-4-1/gate/01', [], 0]);
+    [G0.id, plain(G0.text_ar), 'أسئلة قصيرة لنعرف من أين نبدأ. ' + say(G0.audio_ar), 'search', DAYNUM, G0.id, [], 0]);
 }
 await page.click('#listen');
-check('زر «اسمع السؤال» يعيد نطق السؤال وحده', await page.evaluate(() => window.MM_TEST.spoken.slice(-1)), ['6 وكم تصير 10؟']);
+check('زر «اسمع السؤال» يعيد نطق السؤال وحده', await page.evaluate(() => window.MM_TEST.spoken.slice(-1)), [say(G0.audio_ar)]);
 
 // ---------------------------------------------------------------- 3) يكمل مسألة
 await tick(page);
-await type(page, 5);
+await type(page, G0.answer === 9 ? 8 : G0.answer + 1);
 await page.click('[data-key="del"]');                                    // زلّة إصبع تُصحَّح بالحذف قبل التأكيد (4.1)
-await type(page, 4);
+await type(page, G0.answer);
 await page.click('[data-key="ok"]');
-rEvent(['confirm', 4], true);
+rEvent(['confirm', G0.answer], true);
 v = await shownItem(page);
 inspect(v);
 {
   const rec = await dbRec(page), r0 = rec.records[0];
-  check('يكتب 5 ثم يحذف ثم 4 ويؤكد: سجل واحد لبند البوابة، أول إجابة صحيحة بقيمتها 4 بلا دعم، بجلسته وحزمته ووقته. وعُرض بند آخر بلا '
+  check('يكتب عددًا خطأ ثم يحذفه ثم الجواب ويؤكد: سجل واحد لبند البوابة، أول إجابة صحيحة بقيمتها بلا دعم، بجلسته وحزمته ووقته. وعُرض بند آخر بلا '
     + 'تغذية راجعة، وحالة الحفظ «تم الحفظ»',
   [rec.records.length, r0.item, r0.status, r0.first, r0.support_before, r0.session, r0.pack, r0.at, r0.values,
-    v.id !== '1-4-1/gate/01', v.ok, await page.evaluate(() => document.getElementById('save').textContent)],
-  [1, '1-4-1/gate/01', 'complete', true, [], 'S1', PACK.version, NOW.t, [4], true, false, 'تم الحفظ']);
+    v.id !== G0.id, v.ok, await page.evaluate(() => document.getElementById('save').textContent)],
+  [1, G0.id, 'complete', true, [], 'S1', PACK.version, NOW.t, [G0.answer], true, false, 'تم الحفظ']);
 }
 rShow(v.id);
 
@@ -406,6 +446,17 @@ await press(page);
 rStart(NOW.t);
 // أول بند تعليم («جرّب أولًا»): يخطئ ثم يصيب (4.1 و10.3)
 v = await shownItem(page);
+// قبل درس 1-4-1: التحقق القصير لمتطلبه المتجاوَز بقرار البداية (1-3-3)، صار في النطاق بالمرحلة 1. الطفل يعرفه
+while (v.kind === 'assess') {
+  inspect(v);
+  rShow(v.id);
+  await tick(page);
+  const itS = BY.get(v.id);
+  await type(page, itS.answer);
+  await page.click('[data-key="ok"]');
+  rEvent(['confirm', itS.answer], true);
+  v = await shownItem(page);
+}
 {
   const it = inspect(v);
   rShow(v.id);

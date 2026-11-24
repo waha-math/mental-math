@@ -92,8 +92,174 @@ export function blankLine(a, b) {
   return svg;
 }
 
+// ---------------------------------------------------------------- نماذج المرحلة 1 (units.py)، من حقل model وحده
+// كل رسم يحمل في data-shown ما يُكتب أو يُعدّ فيه، ليُطابَق بالمحتوى. لا ينعكس مع العربية
+const svgOf = (w, h, kind, shown) => el('svg', { viewBox: `0 0 ${w} ${h}`, class: 'm k-' + kind, role: 'img', 'data-kind': kind,
+  'data-shown': JSON.stringify(shown) });
+const txt = (x, y, t, cls) => { const e = el('text', { x, y, class: cls, 'text-anchor': 'middle', 'dominant-baseline': 'central' }); e.textContent = t; return e; };
+// نقاط النرد: ثلاثة ترتيبات لكل عدد حتى 5
+const DOTS = [
+  { 1: [[1, 1]], 2: [[0, 0], [2, 2]], 3: [[0, 0], [1, 1], [2, 2]], 4: [[0, 0], [2, 0], [0, 2], [2, 2]], 5: [[0, 0], [2, 0], [1, 1], [0, 2], [2, 2]] },
+  { 1: [[0, 1]], 2: [[0, 1], [2, 1]], 3: [[0, 2], [1, 0], [2, 2]], 4: [[1, 0], [0, 1], [2, 1], [1, 2]], 5: [[0, 1], [1, 0], [1, 1], [2, 1], [1, 2]] },
+  { 1: [[2, 0]], 2: [[1, 0], [1, 2]], 3: [[0, 1], [1, 1], [2, 1]], 4: [[0, 0], [1, 0], [0, 1], [1, 1]], 5: [[0, 0], [1, 0], [2, 0], [0, 2], [2, 2]] },
+];
+function dots(m) {
+  const svg = svgOf(300, 300, 'dots', { n: m.n });
+  svg.append(el('rect', { x: 10, y: 10, width: 280, height: 280, rx: 30, class: 'die' }));
+  for (const [c, r] of DOTS[m.layout][m.n]) svg.append(el('circle', { cx: 60 + c * 90, cy: 60 + r * 90, r: 30, class: 'counter' }));
+  return svg;
+}
+function frame(m) {
+  const cols = 5, rows = m.size / 5, svg = svgOf(520, 20 + rows * 100, 'frame', { n: m.n, size: m.size });
+  for (let k = 0; k < m.size; k++) {
+    const x = 10 + (k % cols) * 100, y = 10 + Math.floor(k / cols) * 100;
+    svg.append(el('rect', { x, y, width: 100, height: 100, class: 'cell' }));
+    if (k < m.n) svg.append(el('circle', { cx: x + 50, cy: y + 50, r: 36, class: 'counter' }));
+  }
+  return svg;
+}
+// مسار الأعداد: مربعات مرقّمة. hide: المربع المسؤول عنه. mark و jump: البداية والقفزة، والوصول مربع فارغ
+function path(m) {
+  const n = m.len, W = Math.max(560, n * 64), cell = (W - 20) / n;
+  const nums = Array.from({ length: n }, (_, k) => m.start + k * m.step);
+  const end = m.jump !== undefined ? m.mark + m.jump : null;
+  const shown = nums.map((v, k) => (k === m.hide || v === end ? BOX : String(v)));
+  const svg = svgOf(W, 190, 'path', { nums: shown, mark: m.mark ?? null, jump: m.jump ?? null });
+  nums.forEach((v, k) => {
+    const x = 10 + k * cell;
+    svg.append(el('rect', { x, y: 70, width: cell - 4, height: 70, rx: 10, class: 'cell' + (v === m.mark ? ' mark' : '') }));
+    svg.append(txt(x + cell / 2 - 2, 105, shown[k], 'num' + (shown[k] === BOX ? ' ask' : '')));
+  });
+  if (m.jump !== undefined && m.jump !== 0) {
+    const i0 = nums.indexOf(m.mark), i1 = nums.indexOf(end);
+    const a = 10 + i0 * cell + cell / 2 - 2, b = 10 + i1 * cell + cell / 2 - 2, top = 70 - 12 * Math.abs(m.jump) - 10;
+    svg.append(el('path', { d: `M ${a} 66 Q ${(a + b) / 2} ${Math.max(4, top)} ${b} 66`, class: 'jump' }));
+    svg.append(el('path', { d: `M ${b} 66 l ${b > a ? -12 : 12} -6 l ${b > a ? 2 : -2} 12 z`, class: 'head' }));
+    svg.append(txt((a + b) / 2, Math.max(16, top + 10), (m.jump > 0 ? '+' : '−') + Math.abs(m.jump), 'size'));
+  }
+  return svg;
+}
+function discs(m) {
+  const n = m.red + m.blue, svg = svgOf(Math.max(300, n * 70 + 20), 120, 'discs', { red: m.red, blue: m.blue });
+  for (let k = 0; k < n; k++) svg.append(el('circle', { cx: 45 + k * 70, cy: 60, r: 28, class: k < m.red ? 'red' : 'blue' }));
+  return svg;
+}
+// مخطط الرابطة: الكل فوق، والجزءان تحته، والجزء المسؤول عنه مربع
+function bond(m) {
+  const svg = svgOf(420, 300, 'bond', { whole: String(m.whole), parts: [String(m.part), BOX] });
+  svg.append(el('line', { x1: 210, y1: 90, x2: 110, y2: 200, class: 'link' }));
+  svg.append(el('line', { x1: 210, y1: 90, x2: 310, y2: 200, class: 'link' }));
+  for (const [x, y, t] of [[210, 70, String(m.whole)], [110, 220, String(m.part)], [310, 220, BOX]]) {
+    svg.append(el('circle', { cx: x, cy: y, r: 56, class: 'node' }));
+    svg.append(txt(x, y, t, 'num' + (t === BOX ? ' ask' : '')));
+  }
+  return svg;
+}
+// الكوب المخفي: الأقراص الظاهرة، وكوب يغطي الباقي ولا يُعرف عددها منه
+function cup(m) {
+  const svg = svgOf(Math.max(420, m.shown * 70 + 200), 160, 'cup', { shown: m.shown, total: m.total });
+  for (let k = 0; k < m.shown; k++) svg.append(el('circle', { cx: 45 + k * 70, cy: 100, r: 28, class: 'blue' }));
+  const x = 30 + m.shown * 70;
+  svg.append(el('path', { d: `M ${x} 140 L ${x + 30} 30 L ${x + 130} 30 L ${x + 160} 140 Z`, class: 'cupshape' }));
+  return svg;
+}
+// المرحلة 2: إطارا عشرة (يمتلئ الأول ثم الثاني)، وصفّا خرز (المخفي صفّه مغطى)، وخط القفزات بقاعدة خط الأعداد نفسها
+function frames2(m) {
+  const svg = svgOf(1060, 220, 'frames2', { n: m.n });
+  for (let f = 0; f < 2; f++) {
+    for (let k = 0; k < 10; k++) {
+      const x = 10 + f * 530 + (k % 5) * 100, y = 10 + Math.floor(k / 5) * 100;
+      svg.append(el('rect', { x, y, width: 100, height: 100, class: 'cell' }));
+      if (f * 10 + k < m.n) svg.append(el('circle', { cx: x + 50, cy: y + 50, r: 36, class: 'counter' }));
+    }
+  }
+  return svg;
+}
+function beads(m) {
+  const k = m.rows[0], svg = svgOf(Math.max(400, k * 56 + 60), 200, 'beads', { rows: m.rows, hide: m.hide ?? null });
+  m.rows.forEach((n, r) => {
+    const y = 55 + r * 90;
+    svg.append(el('line', { x1: 20, y1: y, x2: n * 56 + 40, y2: y, class: 'link' }));
+    if (r === m.hide) {
+      svg.append(el('rect', { x: 20, y: y - 32, width: n * 56 + 20, height: 64, rx: 14, class: 'cupshape' }));
+      return;
+    }
+    for (let j = 0; j < n; j++) svg.append(el('circle', { cx: 50 + j * 56, cy: y, r: 24, class: j < 5 ? 'red' : 'blue' }));
+  });
+  return svg;
+}
+function jumps(m) {
+  const svg = numberLine(m, { perf: 'units' });
+  svg.setAttribute('class', 'm k-jumps');
+  svg.dataset.kind = 'jumps';
+  return svg;
+}
+// المرحلة 3: حزم العشرات (حزمة = عمود من عشرة مربعات، والآحاد مربعات مفردة؛ المضاف بلون آخر، والمأخوذ مشطوب)،
+// والعددان بالحزم في صفين، وخط التقريب بعشرتيه، والعددان قبل الزيادة وبعدها، والشريط المقصوص نصفين
+function bundle(svg, x, y, cls) {
+  svg.append(el('rect', { x, y, width: 34, height: 200, rx: 4, class: 'rod ' + cls }));
+  for (let j = 1; j < 10; j++) svg.append(el('line', { x1: x, y1: y + j * 20, x2: x + 34, y2: y + j * 20, class: 'rodline' }));
+}
+function tens(m) {
+  const plus = m.plus ?? 0, minus = m.minus ?? 0, total = m.tens + plus;
+  const W = Math.max(420, total * 46 + (m.ones ? 70 : 0) + 40), svg = svgOf(W, 240, 'tens', { tens: m.tens, ones: m.ones, plus, minus });
+  for (let k = 0; k < total; k++) {
+    const x = 20 + k * 46;
+    bundle(svg, x, 20, k >= m.tens ? 'add' : '');
+    if (k >= m.tens - minus && k < m.tens) svg.append(el('line', { x1: x - 6, y1: 230, x2: x + 40, y2: 10, class: 'cross' }));
+  }
+  for (let j = 0; j < m.ones; j++) svg.append(el('rect', { x: 30 + total * 46 + (j % 2) * 26, y: 200 - Math.floor(j / 2) * 26, width: 22, height: 22, class: 'rod' }));
+  return svg;
+}
+function tens2(m) {
+  const W = 520, svg = svgOf(W, 500, 'tens2', { a: m.a, b: m.b });
+  [m.a, m.b].forEach(([t, o], r) => {
+    const y = 20 + r * 250;
+    for (let k = 0; k < t; k++) bundle(svg, 20 + k * 46, y, r ? 'add' : '');
+    for (let j = 0; j < o; j++) svg.append(el('rect', { x: 30 + t * 46 + (j % 2) * 26, y: y + 178 - Math.floor(j / 2) * 26, width: 22, height: 22, class: 'rod' + (r ? ' add' : '') }));
+  });
+  return svg;
+}
+// التقريب: خط من العشرة إلى التالية بأحد عشر تدريجًا، والعدد عليه نقطة، والعشرتان مكتوبتان
+function round(m) {
+  const W = 720, pad = 60, y = 110, step = (W - 2 * pad) / 10, svg = svgOf(W, 200, 'round', { lo: m.lo, hi: m.hi, v: m.v });
+  svg.append(el('line', { x1: pad, y1: y, x2: W - pad, y2: y, class: 'link' }));
+  for (let j = 0; j <= 10; j++) svg.append(el('line', { x1: pad + j * step, y1: y - (j % 5 ? 10 : 20), x2: pad + j * step, y2: y + (j % 5 ? 10 : 20), class: 'link' }));
+  svg.append(txt(pad, y + 50, String(m.lo), 'num'));
+  svg.append(txt(W - pad, y + 50, String(m.hi), 'num'));
+  const x = pad + (m.v - m.lo) * step;
+  svg.append(el('circle', { cx: x, cy: y, r: 14, class: 'red' }));
+  svg.append(txt(x, y - 48, String(m.v), 'num'));
+  return svg;
+}
+// الفرق الثابت: خطان، الأول بالعددين، والثاني بهما بعد زيادة كلٍّ منهما d، والفرق بينهما قوس واحد بلا عدد
+function slide(m) {
+  const W = 720, svg = svgOf(W, 330, 'slide', { rows: [[m.b, m.a], [m.b + m.d, m.a + m.d]], d: m.d });
+  [[m.b, m.a], [m.b + m.d, m.a + m.d]].forEach(([lo, hi], r) => {
+    const y = 90 + r * 160, x0 = 120 + r * 80, x1 = 520 + r * 80;
+    svg.append(el('line', { x1: 30, y1: y, x2: W - 30, y2: y, class: 'link' }));
+    for (const [x, v] of [[x0, lo], [x1, hi]]) {
+      svg.append(el('circle', { cx: x, cy: y, r: 12, class: 'red' }));
+      svg.append(txt(x, y - 40, String(v), 'num'));
+    }
+    svg.append(el('path', { d: `M ${x0} ${y + 14} Q ${(x0 + x1) / 2} ${y + 70} ${x1} ${y + 14}`, class: 'jump' }));
+  });
+  return svg;
+}
+function bar(m) {
+  const svg = svgOf(720, 220, 'bar', { whole: String(m.whole), parts: [BOX, BOX] });
+  svg.append(txt(360, 30, String(m.whole), 'num'));
+  for (let k = 0; k < 2; k++) {
+    svg.append(el('rect', { x: 20 + k * 345, y: 70, width: 335, height: 80, rx: 8, class: 'cell' }));
+    svg.append(txt(187 + k * 345, 110, BOX, 'num ask'));
+  }
+  return svg;
+}
+const KINDS = { dots, frame, path, discs, bond, cup, frames2, beads, jumps, tens, tens2, round, slide, bar };
+
 // نموذج البند كما يطلبه موردُه (resource)، أو null إن كان «بلا نموذج» أو لا رسم له بعد
 export function modelFor(item) {
+  if (item.model && KINDS[item.model.kind]) return KINDS[item.model.kind](item.model);
   const n = item.numbers;
   if (item.performance === 'frame_empty') return tenFrame({ counters: n.n });
   if (item.performance === 'frame_counters') return tenFrame({ counters: 10 - n.e, covered: true });
@@ -104,6 +270,7 @@ export function modelFor(item) {
 
 // النموذج الذي يعود بعد خطأ في التعلّم (4.1): المسألة مجهّزة على الإطار دون حلّها
 export function supportFor(item) {
+  if (item.model && KINDS[item.model.kind]) return KINDS[item.model.kind](item.model);   // الومضة تُعاد ظاهرة
   const n = item.numbers;
   if (item.performance === 'frame_counters') return tenFrame({ counters: 10 - n.e, covered: true });
   if (typeof n.n === 'number' && n.n >= 0 && n.n <= 10) return tenFrame({ counters: n.n });

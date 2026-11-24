@@ -14,7 +14,7 @@
 | 3-5-2 الطرح بالإكمال | 7 | 5 | 8 | 6 | 40 | 27 | 27 | 3 | 60 | 30 | 0 |
 | 3-5-3 مسائل طرح مختلطة بأي من الطريقتين | 9 | 5 | 2 | 6 | 10 | 10 | 10 | 3 | 60 | 30 | 4 |
 
-المجموع 965 بندًا. لكل بند: معرّف، دور، نوع دليل، أداء مطلوب، أعداد، مورد مسموح، نوع إجابة، جواب، نص وصوت بالعربية والإنجليزية، وإجابات خاطئة متوقعة بوصفها المحايد.
+المجموع 9364 بندًا. لكل بند: معرّف، دور، نوع دليل، أداء مطلوب، أعداد، مورد مسموح، نوع إجابة، جواب، نص وصوت بالعربية والإنجليزية، وإجابات خاطئة متوقعة بوصفها المحايد.
 
 ## 2. التصحيح
 
@@ -191,6 +191,94 @@
 | 3-5-2/evidence/15 | تحتاج سلمى 80 خرزة للعقد، ومعها 74 خرزة. كم خرزة تنقصها؟ | Salma needs 80 beads for the necklace and has 74. How many more beads does she need? | 6 |
 | 3-5-2/evidence/16 | في القاعة 91 مقعدًا. جلس الأطفال على 41 مقعدًا. كم مقعدًا فارغًا؟ | The hall has 91 seats. Children are sitting on 41 of them. How many seats are empty? | 50 |
 | 3-5-3/compare/01 | حلّان للمسألة ⁦ 91 − 17 ⁩. الحل أ بالقفز للخلف: 10 ثم 1 ثم 6. الحل ب بالإكمال: 3 ثم 71. أي الحلين قفزاته أقل؟ | Two solutions for ⁦ 91 − 17 ⁩. Solution A jumps back: 10, then 1, then 6. Solution B counts up: 3, then 71. Which solution uses fewer jumps? | B |
+| 1-1-1/lesson/01 | كم نقطة رأيت؟ | How many dots did you see? | 3 |
+| 1-1-1/lesson/04 | كم قرصًا رأيت على الإطار؟ | How many counters did you see on the frame? | 2 |
+| 1-1-2/lesson/01 | كم قرصًا رأيت على الإطار؟ | How many counters did you see on the frame? | 10 |
+| 1-1-2/lesson/04 | ⁦ 5 + 4 = ▢ ⁩ | ⁦ 5 + 4 = ▢ ⁩ | 9 |
+| 1-2-1/lesson/01 | ما العدد الذي يأتي قبل 12؟ | Which number comes before 12? | 11 |
+| 1-2-1/lesson/04 | ما العدد الناقص على المسار؟ | Which number is missing on the path? | 10 |
+| 1-2-2/lesson/01 | نبدأ من 3 ونرجع 1. أين نصل؟ | Start at 3 and move back 1. Where do we land? | 2 |
+| 1-2-2/lesson/04 | ⁦ 10 − 1 = ▢ ⁩ | ⁦ 10 − 1 = ▢ ⁩ | 9 |
+| 1-3-1/lesson/01 | عدد الأقراص 4، منها 3 حمراء والباقي زرقاء. كم عدد الزرقاء؟ | 4 counters: 3 are red and the rest are blue. How many are blue? | 1 |
+| 1-3-1/lesson/04 | ⁦ 4 = 3 + ▢ ⁩ | ⁦ 4 = 3 + ▢ ⁩ | 1 |
+| 1-3-2/lesson/01 | في المخطط: الكل 9 وأحد الجزأين 6. ما الجزء الآخر؟ | In the diagram the whole is 9 and one part is 6. What is the other part? | 3 |
+| 1-3-3/lesson/01 | عدد الأقراص 6، بعضها تحت الكوب. نرى منها 1. كم عدد ما تحت الكوب؟ | We have 6 counters and some are under the cup. We can see 1. How many are under the cup? | 5 |
+| 1-3-3/lesson/06 | ⁦ 8 + ▢ = 10 ⁩ | ⁦ 8 + ▢ = 10 ⁩ | 2 |
+| 1-5-1/lesson/01 | ⁦ 4 + 5 ⁩ نبدأ من الأكبر: من 5 نتقدم 4. أين نصل؟ | ⁦ 4 + 5 ⁩ Start from the bigger number: from 5 move forward 4. Where do we land? | 9 |
+| 1-5-1/lesson/04 | ⁦ 1 + 2 = ▢ ⁩ | ⁦ 1 + 2 = ▢ ⁩ | 3 |
+| 1-5-1/evidence/09 | كان عدد العصافير على الشجرة 2، ثم جاء 6 آخرون. كم صار عدد العصافير؟ | There were 2 birds on the tree. 6 more came. How many birds are on the tree now? | 8 |
+| 1-5-2/lesson/01 | ⁦ 9 − 1 = ▢ ⁩ | ⁦ 9 − 1 = ▢ ⁩ | 8 |
+| 1-5-2/lesson/04 | ⁦ 2 − 1 = ▢ ⁩ في المخطط: الكل 2 وأحد الجزأين 1. ما الجزء الآخر؟ | ⁦ 2 − 1 = ▢ ⁩ In the diagram the whole is 2 and one part is 1. What is the other part? | 1 |
+| 1-5-2/evidence/09 | كان عدد البالونات مع ليلى 10، فطار منها 2. كم بقي منها؟ | Laila had 10 balloons. 2 flew away. How many balloons does she have left? | 8 |
+| 1-5-3/lesson/01 | ⁦ 9 + 1 = 5 + ▢ ⁩ | ⁦ 9 + 1 = 5 + ▢ ⁩ | 5 |
+| 1-5-3/evidence/05 | هل هذا صحيح؟ ⁦ 7 + 3 = 4 + 6 ⁩ | Is this true? ⁦ 7 + 3 = 4 + 6 ⁩ | yes |
+| 2-1-1/lesson/01 | كم قرصًا على الإطارين؟ | How many counters are on the two frames? | 17 |
+| 2-1-1/lesson/04 | ⁦ 10 + 9 = ▢ ⁩ | ⁦ 10 + 9 = ▢ ⁩ | 19 |
+| 2-1-2/lesson/01 | عدد الأقراص على الإطارين 16، ونأخذ منها 1. كم يبقى منها؟ | There are 16 counters on the frames and we take away 1. How many will be left? | 15 |
+| 2-1-2/lesson/04 | ⁦ 12 + 1 = ▢ ⁩ | ⁦ 12 + 1 = ▢ ⁩ | 13 |
+| 2-2-1/lesson/01 | صفّان متماثلان، عدد الخرز في كل صف 2. كم عدد الخرز في الصفين؟ | Two equal rows with 2 beads in each row. How many beads in both rows? | 4 |
+| 2-2-1/lesson/04 | ⁦ 1 + 1 = ▢ ⁩ | ⁦ 1 + 1 = ▢ ⁩ | 2 |
+| 2-2-2/lesson/01 | عدد الخرز في صفين متماثلين 6. كم عدده في كل صف؟ | 6 beads in two equal rows. How many beads are in each row? | 3 |
+| 2-2-2/lesson/04 | نصف 18 = ▢ | Half of 18 = ▢ | 9 |
+| 2-2-2/evidence/09 | عدد الأقلام 8، نضعها في علبتين بالتساوي. كم في كل علبة؟ | 8 pencils go equally into two boxes. How many pencils are in each box? | 4 |
+| 2-3-1/lesson/01 | ⁦ 9 + 10 = ▢ ⁩ | ⁦ 9 + 10 = ▢ ⁩ | 19 |
+| 2-3-1/lesson/04 | ⁦ 4 + 5 = ▢ + 1 ⁩ | ⁦ 4 + 5 = ▢ + 1 ⁩ | 8 |
+| 2-3-2/evidence/09 | هل هذا صحيح؟ ⁦ 4 + 6 = 4 + 4 ⁩ | Is this true? ⁦ 4 + 6 = 4 + 4 ⁩ | no |
+| 2-4-1/lesson/01 | عدد الأقراص على الإطارين 8، ونضيف 5. كم يصير عددها؟ | There are 8 counters on the frames and we add 5. How many will there be? | 13 |
+| 2-4-1/lesson/04 | ⁦ 8 + 9 = 10 + ▢ ⁩ | ⁦ 8 + 9 = 10 + ▢ ⁩ | 7 |
+| 2-4-1/lesson/06 | ⁦ 8 + 3 = ▢ ⁩ | ⁦ 8 + 3 = ▢ ⁩ | 11 |
+| 2-4-2/evidence/09 | كان عدد السيارات مع كريم 5، ثم أعطاه أخوه 9 أخرى. كم صار عددها؟ | Karim had 5 cars. His brother gave him 9 more. How many cars does Karim have now? | 14 |
+| 2-5-1/lesson/01 | ⁦ 17 − 9 ⁩ ننزل إلى 10 أولًا، ثم نكمل. أين نصل؟ | ⁦ 17 − 9 ⁩ First go down to 10, then carry on. Where do we land? | 8 |
+| 2-5-1/lesson/04 | ⁦ 14 − 5 = 10 − ▢ ⁩ | ⁦ 14 − 5 = 10 − ▢ ⁩ | 1 |
+| 2-5-1/lesson/06 | ⁦ 13 − 5 = ▢ ⁩ | ⁦ 13 − 5 = ▢ ⁩ | 8 |
+| 2-5-2/lesson/01 | ⁦ 16 − 8 ⁩ نكمل من 8 إلى 16. كم مجموع القفزتين؟ | ⁦ 16 − 8 ⁩ Count up from 8 to 16. What do the two jumps add up to? | 8 |
+| 2-5-2/lesson/04 | ⁦ 11 − 7 ⁩: من 7 إلى 10 قفزة 3، ومن 10 إلى 11 قفزة ▢ | ⁦ 11 − 7 ⁩: from 7 to 10 is a jump of 3, and from 10 to 11 is a jump of ▢ | 1 |
+| 2-6-1/lesson/01 | ⁦ 9 + 6 = ▢ ⁩ | ⁦ 9 + 6 = ▢ ⁩ | 15 |
+| 2-6-1/lesson/04 | ⁦ 9 + 8 = ▢ − 1 ⁩ | ⁦ 9 + 8 = ▢ − 1 ⁩ | 18 |
+| 2-6-2/lesson/01 | ⁦ 1 + 1 + 9 = ▢ ⁩ | ⁦ 1 + 1 + 9 = ▢ ⁩ | 11 |
+| 2-6-2/evidence/05 | هل هذا صحيح؟ ⁦ 3 + 6 + 7 = 3 + 7 + 7 ⁩ | Is this true? ⁦ 3 + 6 + 7 = 3 + 7 + 7 ⁩ | no |
+| 2-6-3/evidence/05 | كان عدد الأطفال في الحديقة 4، ثم دخل 8 آخرون. كم صار عددهم؟ | There were 4 children in the garden. 8 more came in. How many children are in the garden now? | 12 |
+| 2-6-4/lesson/01 | ⁦ 14 − 1 = ▢ ⁩ | ⁦ 14 − 1 = ▢ ⁩ | 13 |
+| 2-6-4/evidence/05 | كان عدد البالونات مع ليلى 13، فطار منها 8. كم بقي منها؟ | Laila had 13 balloons. 8 flew away. How many balloons does she have left? | 5 |
+| 3-1-1/lesson/01 | كم عدد الأقراص؟ (كل حزمة عشرة) | How many counters? (each bundle is ten) | 81 |
+| 3-1-1/lesson/04 | ⁦ 80 + 2 = ▢ ⁩ | ⁦ 80 + 2 = ▢ ⁩ | 82 |
+| 3-1-2/lesson/01 | ⁦ 55 − 10 ⁩ أين نصل؟ | ⁦ 55 − 10 ⁩ Where do we land? | 45 |
+| 3-1-2/lesson/04 | ⁦ 35 − 20 = ▢ ⁩ | ⁦ 35 − 20 = ▢ ⁩ | 15 |
+| 3-1-3/lesson/01 | ⁦ 60 − 40 ⁩ كم حزمة عشرة تبقى؟ وكم العدد؟ | ⁦ 60 − 40 ⁩ How many tens, and what is the number? | 20 |
+| 3-1-3/lesson/04 | ⁦ 90 + 10 = ▢ ⁩ | ⁦ 90 + 10 = ▢ ⁩ | 100 |
+| 3-1-4/lesson/01 | أي عشرة أقرب إلى 71؟ | Which ten is nearest to 71? | 70 |
+| 3-1-4/lesson/04 | 52 مقرَّبًا إلى أقرب عشرة = ▢ | 52 rounded to the nearest ten = ▢ | 50 |
+| 3-2-1/lesson/01 | من 11 إلى العشرة التالية. كم القفزة؟ | From 11 to the next ten. How big is the jump? | 9 |
+| 3-2-1/lesson/04 | ⁦ 79 + ▢ = 80 ⁩ | ⁦ 79 + ▢ = 80 ⁩ | 1 |
+| 3-2-2/lesson/01 | ⁦ 87 + 6 = ▢ ⁩ | ⁦ 87 + 6 = ▢ ⁩ | 93 |
+| 3-2-2/lesson/04 | ⁦ 28 + 5 = 30 + ▢ ⁩ | ⁦ 28 + 5 = 30 + ▢ ⁩ | 3 |
+| 3-2-2/evidence/09 | كان عدد السيارات مع كريم 45، ثم أعطاه أخوه 6 أخرى. كم صار عددها؟ | Karim had 45 cars. His brother gave him 6 more. How many cars does Karim have now? | 51 |
+| 3-3-1/lesson/01 | ⁦ 12 + 52 ⁩ أين نصل؟ | ⁦ 12 + 52 ⁩ Where do we land? | 64 |
+| 3-3-1/lesson/04 | ⁦ 12 + 55 = 62 + ▢ ⁩ | ⁦ 12 + 55 = 62 + ▢ ⁩ | 5 |
+| 3-3-1/lesson/06 | ⁦ 54 + 14 = ▢ ⁩ | ⁦ 54 + 14 = ▢ ⁩ | 68 |
+| 3-3-2/evidence/13 | كان عدد التفاح في السلة 58، ثم وضعت أمي فيها 25 أخرى. كم صار عدد التفاح في السلة؟ | There were 58 apples in the basket. Mum put in 25 more. How many apples are in the basket now? | 83 |
+| 3-4-1/lesson/01 | ⁦ 33 + 14 ⁩ كم المجموع؟ | ⁦ 33 + 14 ⁩ What is the total? | 47 |
+| 3-4-1/lesson/04 | ⁦ 15 + 84 = ▢ ⁩ | ⁦ 15 + 84 = ▢ ⁩ | 99 |
+| 3-4-2/lesson/04 | ⁦ 38 + 58 = 80 + ▢ ⁩ | ⁦ 38 + 58 = 80 + ▢ ⁩ | 16 |
+| 3-4-2/evidence/09 | هل هذا صحيح؟ ⁦ 59 + 13 = 60 + 13 ⁩ | Is this true? ⁦ 59 + 13 = 60 + 13 ⁩ | no |
+| 3-6-1/lesson/01 | ⁦ 36 + 39 = ▢ ⁩ | ⁦ 36 + 39 = ▢ ⁩ | 75 |
+| 3-6-1/lesson/04 | ⁦ 36 + 39 = ▢ − 1 ⁩ | ⁦ 36 + 39 = ▢ − 1 ⁩ | 76 |
+| 3-6-2/evidence/09 | هل هذا صحيح؟ ⁦ 74 − 19 = 74 − 20 + 1 ⁩ | Is this true? ⁦ 74 − 19 = 74 − 20 + 1 ⁩ | yes |
+| 3-6-3/lesson/01 | ⁦ 19 + 26 ⁩ ننقل 1 من العدد الثاني إلى الأول. كم يصير الأول؟ | ⁦ 19 + 26 ⁩ Move 1 from the second number to the first. What does the first number become? | 20 |
+| 3-6-3/lesson/04 | ⁦ 19 + 78 = 20 + ▢ ⁩ | ⁦ 19 + 78 = 20 + ▢ ⁩ | 77 |
+| 3-6-4/lesson/01 | ⁦ 64 − 57 ⁩ نزيد كلًّا من العددين 3 فيصيران 67 و60. كم الفرق؟ | ⁦ 64 − 57 ⁩ Add 3 to both numbers: they become 67 and 60. What is the difference? | 7 |
+| 3-6-4/lesson/04 | ⁦ 93 − 87 = 96 − ▢ ⁩ | ⁦ 93 − 87 = 96 − ▢ ⁩ | 90 |
+| 3-7-1/lesson/01 | من 22 إلى 100. كم مجموع القفزتين؟ | From 22 to 100. What do the two jumps add up to? | 78 |
+| 3-7-1/lesson/04 | من 81 إلى 90 قفزة 9، ومن 90 إلى 100 قفزة ▢ | From 81 to 90 is a jump of 9, and from 90 to 100 is a jump of ▢ | 10 |
+| 3-7-1/lesson/06 | ⁦ 47 + ▢ = 100 ⁩ | ⁦ 47 + ▢ = 100 ⁩ | 53 |
+| 3-7-2/lesson/01 | اشترينا لعبة بـ14 جنيهًا، ودفعنا 100 جنيه. كم جنيهًا الباقي؟ | We buy a toy for 14 pounds and pay with 100 pounds. How much change do we get? | 86 |
+| 3-8-1/lesson/01 | ⁦ 45 + 45 = ▢ ⁩ | ⁦ 45 + 45 = ▢ ⁩ | 90 |
+| 3-8-1/lesson/04 | ⁦ 12 + 12 = 20 + ▢ ⁩ | ⁦ 12 + 12 = 20 + ▢ ⁩ | 4 |
+| 3-8-2/lesson/01 | نصف 78 = ▢ | Half of 78 = ▢ | 39 |
+| 3-8-2/lesson/04 | نصف 84: نصف 80 هو 40، ونصف 4 هو 2. فنصف 84 = ▢ | Half of 84: half of 80 is 40 and half of 4 is 2. So half of 84 = ▢ | 42 |
+| 3-8-2/evidence/09 | عدد الأقلام 28، نضعها في علبتين بالتساوي. كم في كل علبة؟ | 28 pencils go equally into two boxes. How many pencils are in each box? | 14 |
+| 3-8-3/lesson/01 | شريط طوله 10 نقصّه نصفين متساويين. كم طول كل نصف؟ | A strip 10 long is cut into two equal halves. How long is each half? | 5 |
+| 3-8-3/lesson/04 | نصف 70 = ▢ | Half of 70 = ▢ | 35 |
 
 ## 6. الأوصاف المحايدة للإجابات الخاطئة
 
@@ -231,6 +319,8 @@
 | `card.compare.A` | الحل أ | Solution A |
 | `card.compare.B` | الحل ب | Solution B |
 | `card.compare.same` | متساويان | The same |
+| `card.yesno.yes` | نعم | Yes |
+| `card.yesno.no` | لا | No |
 | `card.how.back` | قفزت للخلف | I jumped back |
 | `card.how.up` | أكملت من العدد الأصغر | I counted up from the smaller number |
 | `card.how.other` | بطريقة أخرى | Another way |
@@ -244,7 +334,7 @@
 - **بندا «جرّب أولًا» لكل نوع.** بقرار الأب (6.2): بعد بوابة أخفقت يُؤخذ بندا «جرّب أولًا» من نوعي الخطأ فيها، فأُضيف بندان لكل نوع. المهارة التي لا بوابة أخفقت لها تبقى على البندين الثابتين في الافتتاح.
 - **بنود ف1 في 3-5-1 و3-5-2** قراءة نموذج معروض، لا بناؤه. بناء النموذج بالنقر يحتاج نوع إجابة ليس في ج1 إلى ج9، فتُرك للدرس (خطوة «افعل بالنموذج») ولم يدخل دليل الفهم.
 - **مقارنة الحلين.** بشروط خانات الوحدة، وفيها آحاد المطروح ليست صفرًا، لا يكون القفز للخلف أقل قفزات من الإكمال في أي مسألة: الجواب «الحل ب» أو «متساويان» دائمًا. لذلك أُدخلت في بنود المقارنة مسائل مطروحها عشرات كاملة، مثل ⁦ 83 − 30 ⁩، ليكون «الحل أ» جوابًا ممكنًا. هذه البنود وصفية ولا تدخل الفحص.
-- **تكرار الحقائق.** في 1-4-1 و1-4-2 سبق عرض حقيقة 250 من 254 بندًا في دليل الفهم والفحصين والمؤجل. هذا حتمي في مجال من 11 حقيقة، ومسجَّل لكل بند في الحقل `fact_seen_before`. في الوحدة 3-5 لا حقيقة مكررة.
+- **تكرار الحقائق.** في 1-4-1 و1-4-2 سبق عرض حقيقة 1355 من 1504 بندًا في دليل الفهم والفحصين والمؤجل. هذا حتمي في مجال من 11 حقيقة، ومسجَّل لكل بند في الحقل `fact_seen_before`. في الوحدة 3-5 لا حقيقة مكررة.
 - **السياقات** ثمانية مواقف مصوَّرة. الأسماء فيها عامة، وليست أسماء الأطفال. تحتاج رسمًا، ومراجعة من المعلم.
 - **الصوت** نصه هو نص البند. من يسجّله، ونطق الأعداد المركّبة بالإنجليزية، مفتوحان.
 - **الصياغة العربية** تتجنب تمييز العدد المتغير («عدد الركاب 3» بدل «3 ركاب») ليصح النص مع كل عدد.

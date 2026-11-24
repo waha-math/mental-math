@@ -612,7 +612,12 @@ class Scheduler:
         if self.group == 'young':
             if c is not None:
                 return None
-            fresh = [x for x in self.ids if fresh_ok(x)]
+            # قرار البداية (قرار المعلم) يُبحث فيه أولًا، وما تحته من متطلباته يُفترض متقنًا فلا يُبحث فيه: «يبدأ من» كما
+            # يقرؤه البالغ (UNITS-PLAN.md). بلا قرار: من أسفل النطاق، كما كان
+            chosen = [x for x in self.ids if self.e.decisions('open', x)]
+            assumed = set().union(*(self.anc[x] for x in chosen)) if chosen else set()
+            fresh = [x for x in chosen if fresh_ok(x)] + [x for x in self.ids if fresh_ok(x) and x not in assumed
+                                                          and x not in chosen]
             return fresh[0] if fresh else None
         if self.gates_run == 0 and self.start in self.inscope and st[self.start] is None:
             return self.start
@@ -627,7 +632,15 @@ class Scheduler:
                 return max(fresh, key=split)
             need = [p for p in sorted(self.pre[c], key=self.idx.get) if st[p] not in DONE and p in self.inscope]
             return need[0] if need else None
-        fresh = [x for x in self.ids if fresh_ok(x)]
+        # قرار البداية يُبحث فيه أولًا، وما تحته من متطلباته يُفترض متقنًا فلا يدخل البحث الحر، كما للصغير: «يبدأ من» كما
+        # يقرؤه البالغ. يلزم حين يتسع النطاق تحت القرار (الكبيران: المراحل 1 إلى 3، UNITS-PLAN.md)؛ في نطاق 3-5 وحده
+        # الترتيب هو ما كان يختاره التنصيف
+        chosen = [x for x in self.ids if self.e.decisions('open', x)]
+        first = [x for x in chosen if fresh_ok(x)]
+        if first:
+            return first[0]
+        assumed = set().union(*(self.anc[x] for x in chosen)) if chosen else set()
+        fresh = [x for x in self.ids if fresh_ok(x) and x not in assumed]
         if not fresh:
             return None
         desc = {x: [d for d in self.ids if x in self.anc[d]] for x in fresh}

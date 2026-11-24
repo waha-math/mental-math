@@ -114,6 +114,7 @@ def main(argv):
             os.symlink(os.path.join(tree, 'node_modules'), os.path.join(work, 'node_modules'))
             steps.append(('اختبارات Chrome للحفظ', [node, 'tests/browser/test_store_browser.mjs'], all_passed, ()))
             steps.append(('تجربة الشريحة في Chrome', [node, 'tests/browser/test_slice_browser.mjs'], all_passed, ()))
+            steps.append(('نماذج المحتوى المرسومة في Chrome', [node, 'tests/browser/test_models_browser.mjs'], all_passed, ()))
             steps.append(('بطاقة «كيف حسبتها؟» والمقارنة في Chrome', [node, 'tests/browser/test_cards_browser.mjs'],
                           all_passed, ()))
             steps.append(('النسخة الاحتياطية والعمل دون اتصال في Chrome', [node, 'tests/browser/test_backup_browser.mjs'],

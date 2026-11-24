@@ -51,6 +51,8 @@ SCORE_ONLY = ('answers', 'correct', 'shown', 'reshown', 'spent')
 
 
 def fact(it):
+    if it.get('fact') is not None:                      # البند يحمل حقيقته (المولّد يكتبها)، وهي هذا الحساب لبنود الشريحة
+        return tuple(it['fact'])
     n = it['numbers']
     if 'a' in n:
         return (n['a'], n['b'])
