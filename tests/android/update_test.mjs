@@ -31,10 +31,15 @@ const [device] = await android.devices();
 const sh = async (cmd) => (await device.shell(cmd)).toString().trim();
 const version = async () => (await sh(`dumpsys package ${PKG} | grep versionCode`)).split(/\s+/)[0] ?? '';
 const install = async (apk) => sh(`pm install -r /data/local/tmp/${apk.split('/').pop()}`);
+// الشاشة مضاءة وغير مقفلة: WebView في الخلفية لا يرسم إطارات، فلا ينتهي انتظار الظهور ولا النقر (أخفق بهذا تشغيل)
+await sh('svc power stayon true');
+await sh('input keyevent KEYCODE_WAKEUP');
+await sh('wm dismiss-keyguard');
 for (const f of [A, B, C]) await device.push(readFileSync(f), `/data/local/tmp/${f.split('/').pop()}`);
 
 async function open() {
   await sh(`am force-stop ${PKG}`);
+  await sh('input keyevent KEYCODE_WAKEUP');
   await sh(`am start -n ${PKG}/.MainActivity`);
   const wv = await device.webView({ pkg: PKG }, { timeout: 60000 });
   const page = await wv.page();
