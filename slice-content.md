@@ -241,9 +241,9 @@
 | 2-6-4/lesson/01 | ⁦ 14 − 1 = ▢ ⁩ | ⁦ 14 − 1 = ▢ ⁩ | 13 |
 | 2-6-4/evidence/05 | كان عدد البالونات مع ليلى 13، فطار منها 8. كم بقي منها؟ | Laila had 13 balloons. 8 flew away. How many balloons does she have left? | 5 |
 | 3-1-1/lesson/01 | كم عدد الأقراص؟ (كل حزمة عشرة) | How many counters? (each bundle is ten) | 81 |
-| 3-1-1/lesson/04 | ⁦ 80 + 2 = ▢ ⁩ | ⁦ 80 + 2 = ▢ ⁩ | 82 |
-| 3-1-2/lesson/01 | ⁦ 55 − 10 ⁩ أين نصل؟ | ⁦ 55 − 10 ⁩ Where do we land? | 45 |
-| 3-1-2/lesson/04 | ⁦ 35 − 20 = ▢ ⁩ | ⁦ 35 − 20 = ▢ ⁩ | 15 |
+| 3-1-1/lesson/04 | ⁦ 80 + 3 = ▢ ⁩ | ⁦ 80 + 3 = ▢ ⁩ | 83 |
+| 3-1-2/lesson/01 | ⁦ 68 − 10 ⁩ أين نصل؟ | ⁦ 68 − 10 ⁩ Where do we land? | 58 |
+| 3-1-2/lesson/04 | ⁦ 54 − 30 = ▢ ⁩ | ⁦ 54 − 30 = ▢ ⁩ | 24 |
 | 3-1-3/lesson/01 | ⁦ 60 − 40 ⁩ كم حزمة عشرة تبقى؟ وكم العدد؟ | ⁦ 60 − 40 ⁩ How many tens, and what is the number? | 20 |
 | 3-1-3/lesson/04 | ⁦ 90 + 10 = ▢ ⁩ | ⁦ 90 + 10 = ▢ ⁩ | 100 |
 | 3-1-4/lesson/01 | أي عشرة أقرب إلى 71؟ | Which ten is nearest to 71? | 70 |

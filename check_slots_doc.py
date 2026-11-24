@@ -1,0 +1,58 @@
+#!/usr/bin/env python3
+"""يكتب CHECK-SLOTS.md: لكل مهارة من units.py شروط خانات فحص استقلالها، ولكل شرط مثال مقبول (بند من المحتوى في
+تلك الخانة) ومثال مرفوض (حقيقة من مجال المهارة لا يحققها الشرط). ومعها ملاحظات المراجعة، مكتوبة يدويًا في NOTES.
+
+    python3 check_slots_doc.py <ملف الخريطة>
+"""
+import json
+import re
+import sys
+
+import transition_engine as t
+import units
+
+NOTES = {
+    '1-5-1': 'الفحص يعرض الأصغر أولًا (1 + 3)، فيقيس البدء من الأكبر. مقبول.',
+    '2-6-2': 'شرط الخانة الأولى يحققه كل المجال: الثانية جزء منه. فالخانتان لا تفصلان شيئًا. يُراجع.',
+    '3-1-1': 'كان في الفحص «20 + 0 = ▢»: معادلة بلا آحاد لا تقيس قراءة عدد من رقمين. أُخرجت العشرات الكاملة من معادلة '
+             'الفحص (تبقى في النموذج).',
+    '3-1-4': 'المجال يستثني ما آحاده 5: لم تحدد الخريطة اتجاه تقريبه. قرار مفتوح.',
+    '3-3-1': 'بنود الفحص حساب بلا نموذج، ومجالها هو مجال 3-4-1. الفحص يقيس الناتج لا الطريقة: من يجيدها بالتجزئة يجتاز '
+             'فحص القفز. الطريقة دليلها في أنواع ف1 وف2 قبل الفحص.',
+    '3-4-1': 'كما في 3-3-1: المجال نفسه، والفحص لا يميّز الطريقة.',
+    '3-3-2': 'مجاله مجال 3-4-2، والفحص لا يميّز القفز من التجزئة.',
+    '3-4-2': 'كما في 3-3-2.',
+    '3-6-3': 'بنود الفحص جمع بإعادة تجميع آحاد الأول فيها 7 فأكثر، وهي من مجال 3-3-2 و3-4-2 أيضًا. الفحص لا يثبت النقل '
+             'بين المضافين.',
+    '3-6-4': 'بنود الفحص طرح عادي آحاد المطروح فيه 7 فأكثر. لا يثبت الفرق الثابت بذاته.',
+    '3-8-3': 'المجال خمس حقائق (10، 30، 50، 70، 90) لعشر خانات: كل حقيقة مرتين. يُراجع بصيغة ثانية كما في المجال الصغير.',
+}
+
+pack = json.load(open('slice-content.json', encoding='utf-8'))
+rows = {}
+for sid, ti, m, req, ev, a in t.ROW.findall(open(sys.argv[1], encoding='utf-8').read()):
+    rows.setdefault(sid, (ti, m))
+items = [i for i in pack['items'] if i['skill'] in units.SKILLS and i['group'] == 'checkA']
+clean = lambda s: re.sub('[⁦⁩]', '', s).strip()
+out = ['# شروط خانات فحص الاستقلال للمهارات الجديدة (units.py)', '',
+       'مولَّد بـ `python3 check_slots_doc.py <الخريطة>` من حزمة المحتوى %d. الشروط كتبتُها من صف المهارة وقاعدة 3.6، '
+       'وتُراجع. المقبول بند فعلي من المحاولة الأولى في تلك الخانة. المرفوض حقيقة من مجال المهارة لا يحققها الشرط '
+       '(تذهب إلى خانة أخرى). وصحة الجواب وحدها لا تثبت أن البند يقيس المهارة: الملاحظات تذكر أين لا يقيسها.' % pack['version'], '']
+for s, sp in units.SKILLS.items():
+    ti, m = rows[s]
+    perf = sp['perf']['solve']
+    dom = units.domain(s, perf)
+    out += ['## %s %s' % (s, clean(ti)), '', 'النموذج في الخريطة: %s. أداء الفحص: `%s`، ومجاله %d حقيقة.' % (clean(m), perf, len(dom)), '',
+            '| الخانات | الشرط | مقبول | مرفوض |', '|---|---|---|---|']
+    order = units.slot_order(s)
+    for c, desc, pred in sp['slots']:
+        slots = [j + 1 for j, (_x, p) in enumerate(order) if p is pred]
+        acc = next((i for i in items if i['skill'] == s and i['slot'] in slots), None)
+        rej = next((n for n in dom if not pred(n)), None)
+        out.append('| %d | %s | %s | %s |' % (c, desc, '%s (%s)' % (clean(acc['text_ar']), acc['answer']) if acc else '—',
+                                               clean(units.PERFS[perf](rej)[0]) if rej else '— (كل المجال يحققه)'))
+    if s in NOTES:
+        out += ['', '**ملاحظة:** ' + NOTES[s]]
+    out.append('')
+open('CHECK-SLOTS.md', 'w', encoding='utf-8').write('\n'.join(out))
+print('كُتب CHECK-SLOTS.md: %d مهارة' % len(units.SKILLS))

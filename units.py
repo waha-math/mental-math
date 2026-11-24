@@ -633,7 +633,9 @@ def dom(perf):
         return [dict(a=a, b=b, c=10 - a, w=w) for a in range(1, 10) for b in range(1, 9) for w in (0, 1) if b != 10 - a]
     # المرحلة 3
     if perf in ('tens_model', 'tens_eq'):
-        return [dict(t=t, o=o) for t in range(1, 10) for o in range(0, 10) if o or t > 1]
+        # «20 + 0 = ▢» ليس قراءة عدد من رقمين: المعادلة بلا آحاد. العشرات الكاملة تبقى في النموذج (30 حزمة بلا آحاد)
+        return [dict(t=t, o=o) for t in range(1, 10) for o in range(0, 10)
+                if (o or t > 1) and (o or perf == 'tens_model')]
     if perf in ('jump10_line', 'jump10'):
         return [dict(a=a, k=k, op=op) for a in range(11, 90) if a % 10 for k in (1, 2, 3) for op in (1, -1)
                 if 10 < a + op * 10 * k < 100]
