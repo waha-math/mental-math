@@ -614,10 +614,9 @@ class Scheduler:
                 return None
             # قرار البداية (قرار المعلم) يُبحث فيه أولًا، وما تحته من متطلباته يُفترض متقنًا فلا يُبحث فيه: «يبدأ من» كما
             # يقرؤه البالغ (UNITS-PLAN.md). بلا قرار: من أسفل النطاق، كما كان
-            chosen = [x for x in self.ids if self.e.decisions('open', x)]
-            assumed = set().union(*(self.anc[x] for x in chosen)) if chosen else set()
-            fresh = [x for x in chosen if fresh_ok(x)] + [x for x in self.ids if fresh_ok(x) and x not in assumed
-                                                          and x not in chosen]
+            if any(self.e.decisions('open', x) for x in self.ids):
+                return self.needed_gate(st, gated)
+            fresh = [x for x in self.ids if fresh_ok(x)]
             return fresh[0] if fresh else None
         if self.gates_run == 0 and self.start in self.inscope and st[self.start] is None:
             return self.start
@@ -635,12 +634,9 @@ class Scheduler:
         # قرار البداية يُبحث فيه أولًا، وما تحته من متطلباته يُفترض متقنًا فلا يدخل البحث الحر، كما للصغير: «يبدأ من» كما
         # يقرؤه البالغ. يلزم حين يتسع النطاق تحت القرار (الكبيران: المراحل 1 إلى 3، UNITS-PLAN.md)؛ في نطاق 3-5 وحده
         # الترتيب هو ما كان يختاره التنصيف
-        chosen = [x for x in self.ids if self.e.decisions('open', x)]
-        first = [x for x in chosen if fresh_ok(x)]
-        if first:
-            return first[0]
-        assumed = set().union(*(self.anc[x] for x in chosen)) if chosen else set()
-        fresh = [x for x in self.ids if fresh_ok(x) and x not in assumed]
+        if any(self.e.decisions('open', x) for x in self.ids):
+            return self.needed_gate(st, gated)
+        fresh = [x for x in self.ids if fresh_ok(x)]
         if not fresh:
             return None
         desc = {x: [d for d in self.ids if x in self.anc[d]] for x in fresh}
@@ -787,12 +783,53 @@ class Scheduler:
             g = self.next_gate()
             if g is not None and g not in opened and g not in helped and gated[g] == 0 and not self.blocked(g, st):
                 return g
-        # البوابة الاحتياطية: أول مهارة لم يُعرف عنها شيء، إلا ما تحت قرار البداية (يُفترض متقنًا، كما في next_gate).
-        # قبل هذا عرضت للصغير بوابة 1-1-1 في يومه الثاني وهو في درس 1-4-1 (tests/karim_start.mjs)
-        assumed = self.assumed()
+        # البوابة الاحتياطية: أول مهارة لم يُعرف عنها شيء. ومع قرار البداية البحث بالحاجة بدلها (قرار الأب، 25 نوفمبر):
+        # قبل هذا عرضت للصغير بوابة 1-2-1 في يومه الثاني وهو في درس 1-4-1 (tests/test_start_decision)
+        if any(self.e.decisions('open', x) for x in self.ids):
+            # البحث بالحاجة وحده: التالية لما أثبته الطفل ومتطلبها الناقص. يلزم هنا لأن الدرس المفتوح يبقى «full» بعد
+            # إتقانه، فلا يبلغ الشرط أعلاه next_gate (بدونه توقف الصغير بعد إتقان 1-4-1: tests/test_start_decision)
+            g = self.needed_gate(st, gated)
+            return g if g is not None and g not in opened and g not in helped and not self.blocked(g, st) else None
         for x in self.ids:
-            if st[x] is None and x not in opened and x not in helped and x not in assumed:
+            if st[x] is None and x not in opened and x not in helped:
                 return x
+        return None
+
+    def needed_gate(self, st, gated):
+        """البحث حين يوجد قرار بداية (قرار الأب، 25 نوفمبر: «نقطة البداية ألا ينشغل بتقييم مهارة جانبية لم يحتج إليها»):
+        مهارات القرارات أولًا، ثم المهارة التالية لما أثبته الطفل (أحد متطلباتها أتقنه أو اجتاز بوابته، والباقي ثابت أو
+        مؤجَّل أو تحت قرار البداية)، فإن نقصها متطلب لم يُفحص فُحص هو (الأعمق أولًا). مهارة جانبية لا يتطلبها شيء مما
+        يليه لا تُفحص."""
+        opened = self.e.s['opened']                         # درس مفتوح لا بوابة له هنا (ولا يقبلها pick_gate): مسار 239
+        fresh_ok = lambda x: st[x] is None and gated[x] == 0 and x not in opened
+        chosen = [x for x in self.ids if self.e.decisions('open', x)]
+        for x in chosen:
+            if fresh_ok(x):
+                return x
+        assumed = self.assumed()
+        ok = lambda p: st[p] in DONE or st[p] == 'deferred' or p in assumed
+
+        def need(x, seen=()):
+            for p in sorted(self.pre[x], key=self.idx.get):
+                if ok(p) or p not in self.inscope or p in seen:
+                    continue
+                if not fresh_ok(p):
+                    return None                             # متطلب متعثَّر أو فُحص: ينتظر التعلّم، لا بوابة
+                if all(ok(q) or q not in self.inscope for q in self.pre[p]):
+                    return p
+                r = need(p, seen + (x,))
+                if r is not None:
+                    return r
+            return None
+        targets = [t for t in self.ids if fresh_ok(t) and t not in assumed and t not in chosen
+                   and any(st[p] in DONE for p in self.pre[t])]
+        for t in targets:                                   # التالية مباشرة أولًا، ثم ما يحتاج متطلبًا جانبيًا
+            if all(ok(p) or p not in self.inscope for p in self.pre[t]):
+                return t
+        for t in targets:
+            r = need(t)
+            if r is not None:
+                return r
         return None
 
     def assumed(self):

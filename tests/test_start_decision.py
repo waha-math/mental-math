@@ -76,6 +76,9 @@ for child in ('young', 'older1'):
         below = [k for s in out for k in s if k.split()[0] in ('gate', 'short') and k.split()[1] in anc]
         if below:
             bad.append('تحت القرار: %r' % below)
+        side = [k for k in out[2] if k.split()[0] in ('gate', 'short') and k.split()[1] not in dec]
+        if side or not any(k.split()[0] in ('lesson', 'evidence', 'opening') and k.split()[1] in dec for k in out[2]):
+            bad.append('اليوم التالي: %r' % out[2])
         if out != JS['out'][child + '|' + kid]:
             bad.append('يخالف التطبيق: %r / %r' % (out, JS['out'][child + '|' + kid]))
         results.append(not bad)

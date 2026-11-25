@@ -663,10 +663,9 @@ export class Scheduler {
     const c = this.candidate(st, helped);
     if (this.group === 'young') {
       if (c !== null) return null;
-      // قرار البداية يُبحث فيه أولًا، وما تحته من متطلباته يُفترض متقنًا فلا يُبحث فيه (كما في المرجع)
-      const chosen = this.ids.filter((x) => this.e.decisions('open', x).length);
-      const assumed = new Set(chosen.flatMap((x) => [...this.anc[x]]));
-      return chosen.find(freshOk) ?? this.ids.find((x) => freshOk(x) && !assumed.has(x) && !chosen.includes(x)) ?? null;
+      // مع قرار البداية: البحث بالحاجة (needed_gate). بلا قرار: من أسفل النطاق (كما في المرجع)
+      if (this.ids.some((x) => this.e.decisions('open', x).length)) return this.needed_gate(st, gated);
+      return this.ids.find(freshOk) ?? null;
     }
     if (this.gates_run === 0 && this.inscope.has(this.start) && isNone(st[this.start])) return this.start;
     const inScope = (set) => [...set].filter((a) => this.inscope.has(a)).sort((a, b) => this.idx[a] - this.idx[b]);
@@ -684,12 +683,8 @@ export class Scheduler {
         .filter((p) => !DONE.includes(st[p]) && this.inscope.has(p));
       return need.length ? need[0] : null;
     }
-    // قرار البداية أولًا، وما تحته من متطلباته خارج البحث الحر (كما في المرجع)
-    const chosen = this.ids.filter((x) => this.e.decisions('open', x).length);
-    const first = chosen.find(freshOk);
-    if (first !== undefined) return first;
-    const assumed = new Set(chosen.flatMap((x) => [...this.anc[x]]));
-    const fresh = this.ids.filter((x) => freshOk(x) && !assumed.has(x));
+    if (this.ids.some((x) => this.e.decisions('open', x).length)) return this.needed_gate(st, gated);
+    const fresh = this.ids.filter(freshOk);
     if (!fresh.length) return null;
     const desc = {};
     for (const x of fresh) desc[x] = this.ids.filter((d) => this.anc[d].has(x));
@@ -827,6 +822,37 @@ export class Scheduler {
     }
   }
 
+  // البحث حين يوجد قرار بداية (كما في المرجع): مهارات القرارات، ثم التالية لما أثبته الطفل، فإن نقصها متطلب لم يُفحص
+  // فُحص هو (الأعمق أولًا). مهارة جانبية لا يتطلبها شيء مما يليه لا تُفحص
+  needed_gate(st, gated) {
+    const opened = this.e.s.opened;                        // درس مفتوح لا بوابة له هنا (كما في المرجع)
+    const freshOk = (x) => isNone(st[x]) && get(gated, x) === 0 && !(x in opened);
+    const chosen = this.ids.filter((x) => this.e.decisions('open', x).length);
+    const first = chosen.find(freshOk);
+    if (first !== undefined) return first;
+    const assumed = this.assumed();
+    const ok = (p) => DONE.includes(st[p]) || st[p] === 'deferred' || assumed.has(p);
+    const byIdx = (xs) => [...xs].sort((a, b) => this.idx[a] - this.idx[b]);
+    const need = (x, seen = []) => {
+      for (const p of byIdx(this.pre[x])) {
+        if (ok(p) || !this.inscope.has(p) || seen.includes(p)) continue;
+        if (!freshOk(p)) return null;
+        if ([...this.pre[p]].every((q) => ok(q) || !this.inscope.has(q))) return p;
+        const r = need(p, [...seen, x]);
+        if (r !== null) return r;
+      }
+      return null;
+    };
+    const targets = this.ids.filter((t) => freshOk(t) && !assumed.has(t) && !chosen.includes(t)
+      && [...this.pre[t]].some((p) => DONE.includes(st[p])));
+    for (const t of targets) if ([...this.pre[t]].every((p) => ok(p) || !this.inscope.has(p))) return t;   // التالية مباشرة أولًا
+    for (const t of targets) {
+      const r = need(t);
+      if (r !== null) return r;
+    }
+    return null;
+  }
+
   // أسلاف مهارات قرارات البداية: لا تدخل البحث الحر ولا البوابة الاحتياطية
   assumed() {
     const chosen = this.ids.filter((x) => this.e.decisions('open', x).length);
@@ -861,10 +887,13 @@ export class Scheduler {
       const g = this.next_gate();
       if (g !== null && !(g in opened) && !helped.has(g) && get(gated, g) === 0 && !this.blocked(g, st)) return g;
     }
-    // البوابة الاحتياطية: إلا ما تحت قرار البداية (كما في المرجع)
-    const assumed = this.assumed();
+    // البوابة الاحتياطية، ومع قرار البداية البحث بالحاجة بدلها (كما في المرجع)
+    if (this.ids.some((x) => this.e.decisions('open', x).length)) {
+      const g = this.needed_gate(st, gated);       // الدرس المفتوح يبقى «full» بعد إتقانه، فالبحث بالحاجة هنا (كما في المرجع)
+      return g !== null && !(g in opened) && !helped.has(g) && !this.blocked(g, st) ? g : null;
+    }
     for (const x of this.ids) {
-      if (isNone(st[x]) && !(x in opened) && !helped.has(x) && !assumed.has(x)) return x;
+      if (isNone(st[x]) && !(x in opened) && !helped.has(x)) return x;
     }
     return null;
   }

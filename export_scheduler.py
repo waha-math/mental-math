@@ -386,9 +386,11 @@ counts['تشخيص بسقف وقت'] = len(traces) - n0
 # حقيقة ما قبله: التأخير يقع في مسار كامل، وأسئلته عن البنود اللاحقة (peek) تُسجَّل في الشريط فيعيدها التطبيق بترتيبها
 n0 = len(traces)
 forced = [learning_trace(seed, force=True) for seed in entered]
-if not entered or not sum(x.deferred for x in forced):
-    raise SystemExit('لا مسار في متجهات المجدول يبلغ تأخير بند التقييم: المسارات %r، والتأخيرات %r' % (
-        entered, [x.deferred for x in forced]))
+# بعد 25 نوفمبر (البحث بالحاجة مع قرار البداية، 17.30) لا يقع هذا الدخول في البذور 0 إلى 1199: مهارات القرار تُفحص
+# بوابتها أولًا فلا تُؤجَّل، فلا تحقق قصير لها يسبق فحصها. فالقسم فارغ، ويُذكر ذلك في الملخص. التأخير نفسه مطابَق بين
+# المرجع والتطبيق في tests/test_defer (حالات مشتركة في tests/defer_cases.json)
+if entered and not sum(x.deferred for x in forced):
+    raise SystemExit('دخول بلا تأخير: المسارات %r، والتأخيرات %r' % (entered, [x.deferred for x in forced]))
 counts['مسارات تأخير بند التقييم'] = len(traces) - n0
 DEFER_NOTE = 'دخول نشاط تقييم بعد نشاط آخر للمهارة: %d مسارًا (البذور %s). وبالتصادم المفروض: %d تأخيرًا' % (
     len(entered), ' '.join(map(str, entered)), sum(x.deferred for x in forced))
