@@ -27,8 +27,9 @@ import sys
 ROW = re.compile(r'^\| (\d-\d-\d) \| (.*?) \| (.*?) \| (.*?) \| (.*?) \| (.*?) \|$', re.M)
 
 
-def load_network(path, stages='123'):
-    """شبكة الإصدار 1 من ملف الخريطة: المعرّفات بترتيبها، والمتطلبات المباشرة."""
+def load_network(path, stages='12345678'):
+    """شبكة الخريطة من ملفها: المعرّفات بترتيبها، والمتطلبات المباشرة. المراحل كلها (الإصدار 1 كان 1 إلى 3).
+    المتطلب الخارجي (خ، 8-5-2) ليس في الشبكة: يُعالج بقرار أو بوابة جاهزية (5.1)."""
     ids, pre = [], {}
     for sid, _t, _m, req, ev, _a in ROW.findall(open(path, encoding='utf-8').read()):
         if not re.findall(r'ف\d', ev) or sid in pre or sid[0] not in stages:
