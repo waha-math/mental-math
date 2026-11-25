@@ -537,7 +537,7 @@ function adultPanel(reason, detail = null) {
 }
 
 // ---------------------------------------------------------------- لوحة الوالد
-const CHECK = { pass: 'اجتاز', fail: 'لم يجتز', help: 'انتهى بطلب مساعدة', held: 'معلّق للمراجعة' };
+const CHECK = { pass: 'اجتاز: حلّ المسائل مستقلًا', fail: 'لم يجتز', help: 'انتهى بطلب مساعدة', held: 'معلّق للمراجعة' };
 const RET = { help: 'طلب مساعدة', cut: 'قطعه السقف', referred: 'أُحيل إلى البالغ', no_alternate: 'لا بدائل' };
 const HOW = { back: 'قفز للخلف', up: 'أكمل من الأصغر', other: 'طريقة أخرى' };
 function boardSection() {
@@ -558,17 +558,22 @@ function boardSection() {
       box.append(h('div', { class: 'board-child', 'data-child': id }, head,
         h('p', {}, `أيام العمل: ${b.days}. أولها ${dayText(b.first)}، وآخرها ${dayText(b.last)}.`),
         h('table', {}, h('tr', {}, ['المهارة', 'الحالة', 'فحوص الاستقلال', 'فحوص الاحتفاظ', 'بنود مسجلة', 'طلب مساعدة',
-          '«كيف حسبتها؟»', 'الفحص الوصفي'].map((x) => h('th', {}, x))),
+          '«كيف حسبتها؟»', 'الفحص الوصفي', 'الطريقة'].map((x) => h('th', {}, x))),
         b.skills.map((k) => h('tr', { 'data-skill': k.skill, 'data-state': k.state },
           h('td', {}, codes(`${k.skill} ${k.name}`)),
           h('td', {}, k.label, k.teacher ? h('small', {}, ' · فُتحت بقرار معلم، وليس دليل إتقان') : null),
-          h('td', {}, k.checks.map((c) => CHECK[c] ?? c).join('، ') || '—'),
+          h('td', {}, k.checks.map((c) => CHECK[c] ?? c).join('، ') || '—', k.checkFacts ? h('small', { class: 'facts' },
+            ` · ${k.checkFacts.items} ${k.checkFacts.items > 10 ? 'بندًا' : 'بنود'} تغطي ${k.checkFacts.facts} ${k.checkFacts.facts > 10 || k.checkFacts.facts < 3 ? 'حقيقة' : 'حقائق'}`,
+            k.checkFacts.wrong.length ? `؛ أخطأ في: ${k.checkFacts.wrong.map(([t, n]) => (n === 2 ? `${t} (مرتين)` : n > 2 ? `${t} (${n} مرات)` : t)).join('، ')}` : '') : null),
           h('td', {}, k.retention.map((t) => (/^\d+$/.test(t) ? `${t} من 5` : RET[t] ?? t)).join('، ') || '—'),
           h('td', {}, String(k.items)), h('td', {}, String(k.help)),
           h('td', {}, Object.entries(k.how).map(([c, n]) => `${HOW[c] ?? c}: ${n}`).join('، ') || '—'),
-          h('td', {}, k.describe ? `${k.describe.correct} من ${k.describe.total} (وصفي، لا يُشترط لتقدم)` : '—')))),
+          h('td', {}, k.describe ? `${k.describe.correct} من ${k.describe.total} (وصفي، لا يُشترط لتقدم)` : '—'),
+          h('td', { 'data-method': k.method ?? '' }, k.method === null ? '—' : k.method ? `استطاع تنفيذ الطريقة عند طلبها (${k.method})` : 'لم يظهر بعد')))),
         b.skipped.length ? h('p', { class: 'skipped', 'data-skipped': b.skipped.join(' ') },
-          'تُخطيت بقرار تحديد نقطة البداية، ولا دليل عليها من الطفل: ', codes(b.skipped.join('، '))) : null));
+          'تُخطيت بقرار تحديد نقطة البداية، ولا دليل عليها من الطفل: ', codes(b.skipped.join('، '))) : null,
+        b.untested.length ? h('p', { class: 'untested', 'data-untested': b.untested.join(' ') },
+          'لم تُفحص بعد (مهارات لم يحتج إليها حتى الآن): ', codes(b.untested.join('، '))) : null));
     }
     box.dataset.ready = 'true';
   })();

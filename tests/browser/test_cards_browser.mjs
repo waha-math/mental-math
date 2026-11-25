@@ -223,7 +223,7 @@ await page.click('#pin-ok');
 await page.waitForSelector('#board[data-ready="true"]');
 if (st.pending !== null) st.show(st.seq);   // الخانة 10 عُرضت قبل إعادة الفتح
 const board = await page.evaluate(() => [...document.querySelectorAll('#board .board-child')].map((c) => [c.dataset.child,
-  [...c.querySelectorAll('tr[data-skill]')].map((r) => [r.dataset.skill, r.dataset.state, ...[...r.cells].slice(4).map((x) => x.textContent)])]));
+  [...c.querySelectorAll('tr[data-skill]')].map((r) => [r.dataset.skill, r.dataset.state, ...[...r.cells].slice(4, 8).map((x) => x.textContent)])]));
 // اللوحة تقرأ الملف كما يُفتح: البند المعروض بلا إجابة يُختم منقطعًا. فالمتوقع من استعادة اللقطة في Node، بعد أن
 // يُعرض فيها ما عرضته الشاشة (الخانة 10 للطفل الأول). كتبتُ المتوقع أول مرة من سجلات الإعادة بلا استعادة، فنقص بندًا
 const want = (st0, child) => [child, ['3-5-1', '3-5-2', '3-5-3'].map((k) => {
@@ -239,6 +239,21 @@ const want = (st0, child) => [child, ['3-5-1', '3-5-2', '3-5-3'].map((k) => {
 })];
 check('اللوحة: لكل طفل ملفه، ولكل مهارة حالتها وعدد بنودها وطلبات المساعدة واختيار «كيف حسبتها؟»، كما في الإعادة في Node',
   board, [['young', []], want(st, 'older1'), want(C.st, 'older2')]);
+// دليل الطريقة (قرار الأب، 25 نوفمبر): لـ3-5-1 و3-5-2 (فيهما ف2) عدد بنود دليل الفهم من ف2 الصحيحة من أول مرة بلا دعم
+// وحقيقتها لم تُعرض قبلها، و3-5-3 (بلا ف2) لا عمود. المتوقع من سجلات الإعادة في Node، بالقاعدة مكتوبة هنا
+const methodWant = (st0, child) => ['3-5-1', '3-5-2', '3-5-3'].map((k) => {
+  if (k === '3-5-3') return '';
+  const r = persist.restore(JSON.parse(JSON.stringify(st0.snapshot(child))), { types: TYPES, source: src(), answer: null,
+    item_seconds: () => 0, records: [], today: null, content: IDENT });
+  return String(r.scheduler.records.filter((x) => x.skill === k && !x.void && x.activity === 'evidence'
+    && PACK.items.find((i) => i.id === x.item).evidence === 'ف2' && x.first === true && x.final === 'correct'
+    && !(x.support ?? []).length && !PACK.items.find((i) => i.id === x.item).fact_seen_before && !x.fact_just_seen).length);
+});
+const methodGot = await page.evaluate(() => ['older1', 'older2'].map((c) => [...document.querySelectorAll(
+  `#board .board-child[data-child="${c}"] tr[data-skill]`)].map((r) => r.lastChild.dataset.method)));
+console.log('        الطريقة: ' + JSON.stringify(methodGot));
+check('اللوحة: «استطاع تنفيذ الطريقة عند طلبها» بعدد بنود ف2 في دليل الفهم، منفصلًا عن نتيجة الفحص', methodGot,
+  [methodWant(st, 'older1'), methodWant(C.st, 'older2')]);
 // ما تحت قرار البداية بلا دليل: سطر «تُخطيت بقرار تحديد نقطة البداية»، والمهارات فيه أسلاف 3-5-1 و3-5-2 في نطاق الملف
 // إلا ما له صف. المتوقع من شبكة المحرك ونطاق الملف في إعداد التطبيق
 const { PROFILES: PR } = await import('../../app/ui/config.mjs');
@@ -318,7 +333,7 @@ await p2.fill('#pin', '1357');
 await p2.fill('#pin2', '1357');
 await p2.click('#pin-ok');
 await p2.waitForSelector('#board[data-ready="true"]');
-check('اللوحة تعرض نتيجة الفحص الوصفي', [await p2.evaluate(() => document.querySelector('#board .board-child[data-child="older1"] tr[data-skill="3-5-3"]').lastChild.textContent)],
+check('اللوحة تعرض نتيجة الفحص الوصفي', [await p2.evaluate(() => document.querySelector('#board .board-child[data-child="older1"] tr[data-skill="3-5-3"]').cells[7].textContent)],
   ['3 من 4 (وصفي، لا يُشترط لتقدم)']);
 await ctx2.close();
 const looks = await page.evaluate(() => {

@@ -12,7 +12,13 @@ const STATE = {
   none: 'لم يثبت فيها شيء بعد',
 };
 
+// دليل الطريقة (قرار الأب، 25 نوفمبر): نوع الدليل الذي يؤدي فيه الطفل خطوة تميّز الطريقة. ف2 حيث هو في صف المهارة،
+// و3-4-1 بلا ف2: بند نموذجه يطلب جمع العشرات (خطوة التجزئة)
+const METHOD_F1 = new Set(['3-4-1']);
+const plainText = (t) => String(t).replace(/[\u2066-\u2069]/g, '').trim();
+
 export function summarize(e, sc, profile, pack) {
+  const BY = new Map(pack.items.map((i) => [i.id, i]));
   const days = [...new Set(e.s.order.map((s) => e.s.sessions[s].day))].sort((a, b) => a - b);
   const all = profile.scope.map((skill) => {
     const [status, und, ind] = e.progress(skill);
@@ -23,6 +29,26 @@ export function summarize(e, sc, profile, pack) {
     const how = {};
     for (const r of recs) if (r.how) how[r.how] = (how[r.how] ?? 0) + 1;
     const desc = recs.filter((r) => r.activity === 'describe');   // الفحص الوصفي: الصحيح من المعروض، بلا حكم
+    // «استطاع تنفيذ الطريقة عند طلبها»: بند دليل فهم من نوع الطريقة، أُجيب صحيحًا من أول مرة بلا دعم، وحقيقته لم تُعرض
+    // قبله في الدرس. لا يُستنتج من الناتج أو الزمن
+    const types = profile.types[skill] ?? [];
+    const mtype = types.includes('ف2') ? 'ف2' : METHOD_F1.has(skill) ? 'ف1' : null;
+    const method = mtype === null ? null : recs.filter((r) => r.activity === 'evidence' && BY.get(r.item)?.evidence === mtype
+      && r.first === true && r.final === 'correct' && !(r.support ?? []).length && !BY.get(r.item)?.fact_seen_before
+      && !r.fact_just_seen).length;
+    // فحص الاستقلال: كم بندًا وكم حقيقة، وأي الحقائق أخطأ فيها وكم مرة (3-8-3: عشرة بنود على خمس حقائق)
+    const chk = recs.filter((r) => r.activity === 'check' && r.status === 'complete');
+    const facts = new Map();
+    for (const r of chk) {
+      const it = BY.get(r.item);
+      const k = JSON.stringify(it?.fact ?? r.item);
+      const f = facts.get(k) ?? { text: plainText(it?.text_ar ?? r.item), n: 0, wrong: 0 };
+      f.n += 1;
+      if (r.final !== 'correct') f.wrong += 1;
+      facts.set(k, f);
+    }
+    const checkFacts = chk.length ? { items: chk.length, facts: facts.size,
+      wrong: [...facts.values()].filter((f) => f.wrong).map((f) => [f.text, f.wrong]) } : null;
     return {
       skill, name: pack.ui['skill.' + skill]?.ar ?? skill, state, label: STATE[state],
       teacher: e.decisions('open', skill).length > 0, ind,
@@ -33,6 +59,7 @@ export function summarize(e, sc, profile, pack) {
       supported: recs.filter((r) => (r.support ?? []).some((x) => x !== 'requested')).length,
       how,
       describe: desc.length ? { correct: desc.filter((r) => r.final === 'correct').length, total: desc.length } : null,
+      method, checkFacts,
     };
   });
   // النطاق صار المراحل 1 إلى 3 (50 مهارة): صفوف اللوحة لما جرى فيه شيء وحده. وما تحت قرار البداية بلا دليل من الطفل يُذكر
@@ -41,7 +68,9 @@ export function summarize(e, sc, profile, pack) {
   const below = new Set(profile.scope.filter((x) => e.decisions('open', x).length).flatMap((x) => [...e.anc[x]]));
   const skills = all.filter(touched);
   const skipped = all.filter((x) => !touched(x) && below.has(x.skill)).map((x) => x.skill);
-  return { skipped, days: days.length, first: days[0] ?? null, last: days[days.length - 1] ?? null, skills };
+  // وما لم يُفحص أصلًا وليس تحت قرار البداية: مهارة جانبية لم يحتج إليها بعد (قرار الأب، 25 نوفمبر)
+  const untested = all.filter((x) => !touched(x) && !below.has(x.skill)).map((x) => x.skill);
+  return { skipped, untested, days: days.length, first: days[0] ?? null, last: days[days.length - 1] ?? null, skills };
 }
 
 // يوم الأسرة (عدد الأيام منذ 1970 بمنطقة الأسرة) تاريخًا يُقرأ
