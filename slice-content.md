@@ -235,50 +235,50 @@
 | 2-5-2/lesson/04 | ⁦ 11 − 7 ⁩: من 7 إلى 10 قفزة 3، ومن 10 إلى 11 قفزة ▢ | ⁦ 11 − 7 ⁩: from 7 to 10 is a jump of 3, and from 10 to 11 is a jump of ▢ | 1 |
 | 2-6-1/lesson/01 | ⁦ 9 + 6 = ▢ ⁩ | ⁦ 9 + 6 = ▢ ⁩ | 15 |
 | 2-6-1/lesson/04 | ⁦ 9 + 8 = ▢ − 1 ⁩ | ⁦ 9 + 8 = ▢ − 1 ⁩ | 18 |
-| 2-6-2/lesson/01 | ⁦ 1 + 1 + 9 = ▢ ⁩ | ⁦ 1 + 1 + 9 = ▢ ⁩ | 11 |
-| 2-6-2/evidence/05 | هل هذا صحيح؟ ⁦ 3 + 6 + 7 = 3 + 7 + 7 ⁩ | Is this true? ⁦ 3 + 6 + 7 = 3 + 7 + 7 ⁩ | no |
-| 2-6-3/evidence/05 | كان عدد الأطفال في الحديقة 4، ثم دخل 8 آخرون. كم صار عددهم؟ | There were 4 children in the garden. 8 more came in. How many children are in the garden now? | 12 |
-| 2-6-4/lesson/01 | ⁦ 14 − 1 = ▢ ⁩ | ⁦ 14 − 1 = ▢ ⁩ | 13 |
-| 2-6-4/evidence/05 | كان عدد البالونات مع ليلى 13، فطار منها 8. كم بقي منها؟ | Laila had 13 balloons. 8 flew away. How many balloons does she have left? | 5 |
-| 3-1-1/lesson/01 | كم عدد الأقراص؟ (كل حزمة عشرة) | How many counters? (each bundle is ten) | 81 |
-| 3-1-1/lesson/04 | ⁦ 80 + 3 = ▢ ⁩ | ⁦ 80 + 3 = ▢ ⁩ | 83 |
-| 3-1-2/lesson/01 | ⁦ 68 − 10 ⁩ أين نصل؟ | ⁦ 68 − 10 ⁩ Where do we land? | 58 |
-| 3-1-2/lesson/04 | ⁦ 54 − 30 = ▢ ⁩ | ⁦ 54 − 30 = ▢ ⁩ | 24 |
-| 3-1-3/lesson/01 | ⁦ 60 − 40 ⁩ كم حزمة عشرة تبقى؟ وكم العدد؟ | ⁦ 60 − 40 ⁩ How many tens, and what is the number? | 20 |
-| 3-1-3/lesson/04 | ⁦ 90 + 10 = ▢ ⁩ | ⁦ 90 + 10 = ▢ ⁩ | 100 |
-| 3-1-4/lesson/01 | أي عشرة أقرب إلى 71؟ | Which ten is nearest to 71? | 70 |
-| 3-1-4/lesson/04 | 52 مقرَّبًا إلى أقرب عشرة = ▢ | 52 rounded to the nearest ten = ▢ | 50 |
-| 3-2-1/lesson/01 | من 11 إلى العشرة التالية. كم القفزة؟ | From 11 to the next ten. How big is the jump? | 9 |
-| 3-2-1/lesson/04 | ⁦ 79 + ▢ = 80 ⁩ | ⁦ 79 + ▢ = 80 ⁩ | 1 |
-| 3-2-2/lesson/01 | ⁦ 87 + 6 = ▢ ⁩ | ⁦ 87 + 6 = ▢ ⁩ | 93 |
-| 3-2-2/lesson/04 | ⁦ 28 + 5 = 30 + ▢ ⁩ | ⁦ 28 + 5 = 30 + ▢ ⁩ | 3 |
-| 3-2-2/evidence/09 | كان عدد السيارات مع كريم 45، ثم أعطاه أخوه 6 أخرى. كم صار عددها؟ | Karim had 45 cars. His brother gave him 6 more. How many cars does Karim have now? | 51 |
-| 3-3-1/lesson/01 | ⁦ 12 + 52 ⁩ أين نصل؟ | ⁦ 12 + 52 ⁩ Where do we land? | 64 |
-| 3-3-1/lesson/04 | ⁦ 12 + 55 = 62 + ▢ ⁩ | ⁦ 12 + 55 = 62 + ▢ ⁩ | 5 |
-| 3-3-1/lesson/06 | ⁦ 54 + 14 = ▢ ⁩ | ⁦ 54 + 14 = ▢ ⁩ | 68 |
-| 3-3-2/evidence/13 | كان عدد التفاح في السلة 58، ثم وضعت أمي فيها 25 أخرى. كم صار عدد التفاح في السلة؟ | There were 58 apples in the basket. Mum put in 25 more. How many apples are in the basket now? | 83 |
-| 3-4-1/lesson/01 | ⁦ 33 + 14 ⁩ كم المجموع؟ | ⁦ 33 + 14 ⁩ What is the total? | 47 |
-| 3-4-1/lesson/04 | ⁦ 15 + 84 = ▢ ⁩ | ⁦ 15 + 84 = ▢ ⁩ | 99 |
-| 3-4-2/lesson/04 | ⁦ 38 + 58 = 80 + ▢ ⁩ | ⁦ 38 + 58 = 80 + ▢ ⁩ | 16 |
-| 3-4-2/evidence/09 | هل هذا صحيح؟ ⁦ 59 + 13 = 60 + 13 ⁩ | Is this true? ⁦ 59 + 13 = 60 + 13 ⁩ | no |
-| 3-6-1/lesson/01 | ⁦ 36 + 39 = ▢ ⁩ | ⁦ 36 + 39 = ▢ ⁩ | 75 |
-| 3-6-1/lesson/04 | ⁦ 36 + 39 = ▢ − 1 ⁩ | ⁦ 36 + 39 = ▢ − 1 ⁩ | 76 |
-| 3-6-2/evidence/09 | هل هذا صحيح؟ ⁦ 74 − 19 = 74 − 20 + 1 ⁩ | Is this true? ⁦ 74 − 19 = 74 − 20 + 1 ⁩ | yes |
-| 3-6-3/lesson/01 | ⁦ 19 + 26 ⁩ ننقل 1 من العدد الثاني إلى الأول. كم يصير الأول؟ | ⁦ 19 + 26 ⁩ Move 1 from the second number to the first. What does the first number become? | 20 |
-| 3-6-3/lesson/04 | ⁦ 19 + 78 = 20 + ▢ ⁩ | ⁦ 19 + 78 = 20 + ▢ ⁩ | 77 |
-| 3-6-4/lesson/01 | ⁦ 64 − 57 ⁩ نزيد كلًّا من العددين 3 فيصيران 67 و60. كم الفرق؟ | ⁦ 64 − 57 ⁩ Add 3 to both numbers: they become 67 and 60. What is the difference? | 7 |
-| 3-6-4/lesson/04 | ⁦ 93 − 87 = 96 − ▢ ⁩ | ⁦ 93 − 87 = 96 − ▢ ⁩ | 90 |
-| 3-7-1/lesson/01 | من 22 إلى 100. كم مجموع القفزتين؟ | From 22 to 100. What do the two jumps add up to? | 78 |
-| 3-7-1/lesson/04 | من 81 إلى 90 قفزة 9، ومن 90 إلى 100 قفزة ▢ | From 81 to 90 is a jump of 9, and from 90 to 100 is a jump of ▢ | 10 |
-| 3-7-1/lesson/06 | ⁦ 47 + ▢ = 100 ⁩ | ⁦ 47 + ▢ = 100 ⁩ | 53 |
-| 3-7-2/lesson/01 | اشترينا لعبة بـ14 جنيهًا، ودفعنا 100 جنيه. كم جنيهًا الباقي؟ | We buy a toy for 14 pounds and pay with 100 pounds. How much change do we get? | 86 |
-| 3-8-1/lesson/01 | ⁦ 45 + 45 = ▢ ⁩ | ⁦ 45 + 45 = ▢ ⁩ | 90 |
-| 3-8-1/lesson/04 | ⁦ 12 + 12 = 20 + ▢ ⁩ | ⁦ 12 + 12 = 20 + ▢ ⁩ | 4 |
-| 3-8-2/lesson/01 | نصف 78 = ▢ | Half of 78 = ▢ | 39 |
-| 3-8-2/lesson/04 | نصف 84: نصف 80 هو 40، ونصف 4 هو 2. فنصف 84 = ▢ | Half of 84: half of 80 is 40 and half of 4 is 2. So half of 84 = ▢ | 42 |
-| 3-8-2/evidence/09 | عدد الأقلام 28، نضعها في علبتين بالتساوي. كم في كل علبة؟ | 28 pencils go equally into two boxes. How many pencils are in each box? | 14 |
-| 3-8-3/lesson/01 | شريط طوله 10 نقصّه نصفين متساويين. كم طول كل نصف؟ | A strip 10 long is cut into two equal halves. How long is each half? | 5 |
-| 3-8-3/lesson/04 | نصف 70 = ▢ | Half of 70 = ▢ | 35 |
+| 2-6-2/lesson/01 | ⁦ 3 + 9 + 7 = ▢ ⁩ | ⁦ 3 + 9 + 7 = ▢ ⁩ | 19 |
+| 2-6-2/evidence/05 | هل هذا صحيح؟ ⁦ 6 + 2 + 4 = 6 + 4 + 3 ⁩ | Is this true? ⁦ 6 + 2 + 4 = 6 + 4 + 3 ⁩ | no |
+| 2-6-3/evidence/05 | كان عدد الأطفال في الحديقة 4، ثم دخل 9 آخرون. كم صار عددهم؟ | There were 4 children in the garden. 9 more came in. How many children are in the garden now? | 13 |
+| 2-6-4/lesson/01 | ⁦ 20 − 6 = ▢ ⁩ | ⁦ 20 − 6 = ▢ ⁩ | 14 |
+| 2-6-4/evidence/05 | كان عدد البالونات مع ليلى 13، فطار منها 7. كم بقي منها؟ | Laila had 13 balloons. 7 flew away. How many balloons does she have left? | 6 |
+| 3-1-1/lesson/01 | كم عدد الأقراص؟ (كل حزمة عشرة) | How many counters? (each bundle is ten) | 21 |
+| 3-1-1/lesson/04 | ⁦ 20 + 2 = ▢ ⁩ | ⁦ 20 + 2 = ▢ ⁩ | 22 |
+| 3-1-2/lesson/01 | ⁦ 69 + 30 ⁩ أين نصل؟ | ⁦ 69 + 30 ⁩ Where do we land? | 99 |
+| 3-1-2/lesson/04 | ⁦ 81 + 10 = ▢ ⁩ | ⁦ 81 + 10 = ▢ ⁩ | 91 |
+| 3-1-3/lesson/01 | ⁦ 60 − 20 ⁩ كم حزمة عشرة تبقى؟ وكم العدد؟ | ⁦ 60 − 20 ⁩ How many tens, and what is the number? | 40 |
+| 3-1-3/lesson/04 | ⁦ 70 − 20 = ▢ ⁩ | ⁦ 70 − 20 = ▢ ⁩ | 50 |
+| 3-1-4/lesson/01 | إلى أي عشرة نقرّب 24؟ | Which ten do we round 24 to? | 20 |
+| 3-1-4/lesson/04 | 27 مقرَّبًا إلى أقرب عشرة = ▢ | 27 rounded to the nearest ten = ▢ | 30 |
+| 3-2-1/lesson/01 | من 83 إلى العشرة التالية. كم القفزة؟ | From 83 to the next ten. How big is the jump? | 7 |
+| 3-2-1/lesson/04 | ⁦ 83 + ▢ = 90 ⁩ | ⁦ 83 + ▢ = 90 ⁩ | 7 |
+| 3-2-2/lesson/01 | ⁦ 46 + 6 = ▢ ⁩ | ⁦ 46 + 6 = ▢ ⁩ | 52 |
+| 3-2-2/lesson/04 | ⁦ 77 + 8 = 80 + ▢ ⁩ | ⁦ 77 + 8 = 80 + ▢ ⁩ | 5 |
+| 3-2-2/evidence/09 | كان عدد العصافير على الشجرة 27، ثم جاء 4 آخرون. كم صار عدد العصافير؟ | There were 27 birds on the tree. 4 more came. How many birds are on the tree now? | 31 |
+| 3-3-1/lesson/01 | ⁦ 52 + 32 ⁩ أين نصل؟ | ⁦ 52 + 32 ⁩ Where do we land? | 84 |
+| 3-3-1/lesson/04 | ⁦ 24 + 62 = 84 + ▢ ⁩ | ⁦ 24 + 62 = 84 + ▢ ⁩ | 2 |
+| 3-3-1/lesson/06 | ⁦ 77 + 21 = ▢ ⁩ | ⁦ 77 + 21 = ▢ ⁩ | 98 |
+| 3-3-2/evidence/13 | كان عدد التفاح في السلة 29، ثم وضعت أمي فيها 59 أخرى. كم صار عدد التفاح في السلة؟ | There were 29 apples in the basket. Mum put in 59 more. How many apples are in the basket now? | 88 |
+| 3-4-1/lesson/01 | ⁦ 42 + 21 ⁩ نجمع العشرات أولًا. كم تصير العشرات معًا؟ | ⁦ 42 + 21 ⁩ First add the tens. What do the tens make together? | 60 |
+| 3-4-1/lesson/04 | ⁦ 63 + 22 = ▢ ⁩ | ⁦ 63 + 22 = ▢ ⁩ | 85 |
+| 3-4-2/lesson/04 | ⁦ 27 + 59 = 70 + ▢ ⁩ | ⁦ 27 + 59 = 70 + ▢ ⁩ | 16 |
+| 3-4-2/evidence/09 | هل هذا صحيح؟ ⁦ 38 + 45 = 70 + 14 ⁩ | Is this true? ⁦ 38 + 45 = 70 + 14 ⁩ | no |
+| 3-6-1/lesson/01 | ⁦ 27 + 29 = ▢ ⁩ | ⁦ 27 + 29 = ▢ ⁩ | 56 |
+| 3-6-1/lesson/04 | ⁦ 48 + 39 = ▢ − 1 ⁩ | ⁦ 48 + 39 = ▢ − 1 ⁩ | 88 |
+| 3-6-2/evidence/09 | هل هذا صحيح؟ ⁦ 86 − 39 = 86 − 40 − 1 ⁩ | Is this true? ⁦ 86 − 39 = 86 − 40 − 1 ⁩ | no |
+| 3-6-3/lesson/01 | ⁦ 17 + 19 ⁩ ننقل 3 من العدد الثاني إلى الأول. كم يصير الأول؟ | ⁦ 17 + 19 ⁩ Move 3 from the second number to the first. What does the first number become? | 20 |
+| 3-6-3/lesson/04 | ⁦ 18 + 57 = 20 + ▢ ⁩ | ⁦ 18 + 57 = 20 + ▢ ⁩ | 55 |
+| 3-6-4/lesson/01 | ⁦ 83 − 38 ⁩ نزيد كلًّا من العددين 2 فيصيران 85 و40. كم الفرق؟ | ⁦ 83 − 38 ⁩ Add 2 to both numbers: they become 85 and 40. What is the difference? | 45 |
+| 3-6-4/lesson/04 | ⁦ 94 − 69 = 95 − ▢ ⁩ | ⁦ 94 − 69 = 95 − ▢ ⁩ | 70 |
+| 3-7-1/lesson/01 | من 39 إلى 100. كم مجموع القفزتين؟ | From 39 to 100. What do the two jumps add up to? | 61 |
+| 3-7-1/lesson/04 | من 86 إلى 90 قفزة 4، ومن 90 إلى 100 قفزة ▢ | From 86 to 90 is a jump of 4, and from 90 to 100 is a jump of ▢ | 10 |
+| 3-7-1/lesson/06 | ⁦ 72 + ▢ = 100 ⁩ | ⁦ 72 + ▢ = 100 ⁩ | 28 |
+| 3-7-2/lesson/01 | ثمن الكتاب 96 جنيهًا، ومعنا ورقة 100 جنيه. كم يعيد البائع؟ | The book costs 96 pounds and we pay with a note of 100 pounds. How much does the seller give back? | 4 |
+| 3-8-1/lesson/01 | ⁦ 47 + 47 = ▢ ⁩ | ⁦ 47 + 47 = ▢ ⁩ | 94 |
+| 3-8-1/lesson/04 | ⁦ 38 + 38 = 60 + ▢ ⁩ | ⁦ 38 + 38 = 60 + ▢ ⁩ | 16 |
+| 3-8-2/lesson/01 | نصف 34 = ▢ | Half of 34 = ▢ | 17 |
+| 3-8-2/lesson/04 | نصف 38: نصف 30 هو 15، ونصف 8 هو 4. فنصف 38 = ▢ | Half of 38: half of 30 is 15 and half of 8 is 4. So half of 38 = ▢ | 19 |
+| 3-8-2/evidence/09 | عدد حبات التمر 44، نقسمها بالتساوي بين طفلين. كم يأخذ كل طفل؟ | 44 dates are shared equally between two children. How many does each child get? | 22 |
+| 3-8-3/lesson/01 | شريط طوله 50 نقصّه نصفين متساويين. كم طول كل نصف؟ | A strip 50 long is cut into two equal halves. How long is each half? | 25 |
+| 3-8-3/lesson/04 | نصف 50 = ▢ | Half of 50 = ▢ | 25 |
 
 ## 6. الأوصاف المحايدة للإجابات الخاطئة
 

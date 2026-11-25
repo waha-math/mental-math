@@ -328,18 +328,28 @@ def p_wholetens(n):
     return plain_eq('%s = %s' % (op_s(10 * n['a'], n['op'], 10 * n['b']), BOX), 10 * (n['a'] + n['op'] * n['b']))
 
 
+# التقريب (قرار الأب، 25 نوفمبر): ما آحاده 5 يبعد 5 عن العشرتين، فيُقرَّب إلى العشرة الأكبر. يُعلَّم في الدرس بأمثلة
+# متجاورة (24 ثم 25 ثم 26) والمسافتان مرسومتان، ولا يُسأل عنه قبل الدرس (البوابة والافتتاح والتحقق القصير)
 def p_round_line(n):
     v = n['v']
     lo = v // 10 * 10
-    return ('أي عشرة أقرب إلى %d؟' % v, 'Which ten is nearest to %d?' % v, lo + 10 if v % 10 > 5 else lo,
-            dict(kind='round', lo=lo, hi=lo + 10, v=v))
+    ans = lo + 10 if v % 10 >= 5 else lo
+    model = dict(kind='round', lo=lo, hi=lo + 10, v=v)
+    if n.get('dist'):
+        model['dist'] = True                                # المسافتان إلى العشرتين مكتوبتان على الخط
+    if n.get('explain'):
+        return ('%d يبعد %d عن %d، ويبعد %d عن %d: المسافتان متساويتان. حين تتساوى المسافتان نختار هنا العشرة الأكبر. '
+                'إلى أي عشرة نقرّب %d؟' % (v, v - lo, lo, lo + 10 - v, lo + 10, v),
+                '%d is %d away from %d and %d away from %d: the distances are equal. When the distances are equal, '
+                'we choose the greater ten. Which ten do we round %d to?' % (v, v - lo, lo, lo + 10 - v, lo + 10, v), ans, model)
+    return ('إلى أي عشرة نقرّب %d؟' % v, 'Which ten do we round %d to?' % v, ans, model)
 
 
 def p_round(n):
     v = n['v']
     lo = v // 10 * 10
     return ('%d مقرَّبًا إلى أقرب عشرة = %s' % (v, BOX), '%d rounded to the nearest ten = %s' % (v, BOX),
-            lo + 10 if v % 10 > 5 else lo, None)
+            lo + 10 if v % 10 >= 5 else lo, None)
 
 
 def p_comp_line(n):
@@ -393,10 +403,11 @@ def p_jump_step(n):
 
 
 def p_tens2_model(n):
+    # خطوة التجزئة (قرار الأب، 25 نوفمبر: دليل على الطريقة لا على الناتج وحده): العشرات معًا أولًا
     a, b = n['a'], n['b']
     s_ = eq('%d + %d' % (a, b))
-    return ('%s كم المجموع؟' % s_, '%s What is the total?' % s_, a + b,
-            dict(kind='tens2', a=[a // 10, a % 10], b=[b // 10, b % 10]))
+    return ('%s نجمع العشرات أولًا. كم تصير العشرات معًا؟' % s_, '%s First add the tens. What do the tens make together?' % s_,
+            a // 10 * 10 + b // 10 * 10, dict(kind='tens2', a=[a // 10, a % 10], b=[b // 10, b % 10]))
 
 
 def p_partition_step(n):
@@ -551,7 +562,7 @@ RESOURCE.update({'tens_model': 'حزم العشرات', 'tens_eq': 'بلا نم�
                  'jump10': 'بلا نموذج', 'wholetens_model': 'حزم العشرات', 'wholetens': 'بلا نموذج', 'round_line': 'خط الأعداد',
                  'round': 'بلا نموذج', 'comp_line': 'خط الأعداد', 'comp': 'بلا نموذج', 'bridge_step': 'بلا نموذج',
                  'two_digit': 'بلا نموذج', 'ctx_big': 'صورة الموقف، والنص منطوق', 'jumps_add': 'خط الأعداد الفارغ',
-                 'jump_step': 'بلا نموذج', 'tens2_model': 'مكعبات العشرات والآحاد', 'partition_step': 'بلا نموذج',
+                 'jump_step': 'بلا نموذج', 'tens2_model': 'مكعبات العشرات والآحاد، والسؤال عن العشرات معًا', 'partition_step': 'بلا نموذج',
                  'judge_partition': 'بلا نموذج', 'adjust_step': 'بلا نموذج', 'judge_adjust': 'بلا نموذج',
                  'transfer_model': 'مكعبات العشرات والآحاد (بدل الأقراص المنتقلة)', 'transfer_step': 'بلا نموذج',
                  'slide_model': 'نقطتان تنزلقان معًا على خط الأعداد', 'slide_step': 'بلا نموذج',
@@ -628,7 +639,10 @@ def dom(perf):
     if perf == 'nine_step':
         return [dict(b=b) for b in range(2, 10)]
     if perf == 'three':
-        return [dict(a=a, b=b, c=10 - a) for a in range(1, 10) for b in range(1, 10) if b != 10 - a]
+        # العشرة في الأول والثالث (تُقدَّم بإعادة الترتيب)، أو في الثاني والثالث (يُبدأ من آخرها). لا يساوي الأول الثاني:
+        # فيه العشرة في الموضعين معًا
+        return ([dict(a=a, b=b, c=10 - a) for a in range(1, 10) for b in range(1, 10) if b != 10 - a and a != b]
+                + [dict(a=a, b=b, c=10 - b) for a in range(1, 10) for b in range(1, 10) if a != 10 - b and a != b])
     if perf == 'judge_three':
         return [dict(a=a, b=b, c=10 - a, w=w) for a in range(1, 10) for b in range(1, 9) for w in (0, 1) if b != 10 - a]
     # المرحلة 3
@@ -643,7 +657,7 @@ def dom(perf):
         return [dict(a=a, b=b, op=op) for a in range(1, 10) for b in range(1, 10) for op in (1, -1)
                 if 0 < a + op * b <= 10 and not (op < 0 and a == b)]
     if perf in ('round_line', 'round'):
-        return [dict(v=v) for v in range(11, 100) if v % 10 not in (0, 5)]
+        return [dict(v=v) for v in range(11, 100) if v % 10]
     if perf in ('comp_line', 'comp'):
         return [dict(a=a) for a in range(11, 100) if a % 10 and a < 90 or (a > 90 and a % 10)]
     if perf in ('hundred_line', 'hundred_step', 'hundred'):
@@ -856,7 +870,8 @@ SKILLS = {
     '2-6-1': S(['ف2', 'ف3'], {'ف2': 'nine_step', 'ف3': 'add20', 'solve': 'add20'},
                [(4, '9 مع 2 إلى 5', lambda n: n['a'] == 9 and n['b'] <= 5), (6, '9 مع 6 إلى 9', lambda n: n['a'] == 9 and n['b'] >= 6)]),
     '2-6-2': S(['ف3', 'ف5'], {'ف3': 'three', 'ف5': 'judge_three', 'solve': 'three'},
-               [(5, 'العشرة في الأول والثالث', lambda n: True), (5, 'العشرة في الأول والثالث، والأوسط كبير', lambda n: n['b'] >= 5)]),
+               [(6, 'العشرة في الأول والثالث: يُعاد الترتيب', lambda n: n['a'] + n['c'] == 10),
+                (4, 'العشرة في الثاني والثالث: يُبدأ منهما', lambda n: n['b'] + n['c'] == 10)]),
     '2-6-3': S(['ف3', 'ف4'], {'ف3': 'add20', 'ف4': 'ctx_add20', 'solve': 'add20'},
                [(4, 'المجموع حتى 10', lambda n: n['a'] + n['b'] <= 10), (6, 'المجموع من 11 إلى 20', lambda n: n['a'] + n['b'] > 10)]),
     '2-6-4': S(['ف3', 'ف4'], {'ف3': 'sub20', 'ف4': 'ctx_sub20', 'solve': 'sub20'},
@@ -871,7 +886,9 @@ SKILLS = {
     '3-1-3': S(['ف1', 'ف3'], {'ف1': 'wholetens_model', 'ف3': 'wholetens', 'solve': 'wholetens'},
                [(5, 'جمع عشرات', lambda n: n['op'] > 0), (5, 'طرح عشرات', lambda n: n['op'] < 0)]),
     '3-1-4': S(['ف1', 'ف3'], {'ف1': 'round_line', 'ف3': 'round', 'solve': 'round'},
-               [(5, 'يُقرَّب إلى الأقل', lambda n: n['v'] % 10 < 5), (5, 'يُقرَّب إلى الأكثر', lambda n: n['v'] % 10 > 5)]),
+               [(4, 'يُقرَّب إلى الأقل', lambda n: n['v'] % 10 < 5),
+                (2, 'الآحاد 5: المسافتان متساويتان، فإلى العشرة الأكبر', lambda n: n['v'] % 10 == 5),
+                (4, 'يُقرَّب إلى الأكثر', lambda n: n['v'] % 10 > 5)]),
     '3-2-1': S(['ف1', 'ف3'], {'ف1': 'comp_line', 'ف3': 'comp', 'solve': 'comp'},
                [(3, 'المتمم 1 إلى 3', lambda n: 10 - n['a'] % 10 <= 3), (4, 'المتمم 4 إلى 6', lambda n: 4 <= 10 - n['a'] % 10 <= 6),
                 (3, 'المتمم 7 إلى 9', lambda n: 10 - n['a'] % 10 >= 7)]),
@@ -910,6 +927,11 @@ SKILLS = {
                [(4, '10 أو 30', lambda n: n['w'] <= 30), (3, '50', lambda n: n['w'] == 50), (3, '70 أو 90', lambda n: n['w'] >= 70)]),
 }
 MORE_PRACTICE = 12
+PRE_TEACH = ('gate', 'regate', 'opening', 'short', 'tryfirst')
+UNTAUGHT = {'3-1-4': lambda n: n['v'] % 10 != 5}            # التساوي يُعلَّم في الدرس (قرار الأب، 25 نوفمبر)
+LESSON_FIXED = {'3-1-4': [('lesson.watch', 'round_line', dict(v=24, dist=True)),
+                          ('lesson.model', 'round_line', dict(v=25, dist=True, explain=True)),
+                          ('lesson.model', 'round_line', dict(v=26, dist=True))]}
 
 
 def slot_order(skill):
@@ -973,6 +995,8 @@ def build(seed=20261119):
     last = {}
 
     def put(skill, group, role, ev, perf, pred=lambda n: True, **kw):
+        if group in PRE_TEACH and skill in UNTAUGHT:        # ما يُعلَّم في الدرس لا يُسأل عنه قبله
+            pred = (lambda p0, u: lambda n: p0(n) and u(n))(pred, UNTAUGHT[skill])
         n = pick.take(skill, perf, pred, avoid=last.get((skill, group)))
         it = make(skill, group, role, ev, perf, n, count, **kw)
         last[(skill, group)] = it['fact']
@@ -983,13 +1007,19 @@ def build(seed=20261119):
         P, types = sp['perf'], sp['types']
         solve = P['solve']
         main, step = P.get('ف1', solve), P.get('ف2', solve)
-        put(skill, 'lesson', 'lesson.watch', None, main)
-        for _ in range(2):
-            put(skill, 'lesson', 'lesson.model', None, main)
+        if skill in LESSON_FIXED:                           # درس بأمثلة مختارة (التقريب: 24 ثم 25 ثم 26)
+            for role, perf, n in LESSON_FIXED[skill]:
+                items.append(make(skill, 'lesson', role, None, perf, dict(n), count))
+                last[(skill, 'lesson')] = items[-1]['fact']
+        else:
+            put(skill, 'lesson', 'lesson.watch', None, main)
+            for _ in range(2):
+                put(skill, 'lesson', 'lesson.model', None, main)
         for _ in range(2):
             put(skill, 'lesson', 'lesson.fade', None, step)
-        for _ in range(2):
-            put(skill, 'lesson', 'lesson.nomodel', None, solve)
+        for k in range(2):                                  # ودرس التقريب: أول بند بلا نموذج حالة تساوٍ
+            put(skill, 'lesson', 'lesson.nomodel', None, solve,
+                (lambda n: n['v'] % 10 == 5) if skill == '3-1-4' and k == 0 else (lambda n: True))
         tries, guided = opening_types(types)               # بأنواع طبقة البنود نفسها، فلا يخالف المحتوى ما تطلبه
         for t in tries:
             put(skill, 'opening', 'opening.try', t, P.get(t, solve))
@@ -1120,7 +1150,9 @@ def truth(it):
         return -n['a'] % 10
     if p == 'bridge_step':
         return (n['a'] + n['b']) % 10 if n['op'] > 0 else 10 - (n['a'] - n['b']) % 10
-    if p in ('two_digit', 'ctx_big', 'jumps_add', 'tens2_model'):
+    if p == 'tens2_model':
+        return n['a'] // 10 * 10 + n['b'] // 10 * 10
+    if p in ('two_digit', 'ctx_big', 'jumps_add'):
         return n['a'] + n['op'] * n['b'] if 'op' in n else n['a'] + n['b']
     if p == 'jump_step':
         return n['b'] % 10

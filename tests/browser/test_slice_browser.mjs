@@ -207,7 +207,7 @@ function inspect(v) {
     bond: () => ({ whole: String(k.whole), parts: [String(k.part), '▢'] }), cup: () => ({ shown: k.shown, total: k.total }),
     frames2: () => ({ n: k.n }), beads: () => ({ rows: k.rows, hide: k.hide ?? null }),
     tens: () => ({ tens: k.tens, ones: k.ones, plus: k.plus ?? 0, minus: k.minus ?? 0 }), tens2: () => ({ a: k.a, b: k.b }),
-    round: () => ({ lo: k.lo, hi: k.hi, v: k.v }), slide: () => ({ rows: [[k.b, k.a], [k.b + k.d, k.a + k.d]], d: k.d }),
+    round: () => (k.dist ? { lo: k.lo, hi: k.hi, v: k.v, dist: [String(k.v - k.lo), String(k.hi - k.v)] } : { lo: k.lo, hi: k.hi, v: k.v }), slide: () => ({ rows: [[k.b, k.a], [k.b + k.d, k.a + k.d]], d: k.d }),
     bar: () => ({ whole: String(k.whole), parts: ['▢', '▢'] }),
     jumps: () => ({ stations: [k.start, ...k.stations].map((x, j) => (j > 0 && Array.isArray(k.hide) && k.hide[0] === 'station'
       && k.hide[1] === j - 1 ? '▢' : String(x))), jumps: k.jumps.map((x, j) => (Array.isArray(k.hide) && k.hide[0] === 'jump' && k.hide[1] === j ? '▢'

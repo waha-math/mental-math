@@ -222,7 +222,9 @@ function tens2(m) {
 }
 // التقريب: خط من العشرة إلى التالية بأحد عشر تدريجًا، والعدد عليه نقطة، والعشرتان مكتوبتان
 function round(m) {
-  const W = 720, pad = 60, y = 110, step = (W - 2 * pad) / 10, svg = svgOf(W, 200, 'round', { lo: m.lo, hi: m.hi, v: m.v });
+  // dist (في الدرس): المسافتان من العدد إلى العشرتين قوسان تحت الخط بمقداريهما، فيُرى التساوي في ما آحاده 5
+  const shown = m.dist ? { lo: m.lo, hi: m.hi, v: m.v, dist: [String(m.v - m.lo), String(m.hi - m.v)] } : { lo: m.lo, hi: m.hi, v: m.v };
+  const W = 720, pad = 60, y = 110, step = (W - 2 * pad) / 10, svg = svgOf(W, m.dist ? 240 : 200, 'round', shown);
   svg.append(el('line', { x1: pad, y1: y, x2: W - pad, y2: y, class: 'link' }));
   for (let j = 0; j <= 10; j++) svg.append(el('line', { x1: pad + j * step, y1: y - (j % 5 ? 10 : 20), x2: pad + j * step, y2: y + (j % 5 ? 10 : 20), class: 'link' }));
   svg.append(txt(pad, y + 50, String(m.lo), 'num'));
@@ -230,6 +232,12 @@ function round(m) {
   const x = pad + (m.v - m.lo) * step;
   svg.append(el('circle', { cx: x, cy: y, r: 14, class: 'red' }));
   svg.append(txt(x, y - 48, String(m.v), 'num'));
+  if (m.dist) {
+    for (const [a, b, d] of [[pad, x, m.v - m.lo], [x, W - pad, m.hi - m.v]]) {
+      svg.append(el('path', { d: `M ${a} ${y + 14} Q ${(a + b) / 2} ${y + 70} ${b} ${y + 14}`, class: 'jump' }));
+      svg.append(txt((a + b) / 2, y + 90, String(d), 'size'));
+    }
+  }
   return svg;
 }
 // الفرق الثابت: خطان، الأول بالعددين، والثاني بهما بعد زيادة كلٍّ منهما d، والفرق بينهما قوس واحد بلا عدد
