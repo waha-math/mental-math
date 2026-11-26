@@ -543,6 +543,18 @@ function adultPanel(reason, detail = null) {
           adultPanel(reason, detail);
         } } }, 'ابدأ أيضًا من: ', skillText(d.skill)))] : null));
   }
+  if (link && link.waiting().length) {           // فحص معلّق ينتظر المعلم (3.6): سببه وترك المحاولة
+    const why4 = h('textarea', { id: 'abandon-reason', rows: '2' });
+    sections.push(h('section', { id: 'held' }, h('p', {}, 'فحص استقلال ينتظر قرارك:'),
+      link.waiting().map((c) => h('p', { class: 'held', 'data-check': c.id, 'data-reason': c.reason ?? '' },
+        codes(`${c.skill}: `), heldText(c),
+        h('button', { 'data-abandon': c.id, disabled: link.sc.cur !== null, on: { click: async () => {
+          if (!why4.value.trim()) { msg.textContent = 'السبب مطلوب'; return; }
+          try { await link.abandonCheck(c.id, why4.value.trim()); } catch (err) { msg.textContent = String(err.message ?? err); return; }
+          adultPanel(reason, detail);
+        } } }, 'اترك المحاولة'))),
+      h('label', {}, 'لماذا؟ (لترك المحاولة)', why4)));
+  }
   if (link && link.e !== null && p) {            // المتطلب الخارجي (5.1): قرار المعلم بدل بوابة الجاهزية، أو إلغاؤه
     const ext = p.scope.flatMap((skill) => externals(link.e, skill, DATA.external_names).map((x) => ({ ...x, skill })));
     if (ext.length) {
@@ -579,6 +591,15 @@ function adultPanel(reason, detail = null) {
 }
 
 // ---------------------------------------------------------------- لوحة الوالد
+// سبب تعليق الفحص أو إعادة بدئه، بلغة اللوحة. نفاد البنود: المحاولات A وB وC معدّة في المحتوى، وتركها يبدأ محاولة بلا بنود
+const HOLD = {
+  interruptions: 'انقطع مرتين في خانة أو ثلاثًا في الفحص', no_alternate: 'نفد بديل خانة',
+  no_items: 'نفدت نصوص الفحص المعدّة لهذه المهارة (ثلاث محاولات). تركها يبدأ محاولة أخرى بلا بنود فتُعلَّق ثانية',
+};
+function heldText(c) {
+  if (c.state === 'needs_restart') return `محاولة فحص تحتاج إعادة بدء (${c.reason ?? 'تغيّر المحتوى'}). تركها يسمح بمحاولة جديدة.`;
+  return `فحص الاستقلال معلّق للمراجعة: ${HOLD[c.reason] ?? c.reason}. عُرض منه ${c.shown} ${c.shown === 1 ? 'بند' : 'بنود'} قبل التعليق، ولا يُحسب خطأً.`;
+}
 const CHECK = { pass: 'اجتاز: حلّ المسائل مستقلًا', fail: 'لم يجتز', help: 'انتهى بطلب مساعدة', held: 'معلّق للمراجعة' };
 const RET = { help: 'طلب مساعدة', cut: 'قطعه السقف', referred: 'أُحيل إلى البالغ', no_alternate: 'لا بدائل' };
 const HOW = { back: 'قفز للخلف', up: 'أكمل من الأصغر', other: 'طريقة أخرى' };

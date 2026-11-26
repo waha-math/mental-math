@@ -119,6 +119,7 @@ def main(argv):
             steps.append(('نماذج المحتوى المرسومة في Chrome', [node, 'tests/browser/test_models_browser.mjs'], all_passed, ()))
             steps.append(('بطاقة «كيف حسبتها؟» والمقارنة في Chrome', [node, 'tests/browser/test_cards_browser.mjs'],
                           all_passed, ()))
+            steps.append(('الفحص المعلّق وتركه من الشاشة في Chrome', [node, 'tests/browser/test_held_browser.mjs'], all_passed, ()))
             steps.append(('المتطلب الخارجي من الشاشة في Chrome', [node, 'tests/browser/test_external_browser.mjs'], all_passed, ()))
             steps.append(('أنواع الإجابة من الشاشة في Chrome', [node, 'tests/browser/test_answers_browser.mjs'], all_passed, ()))
             steps.append(('النسخة الاحتياطية والعمل دون اتصال في Chrome', [node, 'tests/browser/test_backup_browser.mjs'],

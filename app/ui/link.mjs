@@ -231,6 +231,24 @@ export class Link {
       .map((s) => ({ session: s, day: this.e.s.sessions[s].day }));
   }
 
+  // فحوص الاستقلال التي تنتظر المعلم (3.6): معلّقة للمراجعة أو تحتاج إعادة بدء. لا تُبدأ للمهارة محاولة أخرى حتى يتركها
+  waiting() {
+    if (this.e === null) return [];
+    return Object.entries(this.e.s.checks).filter(([, c]) => c.state === 'held' || c.state === 'needs_restart')
+      .map(([id, c]) => ({ id, skill: c.skill, state: c.state, reason: c.state === 'held' ? c.hold_reason : c.restart_reason,
+        shown: (c.held_items ?? []).length }));
+  }
+
+  // ترك المحاولة بقرار المعلم (check_abandoned): لا تُعدّ في المحاولات، ويُسجَّل سببه. والجلسة مغلقة
+  async abandonCheck(id, reason) {
+    if (this.sc.cur !== null) throw new Error('جلسة مفتوحة: تُترك المحاولة بعد ختمها');
+    const ev = { type: 'check_abandoned', check_id: id, reason };
+    const v = this.e.preflight({ ...ev, id: 'ask' });
+    if (!v.ok) throw new Error(`رُفض ترك ${id}: ${v.code}`);
+    this.sc.send(ev);
+    await this.save();
+  }
+
   // قرار فتح يسجّله البالغ بعد إنشاء الملف (10.2)، باسم مهارته ومتطلباتها المتجاوزة وسببه. والجلسة مغلقة
   async decide(d, reason) {
     if (this.sc.cur !== null) throw new Error('جلسة مفتوحة: يُسجَّل القرار بعد ختمها');
