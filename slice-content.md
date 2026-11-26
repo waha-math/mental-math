@@ -416,7 +416,7 @@
 | 7-1-5/lesson/04 | ⁦ 1 − 4/5 = ▢ ⁩ اكتب الناتج كسرًا. | ⁦ 1 − 4/5 = ▢ ⁩ Write the answer as a fraction. | {'t': 'frac', 'n': 1, 'd': 5} |
 | 7-2-1/lesson/01 | ما العدد العشري الذي يمثله الملوّن؟ (الشبكة كلها واحد) | What decimal does the coloured part show? (the whole grid is one) | {'t': 'dec', 'n': 61, 's': 2} |
 | 7-2-1/lesson/04 | 8 جنيهات و71 قرشًا = ▢ جنيه | 8 pounds and 71 piastres = ▢ pounds | {'t': 'dec', 'n': 871, 's': 2} |
-| 7-2-2/lesson/01 | أيهما أكبر؟ الشبكة كلها واحد. | Which is greater? The whole grid is one. | B |
+| 7-2-2/lesson/01 | أيهما أكبر؟ كل شبكة واحد. | Which is greater? Each grid is one whole. | B |
 | 7-2-2/lesson/04 | أيهما أكبر؟ | Which is greater? | A |
 | 7-2-3/lesson/01 | ⁦ 30.5 × 10 ⁩ كم يصير العدد بعد أن ينتقل في جدول المنازل؟ | ⁦ 30.5 × 10 ⁩ What does the number become after it moves in the place value table? | {'t': 'dec', 'n': 305, 's': 0} |
 | 7-2-3/lesson/04 | ⁦ 50.1 × 10 = ▢ ⁩ | ⁦ 50.1 × 10 = ▢ ⁩ | {'t': 'dec', 'n': 501, 's': 0} |
@@ -431,7 +431,7 @@
 | 7-3-3/lesson/01 | ⁦ 20 − 1.05 = ▢ ⁩ اكتب الباقي جنيهات وقروشًا. | ⁦ 20 − 1.05 = ▢ ⁩ Write the change in pounds and piastres. | {'t': 'money', 'p': 1895} |
 | 7-3-3/lesson/04 | من 4.75 جنيه إلى 5 جنيهات: كم قرشًا؟ | From 4.75 pounds to 5 pounds: how many piastres? | 25 |
 | 7-3-3/evidence/09 | ثمن الكراسة 4.75 جنيه، ومعنا ورقة 5 جنيهات. كم يعيد البائع؟ | A notebook costs 4.75 pounds and we pay with 5 pounds. How much change? | {'t': 'money', 'p': 25} |
-| 7-4-1/lesson/01 | الملوّن ⁦ 0.5 ⁩ من الشريط. أي البطاقات تساويه؟ | The coloured part is ⁦ 0.5 ⁩ of the strip. Which card equals it? | A |
+| 7-4-1/lesson/01 | الملوّن ⁦ 0.5 ⁩ من الشبكة. أي البطاقات تساويه؟ | The coloured part is ⁦ 0.5 ⁩ of the grid. Which card equals it? | A |
 | 7-4-1/lesson/04 | أي البطاقات تساوي ⁦ 1/4 ⁩؟ | Which card equals ⁦ 1/4 ⁩? | A |
 | 7-4-3/lesson/01 | ⁦ 0.5 × 8 = ▢ ⁩ | ⁦ 0.5 × 8 = ▢ ⁩ | 4 |
 | 7-4-3/lesson/04 | ⁦ 0.25 ⁩ هي ربع، فـ⁦ 0.25 × 16 ⁩ = ربع 16 = ▢ | ⁦ 0.25 ⁩ is one quarter, so ⁦ 0.25 × 16 ⁩ = one quarter of 16 = ▢ | 4 |

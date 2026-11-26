@@ -216,11 +216,11 @@ function inspect(v) {
     bar: () => ({ whole: String(k.whole), parts: ['▢', '▢'] }),
     arr: () => ({ rows: k.rows, cols: k.cols, shade: k.shade ?? 0, cross: k.cross ?? 0, split: k.split ?? 0 }),
     share: () => ({ total: k.total, plates: k.plates }),
-    places: () => ({ digits: k.digits.map(String), shift: k.shift ?? 0 }), area: () => ({ a: String(k.a), b: String(k.b) }),
+    places: () => ({ digits: k.digits.map(String), shift: k.shift ?? 0, point: k.point ?? 0 }), area: () => ({ a: String(k.a), b: String(k.b) }),
     grid: () => ({ top: k.top.map(String), side: k.side.map(String), cross: k.cross ?? 0, corner: k.corner ?? 0 }),
     halve: () => ({ before: [String(k.a), String(k.b)], after: [String(k.a2), '▢'] }),
     strip: () => ({ parts: k.parts.map(String), by: String(k.by) }),
-    fstrip: () => ({ n: k.n, d: k.d, d2: k.d2 ?? 0, whole: k.whole ?? null, times: k.times ?? 0 }), grid100: () => ({ n: k.n }), clock: () => ({ h: k.h, m: k.m }),
+    fstrip: () => ({ n: k.n, d: k.d, d2: k.d2 ?? 0, whole: k.whole ?? null, times: k.times ?? 0 }), grid100: () => ({ n: k.n }), grids: () => ({ cells: k.cells, labels: [k.labels.A, k.labels.B] }), clock: () => ({ h: k.h, m: k.m }),
     jumps: () => ({ stations: [k.start, ...k.stations].map((x, j) => (j > 0 && Array.isArray(k.hide) && k.hide[0] === 'station'
       && k.hide[1] === j - 1 ? '▢' : String(x))), jumps: k.jumps.map((x, j) => (Array.isArray(k.hide) && k.hide[0] === 'jump' && k.hide[1] === j ? '▢'
       : (k.line === 'back' ? '−' : '+') + x)) }),

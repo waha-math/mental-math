@@ -367,7 +367,8 @@ def digits4(v):
 
 
 MODEL_OK['places'] = lambda m, n, ans: (
-    sum(d * 10 ** (len(m['digits']) - 1 - k) for k, d in enumerate(m['digits'])) == m['value'])
+    sum(d * 10 ** (len(m['digits']) - 1 - k) for k, d in enumerate(m['digits'])) == m['value']
+    and ('point' not in m or (m['point'] == 1 and m['shift'] == n['op'] * n['z'])))
 MODEL_OK['area'] = lambda m, n, ans: m['a'] * m['b'] == ans
 
 
@@ -912,7 +913,11 @@ MODEL_OK['fstrip'] = lambda m, n, ans: 0 <= m['n'] <= m['d'] and (
                                   and ans == m['whole'] // m['d'] * m['n'] or m.get('d2') and ans * m['d'] == m['n'] * m['d2']))
     or (isinstance(ans, int) and m.get('times') is not None and ans == m['times'] * m['d'])
     or ans in ('yes', 'no', 'A', 'B', 'C'))
-MODEL_OK['grid100'] = lambda m, n, ans: isinstance(ans, dict) and ans['t'] == 'dec' and ans['n'] * 10 ** (2 - ans['s']) == m['n']
+MODEL_OK['grid100'] = lambda m, n, ans: (
+    isinstance(ans, dict) and ans['t'] == 'dec' and ans['n'] * 10 ** (2 - ans['s']) == m['n']
+    or ans == 'A' and 'd' in n and m['n'] * n['d'] == 100 * n['n'])
+MODEL_OK['grids'] = lambda m, n, ans: sorted(m['cells']) == sorted([n['a'] * 10, n['b']]) and \
+    (m['cells'][0] > m['cells'][1]) == (ans == 'A') and m['labels'] == cmp_cards(n)[1]
 WORDS = {(1, 2): ('نصف', 'one half'), (1, 3): ('ثلث', 'one third'), (2, 3): ('ثلثان', 'two thirds'),
          (1, 4): ('ربع', 'one quarter'), (3, 4): ('ثلاثة أرباع', 'three quarters'), (1, 5): ('خُمس', 'one fifth'),
          (2, 5): ('خُمسان', 'two fifths'), (3, 5): ('ثلاثة أخماس', 'three fifths'), (4, 5): ('أربعة أخماس', 'four fifths'),
@@ -1036,8 +1041,14 @@ def cmp_ans(n):
     return 'A' if first_big else 'B'
 
 
-perf('dec_compare_grid', lambda n: ('أيهما أكبر؟ الشبكة كلها واحد.', 'Which is greater? The whole grid is one.', cmp_ans(n),
-                                    None),
+def cmp_cells(n):
+    """خلايا شبكتي المئة بترتيب البطاقتين: الأعشار عشر خلايا لكل عُشر، والأجزاء من مئة خلية لكلٍّ."""
+    x, y = n['a'] * 10, n['b']
+    return [x, y] if n['s'] == 0 else [y, x]
+
+
+perf('dec_compare_grid', lambda n: ('أيهما أكبر؟ كل شبكة واحد.', 'Which is greater? Each grid is one whole.', cmp_ans(n),
+                                    dict(kind='grids', cells=cmp_cells(n), labels=cmp_cards(n)[1])),
      cmp_ans, D722, 'شبكة المئة', lambda n: ['c', n['a'], n['b']], cards=cmp_cards)
 perf('dec_compare', lambda n: ('أيهما أكبر؟', 'Which is greater?', cmp_ans(n), None), cmp_ans, D722, 'بلا نموذج',
      lambda n: ['c', n['a'], n['b']], cards=cmp_cards)
@@ -1053,11 +1064,15 @@ def shift_dec(n):
     return '%s %s %d = %s' % (x, DIV, 10 ** z, BOX), dec(v, 1 + z)
 
 
-# بلا رسم: منزلق المنازل بالفاصلة العشرية لم يُبنَ
+# منزلق المنازل: العدد في جدول بمنازله العشرية، والسهم يحرك أرقامه z منزلة: يسارًا للضرب ويمينًا للقسمة. الناتج لا يُرسم
+def shift_model(n):
+    return dict(kind='places', digits=[int(c) for c in str(n['v'])], value=n['v'], point=1, shift=n['op'] * n['z'])
+
+
 perf('shift_dec_model', lambda n: ('%s كم يصير العدد بعد أن ينتقل في جدول المنازل؟' % eq(shift_dec(n)[0].replace(' = ' + BOX, '')),
                                    '%s What does the number become after it moves in the place value table?' % eq(shift_dec(n)[0].replace(' = ' + BOX, '')),
-                                   shift_dec(n)[1], None),
-     lambda n: shift_dec(n)[1], D723, 'منزلق المنازل في النص (لم يُرسم)', lambda n: ['S', n['v'], n['z'], n['op']])
+                                   shift_dec(n)[1], shift_model(n)),
+     lambda n: shift_dec(n)[1], D723, 'منزلق المنازل', lambda n: ['S', n['v'], n['z'], n['op']])
 perf('shift_dec', lambda n: plain(*shift_dec(n)), lambda n: shift_dec(n)[1], D723, 'بلا نموذج',
      lambda n: ['S', n['v'], n['z'], n['op']])
 D724 = [dict(v=v, k=k) for v in range(101, 1000, 11) if v % 10 and v // 10 % 10 for k in range(3)]
@@ -1152,10 +1167,16 @@ def eq_cards(n):
     return order, labels
 
 
-perf('equiv_forms_grid', lambda n: ('الملوّن %s من الشريط. أي البطاقات تساويه؟' % eq(eq_forms(n['n'], n['d'])[n['f']]),
-                                    'The coloured part is %s of the strip. Which card equals it?' % eq(eq_forms(n['n'], n['d'])[n['f']]),
-                                    'A', dict(kind='fstrip', n=n['n'], d=n['d'])),
-     lambda n: 'A', lambda skill: D741 if skill == '7-4-1' else D742, 'شريط مقسّم (بدل شبكة المئة)',
+def eq_cells(a, b):
+    """خلايا شبكة المئة الملوّنة للكسر: نسبته المئوية، ونصف خلية للثُمن (12.5)."""
+    v, pct = EQUIV[(a, b)]
+    return float(pct[:-1]) if '.' in pct else int(pct[:-1])
+
+
+perf('equiv_forms_grid', lambda n: ('الملوّن %s من الشبكة. أي البطاقات تساويه؟' % eq(eq_forms(n['n'], n['d'])[n['f']]),
+                                    'The coloured part is %s of the grid. Which card equals it?' % eq(eq_forms(n['n'], n['d'])[n['f']]),
+                                    'A', dict(kind='grid100', n=eq_cells(n['n'], n['d']))),
+     lambda n: 'A', lambda skill: D741 if skill == '7-4-1' else D742, 'شبكة المئة',
      lambda n: ['=', n['n'], n['d'], n['f']], cards=eq_cards)
 perf('equiv_forms', lambda n: ('أي البطاقات تساوي %s؟' % eq(eq_forms(n['n'], n['d'])[n['f']]),
                                'Which card equals %s?' % eq(eq_forms(n['n'], n['d'])[n['f']]), 'A', None),

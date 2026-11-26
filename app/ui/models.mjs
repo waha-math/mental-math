@@ -293,23 +293,30 @@ function share(m) {
 }
 // المرحلة 5: جدول المنازل بأرقام العدد، من اليسار إلى اليمين. shift: كم منزلة ينتقل العدد (موجب يسارًا في الضرب،
 // وسالب يمينًا في القسمة)، سهم فوق الجدول بلا ناتج
+// جدول المنازل. point: عدد المنازل العشرية في الأرقام (منزلق المنازل في 7-2-3): أعمدة للأعشار وما بعدها، والفاصلة
+// العشرية نقطة على حد الآحاد. shift: السهم يحرك الأرقام يسارًا (موجب، ضرب) أو يمينًا (سالب، قسمة)، والناتج لا يُرسم
 function places(m) {
-  const n = Math.max(m.digits.length + Math.max(m.shift ?? 0, 0), 4), c = 84, W = n * c + 40, H = m.shift ? 230 : 170;
-  const svg = svgOf(W, H, 'places', { digits: m.digits.map(String), shift: m.shift ?? 0 });
+  const p = m.point ?? 0, sh = m.shift ?? 0, intLen = m.digits.length - p;
+  const ni = p ? Math.max(intLen + Math.max(sh, 0), 1) : Math.max(m.digits.length + Math.max(sh, 0), 4);
+  const n = ni + (p ? p + Math.max(-sh, 0) : 0), c = 84, W = n * c + 40, H = sh ? 230 : 170;
+  const svg = svgOf(W, H, 'places', { digits: m.digits.map(String), shift: sh, point: p });
   const names = ['آحاد', 'عشرات', 'مئات', 'آلاف', 'عشرات الآلاف', 'مئات الآلاف'];
-  const top = m.shift ? 70 : 10;
+  const parts = ['أعشار', 'أجزاء المئة', 'أجزاء الألف'];
+  const top = sh ? 70 : 10;
   for (let k = 0; k < n; k++) {
-    const x = 20 + k * c;
+    const x = 20 + k * c, place = ni - 1 - k;
     svg.append(el('rect', { x, y: top, width: c, height: 40, class: 'cell head' }));
-    svg.append(txt(x + c / 2, top + 20, names[n - 1 - k] ?? '', 'size'));
+    svg.append(txt(x + c / 2, top + 20, place >= 0 ? names[place] ?? '' : parts[-place - 1] ?? '', 'size'));
     svg.append(el('rect', { x, y: top + 40, width: c, height: 80, class: 'cell' }));
   }
-  const off = n - m.digits.length - Math.max(m.shift ?? 0, 0);
+  const off = p ? ni - intLen : n - m.digits.length;   // كل رقم في منزلته، والآحاد آخر عمود في العدد الصحيح
+  if (p) svg.append(el('circle', { cx: 20 + ni * c, cy: top + 104, r: 7, class: 'point' }));
   m.digits.forEach((d, k) => svg.append(txt(20 + (off + k) * c + c / 2, top + 80, String(d), 'num')));
-  if (m.shift) {
-    const x1 = 20 + (off + m.digits.length / 2) * c, x2 = x1 - m.shift * c;
+  const shift = sh;
+  if (shift) {
+    const x1 = 20 + (off + m.digits.length / 2) * c, x2 = x1 - shift * c;
     svg.append(el('path', { d: `M ${x1} 50 Q ${(x1 + x2) / 2} 0 ${x2} 50`, class: 'jump' }));
-    svg.append(el('path', { d: `M ${x2} 50 l ${m.shift > 0 ? 4 : -4} -14 l ${m.shift > 0 ? 10 : -10} 6 z`, class: 'head' }));
+    svg.append(el('path', { d: `M ${x2} 50 l ${shift > 0 ? 4 : -4} -14 l ${shift > 0 ? 10 : -10} 6 z`, class: 'head' }));
   }
   return svg;
 }
@@ -396,13 +403,27 @@ function fstrip(m) {
   return svg;
 }
 // شبكة المئة (الواحد): الملوّن n مربعًا صغيرًا. ra و rb (ضرب عشريين): مستطيل ra أعشار في rb أعشار
+// شبكة المئة: n خلية ملوّنة بالترتيب، ونصف خلية إن كان n نصفًا (الثُمن 12.5 في 7-4-2). أو مستطيل ra × rb للضرب
+function cells100(svg, m, x0, c) {
+  for (let k = 0; k < 100; k++) {
+    const col = k % 10, row = Math.floor(k / 10), x = x0 + col * c, y = 10 + row * c;
+    const on = m.ra ? col < m.rb && row < m.ra : k < Math.floor(m.n);
+    svg.append(el('rect', { x, y, width: c, height: c, class: on ? 'cell on' : 'cell' }));
+    if (!m.ra && k === Math.floor(m.n) && m.n % 1) svg.append(el('rect', { x, y, width: c * (m.n % 1), height: c, class: 'cell on half' }));
+  }
+}
 function grid100(m) {
   const c = 26, svg = svgOf(c * 10 + 20, c * 10 + 20, 'grid100', { n: m.n });
-  for (let k = 0; k < 100; k++) {
-    const col = k % 10, row = Math.floor(k / 10);
-    const on = m.ra ? col < m.rb && row < m.ra : k < m.n;
-    svg.append(el('rect', { x: 10 + col * c, y: 10 + row * c, width: c, height: c, class: on ? 'cell on' : 'cell' }));
-  }
+  cells100(svg, m, 10, c);
+  return svg;
+}
+// شبكتا مئة للمقارنة (7-2-2): البطاقة الأولى يمينًا كما في صف البطاقات، وتحت كل شبكة عددها. الحكم للطفل
+function grids(m) {
+  const c = 22, w = c * 10, svg = svgOf(2 * w + 80, w + 70, 'grids', { cells: m.cells, labels: [m.labels.A, m.labels.B] });
+  [[m.cells[0], m.labels.A, w + 60], [m.cells[1], m.labels.B, 20]].forEach(([n, label, x0]) => {
+    cells100(svg, { n }, x0, c);
+    svg.append(txt(x0 + w / 2, w + 45, label, 'num'));
+  });
   return svg;
 }
 // وجه الساعة لبوابة الجاهزية (قراءة الساعة، 8-5-2): أرقام 1 إلى 12، والعقرب القصير بين ساعتيه بقدر الدقائق
@@ -425,7 +446,7 @@ function clock(m) {
   return svg;
 }
 const KINDS = { dots, frame, path, discs, bond, cup, frames2, beads, jumps, tens, tens2, round, slide, bar, arr, share, places,
-  area, grid, halve, strip, fstrip, grid100, clock };
+  area, grid, halve, strip, fstrip, grid100, grids, clock };
 
 // نموذج البند كما يطلبه موردُه (resource)، أو null إن كان «بلا نموذج» أو لا رسم له بعد
 export function modelFor(item) {

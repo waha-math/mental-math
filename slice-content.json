@@ -1,6 +1,6 @@
 {
- "version": 13,
- "digest": "3373319d6bfdf0966cf7c80d2edd8fdde7526af9b1843a74ee8dc5efdb904be2",
+ "version": 14,
+ "digest": "cb73ac293099a6bfc2f94fabc3b5823fb3a8b8e03ea2fd3f311480d5f3eca148",
  "seed": 20261111,
  "texts": {
   "frame_empty": {
@@ -661169,10 +661169,10 @@
    "resource": "شبكة المئة",
    "answer_type": "ج8",
    "answer": "B",
-   "text_ar": "أيهما أكبر؟ الشبكة كلها واحد.",
-   "text_en": "Which is greater? The whole grid is one.",
-   "audio_ar": "أيهما أكبر؟ الشبكة كلها واحد.",
-   "audio_en": "Which is greater? The whole grid is one.",
+   "text_ar": "أيهما أكبر؟ كل شبكة واحد.",
+   "text_en": "Which is greater? Each grid is one whole.",
+   "audio_ar": "أيهما أكبر؟ كل شبكة واحد.",
+   "audio_en": "Which is greater? Each grid is one whole.",
    "wrong": {},
    "slot": null,
    "alt_of": null,
@@ -661191,8 +661191,19 @@
     "A": "0.52",
     "B": "0.9"
    },
+   "model": {
+    "kind": "grids",
+    "cells": [
+     52,
+     90
+    ],
+    "labels": {
+     "A": "0.52",
+     "B": "0.9"
+    }
+   },
    "fact_seen_before": false,
-   "v": "58e02eb1bf50da6b"
+   "v": "77856bb59ed42ce6"
   },
   {
    "id": "7-2-2/lesson/02",
@@ -661209,10 +661220,10 @@
    "resource": "شبكة المئة",
    "answer_type": "ج8",
    "answer": "B",
-   "text_ar": "أيهما أكبر؟ الشبكة كلها واحد.",
-   "text_en": "Which is greater? The whole grid is one.",
-   "audio_ar": "أيهما أكبر؟ الشبكة كلها واحد.",
-   "audio_en": "Which is greater? The whole grid is one.",
+   "text_ar": "أيهما أكبر؟ كل شبكة واحد.",
+   "text_en": "Which is greater? Each grid is one whole.",
+   "audio_ar": "أيهما أكبر؟ كل شبكة واحد.",
+   "audio_en": "Which is greater? Each grid is one whole.",
    "wrong": {},
    "slot": null,
    "alt_of": null,
@@ -661231,8 +661242,19 @@
     "A": "0.34",
     "B": "0.9"
    },
+   "model": {
+    "kind": "grids",
+    "cells": [
+     34,
+     90
+    ],
+    "labels": {
+     "A": "0.34",
+     "B": "0.9"
+    }
+   },
    "fact_seen_before": false,
-   "v": "340d1753c5334893"
+   "v": "9fa804ec144fd885"
   },
   {
    "id": "7-2-2/lesson/03",
@@ -661249,10 +661271,10 @@
    "resource": "شبكة المئة",
    "answer_type": "ج8",
    "answer": "B",
-   "text_ar": "أيهما أكبر؟ الشبكة كلها واحد.",
-   "text_en": "Which is greater? The whole grid is one.",
-   "audio_ar": "أيهما أكبر؟ الشبكة كلها واحد.",
-   "audio_en": "Which is greater? The whole grid is one.",
+   "text_ar": "أيهما أكبر؟ كل شبكة واحد.",
+   "text_en": "Which is greater? Each grid is one whole.",
+   "audio_ar": "أيهما أكبر؟ كل شبكة واحد.",
+   "audio_en": "Which is greater? Each grid is one whole.",
    "wrong": {},
    "slot": null,
    "alt_of": null,
@@ -661271,8 +661293,19 @@
     "A": "0.61",
     "B": "0.9"
    },
+   "model": {
+    "kind": "grids",
+    "cells": [
+     61,
+     90
+    ],
+    "labels": {
+     "A": "0.61",
+     "B": "0.9"
+    }
+   },
    "fact_seen_before": false,
-   "v": "5c13c24882954e34"
+   "v": "8771a023e54f7fd9"
   },
   {
    "id": "7-2-2/lesson/04",
@@ -661449,10 +661482,10 @@
    "resource": "شبكة المئة",
    "answer_type": "ج8",
    "answer": "A",
-   "text_ar": "أيهما أكبر؟ الشبكة كلها واحد.",
-   "text_en": "Which is greater? The whole grid is one.",
-   "audio_ar": "أيهما أكبر؟ الشبكة كلها واحد.",
-   "audio_en": "Which is greater? The whole grid is one.",
+   "text_ar": "أيهما أكبر؟ كل شبكة واحد.",
+   "text_en": "Which is greater? Each grid is one whole.",
+   "audio_ar": "أيهما أكبر؟ كل شبكة واحد.",
+   "audio_en": "Which is greater? Each grid is one whole.",
    "wrong": {},
    "slot": null,
    "alt_of": null,
@@ -661471,8 +661504,19 @@
     "A": "0.73",
     "B": "0.6"
    },
+   "model": {
+    "kind": "grids",
+    "cells": [
+     73,
+     60
+    ],
+    "labels": {
+     "A": "0.73",
+     "B": "0.6"
+    }
+   },
    "fact_seen_before": false,
-   "v": "264d31e976330846"
+   "v": "2822e6f8f81db46d"
   },
   {
    "id": "7-2-2/opening/02",
@@ -661489,10 +661533,10 @@
    "resource": "شبكة المئة",
    "answer_type": "ج8",
    "answer": "A",
-   "text_ar": "أيهما أكبر؟ الشبكة كلها واحد.",
-   "text_en": "Which is greater? The whole grid is one.",
-   "audio_ar": "أيهما أكبر؟ الشبكة كلها واحد.",
-   "audio_en": "Which is greater? The whole grid is one.",
+   "text_ar": "أيهما أكبر؟ كل شبكة واحد.",
+   "text_en": "Which is greater? Each grid is one whole.",
+   "audio_ar": "أيهما أكبر؟ كل شبكة واحد.",
+   "audio_en": "Which is greater? Each grid is one whole.",
    "wrong": {},
    "slot": null,
    "alt_of": null,
@@ -661511,8 +661555,19 @@
     "A": "0.94",
     "B": "0.4"
    },
+   "model": {
+    "kind": "grids",
+    "cells": [
+     94,
+     40
+    ],
+    "labels": {
+     "A": "0.94",
+     "B": "0.4"
+    }
+   },
    "fact_seen_before": false,
-   "v": "12204c451cd6d1ed"
+   "v": "f126baa397599ba5"
   },
   {
    "id": "7-2-2/opening/03",
@@ -661529,10 +661584,10 @@
    "resource": "شبكة المئة",
    "answer_type": "ج8",
    "answer": "B",
-   "text_ar": "أيهما أكبر؟ الشبكة كلها واحد.",
-   "text_en": "Which is greater? The whole grid is one.",
-   "audio_ar": "أيهما أكبر؟ الشبكة كلها واحد.",
-   "audio_en": "Which is greater? The whole grid is one.",
+   "text_ar": "أيهما أكبر؟ كل شبكة واحد.",
+   "text_en": "Which is greater? Each grid is one whole.",
+   "audio_ar": "أيهما أكبر؟ كل شبكة واحد.",
+   "audio_en": "Which is greater? Each grid is one whole.",
    "wrong": {},
    "slot": null,
    "alt_of": null,
@@ -661551,8 +661606,19 @@
     "A": "0.3",
     "B": "0.55"
    },
+   "model": {
+    "kind": "grids",
+    "cells": [
+     30,
+     55
+    ],
+    "labels": {
+     "A": "0.3",
+     "B": "0.55"
+    }
+   },
    "fact_seen_before": false,
-   "v": "1a90c56d7eff9413"
+   "v": "ea86e96617e80e71"
   },
   {
    "id": "7-2-2/opening/04",
@@ -661569,10 +661635,10 @@
    "resource": "شبكة المئة",
    "answer_type": "ج8",
    "answer": "A",
-   "text_ar": "أيهما أكبر؟ الشبكة كلها واحد.",
-   "text_en": "Which is greater? The whole grid is one.",
-   "audio_ar": "أيهما أكبر؟ الشبكة كلها واحد.",
-   "audio_en": "Which is greater? The whole grid is one.",
+   "text_ar": "أيهما أكبر؟ كل شبكة واحد.",
+   "text_en": "Which is greater? Each grid is one whole.",
+   "audio_ar": "أيهما أكبر؟ كل شبكة واحد.",
+   "audio_en": "Which is greater? Each grid is one whole.",
    "wrong": {},
    "slot": null,
    "alt_of": null,
@@ -661591,8 +661657,19 @@
     "A": "0.8",
     "B": "0.49"
    },
+   "model": {
+    "kind": "grids",
+    "cells": [
+     80,
+     49
+    ],
+    "labels": {
+     "A": "0.8",
+     "B": "0.49"
+    }
+   },
    "fact_seen_before": false,
-   "v": "4fccd6d883993025"
+   "v": "4eaca52293e9e2fc"
   },
   {
    "id": "7-2-2/opening/05",
@@ -661609,10 +661686,10 @@
    "resource": "شبكة المئة",
    "answer_type": "ج8",
    "answer": "B",
-   "text_ar": "أيهما أكبر؟ الشبكة كلها واحد.",
-   "text_en": "Which is greater? The whole grid is one.",
-   "audio_ar": "أيهما أكبر؟ الشبكة كلها واحد.",
-   "audio_en": "Which is greater? The whole grid is one.",
+   "text_ar": "أيهما أكبر؟ كل شبكة واحد.",
+   "text_en": "Which is greater? Each grid is one whole.",
+   "audio_ar": "أيهما أكبر؟ كل شبكة واحد.",
+   "audio_en": "Which is greater? Each grid is one whole.",
    "wrong": {},
    "slot": null,
    "alt_of": null,
@@ -661631,8 +661708,19 @@
     "A": "0.64",
     "B": "0.9"
    },
+   "model": {
+    "kind": "grids",
+    "cells": [
+     64,
+     90
+    ],
+    "labels": {
+     "A": "0.64",
+     "B": "0.9"
+    }
+   },
    "fact_seen_before": false,
-   "v": "eb5e6dc615b71711"
+   "v": "450622b3cf88aa2f"
   },
   {
    "id": "7-2-2/practice/01",
@@ -661889,10 +661977,10 @@
    "resource": "شبكة المئة",
    "answer_type": "ج8",
    "answer": "B",
-   "text_ar": "أيهما أكبر؟ الشبكة كلها واحد.",
-   "text_en": "Which is greater? The whole grid is one.",
-   "audio_ar": "أيهما أكبر؟ الشبكة كلها واحد.",
-   "audio_en": "Which is greater? The whole grid is one.",
+   "text_ar": "أيهما أكبر؟ كل شبكة واحد.",
+   "text_en": "Which is greater? Each grid is one whole.",
+   "audio_ar": "أيهما أكبر؟ كل شبكة واحد.",
+   "audio_en": "Which is greater? Each grid is one whole.",
    "wrong": {},
    "slot": null,
    "alt_of": null,
@@ -661911,9 +661999,20 @@
     "A": "0.1",
     "B": "0.22"
    },
+   "model": {
+    "kind": "grids",
+    "cells": [
+     10,
+     22
+    ],
+    "labels": {
+     "A": "0.1",
+     "B": "0.22"
+    }
+   },
    "round": 1,
    "fact_seen_before": false,
-   "v": "36df8f0b6bd4395a"
+   "v": "f6732f706080c6e8"
   },
   {
    "id": "7-2-2/evidence/02",
@@ -661930,10 +662029,10 @@
    "resource": "شبكة المئة",
    "answer_type": "ج8",
    "answer": "B",
-   "text_ar": "أيهما أكبر؟ الشبكة كلها واحد.",
-   "text_en": "Which is greater? The whole grid is one.",
-   "audio_ar": "أيهما أكبر؟ الشبكة كلها واحد.",
-   "audio_en": "Which is greater? The whole grid is one.",
+   "text_ar": "أيهما أكبر؟ كل شبكة واحد.",
+   "text_en": "Which is greater? Each grid is one whole.",
+   "audio_ar": "أيهما أكبر؟ كل شبكة واحد.",
+   "audio_en": "Which is greater? Each grid is one whole.",
    "wrong": {},
    "slot": null,
    "alt_of": null,
@@ -661952,9 +662051,20 @@
     "A": "0.8",
     "B": "0.91"
    },
+   "model": {
+    "kind": "grids",
+    "cells": [
+     80,
+     91
+    ],
+    "labels": {
+     "A": "0.8",
+     "B": "0.91"
+    }
+   },
    "round": 1,
    "fact_seen_before": false,
-   "v": "ade990f2b373423c"
+   "v": "588c08ce5e48ec12"
   },
   {
    "id": "7-2-2/evidence/03",
@@ -661971,10 +662081,10 @@
    "resource": "شبكة المئة",
    "answer_type": "ج8",
    "answer": "A",
-   "text_ar": "أيهما أكبر؟ الشبكة كلها واحد.",
-   "text_en": "Which is greater? The whole grid is one.",
-   "audio_ar": "أيهما أكبر؟ الشبكة كلها واحد.",
-   "audio_en": "Which is greater? The whole grid is one.",
+   "text_ar": "أيهما أكبر؟ كل شبكة واحد.",
+   "text_en": "Which is greater? Each grid is one whole.",
+   "audio_ar": "أيهما أكبر؟ كل شبكة واحد.",
+   "audio_en": "Which is greater? Each grid is one whole.",
    "wrong": {},
    "slot": null,
    "alt_of": null,
@@ -661993,9 +662103,20 @@
     "A": "0.79",
     "B": "0.6"
    },
+   "model": {
+    "kind": "grids",
+    "cells": [
+     79,
+     60
+    ],
+    "labels": {
+     "A": "0.79",
+     "B": "0.6"
+    }
+   },
    "round": 1,
    "fact_seen_before": false,
-   "v": "3c42bfad61acce43"
+   "v": "e72d70ef07ca2853"
   },
   {
    "id": "7-2-2/evidence/04",
@@ -662012,10 +662133,10 @@
    "resource": "شبكة المئة",
    "answer_type": "ج8",
    "answer": "B",
-   "text_ar": "أيهما أكبر؟ الشبكة كلها واحد.",
-   "text_en": "Which is greater? The whole grid is one.",
-   "audio_ar": "أيهما أكبر؟ الشبكة كلها واحد.",
-   "audio_en": "Which is greater? The whole grid is one.",
+   "text_ar": "أيهما أكبر؟ كل شبكة واحد.",
+   "text_en": "Which is greater? Each grid is one whole.",
+   "audio_ar": "أيهما أكبر؟ كل شبكة واحد.",
+   "audio_en": "Which is greater? Each grid is one whole.",
    "wrong": {},
    "slot": null,
    "alt_of": null,
@@ -662034,9 +662155,20 @@
     "A": "0.37",
     "B": "0.5"
    },
+   "model": {
+    "kind": "grids",
+    "cells": [
+     37,
+     50
+    ],
+    "labels": {
+     "A": "0.37",
+     "B": "0.5"
+    }
+   },
    "round": 1,
    "fact_seen_before": true,
-   "v": "b64c799f04fdead0"
+   "v": "1bc6bda9d8779225"
   },
   {
    "id": "7-2-2/evidence/05",
@@ -662217,10 +662349,10 @@
    "resource": "شبكة المئة",
    "answer_type": "ج8",
    "answer": "A",
-   "text_ar": "أيهما أكبر؟ الشبكة كلها واحد.",
-   "text_en": "Which is greater? The whole grid is one.",
-   "audio_ar": "أيهما أكبر؟ الشبكة كلها واحد.",
-   "audio_en": "Which is greater? The whole grid is one.",
+   "text_ar": "أيهما أكبر؟ كل شبكة واحد.",
+   "text_en": "Which is greater? Each grid is one whole.",
+   "audio_ar": "أيهما أكبر؟ كل شبكة واحد.",
+   "audio_en": "Which is greater? Each grid is one whole.",
    "wrong": {},
    "slot": null,
    "alt_of": null,
@@ -662239,9 +662371,20 @@
     "A": "0.9",
     "B": "0.28"
    },
+   "model": {
+    "kind": "grids",
+    "cells": [
+     90,
+     28
+    ],
+    "labels": {
+     "A": "0.9",
+     "B": "0.28"
+    }
+   },
    "round": 2,
    "fact_seen_before": false,
-   "v": "96d4550d99087069"
+   "v": "adf4b89d4e3b351d"
   },
   {
    "id": "7-2-2/evidence/10",
@@ -662258,10 +662401,10 @@
    "resource": "شبكة المئة",
    "answer_type": "ج8",
    "answer": "A",
-   "text_ar": "أيهما أكبر؟ الشبكة كلها واحد.",
-   "text_en": "Which is greater? The whole grid is one.",
-   "audio_ar": "أيهما أكبر؟ الشبكة كلها واحد.",
-   "audio_en": "Which is greater? The whole grid is one.",
+   "text_ar": "أيهما أكبر؟ كل شبكة واحد.",
+   "text_en": "Which is greater? Each grid is one whole.",
+   "audio_ar": "أيهما أكبر؟ كل شبكة واحد.",
+   "audio_en": "Which is greater? Each grid is one whole.",
    "wrong": {},
    "slot": null,
    "alt_of": null,
@@ -662280,9 +662423,20 @@
     "A": "0.5",
     "B": "0.13"
    },
+   "model": {
+    "kind": "grids",
+    "cells": [
+     50,
+     13
+    ],
+    "labels": {
+     "A": "0.5",
+     "B": "0.13"
+    }
+   },
    "round": 2,
    "fact_seen_before": false,
-   "v": "b5ba2d9817b6e812"
+   "v": "2197cdf06f098950"
   },
   {
    "id": "7-2-2/evidence/11",
@@ -662299,10 +662453,10 @@
    "resource": "شبكة المئة",
    "answer_type": "ج8",
    "answer": "B",
-   "text_ar": "أيهما أكبر؟ الشبكة كلها واحد.",
-   "text_en": "Which is greater? The whole grid is one.",
-   "audio_ar": "أيهما أكبر؟ الشبكة كلها واحد.",
-   "audio_en": "Which is greater? The whole grid is one.",
+   "text_ar": "أيهما أكبر؟ كل شبكة واحد.",
+   "text_en": "Which is greater? Each grid is one whole.",
+   "audio_ar": "أيهما أكبر؟ كل شبكة واحد.",
+   "audio_en": "Which is greater? Each grid is one whole.",
    "wrong": {},
    "slot": null,
    "alt_of": null,
@@ -662321,9 +662475,20 @@
     "A": "0.46",
     "B": "0.9"
    },
+   "model": {
+    "kind": "grids",
+    "cells": [
+     46,
+     90
+    ],
+    "labels": {
+     "A": "0.46",
+     "B": "0.9"
+    }
+   },
    "round": 2,
    "fact_seen_before": false,
-   "v": "a93c9076334b97d5"
+   "v": "d5fc1164a2e921bb"
   },
   {
    "id": "7-2-2/evidence/12",
@@ -662340,10 +662505,10 @@
    "resource": "شبكة المئة",
    "answer_type": "ج8",
    "answer": "A",
-   "text_ar": "أيهما أكبر؟ الشبكة كلها واحد.",
-   "text_en": "Which is greater? The whole grid is one.",
-   "audio_ar": "أيهما أكبر؟ الشبكة كلها واحد.",
-   "audio_en": "Which is greater? The whole grid is one.",
+   "text_ar": "أيهما أكبر؟ كل شبكة واحد.",
+   "text_en": "Which is greater? Each grid is one whole.",
+   "audio_ar": "أيهما أكبر؟ كل شبكة واحد.",
+   "audio_en": "Which is greater? Each grid is one whole.",
    "wrong": {},
    "slot": null,
    "alt_of": null,
@@ -662362,9 +662527,20 @@
     "A": "0.94",
     "B": "0.6"
    },
+   "model": {
+    "kind": "grids",
+    "cells": [
+     94,
+     60
+    ],
+    "labels": {
+     "A": "0.94",
+     "B": "0.6"
+    }
+   },
    "round": 2,
    "fact_seen_before": false,
-   "v": "ce3c3e6c495c14a7"
+   "v": "716c7ab5d021f6f1"
   },
   {
    "id": "7-2-2/evidence/13",
@@ -662545,10 +662721,10 @@
    "resource": "شبكة المئة",
    "answer_type": "ج8",
    "answer": "A",
-   "text_ar": "أيهما أكبر؟ الشبكة كلها واحد.",
-   "text_en": "Which is greater? The whole grid is one.",
-   "audio_ar": "أيهما أكبر؟ الشبكة كلها واحد.",
-   "audio_en": "Which is greater? The whole grid is one.",
+   "text_ar": "أيهما أكبر؟ كل شبكة واحد.",
+   "text_en": "Which is greater? Each grid is one whole.",
+   "audio_ar": "أيهما أكبر؟ كل شبكة واحد.",
+   "audio_en": "Which is greater? Each grid is one whole.",
    "wrong": {},
    "slot": null,
    "alt_of": null,
@@ -662567,8 +662743,19 @@
     "A": "0.91",
     "B": "0.4"
    },
+   "model": {
+    "kind": "grids",
+    "cells": [
+     91,
+     40
+    ],
+    "labels": {
+     "A": "0.91",
+     "B": "0.4"
+    }
+   },
    "fact_seen_before": false,
-   "v": "368d57df027cde30"
+   "v": "c552a0df37110b4b"
   },
   {
    "id": "7-2-2/gate/02",
@@ -662585,10 +662772,10 @@
    "resource": "شبكة المئة",
    "answer_type": "ج8",
    "answer": "A",
-   "text_ar": "أيهما أكبر؟ الشبكة كلها واحد.",
-   "text_en": "Which is greater? The whole grid is one.",
-   "audio_ar": "أيهما أكبر؟ الشبكة كلها واحد.",
-   "audio_en": "Which is greater? The whole grid is one.",
+   "text_ar": "أيهما أكبر؟ كل شبكة واحد.",
+   "text_en": "Which is greater? Each grid is one whole.",
+   "audio_ar": "أيهما أكبر؟ كل شبكة واحد.",
+   "audio_en": "Which is greater? Each grid is one whole.",
    "wrong": {},
    "slot": null,
    "alt_of": null,
@@ -662607,8 +662794,19 @@
     "A": "0.37",
     "B": "0.3"
    },
+   "model": {
+    "kind": "grids",
+    "cells": [
+     37,
+     30
+    ],
+    "labels": {
+     "A": "0.37",
+     "B": "0.3"
+    }
+   },
    "fact_seen_before": false,
-   "v": "2bdca5caed4681a3"
+   "v": "2e33d9c9da0eefde"
   },
   {
    "id": "7-2-2/gate/03",
@@ -662705,10 +662903,10 @@
    "resource": "شبكة المئة",
    "answer_type": "ج8",
    "answer": "B",
-   "text_ar": "أيهما أكبر؟ الشبكة كلها واحد.",
-   "text_en": "Which is greater? The whole grid is one.",
-   "audio_ar": "أيهما أكبر؟ الشبكة كلها واحد.",
-   "audio_en": "Which is greater? The whole grid is one.",
+   "text_ar": "أيهما أكبر؟ كل شبكة واحد.",
+   "text_en": "Which is greater? Each grid is one whole.",
+   "audio_ar": "أيهما أكبر؟ كل شبكة واحد.",
+   "audio_en": "Which is greater? Each grid is one whole.",
    "wrong": {},
    "slot": null,
    "alt_of": null,
@@ -662727,8 +662925,19 @@
     "A": "0.22",
     "B": "0.5"
    },
+   "model": {
+    "kind": "grids",
+    "cells": [
+     22,
+     50
+    ],
+    "labels": {
+     "A": "0.22",
+     "B": "0.5"
+    }
+   },
    "fact_seen_before": false,
-   "v": "cb58705791497fb8"
+   "v": "a01f99c3d313406e"
   },
   {
    "id": "7-2-2/gate/06",
@@ -662785,10 +662994,10 @@
    "resource": "شبكة المئة",
    "answer_type": "ج8",
    "answer": "A",
-   "text_ar": "أيهما أكبر؟ الشبكة كلها واحد.",
-   "text_en": "Which is greater? The whole grid is one.",
-   "audio_ar": "أيهما أكبر؟ الشبكة كلها واحد.",
-   "audio_en": "Which is greater? The whole grid is one.",
+   "text_ar": "أيهما أكبر؟ كل شبكة واحد.",
+   "text_en": "Which is greater? Each grid is one whole.",
+   "audio_ar": "أيهما أكبر؟ كل شبكة واحد.",
+   "audio_en": "Which is greater? Each grid is one whole.",
    "wrong": {},
    "slot": null,
    "alt_of": null,
@@ -662807,8 +663016,19 @@
     "A": "0.97",
     "B": "0.9"
    },
+   "model": {
+    "kind": "grids",
+    "cells": [
+     97,
+     90
+    ],
+    "labels": {
+     "A": "0.97",
+     "B": "0.9"
+    }
+   },
    "fact_seen_before": false,
-   "v": "9714d18c6dc34da1"
+   "v": "9d91ac3b6871a47c"
   },
   {
    "id": "7-2-2/gate/08",
@@ -662825,10 +663045,10 @@
    "resource": "شبكة المئة",
    "answer_type": "ج8",
    "answer": "A",
-   "text_ar": "أيهما أكبر؟ الشبكة كلها واحد.",
-   "text_en": "Which is greater? The whole grid is one.",
-   "audio_ar": "أيهما أكبر؟ الشبكة كلها واحد.",
-   "audio_en": "Which is greater? The whole grid is one.",
+   "text_ar": "أيهما أكبر؟ كل شبكة واحد.",
+   "text_en": "Which is greater? Each grid is one whole.",
+   "audio_ar": "أيهما أكبر؟ كل شبكة واحد.",
+   "audio_en": "Which is greater? Each grid is one whole.",
    "wrong": {},
    "slot": null,
    "alt_of": null,
@@ -662847,8 +663067,19 @@
     "A": "0.7",
     "B": "0.52"
    },
+   "model": {
+    "kind": "grids",
+    "cells": [
+     70,
+     52
+    ],
+    "labels": {
+     "A": "0.7",
+     "B": "0.52"
+    }
+   },
    "fact_seen_before": false,
-   "v": "caf82412ce3cd1a9"
+   "v": "c94d0593a0f81a01"
   },
   {
    "id": "7-2-2/gate/09",
@@ -662945,10 +663176,10 @@
    "resource": "شبكة المئة",
    "answer_type": "ج8",
    "answer": "B",
-   "text_ar": "أيهما أكبر؟ الشبكة كلها واحد.",
-   "text_en": "Which is greater? The whole grid is one.",
-   "audio_ar": "أيهما أكبر؟ الشبكة كلها واحد.",
-   "audio_en": "Which is greater? The whole grid is one.",
+   "text_ar": "أيهما أكبر؟ كل شبكة واحد.",
+   "text_en": "Which is greater? Each grid is one whole.",
+   "audio_ar": "أيهما أكبر؟ كل شبكة واحد.",
+   "audio_en": "Which is greater? Each grid is one whole.",
    "wrong": {},
    "slot": null,
    "alt_of": null,
@@ -662967,8 +663198,19 @@
     "A": "0.34",
     "B": "0.8"
    },
+   "model": {
+    "kind": "grids",
+    "cells": [
+     34,
+     80
+    ],
+    "labels": {
+     "A": "0.34",
+     "B": "0.8"
+    }
+   },
    "fact_seen_before": false,
-   "v": "9723a8b91a76ca3a"
+   "v": "7da3cf89ab074bac"
   },
   {
    "id": "7-2-2/gate/12",
@@ -662985,10 +663227,10 @@
    "resource": "شبكة المئة",
    "answer_type": "ج8",
    "answer": "B",
-   "text_ar": "أيهما أكبر؟ الشبكة كلها واحد.",
-   "text_en": "Which is greater? The whole grid is one.",
-   "audio_ar": "أيهما أكبر؟ الشبكة كلها واحد.",
-   "audio_en": "Which is greater? The whole grid is one.",
+   "text_ar": "أيهما أكبر؟ كل شبكة واحد.",
+   "text_en": "Which is greater? Each grid is one whole.",
+   "audio_ar": "أيهما أكبر؟ كل شبكة واحد.",
+   "audio_en": "Which is greater? Each grid is one whole.",
    "wrong": {},
    "slot": null,
    "alt_of": null,
@@ -663007,8 +663249,19 @@
     "A": "0.5",
     "B": "0.97"
    },
+   "model": {
+    "kind": "grids",
+    "cells": [
+     50,
+     97
+    ],
+    "labels": {
+     "A": "0.5",
+     "B": "0.97"
+    }
+   },
    "fact_seen_before": false,
-   "v": "f3804822885a2ab1"
+   "v": "33f3c7734e1bbcec"
   },
   {
    "id": "7-2-2/gate/13",
@@ -663105,10 +663358,10 @@
    "resource": "شبكة المئة",
    "answer_type": "ج8",
    "answer": "A",
-   "text_ar": "أيهما أكبر؟ الشبكة كلها واحد.",
-   "text_en": "Which is greater? The whole grid is one.",
-   "audio_ar": "أيهما أكبر؟ الشبكة كلها واحد.",
-   "audio_en": "Which is greater? The whole grid is one.",
+   "text_ar": "أيهما أكبر؟ كل شبكة واحد.",
+   "text_en": "Which is greater? Each grid is one whole.",
+   "audio_ar": "أيهما أكبر؟ كل شبكة واحد.",
+   "audio_en": "Which is greater? Each grid is one whole.",
    "wrong": {},
    "slot": null,
    "alt_of": null,
@@ -663127,8 +663380,19 @@
     "A": "0.52",
     "B": "0.1"
    },
+   "model": {
+    "kind": "grids",
+    "cells": [
+     52,
+     10
+    ],
+    "labels": {
+     "A": "0.52",
+     "B": "0.1"
+    }
+   },
    "fact_seen_before": false,
-   "v": "b9b3ad218ce28b4a"
+   "v": "2ec53d367810f2dd"
   },
   {
    "id": "7-2-2/regate/02",
@@ -663145,10 +663409,10 @@
    "resource": "شبكة المئة",
    "answer_type": "ج8",
    "answer": "A",
-   "text_ar": "أيهما أكبر؟ الشبكة كلها واحد.",
-   "text_en": "Which is greater? The whole grid is one.",
-   "audio_ar": "أيهما أكبر؟ الشبكة كلها واحد.",
-   "audio_en": "Which is greater? The whole grid is one.",
+   "text_ar": "أيهما أكبر؟ كل شبكة واحد.",
+   "text_en": "Which is greater? Each grid is one whole.",
+   "audio_ar": "أيهما أكبر؟ كل شبكة واحد.",
+   "audio_en": "Which is greater? Each grid is one whole.",
    "wrong": {},
    "slot": null,
    "alt_of": null,
@@ -663167,8 +663431,19 @@
     "A": "0.8",
     "B": "0.31"
    },
+   "model": {
+    "kind": "grids",
+    "cells": [
+     80,
+     31
+    ],
+    "labels": {
+     "A": "0.8",
+     "B": "0.31"
+    }
+   },
    "fact_seen_before": false,
-   "v": "624afec81041ce6e"
+   "v": "73a99bb6f565d459"
   },
   {
    "id": "7-2-2/regate/03",
@@ -663265,10 +663540,10 @@
    "resource": "شبكة المئة",
    "answer_type": "ج8",
    "answer": "A",
-   "text_ar": "أيهما أكبر؟ الشبكة كلها واحد.",
-   "text_en": "Which is greater? The whole grid is one.",
-   "audio_ar": "أيهما أكبر؟ الشبكة كلها واحد.",
-   "audio_en": "Which is greater? The whole grid is one.",
+   "text_ar": "أيهما أكبر؟ كل شبكة واحد.",
+   "text_en": "Which is greater? Each grid is one whole.",
+   "audio_ar": "أيهما أكبر؟ كل شبكة واحد.",
+   "audio_en": "Which is greater? Each grid is one whole.",
    "wrong": {},
    "slot": null,
    "alt_of": null,
@@ -663287,8 +663562,19 @@
     "A": "0.49",
     "B": "0.3"
    },
+   "model": {
+    "kind": "grids",
+    "cells": [
+     49,
+     30
+    ],
+    "labels": {
+     "A": "0.49",
+     "B": "0.3"
+    }
+   },
    "fact_seen_before": false,
-   "v": "0719598a371f3d3c"
+   "v": "190caaf6b93fc44a"
   },
   {
    "id": "7-2-2/regate/06",
@@ -663345,10 +663631,10 @@
    "resource": "شبكة المئة",
    "answer_type": "ج8",
    "answer": "A",
-   "text_ar": "أيهما أكبر؟ الشبكة كلها واحد.",
-   "text_en": "Which is greater? The whole grid is one.",
-   "audio_ar": "أيهما أكبر؟ الشبكة كلها واحد.",
-   "audio_en": "Which is greater? The whole grid is one.",
+   "text_ar": "أيهما أكبر؟ كل شبكة واحد.",
+   "text_en": "Which is greater? Each grid is one whole.",
+   "audio_ar": "أيهما أكبر؟ كل شبكة واحد.",
+   "audio_en": "Which is greater? Each grid is one whole.",
    "wrong": {},
    "slot": null,
    "alt_of": null,
@@ -663367,8 +663653,19 @@
     "A": "0.5",
     "B": "0.31"
    },
+   "model": {
+    "kind": "grids",
+    "cells": [
+     50,
+     31
+    ],
+    "labels": {
+     "A": "0.5",
+     "B": "0.31"
+    }
+   },
    "fact_seen_before": false,
-   "v": "412659d4f395943a"
+   "v": "58b0737e9a117aac"
   },
   {
    "id": "7-2-2/regate/08",
@@ -663385,10 +663682,10 @@
    "resource": "شبكة المئة",
    "answer_type": "ج8",
    "answer": "A",
-   "text_ar": "أيهما أكبر؟ الشبكة كلها واحد.",
-   "text_en": "Which is greater? The whole grid is one.",
-   "audio_ar": "أيهما أكبر؟ الشبكة كلها واحد.",
-   "audio_en": "Which is greater? The whole grid is one.",
+   "text_ar": "أيهما أكبر؟ كل شبكة واحد.",
+   "text_en": "Which is greater? Each grid is one whole.",
+   "audio_ar": "أيهما أكبر؟ كل شبكة واحد.",
+   "audio_en": "Which is greater? Each grid is one whole.",
    "wrong": {},
    "slot": null,
    "alt_of": null,
@@ -663407,8 +663704,19 @@
     "A": "0.55",
     "B": "0.2"
    },
+   "model": {
+    "kind": "grids",
+    "cells": [
+     55,
+     20
+    ],
+    "labels": {
+     "A": "0.55",
+     "B": "0.2"
+    }
+   },
    "fact_seen_before": false,
-   "v": "f4f343962d528d33"
+   "v": "b42de2d31cee2844"
   },
   {
    "id": "7-2-2/regate/09",
@@ -663505,10 +663813,10 @@
    "resource": "شبكة المئة",
    "answer_type": "ج8",
    "answer": "B",
-   "text_ar": "أيهما أكبر؟ الشبكة كلها واحد.",
-   "text_en": "Which is greater? The whole grid is one.",
-   "audio_ar": "أيهما أكبر؟ الشبكة كلها واحد.",
-   "audio_en": "Which is greater? The whole grid is one.",
+   "text_ar": "أيهما أكبر؟ كل شبكة واحد.",
+   "text_en": "Which is greater? Each grid is one whole.",
+   "audio_ar": "أيهما أكبر؟ كل شبكة واحد.",
+   "audio_en": "Which is greater? Each grid is one whole.",
    "wrong": {},
    "slot": null,
    "alt_of": null,
@@ -663527,8 +663835,19 @@
     "A": "0.13",
     "B": "0.7"
    },
+   "model": {
+    "kind": "grids",
+    "cells": [
+     13,
+     70
+    ],
+    "labels": {
+     "A": "0.13",
+     "B": "0.7"
+    }
+   },
    "fact_seen_before": false,
-   "v": "87c05fc162793a59"
+   "v": "f4c68adba1a74591"
   },
   {
    "id": "7-2-2/regate/12",
@@ -663545,10 +663864,10 @@
    "resource": "شبكة المئة",
    "answer_type": "ج8",
    "answer": "B",
-   "text_ar": "أيهما أكبر؟ الشبكة كلها واحد.",
-   "text_en": "Which is greater? The whole grid is one.",
-   "audio_ar": "أيهما أكبر؟ الشبكة كلها واحد.",
-   "audio_en": "Which is greater? The whole grid is one.",
+   "text_ar": "أيهما أكبر؟ كل شبكة واحد.",
+   "text_en": "Which is greater? Each grid is one whole.",
+   "audio_ar": "أيهما أكبر؟ كل شبكة واحد.",
+   "audio_en": "Which is greater? Each grid is one whole.",
    "wrong": {},
    "slot": null,
    "alt_of": null,
@@ -663567,8 +663886,19 @@
     "A": "0.1",
     "B": "0.85"
    },
+   "model": {
+    "kind": "grids",
+    "cells": [
+     10,
+     85
+    ],
+    "labels": {
+     "A": "0.1",
+     "B": "0.85"
+    }
+   },
    "fact_seen_before": false,
-   "v": "5e28b15e7a0549ba"
+   "v": "2ecd3d6e27745bf7"
   },
   {
    "id": "7-2-2/regate/13",
@@ -663665,10 +663995,10 @@
    "resource": "شبكة المئة",
    "answer_type": "ج8",
    "answer": "A",
-   "text_ar": "أيهما أكبر؟ الشبكة كلها واحد.",
-   "text_en": "Which is greater? The whole grid is one.",
-   "audio_ar": "أيهما أكبر؟ الشبكة كلها واحد.",
-   "audio_en": "Which is greater? The whole grid is one.",
+   "text_ar": "أيهما أكبر؟ كل شبكة واحد.",
+   "text_en": "Which is greater? Each grid is one whole.",
+   "audio_ar": "أيهما أكبر؟ كل شبكة واحد.",
+   "audio_en": "Which is greater? Each grid is one whole.",
    "wrong": {},
    "slot": null,
    "alt_of": null,
@@ -663687,8 +664017,19 @@
     "A": "0.25",
     "B": "0.1"
    },
+   "model": {
+    "kind": "grids",
+    "cells": [
+     25,
+     10
+    ],
+    "labels": {
+     "A": "0.25",
+     "B": "0.1"
+    }
+   },
    "fact_seen_before": false,
-   "v": "71acf74c18870b48"
+   "v": "5b5f89e271159565"
   },
   {
    "id": "7-2-2/short/02",
@@ -663705,10 +664046,10 @@
    "resource": "شبكة المئة",
    "answer_type": "ج8",
    "answer": "A",
-   "text_ar": "أيهما أكبر؟ الشبكة كلها واحد.",
-   "text_en": "Which is greater? The whole grid is one.",
-   "audio_ar": "أيهما أكبر؟ الشبكة كلها واحد.",
-   "audio_en": "Which is greater? The whole grid is one.",
+   "text_ar": "أيهما أكبر؟ كل شبكة واحد.",
+   "text_en": "Which is greater? Each grid is one whole.",
+   "audio_ar": "أيهما أكبر؟ كل شبكة واحد.",
+   "audio_en": "Which is greater? Each grid is one whole.",
    "wrong": {},
    "slot": null,
    "alt_of": null,
@@ -663727,8 +664068,19 @@
     "A": "0.94",
     "B": "0.8"
    },
+   "model": {
+    "kind": "grids",
+    "cells": [
+     94,
+     80
+    ],
+    "labels": {
+     "A": "0.94",
+     "B": "0.8"
+    }
+   },
    "fact_seen_before": false,
-   "v": "700e4fd61d5be1c4"
+   "v": "a79e779b0c53f549"
   },
   {
    "id": "7-2-2/short/03",
@@ -663745,10 +664097,10 @@
    "resource": "شبكة المئة",
    "answer_type": "ج8",
    "answer": "B",
-   "text_ar": "أيهما أكبر؟ الشبكة كلها واحد.",
-   "text_en": "Which is greater? The whole grid is one.",
-   "audio_ar": "أيهما أكبر؟ الشبكة كلها واحد.",
-   "audio_en": "Which is greater? The whole grid is one.",
+   "text_ar": "أيهما أكبر؟ كل شبكة واحد.",
+   "text_en": "Which is greater? Each grid is one whole.",
+   "audio_ar": "أيهما أكبر؟ كل شبكة واحد.",
+   "audio_en": "Which is greater? Each grid is one whole.",
    "wrong": {},
    "slot": null,
    "alt_of": null,
@@ -663767,8 +664119,19 @@
     "A": "0.4",
     "B": "0.61"
    },
+   "model": {
+    "kind": "grids",
+    "cells": [
+     40,
+     61
+    ],
+    "labels": {
+     "A": "0.4",
+     "B": "0.61"
+    }
+   },
    "fact_seen_before": false,
-   "v": "402d8f9e585b8aca"
+   "v": "de20e3a4bc7b28a9"
   },
   {
    "id": "7-2-2/checkA/01",
@@ -667400,10 +667763,10 @@
    "resource": "شبكة المئة",
    "answer_type": "ج8",
    "answer": "A",
-   "text_ar": "أيهما أكبر؟ الشبكة كلها واحد.",
-   "text_en": "Which is greater? The whole grid is one.",
-   "audio_ar": "أيهما أكبر؟ الشبكة كلها واحد.",
-   "audio_en": "Which is greater? The whole grid is one.",
+   "text_ar": "أيهما أكبر؟ كل شبكة واحد.",
+   "text_en": "Which is greater? Each grid is one whole.",
+   "audio_ar": "أيهما أكبر؟ كل شبكة واحد.",
+   "audio_en": "Which is greater? Each grid is one whole.",
    "wrong": {},
    "slot": null,
    "alt_of": null,
@@ -667422,8 +667785,19 @@
     "A": "0.73",
     "B": "0.3"
    },
+   "model": {
+    "kind": "grids",
+    "cells": [
+     73,
+     30
+    ],
+    "labels": {
+     "A": "0.73",
+     "B": "0.3"
+    }
+   },
    "fact_seen_before": false,
-   "v": "f73d0208f71d8597"
+   "v": "2faa070dd0f9b5b6"
   },
   {
    "id": "7-2-2/tryfirst/02",
@@ -667440,10 +667814,10 @@
    "resource": "شبكة المئة",
    "answer_type": "ج8",
    "answer": "B",
-   "text_ar": "أيهما أكبر؟ الشبكة كلها واحد.",
-   "text_en": "Which is greater? The whole grid is one.",
-   "audio_ar": "أيهما أكبر؟ الشبكة كلها واحد.",
-   "audio_en": "Which is greater? The whole grid is one.",
+   "text_ar": "أيهما أكبر؟ كل شبكة واحد.",
+   "text_en": "Which is greater? Each grid is one whole.",
+   "audio_ar": "أيهما أكبر؟ كل شبكة واحد.",
+   "audio_en": "Which is greater? Each grid is one whole.",
    "wrong": {},
    "slot": null,
    "alt_of": null,
@@ -667462,8 +667836,19 @@
     "A": "0.2",
     "B": "0.79"
    },
+   "model": {
+    "kind": "grids",
+    "cells": [
+     20,
+     79
+    ],
+    "labels": {
+     "A": "0.2",
+     "B": "0.79"
+    }
+   },
    "fact_seen_before": false,
-   "v": "5e4bc133d6d2be69"
+   "v": "840a81eba460adfc"
   },
   {
    "id": "7-2-2/tryfirst/03",
@@ -667560,10 +667945,10 @@
    "resource": "شبكة المئة",
    "answer_type": "ج8",
    "answer": "B",
-   "text_ar": "أيهما أكبر؟ الشبكة كلها واحد.",
-   "text_en": "Which is greater? The whole grid is one.",
-   "audio_ar": "أيهما أكبر؟ الشبكة كلها واحد.",
-   "audio_en": "Which is greater? The whole grid is one.",
+   "text_ar": "أيهما أكبر؟ كل شبكة واحد.",
+   "text_en": "Which is greater? Each grid is one whole.",
+   "audio_ar": "أيهما أكبر؟ كل شبكة واحد.",
+   "audio_en": "Which is greater? Each grid is one whole.",
    "wrong": {},
    "slot": null,
    "alt_of": null,
@@ -667582,9 +667967,20 @@
     "A": "0.67",
     "B": "0.8"
    },
+   "model": {
+    "kind": "grids",
+    "cells": [
+     67,
+     80
+    ],
+    "labels": {
+     "A": "0.67",
+     "B": "0.8"
+    }
+   },
    "round": 1,
    "fact_seen_before": false,
-   "v": "69f43d227c37cb40"
+   "v": "b9ddf8201aff24fe"
   },
   {
    "id": "7-2-2/evidence/18",
@@ -667642,10 +668038,10 @@
    "resource": "شبكة المئة",
    "answer_type": "ج8",
    "answer": "A",
-   "text_ar": "أيهما أكبر؟ الشبكة كلها واحد.",
-   "text_en": "Which is greater? The whole grid is one.",
-   "audio_ar": "أيهما أكبر؟ الشبكة كلها واحد.",
-   "audio_en": "Which is greater? The whole grid is one.",
+   "text_ar": "أيهما أكبر؟ كل شبكة واحد.",
+   "text_en": "Which is greater? Each grid is one whole.",
+   "audio_ar": "أيهما أكبر؟ كل شبكة واحد.",
+   "audio_en": "Which is greater? Each grid is one whole.",
    "wrong": {},
    "slot": null,
    "alt_of": null,
@@ -667664,9 +668060,20 @@
     "A": "0.76",
     "B": "0.4"
    },
+   "model": {
+    "kind": "grids",
+    "cells": [
+     76,
+     40
+    ],
+    "labels": {
+     "A": "0.76",
+     "B": "0.4"
+    }
+   },
    "round": 2,
    "fact_seen_before": false,
-   "v": "1efe0005bc93bb2f"
+   "v": "07376f12f5a6736a"
   },
   {
    "id": "7-2-2/evidence/20",
@@ -667764,10 +668171,10 @@
    "resource": "شبكة المئة",
    "answer_type": "ج8",
    "answer": "A",
-   "text_ar": "أيهما أكبر؟ الشبكة كلها واحد.",
-   "text_en": "Which is greater? The whole grid is one.",
-   "audio_ar": "أيهما أكبر؟ الشبكة كلها واحد.",
-   "audio_en": "Which is greater? The whole grid is one.",
+   "text_ar": "أيهما أكبر؟ كل شبكة واحد.",
+   "text_en": "Which is greater? Each grid is one whole.",
+   "audio_ar": "أيهما أكبر؟ كل شبكة واحد.",
+   "audio_en": "Which is greater? Each grid is one whole.",
    "wrong": {},
    "slot": null,
    "alt_of": null,
@@ -667786,8 +668193,19 @@
     "A": "0.9",
     "B": "0.55"
    },
+   "model": {
+    "kind": "grids",
+    "cells": [
+     90,
+     55
+    ],
+    "labels": {
+     "A": "0.9",
+     "B": "0.55"
+    }
+   },
    "fact_seen_before": false,
-   "v": "421a23de32c5102a"
+   "v": "60167de163030f46"
   },
   {
    "id": "7-2-2/more/03",
@@ -667844,10 +668262,10 @@
    "resource": "شبكة المئة",
    "answer_type": "ج8",
    "answer": "A",
-   "text_ar": "أيهما أكبر؟ الشبكة كلها واحد.",
-   "text_en": "Which is greater? The whole grid is one.",
-   "audio_ar": "أيهما أكبر؟ الشبكة كلها واحد.",
-   "audio_en": "Which is greater? The whole grid is one.",
+   "text_ar": "أيهما أكبر؟ كل شبكة واحد.",
+   "text_en": "Which is greater? Each grid is one whole.",
+   "audio_ar": "أيهما أكبر؟ كل شبكة واحد.",
+   "audio_en": "Which is greater? Each grid is one whole.",
    "wrong": {},
    "slot": null,
    "alt_of": null,
@@ -667866,8 +668284,19 @@
     "A": "0.22",
     "B": "0.1"
    },
+   "model": {
+    "kind": "grids",
+    "cells": [
+     22,
+     10
+    ],
+    "labels": {
+     "A": "0.22",
+     "B": "0.1"
+    }
+   },
    "fact_seen_before": true,
-   "v": "fe8f1350e5caa0d3"
+   "v": "ff264f97a43695c6"
   },
   {
    "id": "7-2-2/more/05",
@@ -667924,10 +668353,10 @@
    "resource": "شبكة المئة",
    "answer_type": "ج8",
    "answer": "B",
-   "text_ar": "أيهما أكبر؟ الشبكة كلها واحد.",
-   "text_en": "Which is greater? The whole grid is one.",
-   "audio_ar": "أيهما أكبر؟ الشبكة كلها واحد.",
-   "audio_en": "Which is greater? The whole grid is one.",
+   "text_ar": "أيهما أكبر؟ كل شبكة واحد.",
+   "text_en": "Which is greater? Each grid is one whole.",
+   "audio_ar": "أيهما أكبر؟ كل شبكة واحد.",
+   "audio_en": "Which is greater? Each grid is one whole.",
    "wrong": {},
    "slot": null,
    "alt_of": null,
@@ -667946,8 +668375,19 @@
     "A": "0.73",
     "B": "0.8"
    },
+   "model": {
+    "kind": "grids",
+    "cells": [
+     73,
+     80
+    ],
+    "labels": {
+     "A": "0.73",
+     "B": "0.8"
+    }
+   },
    "fact_seen_before": true,
-   "v": "39f7c33473276d5b"
+   "v": "5fb212d284c864c0"
   },
   {
    "id": "7-2-2/more/07",
@@ -668004,10 +668444,10 @@
    "resource": "شبكة المئة",
    "answer_type": "ج8",
    "answer": "A",
-   "text_ar": "أيهما أكبر؟ الشبكة كلها واحد.",
-   "text_en": "Which is greater? The whole grid is one.",
-   "audio_ar": "أيهما أكبر؟ الشبكة كلها واحد.",
-   "audio_en": "Which is greater? The whole grid is one.",
+   "text_ar": "أيهما أكبر؟ كل شبكة واحد.",
+   "text_en": "Which is greater? Each grid is one whole.",
+   "audio_ar": "أيهما أكبر؟ كل شبكة واحد.",
+   "audio_en": "Which is greater? Each grid is one whole.",
    "wrong": {},
    "slot": null,
    "alt_of": null,
@@ -668026,8 +668466,19 @@
     "A": "0.9",
     "B": "0.82"
    },
+   "model": {
+    "kind": "grids",
+    "cells": [
+     90,
+     82
+    ],
+    "labels": {
+     "A": "0.9",
+     "B": "0.82"
+    }
+   },
    "fact_seen_before": false,
-   "v": "57908b23ae3adccc"
+   "v": "7a2d754bc934355b"
   },
   {
    "id": "7-2-2/more/09",
@@ -668084,10 +668535,10 @@
    "resource": "شبكة المئة",
    "answer_type": "ج8",
    "answer": "A",
-   "text_ar": "أيهما أكبر؟ الشبكة كلها واحد.",
-   "text_en": "Which is greater? The whole grid is one.",
-   "audio_ar": "أيهما أكبر؟ الشبكة كلها واحد.",
-   "audio_en": "Which is greater? The whole grid is one.",
+   "text_ar": "أيهما أكبر؟ كل شبكة واحد.",
+   "text_en": "Which is greater? Each grid is one whole.",
+   "audio_ar": "أيهما أكبر؟ كل شبكة واحد.",
+   "audio_en": "Which is greater? Each grid is one whole.",
    "wrong": {},
    "slot": null,
    "alt_of": null,
@@ -668106,8 +668557,19 @@
     "A": "0.3",
     "B": "0.19"
    },
+   "model": {
+    "kind": "grids",
+    "cells": [
+     30,
+     19
+    ],
+    "labels": {
+     "A": "0.3",
+     "B": "0.19"
+    }
+   },
    "fact_seen_before": true,
-   "v": "e436bf0117d8190c"
+   "v": "39557ae83c86c8ac"
   },
   {
    "id": "7-2-2/more/11",
@@ -668164,10 +668626,10 @@
    "resource": "شبكة المئة",
    "answer_type": "ج8",
    "answer": "A",
-   "text_ar": "أيهما أكبر؟ الشبكة كلها واحد.",
-   "text_en": "Which is greater? The whole grid is one.",
-   "audio_ar": "أيهما أكبر؟ الشبكة كلها واحد.",
-   "audio_en": "Which is greater? The whole grid is one.",
+   "text_ar": "أيهما أكبر؟ كل شبكة واحد.",
+   "text_en": "Which is greater? Each grid is one whole.",
+   "audio_ar": "أيهما أكبر؟ كل شبكة واحد.",
+   "audio_en": "Which is greater? Each grid is one whole.",
    "wrong": {},
    "slot": null,
    "alt_of": null,
@@ -668186,8 +668648,19 @@
     "A": "0.4",
     "B": "0.28"
    },
+   "model": {
+    "kind": "grids",
+    "cells": [
+     40,
+     28
+    ],
+    "labels": {
+     "A": "0.4",
+     "B": "0.28"
+    }
+   },
    "fact_seen_before": false,
-   "v": "48e65172d851e300"
+   "v": "d573d85286ea86cc"
   },
   {
    "id": "7-2-3/lesson/01",
@@ -668202,7 +668675,7 @@
     "z": 1,
     "op": 1
    },
-   "resource": "منزلق المنازل في النص (لم يُرسم)",
+   "resource": "منزلق المنازل",
    "answer_type": "ج2",
    "answer": {
     "t": "dec",
@@ -668223,8 +668696,19 @@
     1,
     1
    ],
+   "model": {
+    "kind": "places",
+    "digits": [
+     3,
+     0,
+     5
+    ],
+    "value": 305,
+    "point": 1,
+    "shift": 1
+   },
    "fact_seen_before": false,
-   "v": "07a97498c1d9929c"
+   "v": "4cf66ec733ecfd5b"
   },
   {
    "id": "7-2-3/lesson/02",
@@ -668239,7 +668723,7 @@
     "z": 2,
     "op": -1
    },
-   "resource": "منزلق المنازل في النص (لم يُرسم)",
+   "resource": "منزلق المنازل",
    "answer_type": "ج2",
    "answer": {
     "t": "dec",
@@ -668260,8 +668744,19 @@
     2,
     -1
    ],
+   "model": {
+    "kind": "places",
+    "digits": [
+     5,
+     0,
+     1
+    ],
+    "value": 501,
+    "point": 1,
+    "shift": -2
+   },
    "fact_seen_before": false,
-   "v": "af4ac1f548198189"
+   "v": "f9106add9fef25f0"
   },
   {
    "id": "7-2-3/lesson/03",
@@ -668276,7 +668771,7 @@
     "z": 1,
     "op": 1
    },
-   "resource": "منزلق المنازل في النص (لم يُرسم)",
+   "resource": "منزلق المنازل",
    "answer_type": "ج2",
    "answer": {
     "t": "dec",
@@ -668297,8 +668792,19 @@
     1,
     1
    ],
+   "model": {
+    "kind": "places",
+    "digits": [
+     5,
+     9,
+     9
+    ],
+    "value": 599,
+    "point": 1,
+    "shift": 1
+   },
    "fact_seen_before": false,
-   "v": "bdeaf849dc0f4521"
+   "v": "b6c8bc3e0e3a49c5"
   },
   {
    "id": "7-2-3/lesson/04",
@@ -668498,7 +669004,7 @@
     "z": 2,
     "op": -1
    },
-   "resource": "منزلق المنازل في النص (لم يُرسم)",
+   "resource": "منزلق المنازل",
    "answer_type": "ج2",
    "answer": {
     "t": "dec",
@@ -668519,8 +669025,19 @@
     2,
     -1
    ],
+   "model": {
+    "kind": "places",
+    "digits": [
+     7,
+     5,
+     3
+    ],
+    "value": 753,
+    "point": 1,
+    "shift": -2
+   },
    "fact_seen_before": false,
-   "v": "6ecccba1e0347008"
+   "v": "58a7c3c525bbd2d9"
   },
   {
    "id": "7-2-3/opening/03",
@@ -668535,7 +669052,7 @@
     "z": 2,
     "op": -1
    },
-   "resource": "منزلق المنازل في النص (لم يُرسم)",
+   "resource": "منزلق المنازل",
    "answer_type": "ج2",
    "answer": {
     "t": "dec",
@@ -668556,8 +669073,19 @@
     2,
     -1
    ],
+   "model": {
+    "kind": "places",
+    "digits": [
+     6,
+     6,
+     2
+    ],
+    "value": 662,
+    "point": 1,
+    "shift": -2
+   },
    "fact_seen_before": false,
-   "v": "d625bb63ae5f7e24"
+   "v": "866197684328a9c6"
   },
   {
    "id": "7-2-3/opening/04",
@@ -668572,7 +669100,7 @@
     "z": 1,
     "op": 1
    },
-   "resource": "منزلق المنازل في النص (لم يُرسم)",
+   "resource": "منزلق المنازل",
    "answer_type": "ج2",
    "answer": {
     "t": "dec",
@@ -668593,8 +669121,19 @@
     1,
     1
    ],
+   "model": {
+    "kind": "places",
+    "digits": [
+     6,
+     8,
+     3
+    ],
+    "value": 683,
+    "point": 1,
+    "shift": 1
+   },
    "fact_seen_before": false,
-   "v": "12d2880eafe73000"
+   "v": "2ca2a33193c4d260"
   },
   {
    "id": "7-2-3/opening/05",
@@ -668609,7 +669148,7 @@
     "z": 1,
     "op": -1
    },
-   "resource": "منزلق المنازل في النص (لم يُرسم)",
+   "resource": "منزلق المنازل",
    "answer_type": "ج2",
    "answer": {
     "t": "dec",
@@ -668630,8 +669169,19 @@
     1,
     -1
    ],
+   "model": {
+    "kind": "places",
+    "digits": [
+     6,
+     7,
+     6
+    ],
+    "value": 676,
+    "point": 1,
+    "shift": -1
+   },
    "fact_seen_before": false,
-   "v": "9343bd63ccbc8623"
+   "v": "77c4969cfaefd1d4"
   },
   {
    "id": "7-2-3/practice/01",
@@ -668868,7 +669418,7 @@
     "z": 1,
     "op": 1
    },
-   "resource": "منزلق المنازل في النص (لم يُرسم)",
+   "resource": "منزلق المنازل",
    "answer_type": "ج2",
    "answer": {
     "t": "dec",
@@ -668889,9 +669439,20 @@
     1,
     1
    ],
+   "model": {
+    "kind": "places",
+    "digits": [
+     1,
+     5,
+     1
+    ],
+    "value": 151,
+    "point": 1,
+    "shift": 1
+   },
    "round": 1,
    "fact_seen_before": false,
-   "v": "68db6a387be7783d"
+   "v": "a358083acfe99cec"
   },
   {
    "id": "7-2-3/evidence/02",
@@ -668906,7 +669467,7 @@
     "z": 2,
     "op": -1
    },
-   "resource": "منزلق المنازل في النص (لم يُرسم)",
+   "resource": "منزلق المنازل",
    "answer_type": "ج2",
    "answer": {
     "t": "dec",
@@ -668927,9 +669488,20 @@
     2,
     -1
    ],
+   "model": {
+    "kind": "places",
+    "digits": [
+     4,
+     3,
+     8
+    ],
+    "value": 438,
+    "point": 1,
+    "shift": -2
+   },
    "round": 1,
    "fact_seen_before": false,
-   "v": "368ff0775ead16f3"
+   "v": "f0c7fc4b452f23b0"
   },
   {
    "id": "7-2-3/evidence/03",
@@ -668944,7 +669516,7 @@
     "z": 1,
     "op": 1
    },
-   "resource": "منزلق المنازل في النص (لم يُرسم)",
+   "resource": "منزلق المنازل",
    "answer_type": "ج2",
    "answer": {
     "t": "dec",
@@ -668965,9 +669537,20 @@
     1,
     1
    ],
+   "model": {
+    "kind": "places",
+    "digits": [
+     4,
+     2,
+     4
+    ],
+    "value": 424,
+    "point": 1,
+    "shift": 1
+   },
    "round": 1,
    "fact_seen_before": false,
-   "v": "e725f5b2eb326e8b"
+   "v": "0ee75b32eb3d11ac"
   },
   {
    "id": "7-2-3/evidence/04",
@@ -668982,7 +669565,7 @@
     "z": 2,
     "op": -1
    },
-   "resource": "منزلق المنازل في النص (لم يُرسم)",
+   "resource": "منزلق المنازل",
    "answer_type": "ج2",
    "answer": {
     "t": "dec",
@@ -669003,9 +669586,20 @@
     2,
     -1
    ],
+   "model": {
+    "kind": "places",
+    "digits": [
+     8,
+     0,
+     9
+    ],
+    "value": 809,
+    "point": 1,
+    "shift": -2
+   },
    "round": 1,
    "fact_seen_before": false,
-   "v": "939fca1f1490e322"
+   "v": "6d1216d440844d71"
   },
   {
    "id": "7-2-3/evidence/05",
@@ -669172,7 +669766,7 @@
     "z": 1,
     "op": -1
    },
-   "resource": "منزلق المنازل في النص (لم يُرسم)",
+   "resource": "منزلق المنازل",
    "answer_type": "ج2",
    "answer": {
     "t": "dec",
@@ -669193,9 +669787,20 @@
     1,
     -1
    ],
+   "model": {
+    "kind": "places",
+    "digits": [
+     5,
+     9,
+     9
+    ],
+    "value": 599,
+    "point": 1,
+    "shift": -1
+   },
    "round": 2,
    "fact_seen_before": false,
-   "v": "96666bb249cb8caf"
+   "v": "7a5f6c7eaf0a8468"
   },
   {
    "id": "7-2-3/evidence/10",
@@ -669210,7 +669815,7 @@
     "z": 2,
     "op": -1
    },
-   "resource": "منزلق المنازل في النص (لم يُرسم)",
+   "resource": "منزلق المنازل",
    "answer_type": "ج2",
    "answer": {
     "t": "dec",
@@ -669231,9 +669836,20 @@
     2,
     -1
    ],
+   "model": {
+    "kind": "places",
+    "digits": [
+     6,
+     7,
+     6
+    ],
+    "value": 676,
+    "point": 1,
+    "shift": -2
+   },
    "round": 2,
    "fact_seen_before": false,
-   "v": "9a6ee8d620fef156"
+   "v": "09d5e9918a9e1271"
   },
   {
    "id": "7-2-3/evidence/11",
@@ -669248,7 +669864,7 @@
     "z": 1,
     "op": -1
    },
-   "resource": "منزلق المنازل في النص (لم يُرسم)",
+   "resource": "منزلق المنازل",
    "answer_type": "ج2",
    "answer": {
     "t": "dec",
@@ -669269,9 +669885,20 @@
     1,
     -1
    ],
+   "model": {
+    "kind": "places",
+    "digits": [
+     9,
+     4,
+     9
+    ],
+    "value": 949,
+    "point": 1,
+    "shift": -1
+   },
    "round": 2,
    "fact_seen_before": false,
-   "v": "ea623c1493848248"
+   "v": "d973a76e103f03f0"
   },
   {
    "id": "7-2-3/evidence/12",
@@ -669286,7 +669913,7 @@
     "z": 2,
     "op": -1
    },
-   "resource": "منزلق المنازل في النص (لم يُرسم)",
+   "resource": "منزلق المنازل",
    "answer_type": "ج2",
    "answer": {
     "t": "dec",
@@ -669307,9 +669934,20 @@
     2,
     -1
    ],
+   "model": {
+    "kind": "places",
+    "digits": [
+     6,
+     4,
+     8
+    ],
+    "value": 648,
+    "point": 1,
+    "shift": -2
+   },
    "round": 2,
    "fact_seen_before": false,
-   "v": "6f8b2351be5ca0b8"
+   "v": "4f7ffd7806841248"
   },
   {
    "id": "7-2-3/evidence/13",
@@ -669661,7 +670299,7 @@
     "z": 2,
     "op": -1
    },
-   "resource": "منزلق المنازل في النص (لم يُرسم)",
+   "resource": "منزلق المنازل",
    "answer_type": "ج2",
    "answer": {
     "t": "dec",
@@ -669682,8 +670320,18 @@
     2,
     -1
    ],
+   "model": {
+    "kind": "places",
+    "digits": [
+     5,
+     3
+    ],
+    "value": 53,
+    "point": 1,
+    "shift": -2
+   },
    "fact_seen_before": false,
-   "v": "14eaf11d25412e41"
+   "v": "9c21efa9e68b7211"
   },
   {
    "id": "7-2-3/gate/07",
@@ -669698,7 +670346,7 @@
     "z": 2,
     "op": -1
    },
-   "resource": "منزلق المنازل في النص (لم يُرسم)",
+   "resource": "منزلق المنازل",
    "answer_type": "ج2",
    "answer": {
     "t": "dec",
@@ -669719,8 +670367,19 @@
     2,
     -1
    ],
+   "model": {
+    "kind": "places",
+    "digits": [
+     4,
+     5,
+     9
+    ],
+    "value": 459,
+    "point": 1,
+    "shift": -2
+   },
    "fact_seen_before": false,
-   "v": "2c97fee4937dc2fe"
+   "v": "d2d3c9e990481b04"
   },
   {
    "id": "7-2-3/gate/08",
@@ -669735,7 +670394,7 @@
     "z": 2,
     "op": -1
    },
-   "resource": "منزلق المنازل في النص (لم يُرسم)",
+   "resource": "منزلق المنازل",
    "answer_type": "ج2",
    "answer": {
     "t": "dec",
@@ -669756,8 +670415,19 @@
     2,
     -1
    ],
+   "model": {
+    "kind": "places",
+    "digits": [
+     4,
+     5,
+     2
+    ],
+    "value": 452,
+    "point": 1,
+    "shift": -2
+   },
    "fact_seen_before": false,
-   "v": "3953c20e248491d3"
+   "v": "c31a5c66499f0047"
   },
   {
    "id": "7-2-3/gate/09",
@@ -669772,7 +670442,7 @@
     "z": 1,
     "op": -1
    },
-   "resource": "منزلق المنازل في النص (لم يُرسم)",
+   "resource": "منزلق المنازل",
    "answer_type": "ج2",
    "answer": {
     "t": "dec",
@@ -669793,8 +670463,19 @@
     1,
     -1
    ],
+   "model": {
+    "kind": "places",
+    "digits": [
+     7,
+     1,
+     8
+    ],
+    "value": 718,
+    "point": 1,
+    "shift": -1
+   },
    "fact_seen_before": false,
-   "v": "69bc42215b1e2470"
+   "v": "e029eff615f7adcd"
   },
   {
    "id": "7-2-3/gate/10",
@@ -669883,7 +670564,7 @@
     "z": 1,
     "op": 1
    },
-   "resource": "منزلق المنازل في النص (لم يُرسم)",
+   "resource": "منزلق المنازل",
    "answer_type": "ج2",
    "answer": {
     "t": "dec",
@@ -669904,8 +670585,19 @@
     1,
     1
    ],
+   "model": {
+    "kind": "places",
+    "digits": [
+     3,
+     5,
+     4
+    ],
+    "value": 354,
+    "point": 1,
+    "shift": 1
+   },
    "fact_seen_before": false,
-   "v": "a4acac895c9eccaa"
+   "v": "fe2ac3fde9164d5d"
   },
   {
    "id": "7-2-3/gate/13",
@@ -669920,7 +670612,7 @@
     "z": 2,
     "op": -1
    },
-   "resource": "منزلق المنازل في النص (لم يُرسم)",
+   "resource": "منزلق المنازل",
    "answer_type": "ج2",
    "answer": {
     "t": "dec",
@@ -669941,8 +670633,19 @@
     2,
     -1
    ],
+   "model": {
+    "kind": "places",
+    "digits": [
+     9,
+     2,
+     1
+    ],
+    "value": 921,
+    "point": 1,
+    "shift": -2
+   },
    "fact_seen_before": false,
-   "v": "4046488116a9df08"
+   "v": "ee24ce17eba63b2f"
   },
   {
    "id": "7-2-3/gate/14",
@@ -670216,7 +670919,7 @@
     "z": 1,
     "op": 1
    },
-   "resource": "منزلق المنازل في النص (لم يُرسم)",
+   "resource": "منزلق المنازل",
    "answer_type": "ج2",
    "answer": {
     "t": "dec",
@@ -670237,8 +670940,19 @@
     1,
     1
    ],
+   "model": {
+    "kind": "places",
+    "digits": [
+     9,
+     1,
+     4
+    ],
+    "value": 914,
+    "point": 1,
+    "shift": 1
+   },
    "fact_seen_before": false,
-   "v": "70cf3ea9c50f5090"
+   "v": "e09617860b958bc4"
   },
   {
    "id": "7-2-3/regate/07",
@@ -670253,7 +670967,7 @@
     "z": 1,
     "op": -1
    },
-   "resource": "منزلق المنازل في النص (لم يُرسم)",
+   "resource": "منزلق المنازل",
    "answer_type": "ج2",
    "answer": {
     "t": "dec",
@@ -670274,8 +670988,19 @@
     1,
     -1
    ],
+   "model": {
+    "kind": "places",
+    "digits": [
+     8,
+     0,
+     2
+    ],
+    "value": 802,
+    "point": 1,
+    "shift": -1
+   },
    "fact_seen_before": false,
-   "v": "0c7e1d831e84a803"
+   "v": "264352691391daa6"
   },
   {
    "id": "7-2-3/regate/08",
@@ -670290,7 +671015,7 @@
     "z": 2,
     "op": -1
    },
-   "resource": "منزلق المنازل في النص (لم يُرسم)",
+   "resource": "منزلق المنازل",
    "answer_type": "ج2",
    "answer": {
     "t": "dec",
@@ -670311,8 +671036,19 @@
     2,
     -1
    ],
+   "model": {
+    "kind": "places",
+    "digits": [
+     6,
+     4,
+     1
+    ],
+    "value": 641,
+    "point": 1,
+    "shift": -2
+   },
    "fact_seen_before": false,
-   "v": "5ded6c0aae8afd90"
+   "v": "03e590bc4f13a33c"
   },
   {
    "id": "7-2-3/regate/09",
@@ -670327,7 +671063,7 @@
     "z": 1,
     "op": 1
    },
-   "resource": "منزلق المنازل في النص (لم يُرسم)",
+   "resource": "منزلق المنازل",
    "answer_type": "ج2",
    "answer": {
     "t": "dec",
@@ -670348,8 +671084,19 @@
     1,
     1
    ],
+   "model": {
+    "kind": "places",
+    "digits": [
+     8,
+     6,
+     5
+    ],
+    "value": 865,
+    "point": 1,
+    "shift": 1
+   },
    "fact_seen_before": false,
-   "v": "c65c5116f0b9c48e"
+   "v": "3f3fbb017e754abe"
   },
   {
    "id": "7-2-3/regate/10",
@@ -670438,7 +671185,7 @@
     "z": 1,
     "op": 1
    },
-   "resource": "منزلق المنازل في النص (لم يُرسم)",
+   "resource": "منزلق المنازل",
    "answer_type": "ج2",
    "answer": {
     "t": "dec",
@@ -670459,8 +671206,19 @@
     1,
     1
    ],
+   "model": {
+    "kind": "places",
+    "digits": [
+     5,
+     9,
+     2
+    ],
+    "value": 592,
+    "point": 1,
+    "shift": 1
+   },
    "fact_seen_before": false,
-   "v": "2044725de2413edc"
+   "v": "3505fa26b1613365"
   },
   {
    "id": "7-2-3/regate/13",
@@ -670475,7 +671233,7 @@
     "z": 2,
     "op": -1
    },
-   "resource": "منزلق المنازل في النص (لم يُرسم)",
+   "resource": "منزلق المنازل",
    "answer_type": "ج2",
    "answer": {
     "t": "dec",
@@ -670496,8 +671254,19 @@
     2,
     -1
    ],
+   "model": {
+    "kind": "places",
+    "digits": [
+     8,
+     7,
+     9
+    ],
+    "value": 879,
+    "point": 1,
+    "shift": -2
+   },
    "fact_seen_before": false,
-   "v": "bd2c4519637d8f1a"
+   "v": "ca15b6b012da2363"
   },
   {
    "id": "7-2-3/regate/14",
@@ -670586,7 +671355,7 @@
     "z": 1,
     "op": -1
    },
-   "resource": "منزلق المنازل في النص (لم يُرسم)",
+   "resource": "منزلق المنازل",
    "answer_type": "ج2",
    "answer": {
     "t": "dec",
@@ -670607,8 +671376,19 @@
     1,
     -1
    ],
+   "model": {
+    "kind": "places",
+    "digits": [
+     5,
+     2,
+     2
+    ],
+    "value": 522,
+    "point": 1,
+    "shift": -1
+   },
    "fact_seen_before": false,
-   "v": "a65d411884c771bd"
+   "v": "7187b42acb6617c0"
   },
   {
    "id": "7-2-3/short/02",
@@ -674042,7 +674822,7 @@
     "z": 1,
     "op": 1
    },
-   "resource": "منزلق المنازل في النص (لم يُرسم)",
+   "resource": "منزلق المنازل",
    "answer_type": "ج2",
    "answer": {
     "t": "dec",
@@ -674063,8 +674843,19 @@
     1,
     1
    ],
+   "model": {
+    "kind": "places",
+    "digits": [
+     5,
+     8,
+     5
+    ],
+    "value": 585,
+    "point": 1,
+    "shift": 1
+   },
    "fact_seen_before": false,
-   "v": "6ac4aa5944dd352b"
+   "v": "49b5b93f95fde333"
   },
   {
    "id": "7-2-3/tryfirst/02",
@@ -674079,7 +674870,7 @@
     "z": 2,
     "op": -1
    },
-   "resource": "منزلق المنازل في النص (لم يُرسم)",
+   "resource": "منزلق المنازل",
    "answer_type": "ج2",
    "answer": {
     "t": "dec",
@@ -674100,8 +674891,19 @@
     2,
     -1
    ],
+   "model": {
+    "kind": "places",
+    "digits": [
+     4,
+     8,
+     7
+    ],
+    "value": 487,
+    "point": 1,
+    "shift": -2
+   },
    "fact_seen_before": false,
-   "v": "df861b3b11782553"
+   "v": "8efb1881e656cab8"
   },
   {
    "id": "7-2-3/tryfirst/03",
@@ -674190,7 +674992,7 @@
     "z": 1,
     "op": -1
    },
-   "resource": "منزلق المنازل في النص (لم يُرسم)",
+   "resource": "منزلق المنازل",
    "answer_type": "ج2",
    "answer": {
     "t": "dec",
@@ -674211,9 +675013,19 @@
     1,
     -1
    ],
+   "model": {
+    "kind": "places",
+    "digits": [
+     5,
+     3
+    ],
+    "value": 53,
+    "point": 1,
+    "shift": -1
+   },
    "round": 1,
    "fact_seen_before": false,
-   "v": "953803f3eba8bd1a"
+   "v": "5bd1f070bfe1ccb6"
   },
   {
    "id": "7-2-3/evidence/18",
@@ -674266,7 +675078,7 @@
     "z": 2,
     "op": -1
    },
-   "resource": "منزلق المنازل في النص (لم يُرسم)",
+   "resource": "منزلق المنازل",
    "answer_type": "ج2",
    "answer": {
     "t": "dec",
@@ -674287,9 +675099,20 @@
     2,
     -1
    ],
+   "model": {
+    "kind": "places",
+    "digits": [
+     7,
+     1,
+     1
+    ],
+    "value": 711,
+    "point": 1,
+    "shift": -2
+   },
    "round": 2,
    "fact_seen_before": false,
-   "v": "a077cccd2a1b40cc"
+   "v": "a7c2f7e629e08310"
   },
   {
    "id": "7-2-3/evidence/20",
@@ -674379,7 +675202,7 @@
     "z": 1,
     "op": 1
    },
-   "resource": "منزلق المنازل في النص (لم يُرسم)",
+   "resource": "منزلق المنازل",
    "answer_type": "ج2",
    "answer": {
     "t": "dec",
@@ -674400,8 +675223,19 @@
     1,
     1
    ],
+   "model": {
+    "kind": "places",
+    "digits": [
+     2,
+     5,
+     6
+    ],
+    "value": 256,
+    "point": 1,
+    "shift": 1
+   },
    "fact_seen_before": false,
-   "v": "32378665abf5512c"
+   "v": "a4089a56d89bfd8a"
   },
   {
    "id": "7-2-3/more/03",
@@ -674453,7 +675287,7 @@
     "z": 1,
     "op": 1
    },
-   "resource": "منزلق المنازل في النص (لم يُرسم)",
+   "resource": "منزلق المنازل",
    "answer_type": "ج2",
    "answer": {
     "t": "dec",
@@ -674474,8 +675308,19 @@
     1,
     1
    ],
+   "model": {
+    "kind": "places",
+    "digits": [
+     8,
+     1,
+     6
+    ],
+    "value": 816,
+    "point": 1,
+    "shift": 1
+   },
    "fact_seen_before": true,
-   "v": "2011abc02d03adae"
+   "v": "6369c6ab12ea498c"
   },
   {
    "id": "7-2-3/more/05",
@@ -674527,7 +675372,7 @@
     "z": 2,
     "op": -1
    },
-   "resource": "منزلق المنازل في النص (لم يُرسم)",
+   "resource": "منزلق المنازل",
    "answer_type": "ج2",
    "answer": {
     "t": "dec",
@@ -674548,8 +675393,19 @@
     2,
     -1
    ],
+   "model": {
+    "kind": "places",
+    "digits": [
+     3,
+     8,
+     9
+    ],
+    "value": 389,
+    "point": 1,
+    "shift": -2
+   },
    "fact_seen_before": false,
-   "v": "fc1eaf7519d640ea"
+   "v": "5e9ee1e4604709b0"
   },
   {
    "id": "7-2-3/more/07",
@@ -674601,7 +675457,7 @@
     "z": 1,
     "op": 1
    },
-   "resource": "منزلق المنازل في النص (لم يُرسم)",
+   "resource": "منزلق المنازل",
    "answer_type": "ج2",
    "answer": {
     "t": "dec",
@@ -674622,8 +675478,19 @@
     1,
     1
    ],
+   "model": {
+    "kind": "places",
+    "digits": [
+     5,
+     2,
+     9
+    ],
+    "value": 529,
+    "point": 1,
+    "shift": 1
+   },
    "fact_seen_before": false,
-   "v": "433f8d6355da6b03"
+   "v": "03f6c1d59690c35b"
   },
   {
    "id": "7-2-3/more/09",
@@ -674675,7 +675542,7 @@
     "z": 1,
     "op": -1
    },
-   "resource": "منزلق المنازل في النص (لم يُرسم)",
+   "resource": "منزلق المنازل",
    "answer_type": "ج2",
    "answer": {
     "t": "dec",
@@ -674696,8 +675563,19 @@
     1,
     -1
    ],
+   "model": {
+    "kind": "places",
+    "digits": [
+     7,
+     7,
+     4
+    ],
+    "value": 774,
+    "point": 1,
+    "shift": -1
+   },
    "fact_seen_before": false,
-   "v": "f3748160d044ce9e"
+   "v": "e19da334e500091e"
   },
   {
    "id": "7-2-3/more/11",
@@ -674749,7 +675627,7 @@
     "z": 1,
     "op": -1
    },
-   "resource": "منزلق المنازل في النص (لم يُرسم)",
+   "resource": "منزلق المنازل",
    "answer_type": "ج2",
    "answer": {
     "t": "dec",
@@ -674770,8 +675648,19 @@
     1,
     -1
    ],
+   "model": {
+    "kind": "places",
+    "digits": [
+     9,
+     7,
+     7
+    ],
+    "value": 977,
+    "point": 1,
+    "shift": -1
+   },
    "fact_seen_before": false,
-   "v": "00d92479a7126595"
+   "v": "02eb2be02df9556a"
   },
   {
    "id": "7-2-4/lesson/01",
@@ -701137,13 +702026,13 @@
     "d": 2,
     "f": 1
    },
-   "resource": "شريط مقسّم (بدل شبكة المئة)",
+   "resource": "شبكة المئة",
    "answer_type": "ج8",
    "answer": "A",
-   "text_ar": "الملوّن ⁦ 0.5 ⁩ من الشريط. أي البطاقات تساويه؟",
-   "text_en": "The coloured part is ⁦ 0.5 ⁩ of the strip. Which card equals it?",
-   "audio_ar": "الملوّن ⁦ 0.5 ⁩ من الشريط. أي البطاقات تساويه؟",
-   "audio_en": "The coloured part is ⁦ 0.5 ⁩ of the strip. Which card equals it?",
+   "text_ar": "الملوّن ⁦ 0.5 ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "text_en": "The coloured part is ⁦ 0.5 ⁩ of the grid. Which card equals it?",
+   "audio_ar": "الملوّن ⁦ 0.5 ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "audio_en": "The coloured part is ⁦ 0.5 ⁩ of the grid. Which card equals it?",
    "wrong": {},
    "slot": null,
    "alt_of": null,
@@ -701166,12 +702055,11 @@
     "C": "30%"
    },
    "model": {
-    "kind": "fstrip",
-    "n": 1,
-    "d": 2
+    "kind": "grid100",
+    "n": 50
    },
    "fact_seen_before": false,
-   "v": "a58f530bac440a44"
+   "v": "af761ee99c482d10"
   },
   {
    "id": "7-4-1/lesson/02",
@@ -701185,13 +702073,13 @@
     "d": 10,
     "f": 1
    },
-   "resource": "شريط مقسّم (بدل شبكة المئة)",
+   "resource": "شبكة المئة",
    "answer_type": "ج8",
    "answer": "A",
-   "text_ar": "الملوّن ⁦ 0.1 ⁩ من الشريط. أي البطاقات تساويه؟",
-   "text_en": "The coloured part is ⁦ 0.1 ⁩ of the strip. Which card equals it?",
-   "audio_ar": "الملوّن ⁦ 0.1 ⁩ من الشريط. أي البطاقات تساويه؟",
-   "audio_en": "The coloured part is ⁦ 0.1 ⁩ of the strip. Which card equals it?",
+   "text_ar": "الملوّن ⁦ 0.1 ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "text_en": "The coloured part is ⁦ 0.1 ⁩ of the grid. Which card equals it?",
+   "audio_ar": "الملوّن ⁦ 0.1 ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "audio_en": "The coloured part is ⁦ 0.1 ⁩ of the grid. Which card equals it?",
    "wrong": {},
    "slot": null,
    "alt_of": null,
@@ -701214,12 +702102,11 @@
     "C": "30%"
    },
    "model": {
-    "kind": "fstrip",
-    "n": 1,
-    "d": 10
+    "kind": "grid100",
+    "n": 10
    },
    "fact_seen_before": false,
-   "v": "a6b30da04fe8b78e"
+   "v": "904f3a7570e41802"
   },
   {
    "id": "7-4-1/lesson/03",
@@ -701233,13 +702120,13 @@
     "d": 4,
     "f": 0
    },
-   "resource": "شريط مقسّم (بدل شبكة المئة)",
+   "resource": "شبكة المئة",
    "answer_type": "ج8",
    "answer": "A",
-   "text_ar": "الملوّن ⁦ 3/4 ⁩ من الشريط. أي البطاقات تساويه؟",
-   "text_en": "The coloured part is ⁦ 3/4 ⁩ of the strip. Which card equals it?",
-   "audio_ar": "الملوّن ⁦ 3/4 ⁩ من الشريط. أي البطاقات تساويه؟",
-   "audio_en": "The coloured part is ⁦ 3/4 ⁩ of the strip. Which card equals it?",
+   "text_ar": "الملوّن ⁦ 3/4 ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "text_en": "The coloured part is ⁦ 3/4 ⁩ of the grid. Which card equals it?",
+   "audio_ar": "الملوّن ⁦ 3/4 ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "audio_en": "The coloured part is ⁦ 3/4 ⁩ of the grid. Which card equals it?",
    "wrong": {},
    "slot": null,
    "alt_of": null,
@@ -701262,12 +702149,11 @@
     "C": "0.3"
    },
    "model": {
-    "kind": "fstrip",
-    "n": 3,
-    "d": 4
+    "kind": "grid100",
+    "n": 75
    },
    "fact_seen_before": false,
-   "v": "eb96b54fe04cbc16"
+   "v": "70556eb9ee4670d7"
   },
   {
    "id": "7-4-1/lesson/04",
@@ -701496,13 +702382,13 @@
     "d": 2,
     "f": 0
    },
-   "resource": "شريط مقسّم (بدل شبكة المئة)",
+   "resource": "شبكة المئة",
    "answer_type": "ج8",
    "answer": "A",
-   "text_ar": "الملوّن ⁦ 1/2 ⁩ من الشريط. أي البطاقات تساويه؟",
-   "text_en": "The coloured part is ⁦ 1/2 ⁩ of the strip. Which card equals it?",
-   "audio_ar": "الملوّن ⁦ 1/2 ⁩ من الشريط. أي البطاقات تساويه؟",
-   "audio_en": "The coloured part is ⁦ 1/2 ⁩ of the strip. Which card equals it?",
+   "text_ar": "الملوّن ⁦ 1/2 ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "text_en": "The coloured part is ⁦ 1/2 ⁩ of the grid. Which card equals it?",
+   "audio_ar": "الملوّن ⁦ 1/2 ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "audio_en": "The coloured part is ⁦ 1/2 ⁩ of the grid. Which card equals it?",
    "wrong": {},
    "slot": null,
    "alt_of": null,
@@ -701525,12 +702411,11 @@
     "C": "0.3"
    },
    "model": {
-    "kind": "fstrip",
-    "n": 1,
-    "d": 2
+    "kind": "grid100",
+    "n": 50
    },
    "fact_seen_before": false,
-   "v": "4144e02537fef151"
+   "v": "b5ecd6d8854c49f4"
   },
   {
    "id": "7-4-1/opening/03",
@@ -701544,13 +702429,13 @@
     "d": 4,
     "f": 1
    },
-   "resource": "شريط مقسّم (بدل شبكة المئة)",
+   "resource": "شبكة المئة",
    "answer_type": "ج8",
    "answer": "A",
-   "text_ar": "الملوّن ⁦ 0.25 ⁩ من الشريط. أي البطاقات تساويه؟",
-   "text_en": "The coloured part is ⁦ 0.25 ⁩ of the strip. Which card equals it?",
-   "audio_ar": "الملوّن ⁦ 0.25 ⁩ من الشريط. أي البطاقات تساويه؟",
-   "audio_en": "The coloured part is ⁦ 0.25 ⁩ of the strip. Which card equals it?",
+   "text_ar": "الملوّن ⁦ 0.25 ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "text_en": "The coloured part is ⁦ 0.25 ⁩ of the grid. Which card equals it?",
+   "audio_ar": "الملوّن ⁦ 0.25 ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "audio_en": "The coloured part is ⁦ 0.25 ⁩ of the grid. Which card equals it?",
    "wrong": {},
    "slot": null,
    "alt_of": null,
@@ -701573,12 +702458,11 @@
     "C": "3/10"
    },
    "model": {
-    "kind": "fstrip",
-    "n": 1,
-    "d": 4
+    "kind": "grid100",
+    "n": 25
    },
    "fact_seen_before": true,
-   "v": "ba4e20bfdb80b356"
+   "v": "756b122c18258b52"
   },
   {
    "id": "7-4-1/opening/04",
@@ -701592,13 +702476,13 @@
     "d": 4,
     "f": 0
    },
-   "resource": "شريط مقسّم (بدل شبكة المئة)",
+   "resource": "شبكة المئة",
    "answer_type": "ج8",
    "answer": "A",
-   "text_ar": "الملوّن ⁦ 1/4 ⁩ من الشريط. أي البطاقات تساويه؟",
-   "text_en": "The coloured part is ⁦ 1/4 ⁩ of the strip. Which card equals it?",
-   "audio_ar": "الملوّن ⁦ 1/4 ⁩ من الشريط. أي البطاقات تساويه؟",
-   "audio_en": "The coloured part is ⁦ 1/4 ⁩ of the strip. Which card equals it?",
+   "text_ar": "الملوّن ⁦ 1/4 ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "text_en": "The coloured part is ⁦ 1/4 ⁩ of the grid. Which card equals it?",
+   "audio_ar": "الملوّن ⁦ 1/4 ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "audio_en": "The coloured part is ⁦ 1/4 ⁩ of the grid. Which card equals it?",
    "wrong": {},
    "slot": null,
    "alt_of": null,
@@ -701621,12 +702505,11 @@
     "C": "0.75"
    },
    "model": {
-    "kind": "fstrip",
-    "n": 1,
-    "d": 4
+    "kind": "grid100",
+    "n": 25
    },
    "fact_seen_before": true,
-   "v": "0c17ede7ed410c42"
+   "v": "ed18194bee368c17"
   },
   {
    "id": "7-4-1/opening/05",
@@ -701640,13 +702523,13 @@
     "d": 4,
     "f": 2
    },
-   "resource": "شريط مقسّم (بدل شبكة المئة)",
+   "resource": "شبكة المئة",
    "answer_type": "ج8",
    "answer": "A",
-   "text_ar": "الملوّن ⁦ 25% ⁩ من الشريط. أي البطاقات تساويه؟",
-   "text_en": "The coloured part is ⁦ 25% ⁩ of the strip. Which card equals it?",
-   "audio_ar": "الملوّن ⁦ 25% ⁩ من الشريط. أي البطاقات تساويه؟",
-   "audio_en": "The coloured part is ⁦ 25% ⁩ of the strip. Which card equals it?",
+   "text_ar": "الملوّن ⁦ 25% ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "text_en": "The coloured part is ⁦ 25% ⁩ of the grid. Which card equals it?",
+   "audio_ar": "الملوّن ⁦ 25% ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "audio_en": "The coloured part is ⁦ 25% ⁩ of the grid. Which card equals it?",
    "wrong": {},
    "slot": null,
    "alt_of": null,
@@ -701669,12 +702552,11 @@
     "C": "3/4"
    },
    "model": {
-    "kind": "fstrip",
-    "n": 1,
-    "d": 4
+    "kind": "grid100",
+    "n": 25
    },
    "fact_seen_before": false,
-   "v": "99465801fb25b5db"
+   "v": "3077037f51bb57fb"
   },
   {
    "id": "7-4-1/practice/01",
@@ -701946,13 +702828,13 @@
     "d": 4,
     "f": 2
    },
-   "resource": "شريط مقسّم (بدل شبكة المئة)",
+   "resource": "شبكة المئة",
    "answer_type": "ج8",
    "answer": "A",
-   "text_ar": "الملوّن ⁦ 75% ⁩ من الشريط. أي البطاقات تساويه؟",
-   "text_en": "The coloured part is ⁦ 75% ⁩ of the strip. Which card equals it?",
-   "audio_ar": "الملوّن ⁦ 75% ⁩ من الشريط. أي البطاقات تساويه؟",
-   "audio_en": "The coloured part is ⁦ 75% ⁩ of the strip. Which card equals it?",
+   "text_ar": "الملوّن ⁦ 75% ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "text_en": "The coloured part is ⁦ 75% ⁩ of the grid. Which card equals it?",
+   "audio_ar": "الملوّن ⁦ 75% ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "audio_en": "The coloured part is ⁦ 75% ⁩ of the grid. Which card equals it?",
    "wrong": {},
    "slot": null,
    "alt_of": null,
@@ -701975,13 +702857,12 @@
     "C": "3/10"
    },
    "model": {
-    "kind": "fstrip",
-    "n": 3,
-    "d": 4
+    "kind": "grid100",
+    "n": 75
    },
    "round": 1,
    "fact_seen_before": true,
-   "v": "91703225a78a914c"
+   "v": "6bc1b94ead666024"
   },
   {
    "id": "7-4-1/evidence/02",
@@ -701995,13 +702876,13 @@
     "d": 4,
     "f": 1
    },
-   "resource": "شريط مقسّم (بدل شبكة المئة)",
+   "resource": "شبكة المئة",
    "answer_type": "ج8",
    "answer": "A",
-   "text_ar": "الملوّن ⁦ 0.75 ⁩ من الشريط. أي البطاقات تساويه؟",
-   "text_en": "The coloured part is ⁦ 0.75 ⁩ of the strip. Which card equals it?",
-   "audio_ar": "الملوّن ⁦ 0.75 ⁩ من الشريط. أي البطاقات تساويه؟",
-   "audio_en": "The coloured part is ⁦ 0.75 ⁩ of the strip. Which card equals it?",
+   "text_ar": "الملوّن ⁦ 0.75 ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "text_en": "The coloured part is ⁦ 0.75 ⁩ of the grid. Which card equals it?",
+   "audio_ar": "الملوّن ⁦ 0.75 ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "audio_en": "The coloured part is ⁦ 0.75 ⁩ of the grid. Which card equals it?",
    "wrong": {},
    "slot": null,
    "alt_of": null,
@@ -702024,13 +702905,12 @@
     "C": "30%"
    },
    "model": {
-    "kind": "fstrip",
-    "n": 3,
-    "d": 4
+    "kind": "grid100",
+    "n": 75
    },
    "round": 1,
    "fact_seen_before": true,
-   "v": "716eb87f3141814e"
+   "v": "672931a63076aa81"
   },
   {
    "id": "7-4-1/evidence/03",
@@ -702044,13 +702924,13 @@
     "d": 10,
     "f": 0
    },
-   "resource": "شريط مقسّم (بدل شبكة المئة)",
+   "resource": "شبكة المئة",
    "answer_type": "ج8",
    "answer": "A",
-   "text_ar": "الملوّن ⁦ 1/10 ⁩ من الشريط. أي البطاقات تساويه؟",
-   "text_en": "The coloured part is ⁦ 1/10 ⁩ of the strip. Which card equals it?",
-   "audio_ar": "الملوّن ⁦ 1/10 ⁩ من الشريط. أي البطاقات تساويه؟",
-   "audio_en": "The coloured part is ⁦ 1/10 ⁩ of the strip. Which card equals it?",
+   "text_ar": "الملوّن ⁦ 1/10 ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "text_en": "The coloured part is ⁦ 1/10 ⁩ of the grid. Which card equals it?",
+   "audio_ar": "الملوّن ⁦ 1/10 ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "audio_en": "The coloured part is ⁦ 1/10 ⁩ of the grid. Which card equals it?",
    "wrong": {},
    "slot": null,
    "alt_of": null,
@@ -702073,13 +702953,12 @@
     "C": "0.3"
    },
    "model": {
-    "kind": "fstrip",
-    "n": 1,
-    "d": 10
+    "kind": "grid100",
+    "n": 10
    },
    "round": 1,
    "fact_seen_before": true,
-   "v": "912657dff7ad1763"
+   "v": "7667d2963590a269"
   },
   {
    "id": "7-4-1/evidence/04",
@@ -702093,13 +702972,13 @@
     "d": 2,
     "f": 2
    },
-   "resource": "شريط مقسّم (بدل شبكة المئة)",
+   "resource": "شبكة المئة",
    "answer_type": "ج8",
    "answer": "A",
-   "text_ar": "الملوّن ⁦ 50% ⁩ من الشريط. أي البطاقات تساويه؟",
-   "text_en": "The coloured part is ⁦ 50% ⁩ of the strip. Which card equals it?",
-   "audio_ar": "الملوّن ⁦ 50% ⁩ من الشريط. أي البطاقات تساويه؟",
-   "audio_en": "The coloured part is ⁦ 50% ⁩ of the strip. Which card equals it?",
+   "text_ar": "الملوّن ⁦ 50% ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "text_en": "The coloured part is ⁦ 50% ⁩ of the grid. Which card equals it?",
+   "audio_ar": "الملوّن ⁦ 50% ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "audio_en": "The coloured part is ⁦ 50% ⁩ of the grid. Which card equals it?",
    "wrong": {},
    "slot": null,
    "alt_of": null,
@@ -702122,13 +703001,12 @@
     "C": "3/10"
    },
    "model": {
-    "kind": "fstrip",
-    "n": 1,
-    "d": 2
+    "kind": "grid100",
+    "n": 50
    },
    "round": 1,
    "fact_seen_before": true,
-   "v": "337ff53e0a96f3e0"
+   "v": "a81fe03a13acd313"
   },
   {
    "id": "7-4-1/evidence/05",
@@ -702318,13 +703196,13 @@
     "d": 4,
     "f": 2
    },
-   "resource": "شريط مقسّم (بدل شبكة المئة)",
+   "resource": "شبكة المئة",
    "answer_type": "ج8",
    "answer": "A",
-   "text_ar": "الملوّن ⁦ 25% ⁩ من الشريط. أي البطاقات تساويه؟",
-   "text_en": "The coloured part is ⁦ 25% ⁩ of the strip. Which card equals it?",
-   "audio_ar": "الملوّن ⁦ 25% ⁩ من الشريط. أي البطاقات تساويه؟",
-   "audio_en": "The coloured part is ⁦ 25% ⁩ of the strip. Which card equals it?",
+   "text_ar": "الملوّن ⁦ 25% ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "text_en": "The coloured part is ⁦ 25% ⁩ of the grid. Which card equals it?",
+   "audio_ar": "الملوّن ⁦ 25% ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "audio_en": "The coloured part is ⁦ 25% ⁩ of the grid. Which card equals it?",
    "wrong": {},
    "slot": null,
    "alt_of": null,
@@ -702347,13 +703225,12 @@
     "C": "75%"
    },
    "model": {
-    "kind": "fstrip",
-    "n": 1,
-    "d": 4
+    "kind": "grid100",
+    "n": 25
    },
    "round": 2,
    "fact_seen_before": true,
-   "v": "823fa0a6ffa24135"
+   "v": "56811b5b512a2da1"
   },
   {
    "id": "7-4-1/evidence/10",
@@ -702367,13 +703244,13 @@
     "d": 2,
     "f": 1
    },
-   "resource": "شريط مقسّم (بدل شبكة المئة)",
+   "resource": "شبكة المئة",
    "answer_type": "ج8",
    "answer": "A",
-   "text_ar": "الملوّن ⁦ 0.5 ⁩ من الشريط. أي البطاقات تساويه؟",
-   "text_en": "The coloured part is ⁦ 0.5 ⁩ of the strip. Which card equals it?",
-   "audio_ar": "الملوّن ⁦ 0.5 ⁩ من الشريط. أي البطاقات تساويه؟",
-   "audio_en": "The coloured part is ⁦ 0.5 ⁩ of the strip. Which card equals it?",
+   "text_ar": "الملوّن ⁦ 0.5 ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "text_en": "The coloured part is ⁦ 0.5 ⁩ of the grid. Which card equals it?",
+   "audio_ar": "الملوّن ⁦ 0.5 ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "audio_en": "The coloured part is ⁦ 0.5 ⁩ of the grid. Which card equals it?",
    "wrong": {},
    "slot": null,
    "alt_of": null,
@@ -702396,13 +703273,12 @@
     "C": "30%"
    },
    "model": {
-    "kind": "fstrip",
-    "n": 1,
-    "d": 2
+    "kind": "grid100",
+    "n": 50
    },
    "round": 2,
    "fact_seen_before": true,
-   "v": "a6656507347cdcc9"
+   "v": "7fe5d6fe9ff1804c"
   },
   {
    "id": "7-4-1/evidence/11",
@@ -702416,13 +703292,13 @@
     "d": 10,
     "f": 1
    },
-   "resource": "شريط مقسّم (بدل شبكة المئة)",
+   "resource": "شبكة المئة",
    "answer_type": "ج8",
    "answer": "A",
-   "text_ar": "الملوّن ⁦ 0.1 ⁩ من الشريط. أي البطاقات تساويه؟",
-   "text_en": "The coloured part is ⁦ 0.1 ⁩ of the strip. Which card equals it?",
-   "audio_ar": "الملوّن ⁦ 0.1 ⁩ من الشريط. أي البطاقات تساويه؟",
-   "audio_en": "The coloured part is ⁦ 0.1 ⁩ of the strip. Which card equals it?",
+   "text_ar": "الملوّن ⁦ 0.1 ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "text_en": "The coloured part is ⁦ 0.1 ⁩ of the grid. Which card equals it?",
+   "audio_ar": "الملوّن ⁦ 0.1 ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "audio_en": "The coloured part is ⁦ 0.1 ⁩ of the grid. Which card equals it?",
    "wrong": {},
    "slot": null,
    "alt_of": null,
@@ -702445,13 +703321,12 @@
     "C": "30%"
    },
    "model": {
-    "kind": "fstrip",
-    "n": 1,
-    "d": 10
+    "kind": "grid100",
+    "n": 10
    },
    "round": 2,
    "fact_seen_before": true,
-   "v": "c9fc5b2c4ba16bb1"
+   "v": "46650fc7aa14e581"
   },
   {
    "id": "7-4-1/evidence/12",
@@ -702465,13 +703340,13 @@
     "d": 4,
     "f": 0
    },
-   "resource": "شريط مقسّم (بدل شبكة المئة)",
+   "resource": "شبكة المئة",
    "answer_type": "ج8",
    "answer": "A",
-   "text_ar": "الملوّن ⁦ 3/4 ⁩ من الشريط. أي البطاقات تساويه؟",
-   "text_en": "The coloured part is ⁦ 3/4 ⁩ of the strip. Which card equals it?",
-   "audio_ar": "الملوّن ⁦ 3/4 ⁩ من الشريط. أي البطاقات تساويه؟",
-   "audio_en": "The coloured part is ⁦ 3/4 ⁩ of the strip. Which card equals it?",
+   "text_ar": "الملوّن ⁦ 3/4 ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "text_en": "The coloured part is ⁦ 3/4 ⁩ of the grid. Which card equals it?",
+   "audio_ar": "الملوّن ⁦ 3/4 ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "audio_en": "The coloured part is ⁦ 3/4 ⁩ of the grid. Which card equals it?",
    "wrong": {},
    "slot": null,
    "alt_of": null,
@@ -702494,13 +703369,12 @@
     "C": "0.3"
    },
    "model": {
-    "kind": "fstrip",
-    "n": 3,
-    "d": 4
+    "kind": "grid100",
+    "n": 75
    },
    "round": 2,
    "fact_seen_before": true,
-   "v": "50aa1cde2966f118"
+   "v": "3de93335db1c3586"
   },
   {
    "id": "7-4-1/evidence/13",
@@ -702905,13 +703779,13 @@
     "d": 2,
     "f": 0
    },
-   "resource": "شريط مقسّم (بدل شبكة المئة)",
+   "resource": "شبكة المئة",
    "answer_type": "ج8",
    "answer": "A",
-   "text_ar": "الملوّن ⁦ 1/2 ⁩ من الشريط. أي البطاقات تساويه؟",
-   "text_en": "The coloured part is ⁦ 1/2 ⁩ of the strip. Which card equals it?",
-   "audio_ar": "الملوّن ⁦ 1/2 ⁩ من الشريط. أي البطاقات تساويه؟",
-   "audio_en": "The coloured part is ⁦ 1/2 ⁩ of the strip. Which card equals it?",
+   "text_ar": "الملوّن ⁦ 1/2 ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "text_en": "The coloured part is ⁦ 1/2 ⁩ of the grid. Which card equals it?",
+   "audio_ar": "الملوّن ⁦ 1/2 ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "audio_en": "The coloured part is ⁦ 1/2 ⁩ of the grid. Which card equals it?",
    "wrong": {},
    "slot": null,
    "alt_of": null,
@@ -702934,12 +703808,11 @@
     "C": "0.3"
    },
    "model": {
-    "kind": "fstrip",
-    "n": 1,
-    "d": 2
+    "kind": "grid100",
+    "n": 50
    },
    "fact_seen_before": false,
-   "v": "9c68863baea29b57"
+   "v": "314e1023cc80b671"
   },
   {
    "id": "7-4-1/gate/07",
@@ -702953,13 +703826,13 @@
     "d": 10,
     "f": 2
    },
-   "resource": "شريط مقسّم (بدل شبكة المئة)",
+   "resource": "شبكة المئة",
    "answer_type": "ج8",
    "answer": "A",
-   "text_ar": "الملوّن ⁦ 10% ⁩ من الشريط. أي البطاقات تساويه؟",
-   "text_en": "The coloured part is ⁦ 10% ⁩ of the strip. Which card equals it?",
-   "audio_ar": "الملوّن ⁦ 10% ⁩ من الشريط. أي البطاقات تساويه؟",
-   "audio_en": "The coloured part is ⁦ 10% ⁩ of the strip. Which card equals it?",
+   "text_ar": "الملوّن ⁦ 10% ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "text_en": "The coloured part is ⁦ 10% ⁩ of the grid. Which card equals it?",
+   "audio_ar": "الملوّن ⁦ 10% ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "audio_en": "The coloured part is ⁦ 10% ⁩ of the grid. Which card equals it?",
    "wrong": {},
    "slot": null,
    "alt_of": null,
@@ -702982,12 +703855,11 @@
     "C": "3/10"
    },
    "model": {
-    "kind": "fstrip",
-    "n": 1,
-    "d": 10
+    "kind": "grid100",
+    "n": 10
    },
    "fact_seen_before": false,
-   "v": "e42983acbc5161d4"
+   "v": "830644f51da58dbd"
   },
   {
    "id": "7-4-1/gate/08",
@@ -703001,13 +703873,13 @@
     "d": 4,
     "f": 0
    },
-   "resource": "شريط مقسّم (بدل شبكة المئة)",
+   "resource": "شبكة المئة",
    "answer_type": "ج8",
    "answer": "A",
-   "text_ar": "الملوّن ⁦ 1/4 ⁩ من الشريط. أي البطاقات تساويه؟",
-   "text_en": "The coloured part is ⁦ 1/4 ⁩ of the strip. Which card equals it?",
-   "audio_ar": "الملوّن ⁦ 1/4 ⁩ من الشريط. أي البطاقات تساويه؟",
-   "audio_en": "The coloured part is ⁦ 1/4 ⁩ of the strip. Which card equals it?",
+   "text_ar": "الملوّن ⁦ 1/4 ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "text_en": "The coloured part is ⁦ 1/4 ⁩ of the grid. Which card equals it?",
+   "audio_ar": "الملوّن ⁦ 1/4 ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "audio_en": "The coloured part is ⁦ 1/4 ⁩ of the grid. Which card equals it?",
    "wrong": {},
    "slot": null,
    "alt_of": null,
@@ -703030,12 +703902,11 @@
     "C": "0.75"
    },
    "model": {
-    "kind": "fstrip",
-    "n": 1,
-    "d": 4
+    "kind": "grid100",
+    "n": 25
    },
    "fact_seen_before": false,
-   "v": "4668142d002f927f"
+   "v": "17172ab0310fbedd"
   },
   {
    "id": "7-4-1/gate/09",
@@ -703049,13 +703920,13 @@
     "d": 4,
     "f": 2
    },
-   "resource": "شريط مقسّم (بدل شبكة المئة)",
+   "resource": "شبكة المئة",
    "answer_type": "ج8",
    "answer": "A",
-   "text_ar": "الملوّن ⁦ 25% ⁩ من الشريط. أي البطاقات تساويه؟",
-   "text_en": "The coloured part is ⁦ 25% ⁩ of the strip. Which card equals it?",
-   "audio_ar": "الملوّن ⁦ 25% ⁩ من الشريط. أي البطاقات تساويه؟",
-   "audio_en": "The coloured part is ⁦ 25% ⁩ of the strip. Which card equals it?",
+   "text_ar": "الملوّن ⁦ 25% ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "text_en": "The coloured part is ⁦ 25% ⁩ of the grid. Which card equals it?",
+   "audio_ar": "الملوّن ⁦ 25% ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "audio_en": "The coloured part is ⁦ 25% ⁩ of the grid. Which card equals it?",
    "wrong": {},
    "slot": null,
    "alt_of": null,
@@ -703078,12 +703949,11 @@
     "C": "3/4"
    },
    "model": {
-    "kind": "fstrip",
-    "n": 1,
-    "d": 4
+    "kind": "grid100",
+    "n": 25
    },
    "fact_seen_before": false,
-   "v": "7578ed1cc936777d"
+   "v": "fcfdad992787a121"
   },
   {
    "id": "7-4-1/gate/10",
@@ -703183,13 +704053,13 @@
     "d": 4,
     "f": 2
    },
-   "resource": "شريط مقسّم (بدل شبكة المئة)",
+   "resource": "شبكة المئة",
    "answer_type": "ج8",
    "answer": "A",
-   "text_ar": "الملوّن ⁦ 75% ⁩ من الشريط. أي البطاقات تساويه؟",
-   "text_en": "The coloured part is ⁦ 75% ⁩ of the strip. Which card equals it?",
-   "audio_ar": "الملوّن ⁦ 75% ⁩ من الشريط. أي البطاقات تساويه؟",
-   "audio_en": "The coloured part is ⁦ 75% ⁩ of the strip. Which card equals it?",
+   "text_ar": "الملوّن ⁦ 75% ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "text_en": "The coloured part is ⁦ 75% ⁩ of the grid. Which card equals it?",
+   "audio_ar": "الملوّن ⁦ 75% ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "audio_en": "The coloured part is ⁦ 75% ⁩ of the grid. Which card equals it?",
    "wrong": {},
    "slot": null,
    "alt_of": null,
@@ -703212,12 +704082,11 @@
     "C": "3/10"
    },
    "model": {
-    "kind": "fstrip",
-    "n": 3,
-    "d": 4
+    "kind": "grid100",
+    "n": 75
    },
    "fact_seen_before": false,
-   "v": "c3e97951bf8f8bdb"
+   "v": "deb64b9b7cf67f06"
   },
   {
    "id": "7-4-1/gate/13",
@@ -703231,13 +704100,13 @@
     "d": 4,
     "f": 1
    },
-   "resource": "شريط مقسّم (بدل شبكة المئة)",
+   "resource": "شبكة المئة",
    "answer_type": "ج8",
    "answer": "A",
-   "text_ar": "الملوّن ⁦ 0.75 ⁩ من الشريط. أي البطاقات تساويه؟",
-   "text_en": "The coloured part is ⁦ 0.75 ⁩ of the strip. Which card equals it?",
-   "audio_ar": "الملوّن ⁦ 0.75 ⁩ من الشريط. أي البطاقات تساويه؟",
-   "audio_en": "The coloured part is ⁦ 0.75 ⁩ of the strip. Which card equals it?",
+   "text_ar": "الملوّن ⁦ 0.75 ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "text_en": "The coloured part is ⁦ 0.75 ⁩ of the grid. Which card equals it?",
+   "audio_ar": "الملوّن ⁦ 0.75 ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "audio_en": "The coloured part is ⁦ 0.75 ⁩ of the grid. Which card equals it?",
    "wrong": {},
    "slot": null,
    "alt_of": null,
@@ -703260,12 +704129,11 @@
     "C": "30%"
    },
    "model": {
-    "kind": "fstrip",
-    "n": 3,
-    "d": 4
+    "kind": "grid100",
+    "n": 75
    },
    "fact_seen_before": false,
-   "v": "613a19d3aa150358"
+   "v": "a6a5e14e7dcd19b4"
   },
   {
    "id": "7-4-1/gate/14",
@@ -703580,13 +704448,13 @@
     "d": 10,
     "f": 0
    },
-   "resource": "شريط مقسّم (بدل شبكة المئة)",
+   "resource": "شبكة المئة",
    "answer_type": "ج8",
    "answer": "A",
-   "text_ar": "الملوّن ⁦ 1/10 ⁩ من الشريط. أي البطاقات تساويه؟",
-   "text_en": "The coloured part is ⁦ 1/10 ⁩ of the strip. Which card equals it?",
-   "audio_ar": "الملوّن ⁦ 1/10 ⁩ من الشريط. أي البطاقات تساويه؟",
-   "audio_en": "The coloured part is ⁦ 1/10 ⁩ of the strip. Which card equals it?",
+   "text_ar": "الملوّن ⁦ 1/10 ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "text_en": "The coloured part is ⁦ 1/10 ⁩ of the grid. Which card equals it?",
+   "audio_ar": "الملوّن ⁦ 1/10 ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "audio_en": "The coloured part is ⁦ 1/10 ⁩ of the grid. Which card equals it?",
    "wrong": {},
    "slot": null,
    "alt_of": null,
@@ -703609,12 +704477,11 @@
     "C": "0.3"
    },
    "model": {
-    "kind": "fstrip",
-    "n": 1,
-    "d": 10
+    "kind": "grid100",
+    "n": 10
    },
    "fact_seen_before": false,
-   "v": "29e51ee3bb1c376e"
+   "v": "5eee86089e6fa568"
   },
   {
    "id": "7-4-1/regate/07",
@@ -703628,13 +704495,13 @@
     "d": 2,
     "f": 2
    },
-   "resource": "شريط مقسّم (بدل شبكة المئة)",
+   "resource": "شبكة المئة",
    "answer_type": "ج8",
    "answer": "A",
-   "text_ar": "الملوّن ⁦ 50% ⁩ من الشريط. أي البطاقات تساويه؟",
-   "text_en": "The coloured part is ⁦ 50% ⁩ of the strip. Which card equals it?",
-   "audio_ar": "الملوّن ⁦ 50% ⁩ من الشريط. أي البطاقات تساويه؟",
-   "audio_en": "The coloured part is ⁦ 50% ⁩ of the strip. Which card equals it?",
+   "text_ar": "الملوّن ⁦ 50% ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "text_en": "The coloured part is ⁦ 50% ⁩ of the grid. Which card equals it?",
+   "audio_ar": "الملوّن ⁦ 50% ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "audio_en": "The coloured part is ⁦ 50% ⁩ of the grid. Which card equals it?",
    "wrong": {},
    "slot": null,
    "alt_of": null,
@@ -703657,12 +704524,11 @@
     "C": "3/10"
    },
    "model": {
-    "kind": "fstrip",
-    "n": 1,
-    "d": 2
+    "kind": "grid100",
+    "n": 50
    },
    "fact_seen_before": false,
-   "v": "5af6481f82adb438"
+   "v": "991fd5cf2895fe2e"
   },
   {
    "id": "7-4-1/regate/08",
@@ -703676,13 +704542,13 @@
     "d": 4,
     "f": 1
    },
-   "resource": "شريط مقسّم (بدل شبكة المئة)",
+   "resource": "شبكة المئة",
    "answer_type": "ج8",
    "answer": "A",
-   "text_ar": "الملوّن ⁦ 0.25 ⁩ من الشريط. أي البطاقات تساويه؟",
-   "text_en": "The coloured part is ⁦ 0.25 ⁩ of the strip. Which card equals it?",
-   "audio_ar": "الملوّن ⁦ 0.25 ⁩ من الشريط. أي البطاقات تساويه؟",
-   "audio_en": "The coloured part is ⁦ 0.25 ⁩ of the strip. Which card equals it?",
+   "text_ar": "الملوّن ⁦ 0.25 ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "text_en": "The coloured part is ⁦ 0.25 ⁩ of the grid. Which card equals it?",
+   "audio_ar": "الملوّن ⁦ 0.25 ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "audio_en": "The coloured part is ⁦ 0.25 ⁩ of the grid. Which card equals it?",
    "wrong": {},
    "slot": null,
    "alt_of": null,
@@ -703705,12 +704571,11 @@
     "C": "75%"
    },
    "model": {
-    "kind": "fstrip",
-    "n": 1,
-    "d": 4
+    "kind": "grid100",
+    "n": 25
    },
    "fact_seen_before": false,
-   "v": "4a3fdc71bfcf1f46"
+   "v": "fa92ff427cb5f469"
   },
   {
    "id": "7-4-1/regate/09",
@@ -703724,13 +704589,13 @@
     "d": 2,
     "f": 1
    },
-   "resource": "شريط مقسّم (بدل شبكة المئة)",
+   "resource": "شبكة المئة",
    "answer_type": "ج8",
    "answer": "A",
-   "text_ar": "الملوّن ⁦ 0.5 ⁩ من الشريط. أي البطاقات تساويه؟",
-   "text_en": "The coloured part is ⁦ 0.5 ⁩ of the strip. Which card equals it?",
-   "audio_ar": "الملوّن ⁦ 0.5 ⁩ من الشريط. أي البطاقات تساويه؟",
-   "audio_en": "The coloured part is ⁦ 0.5 ⁩ of the strip. Which card equals it?",
+   "text_ar": "الملوّن ⁦ 0.5 ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "text_en": "The coloured part is ⁦ 0.5 ⁩ of the grid. Which card equals it?",
+   "audio_ar": "الملوّن ⁦ 0.5 ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "audio_en": "The coloured part is ⁦ 0.5 ⁩ of the grid. Which card equals it?",
    "wrong": {},
    "slot": null,
    "alt_of": null,
@@ -703753,12 +704618,11 @@
     "C": "30%"
    },
    "model": {
-    "kind": "fstrip",
-    "n": 1,
-    "d": 2
+    "kind": "grid100",
+    "n": 50
    },
    "fact_seen_before": false,
-   "v": "3de9b0f60eb62ec4"
+   "v": "d510c29b73246870"
   },
   {
    "id": "7-4-1/regate/10",
@@ -703858,13 +704722,13 @@
     "d": 10,
     "f": 1
    },
-   "resource": "شريط مقسّم (بدل شبكة المئة)",
+   "resource": "شبكة المئة",
    "answer_type": "ج8",
    "answer": "A",
-   "text_ar": "الملوّن ⁦ 0.1 ⁩ من الشريط. أي البطاقات تساويه؟",
-   "text_en": "The coloured part is ⁦ 0.1 ⁩ of the strip. Which card equals it?",
-   "audio_ar": "الملوّن ⁦ 0.1 ⁩ من الشريط. أي البطاقات تساويه؟",
-   "audio_en": "The coloured part is ⁦ 0.1 ⁩ of the strip. Which card equals it?",
+   "text_ar": "الملوّن ⁦ 0.1 ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "text_en": "The coloured part is ⁦ 0.1 ⁩ of the grid. Which card equals it?",
+   "audio_ar": "الملوّن ⁦ 0.1 ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "audio_en": "The coloured part is ⁦ 0.1 ⁩ of the grid. Which card equals it?",
    "wrong": {},
    "slot": null,
    "alt_of": null,
@@ -703887,12 +704751,11 @@
     "C": "30%"
    },
    "model": {
-    "kind": "fstrip",
-    "n": 1,
-    "d": 10
+    "kind": "grid100",
+    "n": 10
    },
    "fact_seen_before": false,
-   "v": "9ded5270ef938b11"
+   "v": "fe60b423b1b9ab2b"
   },
   {
    "id": "7-4-1/regate/13",
@@ -703906,13 +704769,13 @@
     "d": 4,
     "f": 0
    },
-   "resource": "شريط مقسّم (بدل شبكة المئة)",
+   "resource": "شبكة المئة",
    "answer_type": "ج8",
    "answer": "A",
-   "text_ar": "الملوّن ⁦ 3/4 ⁩ من الشريط. أي البطاقات تساويه؟",
-   "text_en": "The coloured part is ⁦ 3/4 ⁩ of the strip. Which card equals it?",
-   "audio_ar": "الملوّن ⁦ 3/4 ⁩ من الشريط. أي البطاقات تساويه؟",
-   "audio_en": "The coloured part is ⁦ 3/4 ⁩ of the strip. Which card equals it?",
+   "text_ar": "الملوّن ⁦ 3/4 ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "text_en": "The coloured part is ⁦ 3/4 ⁩ of the grid. Which card equals it?",
+   "audio_ar": "الملوّن ⁦ 3/4 ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "audio_en": "The coloured part is ⁦ 3/4 ⁩ of the grid. Which card equals it?",
    "wrong": {},
    "slot": null,
    "alt_of": null,
@@ -703935,12 +704798,11 @@
     "C": "0.3"
    },
    "model": {
-    "kind": "fstrip",
-    "n": 3,
-    "d": 4
+    "kind": "grid100",
+    "n": 75
    },
    "fact_seen_before": false,
-   "v": "94af3a5cb4f69596"
+   "v": "345b3fbadf774cb4"
   },
   {
    "id": "7-4-1/regate/14",
@@ -704040,13 +704902,13 @@
     "d": 2,
     "f": 0
    },
-   "resource": "شريط مقسّم (بدل شبكة المئة)",
+   "resource": "شبكة المئة",
    "answer_type": "ج8",
    "answer": "A",
-   "text_ar": "الملوّن ⁦ 1/2 ⁩ من الشريط. أي البطاقات تساويه؟",
-   "text_en": "The coloured part is ⁦ 1/2 ⁩ of the strip. Which card equals it?",
-   "audio_ar": "الملوّن ⁦ 1/2 ⁩ من الشريط. أي البطاقات تساويه؟",
-   "audio_en": "The coloured part is ⁦ 1/2 ⁩ of the strip. Which card equals it?",
+   "text_ar": "الملوّن ⁦ 1/2 ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "text_en": "The coloured part is ⁦ 1/2 ⁩ of the grid. Which card equals it?",
+   "audio_ar": "الملوّن ⁦ 1/2 ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "audio_en": "The coloured part is ⁦ 1/2 ⁩ of the grid. Which card equals it?",
    "wrong": {},
    "slot": null,
    "alt_of": null,
@@ -704069,12 +704931,11 @@
     "C": "0.3"
    },
    "model": {
-    "kind": "fstrip",
-    "n": 1,
-    "d": 2
+    "kind": "grid100",
+    "n": 50
    },
    "fact_seen_before": false,
-   "v": "26d444a3cf946725"
+   "v": "4f4719e27eccf058"
   },
   {
    "id": "7-4-1/short/02",
@@ -708059,13 +708920,13 @@
     "d": 10,
     "f": 0
    },
-   "resource": "شريط مقسّم (بدل شبكة المئة)",
+   "resource": "شبكة المئة",
    "answer_type": "ج8",
    "answer": "A",
-   "text_ar": "الملوّن ⁦ 1/10 ⁩ من الشريط. أي البطاقات تساويه؟",
-   "text_en": "The coloured part is ⁦ 1/10 ⁩ of the strip. Which card equals it?",
-   "audio_ar": "الملوّن ⁦ 1/10 ⁩ من الشريط. أي البطاقات تساويه؟",
-   "audio_en": "The coloured part is ⁦ 1/10 ⁩ of the strip. Which card equals it?",
+   "text_ar": "الملوّن ⁦ 1/10 ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "text_en": "The coloured part is ⁦ 1/10 ⁩ of the grid. Which card equals it?",
+   "audio_ar": "الملوّن ⁦ 1/10 ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "audio_en": "The coloured part is ⁦ 1/10 ⁩ of the grid. Which card equals it?",
    "wrong": {},
    "slot": null,
    "alt_of": null,
@@ -708088,12 +708949,11 @@
     "C": "3/10"
    },
    "model": {
-    "kind": "fstrip",
-    "n": 1,
-    "d": 10
+    "kind": "grid100",
+    "n": 10
    },
    "fact_seen_before": false,
-   "v": "a21fceb92825beea"
+   "v": "adfecd79e53d963c"
   },
   {
    "id": "7-4-1/tryfirst/02",
@@ -708107,13 +708967,13 @@
     "d": 4,
     "f": 0
    },
-   "resource": "شريط مقسّم (بدل شبكة المئة)",
+   "resource": "شبكة المئة",
    "answer_type": "ج8",
    "answer": "A",
-   "text_ar": "الملوّن ⁦ 1/4 ⁩ من الشريط. أي البطاقات تساويه؟",
-   "text_en": "The coloured part is ⁦ 1/4 ⁩ of the strip. Which card equals it?",
-   "audio_ar": "الملوّن ⁦ 1/4 ⁩ من الشريط. أي البطاقات تساويه؟",
-   "audio_en": "The coloured part is ⁦ 1/4 ⁩ of the strip. Which card equals it?",
+   "text_ar": "الملوّن ⁦ 1/4 ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "text_en": "The coloured part is ⁦ 1/4 ⁩ of the grid. Which card equals it?",
+   "audio_ar": "الملوّن ⁦ 1/4 ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "audio_en": "The coloured part is ⁦ 1/4 ⁩ of the grid. Which card equals it?",
    "wrong": {},
    "slot": null,
    "alt_of": null,
@@ -708136,12 +708996,11 @@
     "C": "0.75"
    },
    "model": {
-    "kind": "fstrip",
-    "n": 1,
-    "d": 4
+    "kind": "grid100",
+    "n": 25
    },
    "fact_seen_before": false,
-   "v": "262035c76d91b4c3"
+   "v": "5aeaf1d6a06f2dc9"
   },
   {
    "id": "7-4-1/tryfirst/03",
@@ -708241,13 +709100,13 @@
     "d": 4,
     "f": 2
    },
-   "resource": "شريط مقسّم (بدل شبكة المئة)",
+   "resource": "شبكة المئة",
    "answer_type": "ج8",
    "answer": "A",
-   "text_ar": "الملوّن ⁦ 25% ⁩ من الشريط. أي البطاقات تساويه؟",
-   "text_en": "The coloured part is ⁦ 25% ⁩ of the strip. Which card equals it?",
-   "audio_ar": "الملوّن ⁦ 25% ⁩ من الشريط. أي البطاقات تساويه؟",
-   "audio_en": "The coloured part is ⁦ 25% ⁩ of the strip. Which card equals it?",
+   "text_ar": "الملوّن ⁦ 25% ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "text_en": "The coloured part is ⁦ 25% ⁩ of the grid. Which card equals it?",
+   "audio_ar": "الملوّن ⁦ 25% ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "audio_en": "The coloured part is ⁦ 25% ⁩ of the grid. Which card equals it?",
    "wrong": {},
    "slot": null,
    "alt_of": null,
@@ -708270,13 +709129,12 @@
     "C": "3/4"
    },
    "model": {
-    "kind": "fstrip",
-    "n": 1,
-    "d": 4
+    "kind": "grid100",
+    "n": 25
    },
    "round": 1,
    "fact_seen_before": true,
-   "v": "254b4aea8f8d6351"
+   "v": "5dce0e68fd8d5265"
   },
   {
    "id": "7-4-1/evidence/18",
@@ -708334,13 +709192,13 @@
     "d": 4,
     "f": 2
    },
-   "resource": "شريط مقسّم (بدل شبكة المئة)",
+   "resource": "شبكة المئة",
    "answer_type": "ج8",
    "answer": "A",
-   "text_ar": "الملوّن ⁦ 75% ⁩ من الشريط. أي البطاقات تساويه؟",
-   "text_en": "The coloured part is ⁦ 75% ⁩ of the strip. Which card equals it?",
-   "audio_ar": "الملوّن ⁦ 75% ⁩ من الشريط. أي البطاقات تساويه؟",
-   "audio_en": "The coloured part is ⁦ 75% ⁩ of the strip. Which card equals it?",
+   "text_ar": "الملوّن ⁦ 75% ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "text_en": "The coloured part is ⁦ 75% ⁩ of the grid. Which card equals it?",
+   "audio_ar": "الملوّن ⁦ 75% ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "audio_en": "The coloured part is ⁦ 75% ⁩ of the grid. Which card equals it?",
    "wrong": {},
    "slot": null,
    "alt_of": null,
@@ -708363,13 +709221,12 @@
     "C": "3/10"
    },
    "model": {
-    "kind": "fstrip",
-    "n": 3,
-    "d": 4
+    "kind": "grid100",
+    "n": 75
    },
    "round": 2,
    "fact_seen_before": true,
-   "v": "26ee87f9f7efa0b8"
+   "v": "a2ac7c3327e83f9c"
   },
   {
    "id": "7-4-1/evidence/20",
@@ -708470,13 +709327,13 @@
     "d": 4,
     "f": 1
    },
-   "resource": "شريط مقسّم (بدل شبكة المئة)",
+   "resource": "شبكة المئة",
    "answer_type": "ج8",
    "answer": "A",
-   "text_ar": "الملوّن ⁦ 0.75 ⁩ من الشريط. أي البطاقات تساويه؟",
-   "text_en": "The coloured part is ⁦ 0.75 ⁩ of the strip. Which card equals it?",
-   "audio_ar": "الملوّن ⁦ 0.75 ⁩ من الشريط. أي البطاقات تساويه؟",
-   "audio_en": "The coloured part is ⁦ 0.75 ⁩ of the strip. Which card equals it?",
+   "text_ar": "الملوّن ⁦ 0.75 ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "text_en": "The coloured part is ⁦ 0.75 ⁩ of the grid. Which card equals it?",
+   "audio_ar": "الملوّن ⁦ 0.75 ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "audio_en": "The coloured part is ⁦ 0.75 ⁩ of the grid. Which card equals it?",
    "wrong": {},
    "slot": null,
    "alt_of": null,
@@ -708499,12 +709356,11 @@
     "C": "30%"
    },
    "model": {
-    "kind": "fstrip",
-    "n": 3,
-    "d": 4
+    "kind": "grid100",
+    "n": 75
    },
    "fact_seen_before": true,
-   "v": "2119d29352c40e71"
+   "v": "c58c0e7804bf9ae0"
   },
   {
    "id": "7-4-1/more/03",
@@ -708561,13 +709417,13 @@
     "d": 10,
     "f": 0
    },
-   "resource": "شريط مقسّم (بدل شبكة المئة)",
+   "resource": "شبكة المئة",
    "answer_type": "ج8",
    "answer": "A",
-   "text_ar": "الملوّن ⁦ 1/10 ⁩ من الشريط. أي البطاقات تساويه؟",
-   "text_en": "The coloured part is ⁦ 1/10 ⁩ of the strip. Which card equals it?",
-   "audio_ar": "الملوّن ⁦ 1/10 ⁩ من الشريط. أي البطاقات تساويه؟",
-   "audio_en": "The coloured part is ⁦ 1/10 ⁩ of the strip. Which card equals it?",
+   "text_ar": "الملوّن ⁦ 1/10 ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "text_en": "The coloured part is ⁦ 1/10 ⁩ of the grid. Which card equals it?",
+   "audio_ar": "الملوّن ⁦ 1/10 ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "audio_en": "The coloured part is ⁦ 1/10 ⁩ of the grid. Which card equals it?",
    "wrong": {},
    "slot": null,
    "alt_of": null,
@@ -708590,12 +709446,11 @@
     "C": "0.3"
    },
    "model": {
-    "kind": "fstrip",
-    "n": 1,
-    "d": 10
+    "kind": "grid100",
+    "n": 10
    },
    "fact_seen_before": true,
-   "v": "17cd674e185a7f81"
+   "v": "dfee4ef139389ed1"
   },
   {
    "id": "7-4-1/more/05",
@@ -708652,13 +709507,13 @@
     "d": 2,
     "f": 2
    },
-   "resource": "شريط مقسّم (بدل شبكة المئة)",
+   "resource": "شبكة المئة",
    "answer_type": "ج8",
    "answer": "A",
-   "text_ar": "الملوّن ⁦ 50% ⁩ من الشريط. أي البطاقات تساويه؟",
-   "text_en": "The coloured part is ⁦ 50% ⁩ of the strip. Which card equals it?",
-   "audio_ar": "الملوّن ⁦ 50% ⁩ من الشريط. أي البطاقات تساويه؟",
-   "audio_en": "The coloured part is ⁦ 50% ⁩ of the strip. Which card equals it?",
+   "text_ar": "الملوّن ⁦ 50% ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "text_en": "The coloured part is ⁦ 50% ⁩ of the grid. Which card equals it?",
+   "audio_ar": "الملوّن ⁦ 50% ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "audio_en": "The coloured part is ⁦ 50% ⁩ of the grid. Which card equals it?",
    "wrong": {},
    "slot": null,
    "alt_of": null,
@@ -708681,12 +709536,11 @@
     "C": "3/10"
    },
    "model": {
-    "kind": "fstrip",
-    "n": 1,
-    "d": 2
+    "kind": "grid100",
+    "n": 50
    },
    "fact_seen_before": true,
-   "v": "397b683b9dee0032"
+   "v": "e0e3494b191cf285"
   },
   {
    "id": "7-4-1/more/07",
@@ -708743,13 +709597,13 @@
     "d": 4,
     "f": 1
    },
-   "resource": "شريط مقسّم (بدل شبكة المئة)",
+   "resource": "شبكة المئة",
    "answer_type": "ج8",
    "answer": "A",
-   "text_ar": "الملوّن ⁦ 0.25 ⁩ من الشريط. أي البطاقات تساويه؟",
-   "text_en": "The coloured part is ⁦ 0.25 ⁩ of the strip. Which card equals it?",
-   "audio_ar": "الملوّن ⁦ 0.25 ⁩ من الشريط. أي البطاقات تساويه؟",
-   "audio_en": "The coloured part is ⁦ 0.25 ⁩ of the strip. Which card equals it?",
+   "text_ar": "الملوّن ⁦ 0.25 ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "text_en": "The coloured part is ⁦ 0.25 ⁩ of the grid. Which card equals it?",
+   "audio_ar": "الملوّن ⁦ 0.25 ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "audio_en": "The coloured part is ⁦ 0.25 ⁩ of the grid. Which card equals it?",
    "wrong": {},
    "slot": null,
    "alt_of": null,
@@ -708772,12 +709626,11 @@
     "C": "75%"
    },
    "model": {
-    "kind": "fstrip",
-    "n": 1,
-    "d": 4
+    "kind": "grid100",
+    "n": 25
    },
    "fact_seen_before": true,
-   "v": "5007d511a03572c3"
+   "v": "8e5d773d01046cca"
   },
   {
    "id": "7-4-1/more/09",
@@ -708834,13 +709687,13 @@
     "d": 2,
     "f": 1
    },
-   "resource": "شريط مقسّم (بدل شبكة المئة)",
+   "resource": "شبكة المئة",
    "answer_type": "ج8",
    "answer": "A",
-   "text_ar": "الملوّن ⁦ 0.5 ⁩ من الشريط. أي البطاقات تساويه؟",
-   "text_en": "The coloured part is ⁦ 0.5 ⁩ of the strip. Which card equals it?",
-   "audio_ar": "الملوّن ⁦ 0.5 ⁩ من الشريط. أي البطاقات تساويه؟",
-   "audio_en": "The coloured part is ⁦ 0.5 ⁩ of the strip. Which card equals it?",
+   "text_ar": "الملوّن ⁦ 0.5 ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "text_en": "The coloured part is ⁦ 0.5 ⁩ of the grid. Which card equals it?",
+   "audio_ar": "الملوّن ⁦ 0.5 ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "audio_en": "The coloured part is ⁦ 0.5 ⁩ of the grid. Which card equals it?",
    "wrong": {},
    "slot": null,
    "alt_of": null,
@@ -708863,12 +709716,11 @@
     "C": "30%"
    },
    "model": {
-    "kind": "fstrip",
-    "n": 1,
-    "d": 2
+    "kind": "grid100",
+    "n": 50
    },
    "fact_seen_before": true,
-   "v": "3c0854aed3bb3197"
+   "v": "a16b86871fe83cd4"
   },
   {
    "id": "7-4-1/more/11",
@@ -708925,13 +709777,13 @@
     "d": 4,
     "f": 0
    },
-   "resource": "شريط مقسّم (بدل شبكة المئة)",
+   "resource": "شبكة المئة",
    "answer_type": "ج8",
    "answer": "A",
-   "text_ar": "الملوّن ⁦ 3/4 ⁩ من الشريط. أي البطاقات تساويه؟",
-   "text_en": "The coloured part is ⁦ 3/4 ⁩ of the strip. Which card equals it?",
-   "audio_ar": "الملوّن ⁦ 3/4 ⁩ من الشريط. أي البطاقات تساويه؟",
-   "audio_en": "The coloured part is ⁦ 3/4 ⁩ of the strip. Which card equals it?",
+   "text_ar": "الملوّن ⁦ 3/4 ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "text_en": "The coloured part is ⁦ 3/4 ⁩ of the grid. Which card equals it?",
+   "audio_ar": "الملوّن ⁦ 3/4 ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "audio_en": "The coloured part is ⁦ 3/4 ⁩ of the grid. Which card equals it?",
    "wrong": {},
    "slot": null,
    "alt_of": null,
@@ -708954,12 +709806,11 @@
     "C": "0.3"
    },
    "model": {
-    "kind": "fstrip",
-    "n": 3,
-    "d": 4
+    "kind": "grid100",
+    "n": 75
    },
    "fact_seen_before": true,
-   "v": "143d26146125717e"
+   "v": "7ee9c4a1c51e9985"
   },
   {
    "id": "7-4-2/lesson/01",
@@ -708973,13 +709824,13 @@
     "d": 5,
     "f": 1
    },
-   "resource": "شريط مقسّم (بدل شبكة المئة)",
+   "resource": "شبكة المئة",
    "answer_type": "ج8",
    "answer": "A",
-   "text_ar": "الملوّن ⁦ 0.4 ⁩ من الشريط. أي البطاقات تساويه؟",
-   "text_en": "The coloured part is ⁦ 0.4 ⁩ of the strip. Which card equals it?",
-   "audio_ar": "الملوّن ⁦ 0.4 ⁩ من الشريط. أي البطاقات تساويه؟",
-   "audio_en": "The coloured part is ⁦ 0.4 ⁩ of the strip. Which card equals it?",
+   "text_ar": "الملوّن ⁦ 0.4 ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "text_en": "The coloured part is ⁦ 0.4 ⁩ of the grid. Which card equals it?",
+   "audio_ar": "الملوّن ⁦ 0.4 ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "audio_en": "The coloured part is ⁦ 0.4 ⁩ of the grid. Which card equals it?",
    "wrong": {},
    "slot": null,
    "alt_of": null,
@@ -709002,12 +709853,11 @@
     "C": "12.5%"
    },
    "model": {
-    "kind": "fstrip",
-    "n": 2,
-    "d": 5
+    "kind": "grid100",
+    "n": 40
    },
    "fact_seen_before": false,
-   "v": "864f381962c3fa2b"
+   "v": "e23873488ba32585"
   },
   {
    "id": "7-4-2/lesson/02",
@@ -709021,13 +709871,13 @@
     "d": 8,
     "f": 2
    },
-   "resource": "شريط مقسّم (بدل شبكة المئة)",
+   "resource": "شبكة المئة",
    "answer_type": "ج8",
    "answer": "A",
-   "text_ar": "الملوّن ⁦ 12.5% ⁩ من الشريط. أي البطاقات تساويه؟",
-   "text_en": "The coloured part is ⁦ 12.5% ⁩ of the strip. Which card equals it?",
-   "audio_ar": "الملوّن ⁦ 12.5% ⁩ من الشريط. أي البطاقات تساويه؟",
-   "audio_en": "The coloured part is ⁦ 12.5% ⁩ of the strip. Which card equals it?",
+   "text_ar": "الملوّن ⁦ 12.5% ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "text_en": "The coloured part is ⁦ 12.5% ⁩ of the grid. Which card equals it?",
+   "audio_ar": "الملوّن ⁦ 12.5% ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "audio_en": "The coloured part is ⁦ 12.5% ⁩ of the grid. Which card equals it?",
    "wrong": {},
    "slot": null,
    "alt_of": null,
@@ -709050,12 +709900,11 @@
     "C": "2/5"
    },
    "model": {
-    "kind": "fstrip",
-    "n": 1,
-    "d": 8
+    "kind": "grid100",
+    "n": 12.5
    },
    "fact_seen_before": false,
-   "v": "3c75eeb29913f7c6"
+   "v": "64eaae41434a84c3"
   },
   {
    "id": "7-4-2/lesson/03",
@@ -709069,13 +709918,13 @@
     "d": 5,
     "f": 2
    },
-   "resource": "شريط مقسّم (بدل شبكة المئة)",
+   "resource": "شبكة المئة",
    "answer_type": "ج8",
    "answer": "A",
-   "text_ar": "الملوّن ⁦ 40% ⁩ من الشريط. أي البطاقات تساويه؟",
-   "text_en": "The coloured part is ⁦ 40% ⁩ of the strip. Which card equals it?",
-   "audio_ar": "الملوّن ⁦ 40% ⁩ من الشريط. أي البطاقات تساويه؟",
-   "audio_en": "The coloured part is ⁦ 40% ⁩ of the strip. Which card equals it?",
+   "text_ar": "الملوّن ⁦ 40% ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "text_en": "The coloured part is ⁦ 40% ⁩ of the grid. Which card equals it?",
+   "audio_ar": "الملوّن ⁦ 40% ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "audio_en": "The coloured part is ⁦ 40% ⁩ of the grid. Which card equals it?",
    "wrong": {},
    "slot": null,
    "alt_of": null,
@@ -709098,12 +709947,11 @@
     "C": "1/8"
    },
    "model": {
-    "kind": "fstrip",
-    "n": 2,
-    "d": 5
+    "kind": "grid100",
+    "n": 40
    },
    "fact_seen_before": false,
-   "v": "3fec66859581e43c"
+   "v": "f21f2f195c663fce"
   },
   {
    "id": "7-4-2/lesson/04",
@@ -709332,13 +710180,13 @@
     "d": 4,
     "f": 1
    },
-   "resource": "شريط مقسّم (بدل شبكة المئة)",
+   "resource": "شبكة المئة",
    "answer_type": "ج8",
    "answer": "A",
-   "text_ar": "الملوّن ⁦ 0.75 ⁩ من الشريط. أي البطاقات تساويه؟",
-   "text_en": "The coloured part is ⁦ 0.75 ⁩ of the strip. Which card equals it?",
-   "audio_ar": "الملوّن ⁦ 0.75 ⁩ من الشريط. أي البطاقات تساويه؟",
-   "audio_en": "The coloured part is ⁦ 0.75 ⁩ of the strip. Which card equals it?",
+   "text_ar": "الملوّن ⁦ 0.75 ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "text_en": "The coloured part is ⁦ 0.75 ⁩ of the grid. Which card equals it?",
+   "audio_ar": "الملوّن ⁦ 0.75 ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "audio_en": "The coloured part is ⁦ 0.75 ⁩ of the grid. Which card equals it?",
    "wrong": {},
    "slot": null,
    "alt_of": null,
@@ -709361,12 +710209,11 @@
     "C": "30%"
    },
    "model": {
-    "kind": "fstrip",
-    "n": 3,
-    "d": 4
+    "kind": "grid100",
+    "n": 75
    },
    "fact_seen_before": false,
-   "v": "b1a1f1ef1c67821f"
+   "v": "f64035c4aa6d05c1"
   },
   {
    "id": "7-4-2/opening/03",
@@ -709380,13 +710227,13 @@
     "d": 8,
     "f": 0
    },
-   "resource": "شريط مقسّم (بدل شبكة المئة)",
+   "resource": "شبكة المئة",
    "answer_type": "ج8",
    "answer": "A",
-   "text_ar": "الملوّن ⁦ 1/8 ⁩ من الشريط. أي البطاقات تساويه؟",
-   "text_en": "The coloured part is ⁦ 1/8 ⁩ of the strip. Which card equals it?",
-   "audio_ar": "الملوّن ⁦ 1/8 ⁩ من الشريط. أي البطاقات تساويه؟",
-   "audio_en": "The coloured part is ⁦ 1/8 ⁩ of the strip. Which card equals it?",
+   "text_ar": "الملوّن ⁦ 1/8 ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "text_en": "The coloured part is ⁦ 1/8 ⁩ of the grid. Which card equals it?",
+   "audio_ar": "الملوّن ⁦ 1/8 ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "audio_en": "The coloured part is ⁦ 1/8 ⁩ of the grid. Which card equals it?",
    "wrong": {},
    "slot": null,
    "alt_of": null,
@@ -709409,12 +710256,11 @@
     "C": "75%"
    },
    "model": {
-    "kind": "fstrip",
-    "n": 1,
-    "d": 8
+    "kind": "grid100",
+    "n": 12.5
    },
    "fact_seen_before": false,
-   "v": "baa3226b63b5f4e2"
+   "v": "aef56effe4a5ef1c"
   },
   {
    "id": "7-4-2/opening/04",
@@ -709428,13 +710274,13 @@
     "d": 8,
     "f": 1
    },
-   "resource": "شريط مقسّم (بدل شبكة المئة)",
+   "resource": "شبكة المئة",
    "answer_type": "ج8",
    "answer": "A",
-   "text_ar": "الملوّن ⁦ 0.125 ⁩ من الشريط. أي البطاقات تساويه؟",
-   "text_en": "The coloured part is ⁦ 0.125 ⁩ of the strip. Which card equals it?",
-   "audio_ar": "الملوّن ⁦ 0.125 ⁩ من الشريط. أي البطاقات تساويه؟",
-   "audio_en": "The coloured part is ⁦ 0.125 ⁩ of the strip. Which card equals it?",
+   "text_ar": "الملوّن ⁦ 0.125 ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "text_en": "The coloured part is ⁦ 0.125 ⁩ of the grid. Which card equals it?",
+   "audio_ar": "الملوّن ⁦ 0.125 ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "audio_en": "The coloured part is ⁦ 0.125 ⁩ of the grid. Which card equals it?",
    "wrong": {},
    "slot": null,
    "alt_of": null,
@@ -709457,12 +710303,11 @@
     "C": "40%"
    },
    "model": {
-    "kind": "fstrip",
-    "n": 1,
-    "d": 8
+    "kind": "grid100",
+    "n": 12.5
    },
    "fact_seen_before": false,
-   "v": "2cd7c7fb57a15775"
+   "v": "5b65719c900fb0ea"
   },
   {
    "id": "7-4-2/opening/05",
@@ -709476,13 +710321,13 @@
     "d": 8,
     "f": 0
    },
-   "resource": "شريط مقسّم (بدل شبكة المئة)",
+   "resource": "شبكة المئة",
    "answer_type": "ج8",
    "answer": "A",
-   "text_ar": "الملوّن ⁦ 3/8 ⁩ من الشريط. أي البطاقات تساويه؟",
-   "text_en": "The coloured part is ⁦ 3/8 ⁩ of the strip. Which card equals it?",
-   "audio_ar": "الملوّن ⁦ 3/8 ⁩ من الشريط. أي البطاقات تساويه؟",
-   "audio_en": "The coloured part is ⁦ 3/8 ⁩ of the strip. Which card equals it?",
+   "text_ar": "الملوّن ⁦ 3/8 ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "text_en": "The coloured part is ⁦ 3/8 ⁩ of the grid. Which card equals it?",
+   "audio_ar": "الملوّن ⁦ 3/8 ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "audio_en": "The coloured part is ⁦ 3/8 ⁩ of the grid. Which card equals it?",
    "wrong": {},
    "slot": null,
    "alt_of": null,
@@ -709505,12 +710350,11 @@
     "C": "0.1"
    },
    "model": {
-    "kind": "fstrip",
-    "n": 3,
-    "d": 8
+    "kind": "grid100",
+    "n": 37.5
    },
    "fact_seen_before": true,
-   "v": "3fe19d7c8fcbc165"
+   "v": "f2bf40677def2919"
   },
   {
    "id": "7-4-2/practice/01",
@@ -709782,13 +710626,13 @@
     "d": 8,
     "f": 1
    },
-   "resource": "شريط مقسّم (بدل شبكة المئة)",
+   "resource": "شبكة المئة",
    "answer_type": "ج8",
    "answer": "A",
-   "text_ar": "الملوّن ⁦ 0.375 ⁩ من الشريط. أي البطاقات تساويه؟",
-   "text_en": "The coloured part is ⁦ 0.375 ⁩ of the strip. Which card equals it?",
-   "audio_ar": "الملوّن ⁦ 0.375 ⁩ من الشريط. أي البطاقات تساويه؟",
-   "audio_en": "The coloured part is ⁦ 0.375 ⁩ of the strip. Which card equals it?",
+   "text_ar": "الملوّن ⁦ 0.375 ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "text_en": "The coloured part is ⁦ 0.375 ⁩ of the grid. Which card equals it?",
+   "audio_ar": "الملوّن ⁦ 0.375 ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "audio_en": "The coloured part is ⁦ 0.375 ⁩ of the grid. Which card equals it?",
    "wrong": {},
    "slot": null,
    "alt_of": null,
@@ -709811,13 +710655,12 @@
     "C": "10%"
    },
    "model": {
-    "kind": "fstrip",
-    "n": 3,
-    "d": 8
+    "kind": "grid100",
+    "n": 37.5
    },
    "round": 1,
    "fact_seen_before": true,
-   "v": "ad4315b62c9e0c51"
+   "v": "a8cf99fe920fbbf0"
   },
   {
    "id": "7-4-2/evidence/02",
@@ -709831,13 +710674,13 @@
     "d": 5,
     "f": 0
    },
-   "resource": "شريط مقسّم (بدل شبكة المئة)",
+   "resource": "شبكة المئة",
    "answer_type": "ج8",
    "answer": "A",
-   "text_ar": "الملوّن ⁦ 1/5 ⁩ من الشريط. أي البطاقات تساويه؟",
-   "text_en": "The coloured part is ⁦ 1/5 ⁩ of the strip. Which card equals it?",
-   "audio_ar": "الملوّن ⁦ 1/5 ⁩ من الشريط. أي البطاقات تساويه؟",
-   "audio_en": "The coloured part is ⁦ 1/5 ⁩ of the strip. Which card equals it?",
+   "text_ar": "الملوّن ⁦ 1/5 ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "text_en": "The coloured part is ⁦ 1/5 ⁩ of the grid. Which card equals it?",
+   "audio_ar": "الملوّن ⁦ 1/5 ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "audio_en": "The coloured part is ⁦ 1/5 ⁩ of the grid. Which card equals it?",
    "wrong": {},
    "slot": null,
    "alt_of": null,
@@ -709860,13 +710703,12 @@
     "C": "0.75"
    },
    "model": {
-    "kind": "fstrip",
-    "n": 1,
-    "d": 5
+    "kind": "grid100",
+    "n": 20
    },
    "round": 1,
    "fact_seen_before": false,
-   "v": "db7bc07a5a74f04d"
+   "v": "d723e3020c53bdeb"
   },
   {
    "id": "7-4-2/evidence/03",
@@ -709880,13 +710722,13 @@
     "d": 4,
     "f": 0
    },
-   "resource": "شريط مقسّم (بدل شبكة المئة)",
+   "resource": "شبكة المئة",
    "answer_type": "ج8",
    "answer": "A",
-   "text_ar": "الملوّن ⁦ 3/4 ⁩ من الشريط. أي البطاقات تساويه؟",
-   "text_en": "The coloured part is ⁦ 3/4 ⁩ of the strip. Which card equals it?",
-   "audio_ar": "الملوّن ⁦ 3/4 ⁩ من الشريط. أي البطاقات تساويه؟",
-   "audio_en": "The coloured part is ⁦ 3/4 ⁩ of the strip. Which card equals it?",
+   "text_ar": "الملوّن ⁦ 3/4 ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "text_en": "The coloured part is ⁦ 3/4 ⁩ of the grid. Which card equals it?",
+   "audio_ar": "الملوّن ⁦ 3/4 ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "audio_en": "The coloured part is ⁦ 3/4 ⁩ of the grid. Which card equals it?",
    "wrong": {},
    "slot": null,
    "alt_of": null,
@@ -709909,13 +710751,12 @@
     "C": "0.3"
    },
    "model": {
-    "kind": "fstrip",
-    "n": 3,
-    "d": 4
+    "kind": "grid100",
+    "n": 75
    },
    "round": 1,
    "fact_seen_before": false,
-   "v": "8fa083b3882b9814"
+   "v": "5996a7c0cf094dc2"
   },
   {
    "id": "7-4-2/evidence/04",
@@ -709929,13 +710770,13 @@
     "d": 5,
     "f": 2
    },
-   "resource": "شريط مقسّم (بدل شبكة المئة)",
+   "resource": "شبكة المئة",
    "answer_type": "ج8",
    "answer": "A",
-   "text_ar": "الملوّن ⁦ 20% ⁩ من الشريط. أي البطاقات تساويه؟",
-   "text_en": "The coloured part is ⁦ 20% ⁩ of the strip. Which card equals it?",
-   "audio_ar": "الملوّن ⁦ 20% ⁩ من الشريط. أي البطاقات تساويه؟",
-   "audio_en": "The coloured part is ⁦ 20% ⁩ of the strip. Which card equals it?",
+   "text_ar": "الملوّن ⁦ 20% ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "text_en": "The coloured part is ⁦ 20% ⁩ of the grid. Which card equals it?",
+   "audio_ar": "الملوّن ⁦ 20% ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "audio_en": "The coloured part is ⁦ 20% ⁩ of the grid. Which card equals it?",
    "wrong": {},
    "slot": null,
    "alt_of": null,
@@ -709958,13 +710799,12 @@
     "C": "3/4"
    },
    "model": {
-    "kind": "fstrip",
-    "n": 1,
-    "d": 5
+    "kind": "grid100",
+    "n": 20
    },
    "round": 1,
    "fact_seen_before": true,
-   "v": "0e8b31a84c48b764"
+   "v": "d9fb9c45b69948e8"
   },
   {
    "id": "7-4-2/evidence/05",
@@ -710154,13 +710994,13 @@
     "d": 8,
     "f": 0
    },
-   "resource": "شريط مقسّم (بدل شبكة المئة)",
+   "resource": "شبكة المئة",
    "answer_type": "ج8",
    "answer": "A",
-   "text_ar": "الملوّن ⁦ 1/8 ⁩ من الشريط. أي البطاقات تساويه؟",
-   "text_en": "The coloured part is ⁦ 1/8 ⁩ of the strip. Which card equals it?",
-   "audio_ar": "الملوّن ⁦ 1/8 ⁩ من الشريط. أي البطاقات تساويه؟",
-   "audio_en": "The coloured part is ⁦ 1/8 ⁩ of the strip. Which card equals it?",
+   "text_ar": "الملوّن ⁦ 1/8 ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "text_en": "The coloured part is ⁦ 1/8 ⁩ of the grid. Which card equals it?",
+   "audio_ar": "الملوّن ⁦ 1/8 ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "audio_en": "The coloured part is ⁦ 1/8 ⁩ of the grid. Which card equals it?",
    "wrong": {},
    "slot": null,
    "alt_of": null,
@@ -710183,13 +711023,12 @@
     "C": "0.4"
    },
    "model": {
-    "kind": "fstrip",
-    "n": 1,
-    "d": 8
+    "kind": "grid100",
+    "n": 12.5
    },
    "round": 2,
    "fact_seen_before": true,
-   "v": "0b8b57145cd59ee2"
+   "v": "f699d9c141378f45"
   },
   {
    "id": "7-4-2/evidence/10",
@@ -710203,13 +711042,13 @@
     "d": 4,
     "f": 2
    },
-   "resource": "شريط مقسّم (بدل شبكة المئة)",
+   "resource": "شبكة المئة",
    "answer_type": "ج8",
    "answer": "A",
-   "text_ar": "الملوّن ⁦ 75% ⁩ من الشريط. أي البطاقات تساويه؟",
-   "text_en": "The coloured part is ⁦ 75% ⁩ of the strip. Which card equals it?",
-   "audio_ar": "الملوّن ⁦ 75% ⁩ من الشريط. أي البطاقات تساويه؟",
-   "audio_en": "The coloured part is ⁦ 75% ⁩ of the strip. Which card equals it?",
+   "text_ar": "الملوّن ⁦ 75% ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "text_en": "The coloured part is ⁦ 75% ⁩ of the grid. Which card equals it?",
+   "audio_ar": "الملوّن ⁦ 75% ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "audio_en": "The coloured part is ⁦ 75% ⁩ of the grid. Which card equals it?",
    "wrong": {},
    "slot": null,
    "alt_of": null,
@@ -710232,13 +711071,12 @@
     "C": "3/10"
    },
    "model": {
-    "kind": "fstrip",
-    "n": 3,
-    "d": 4
+    "kind": "grid100",
+    "n": 75
    },
    "round": 2,
    "fact_seen_before": true,
-   "v": "cfaabe6ed7c24775"
+   "v": "fff8a4e313137a5d"
   },
   {
    "id": "7-4-2/evidence/11",
@@ -710252,13 +711090,13 @@
     "d": 8,
     "f": 2
    },
-   "resource": "شريط مقسّم (بدل شبكة المئة)",
+   "resource": "شبكة المئة",
    "answer_type": "ج8",
    "answer": "A",
-   "text_ar": "الملوّن ⁦ 37.5% ⁩ من الشريط. أي البطاقات تساويه؟",
-   "text_en": "The coloured part is ⁦ 37.5% ⁩ of the strip. Which card equals it?",
-   "audio_ar": "الملوّن ⁦ 37.5% ⁩ من الشريط. أي البطاقات تساويه؟",
-   "audio_en": "The coloured part is ⁦ 37.5% ⁩ of the strip. Which card equals it?",
+   "text_ar": "الملوّن ⁦ 37.5% ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "text_en": "The coloured part is ⁦ 37.5% ⁩ of the grid. Which card equals it?",
+   "audio_ar": "الملوّن ⁦ 37.5% ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "audio_en": "The coloured part is ⁦ 37.5% ⁩ of the grid. Which card equals it?",
    "wrong": {},
    "slot": null,
    "alt_of": null,
@@ -710281,13 +711119,12 @@
     "C": "1/10"
    },
    "model": {
-    "kind": "fstrip",
-    "n": 3,
-    "d": 8
+    "kind": "grid100",
+    "n": 37.5
    },
    "round": 2,
    "fact_seen_before": true,
-   "v": "848b84b83cba8ba4"
+   "v": "b5070e7bfb3c53ae"
   },
   {
    "id": "7-4-2/evidence/12",
@@ -710301,13 +711138,13 @@
     "d": 5,
     "f": 0
    },
-   "resource": "شريط مقسّم (بدل شبكة المئة)",
+   "resource": "شبكة المئة",
    "answer_type": "ج8",
    "answer": "A",
-   "text_ar": "الملوّن ⁦ 2/5 ⁩ من الشريط. أي البطاقات تساويه؟",
-   "text_en": "The coloured part is ⁦ 2/5 ⁩ of the strip. Which card equals it?",
-   "audio_ar": "الملوّن ⁦ 2/5 ⁩ من الشريط. أي البطاقات تساويه؟",
-   "audio_en": "The coloured part is ⁦ 2/5 ⁩ of the strip. Which card equals it?",
+   "text_ar": "الملوّن ⁦ 2/5 ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "text_en": "The coloured part is ⁦ 2/5 ⁩ of the grid. Which card equals it?",
+   "audio_ar": "الملوّن ⁦ 2/5 ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "audio_en": "The coloured part is ⁦ 2/5 ⁩ of the grid. Which card equals it?",
    "wrong": {},
    "slot": null,
    "alt_of": null,
@@ -710330,13 +711167,12 @@
     "C": "0.125"
    },
    "model": {
-    "kind": "fstrip",
-    "n": 2,
-    "d": 5
+    "kind": "grid100",
+    "n": 40
    },
    "round": 2,
    "fact_seen_before": true,
-   "v": "de138643ce11d366"
+   "v": "2badcbf2ceb0dac0"
   },
   {
    "id": "7-4-2/evidence/13",
@@ -710741,13 +711577,13 @@
     "d": 8,
     "f": 2
    },
-   "resource": "شريط مقسّم (بدل شبكة المئة)",
+   "resource": "شبكة المئة",
    "answer_type": "ج8",
    "answer": "A",
-   "text_ar": "الملوّن ⁦ 12.5% ⁩ من الشريط. أي البطاقات تساويه؟",
-   "text_en": "The coloured part is ⁦ 12.5% ⁩ of the strip. Which card equals it?",
-   "audio_ar": "الملوّن ⁦ 12.5% ⁩ من الشريط. أي البطاقات تساويه؟",
-   "audio_en": "The coloured part is ⁦ 12.5% ⁩ of the strip. Which card equals it?",
+   "text_ar": "الملوّن ⁦ 12.5% ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "text_en": "The coloured part is ⁦ 12.5% ⁩ of the grid. Which card equals it?",
+   "audio_ar": "الملوّن ⁦ 12.5% ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "audio_en": "The coloured part is ⁦ 12.5% ⁩ of the grid. Which card equals it?",
    "wrong": {},
    "slot": null,
    "alt_of": null,
@@ -710770,12 +711606,11 @@
     "C": "2/5"
    },
    "model": {
-    "kind": "fstrip",
-    "n": 1,
-    "d": 8
+    "kind": "grid100",
+    "n": 12.5
    },
    "fact_seen_before": false,
-   "v": "264638f75ceafc7b"
+   "v": "83e210aa26562710"
   },
   {
    "id": "7-4-2/gate/07",
@@ -710789,13 +711624,13 @@
     "d": 5,
     "f": 2
    },
-   "resource": "شريط مقسّم (بدل شبكة المئة)",
+   "resource": "شبكة المئة",
    "answer_type": "ج8",
    "answer": "A",
-   "text_ar": "الملوّن ⁦ 40% ⁩ من الشريط. أي البطاقات تساويه؟",
-   "text_en": "The coloured part is ⁦ 40% ⁩ of the strip. Which card equals it?",
-   "audio_ar": "الملوّن ⁦ 40% ⁩ من الشريط. أي البطاقات تساويه؟",
-   "audio_en": "The coloured part is ⁦ 40% ⁩ of the strip. Which card equals it?",
+   "text_ar": "الملوّن ⁦ 40% ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "text_en": "The coloured part is ⁦ 40% ⁩ of the grid. Which card equals it?",
+   "audio_ar": "الملوّن ⁦ 40% ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "audio_en": "The coloured part is ⁦ 40% ⁩ of the grid. Which card equals it?",
    "wrong": {},
    "slot": null,
    "alt_of": null,
@@ -710818,12 +711653,11 @@
     "C": "1/8"
    },
    "model": {
-    "kind": "fstrip",
-    "n": 2,
-    "d": 5
+    "kind": "grid100",
+    "n": 40
    },
    "fact_seen_before": false,
-   "v": "241599aa6c594d3c"
+   "v": "9083042369046912"
   },
   {
    "id": "7-4-2/gate/08",
@@ -710837,13 +711671,13 @@
     "d": 4,
     "f": 1
    },
-   "resource": "شريط مقسّم (بدل شبكة المئة)",
+   "resource": "شبكة المئة",
    "answer_type": "ج8",
    "answer": "A",
-   "text_ar": "الملوّن ⁦ 0.75 ⁩ من الشريط. أي البطاقات تساويه؟",
-   "text_en": "The coloured part is ⁦ 0.75 ⁩ of the strip. Which card equals it?",
-   "audio_ar": "الملوّن ⁦ 0.75 ⁩ من الشريط. أي البطاقات تساويه؟",
-   "audio_en": "The coloured part is ⁦ 0.75 ⁩ of the strip. Which card equals it?",
+   "text_ar": "الملوّن ⁦ 0.75 ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "text_en": "The coloured part is ⁦ 0.75 ⁩ of the grid. Which card equals it?",
+   "audio_ar": "الملوّن ⁦ 0.75 ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "audio_en": "The coloured part is ⁦ 0.75 ⁩ of the grid. Which card equals it?",
    "wrong": {},
    "slot": null,
    "alt_of": null,
@@ -710866,12 +711700,11 @@
     "C": "30%"
    },
    "model": {
-    "kind": "fstrip",
-    "n": 3,
-    "d": 4
+    "kind": "grid100",
+    "n": 75
    },
    "fact_seen_before": false,
-   "v": "189d1bc44b37c273"
+   "v": "1f4f56655919ad84"
   },
   {
    "id": "7-4-2/gate/09",
@@ -710885,13 +711718,13 @@
     "d": 5,
     "f": 1
    },
-   "resource": "شريط مقسّم (بدل شبكة المئة)",
+   "resource": "شبكة المئة",
    "answer_type": "ج8",
    "answer": "A",
-   "text_ar": "الملوّن ⁦ 0.2 ⁩ من الشريط. أي البطاقات تساويه؟",
-   "text_en": "The coloured part is ⁦ 0.2 ⁩ of the strip. Which card equals it?",
-   "audio_ar": "الملوّن ⁦ 0.2 ⁩ من الشريط. أي البطاقات تساويه؟",
-   "audio_en": "The coloured part is ⁦ 0.2 ⁩ of the strip. Which card equals it?",
+   "text_ar": "الملوّن ⁦ 0.2 ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "text_en": "The coloured part is ⁦ 0.2 ⁩ of the grid. Which card equals it?",
+   "audio_ar": "الملوّن ⁦ 0.2 ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "audio_en": "The coloured part is ⁦ 0.2 ⁩ of the grid. Which card equals it?",
    "wrong": {},
    "slot": null,
    "alt_of": null,
@@ -710914,12 +711747,11 @@
     "C": "75%"
    },
    "model": {
-    "kind": "fstrip",
-    "n": 1,
-    "d": 5
+    "kind": "grid100",
+    "n": 20
    },
    "fact_seen_before": false,
-   "v": "2fda00b0c8e7670f"
+   "v": "03ef5812d45a9b37"
   },
   {
    "id": "7-4-2/gate/10",
@@ -711019,13 +711851,13 @@
     "d": 8,
     "f": 1
    },
-   "resource": "شريط مقسّم (بدل شبكة المئة)",
+   "resource": "شبكة المئة",
    "answer_type": "ج8",
    "answer": "A",
-   "text_ar": "الملوّن ⁦ 0.125 ⁩ من الشريط. أي البطاقات تساويه؟",
-   "text_en": "The coloured part is ⁦ 0.125 ⁩ of the strip. Which card equals it?",
-   "audio_ar": "الملوّن ⁦ 0.125 ⁩ من الشريط. أي البطاقات تساويه؟",
-   "audio_en": "The coloured part is ⁦ 0.125 ⁩ of the strip. Which card equals it?",
+   "text_ar": "الملوّن ⁦ 0.125 ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "text_en": "The coloured part is ⁦ 0.125 ⁩ of the grid. Which card equals it?",
+   "audio_ar": "الملوّن ⁦ 0.125 ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "audio_en": "The coloured part is ⁦ 0.125 ⁩ of the grid. Which card equals it?",
    "wrong": {},
    "slot": null,
    "alt_of": null,
@@ -711048,12 +711880,11 @@
     "C": "40%"
    },
    "model": {
-    "kind": "fstrip",
-    "n": 1,
-    "d": 8
+    "kind": "grid100",
+    "n": 12.5
    },
    "fact_seen_before": false,
-   "v": "d7a7789b15f349aa"
+   "v": "908b244e74fda12f"
   },
   {
    "id": "7-4-2/gate/13",
@@ -711067,13 +711898,13 @@
     "d": 8,
     "f": 0
    },
-   "resource": "شريط مقسّم (بدل شبكة المئة)",
+   "resource": "شبكة المئة",
    "answer_type": "ج8",
    "answer": "A",
-   "text_ar": "الملوّن ⁦ 3/8 ⁩ من الشريط. أي البطاقات تساويه؟",
-   "text_en": "The coloured part is ⁦ 3/8 ⁩ of the strip. Which card equals it?",
-   "audio_ar": "الملوّن ⁦ 3/8 ⁩ من الشريط. أي البطاقات تساويه؟",
-   "audio_en": "The coloured part is ⁦ 3/8 ⁩ of the strip. Which card equals it?",
+   "text_ar": "الملوّن ⁦ 3/8 ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "text_en": "The coloured part is ⁦ 3/8 ⁩ of the grid. Which card equals it?",
+   "audio_ar": "الملوّن ⁦ 3/8 ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "audio_en": "The coloured part is ⁦ 3/8 ⁩ of the grid. Which card equals it?",
    "wrong": {},
    "slot": null,
    "alt_of": null,
@@ -711096,12 +711927,11 @@
     "C": "0.1"
    },
    "model": {
-    "kind": "fstrip",
-    "n": 3,
-    "d": 8
+    "kind": "grid100",
+    "n": 37.5
    },
    "fact_seen_before": false,
-   "v": "0ddfbc804f712510"
+   "v": "890845411bde3faa"
   },
   {
    "id": "7-4-2/gate/14",
@@ -711416,13 +712246,13 @@
     "d": 8,
     "f": 1
    },
-   "resource": "شريط مقسّم (بدل شبكة المئة)",
+   "resource": "شبكة المئة",
    "answer_type": "ج8",
    "answer": "A",
-   "text_ar": "الملوّن ⁦ 0.375 ⁩ من الشريط. أي البطاقات تساويه؟",
-   "text_en": "The coloured part is ⁦ 0.375 ⁩ of the strip. Which card equals it?",
-   "audio_ar": "الملوّن ⁦ 0.375 ⁩ من الشريط. أي البطاقات تساويه؟",
-   "audio_en": "The coloured part is ⁦ 0.375 ⁩ of the strip. Which card equals it?",
+   "text_ar": "الملوّن ⁦ 0.375 ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "text_en": "The coloured part is ⁦ 0.375 ⁩ of the grid. Which card equals it?",
+   "audio_ar": "الملوّن ⁦ 0.375 ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "audio_en": "The coloured part is ⁦ 0.375 ⁩ of the grid. Which card equals it?",
    "wrong": {},
    "slot": null,
    "alt_of": null,
@@ -711445,12 +712275,11 @@
     "C": "10%"
    },
    "model": {
-    "kind": "fstrip",
-    "n": 3,
-    "d": 8
+    "kind": "grid100",
+    "n": 37.5
    },
    "fact_seen_before": false,
-   "v": "65f79210154df525"
+   "v": "8c79d218d33f82b5"
   },
   {
    "id": "7-4-2/regate/07",
@@ -711464,13 +712293,13 @@
     "d": 5,
     "f": 0
    },
-   "resource": "شريط مقسّم (بدل شبكة المئة)",
+   "resource": "شبكة المئة",
    "answer_type": "ج8",
    "answer": "A",
-   "text_ar": "الملوّن ⁦ 1/5 ⁩ من الشريط. أي البطاقات تساويه؟",
-   "text_en": "The coloured part is ⁦ 1/5 ⁩ of the strip. Which card equals it?",
-   "audio_ar": "الملوّن ⁦ 1/5 ⁩ من الشريط. أي البطاقات تساويه؟",
-   "audio_en": "The coloured part is ⁦ 1/5 ⁩ of the strip. Which card equals it?",
+   "text_ar": "الملوّن ⁦ 1/5 ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "text_en": "The coloured part is ⁦ 1/5 ⁩ of the grid. Which card equals it?",
+   "audio_ar": "الملوّن ⁦ 1/5 ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "audio_en": "The coloured part is ⁦ 1/5 ⁩ of the grid. Which card equals it?",
    "wrong": {},
    "slot": null,
    "alt_of": null,
@@ -711493,12 +712322,11 @@
     "C": "0.75"
    },
    "model": {
-    "kind": "fstrip",
-    "n": 1,
-    "d": 5
+    "kind": "grid100",
+    "n": 20
    },
    "fact_seen_before": false,
-   "v": "286253dc10716acc"
+   "v": "6eda883ce94d3961"
   },
   {
    "id": "7-4-2/regate/08",
@@ -711512,13 +712340,13 @@
     "d": 4,
     "f": 0
    },
-   "resource": "شريط مقسّم (بدل شبكة المئة)",
+   "resource": "شبكة المئة",
    "answer_type": "ج8",
    "answer": "A",
-   "text_ar": "الملوّن ⁦ 3/4 ⁩ من الشريط. أي البطاقات تساويه؟",
-   "text_en": "The coloured part is ⁦ 3/4 ⁩ of the strip. Which card equals it?",
-   "audio_ar": "الملوّن ⁦ 3/4 ⁩ من الشريط. أي البطاقات تساويه؟",
-   "audio_en": "The coloured part is ⁦ 3/4 ⁩ of the strip. Which card equals it?",
+   "text_ar": "الملوّن ⁦ 3/4 ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "text_en": "The coloured part is ⁦ 3/4 ⁩ of the grid. Which card equals it?",
+   "audio_ar": "الملوّن ⁦ 3/4 ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "audio_en": "The coloured part is ⁦ 3/4 ⁩ of the grid. Which card equals it?",
    "wrong": {},
    "slot": null,
    "alt_of": null,
@@ -711541,12 +712369,11 @@
     "C": "0.3"
    },
    "model": {
-    "kind": "fstrip",
-    "n": 3,
-    "d": 4
+    "kind": "grid100",
+    "n": 75
    },
    "fact_seen_before": false,
-   "v": "4e9028397a240233"
+   "v": "31d098451ea6579b"
   },
   {
    "id": "7-4-2/regate/09",
@@ -711560,13 +712387,13 @@
     "d": 5,
     "f": 2
    },
-   "resource": "شريط مقسّم (بدل شبكة المئة)",
+   "resource": "شبكة المئة",
    "answer_type": "ج8",
    "answer": "A",
-   "text_ar": "الملوّن ⁦ 20% ⁩ من الشريط. أي البطاقات تساويه؟",
-   "text_en": "The coloured part is ⁦ 20% ⁩ of the strip. Which card equals it?",
-   "audio_ar": "الملوّن ⁦ 20% ⁩ من الشريط. أي البطاقات تساويه؟",
-   "audio_en": "The coloured part is ⁦ 20% ⁩ of the strip. Which card equals it?",
+   "text_ar": "الملوّن ⁦ 20% ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "text_en": "The coloured part is ⁦ 20% ⁩ of the grid. Which card equals it?",
+   "audio_ar": "الملوّن ⁦ 20% ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "audio_en": "The coloured part is ⁦ 20% ⁩ of the grid. Which card equals it?",
    "wrong": {},
    "slot": null,
    "alt_of": null,
@@ -711589,12 +712416,11 @@
     "C": "3/4"
    },
    "model": {
-    "kind": "fstrip",
-    "n": 1,
-    "d": 5
+    "kind": "grid100",
+    "n": 20
    },
    "fact_seen_before": false,
-   "v": "c061d6873f319b0b"
+   "v": "ec9a53c8815a7cc3"
   },
   {
    "id": "7-4-2/regate/10",
@@ -711694,13 +712520,13 @@
     "d": 8,
     "f": 0
    },
-   "resource": "شريط مقسّم (بدل شبكة المئة)",
+   "resource": "شبكة المئة",
    "answer_type": "ج8",
    "answer": "A",
-   "text_ar": "الملوّن ⁦ 1/8 ⁩ من الشريط. أي البطاقات تساويه؟",
-   "text_en": "The coloured part is ⁦ 1/8 ⁩ of the strip. Which card equals it?",
-   "audio_ar": "الملوّن ⁦ 1/8 ⁩ من الشريط. أي البطاقات تساويه؟",
-   "audio_en": "The coloured part is ⁦ 1/8 ⁩ of the strip. Which card equals it?",
+   "text_ar": "الملوّن ⁦ 1/8 ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "text_en": "The coloured part is ⁦ 1/8 ⁩ of the grid. Which card equals it?",
+   "audio_ar": "الملوّن ⁦ 1/8 ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "audio_en": "The coloured part is ⁦ 1/8 ⁩ of the grid. Which card equals it?",
    "wrong": {},
    "slot": null,
    "alt_of": null,
@@ -711723,12 +712549,11 @@
     "C": "0.4"
    },
    "model": {
-    "kind": "fstrip",
-    "n": 1,
-    "d": 8
+    "kind": "grid100",
+    "n": 12.5
    },
    "fact_seen_before": false,
-   "v": "4744de029fd936ee"
+   "v": "7cf77954da1ac816"
   },
   {
    "id": "7-4-2/regate/13",
@@ -711742,13 +712567,13 @@
     "d": 4,
     "f": 2
    },
-   "resource": "شريط مقسّم (بدل شبكة المئة)",
+   "resource": "شبكة المئة",
    "answer_type": "ج8",
    "answer": "A",
-   "text_ar": "الملوّن ⁦ 75% ⁩ من الشريط. أي البطاقات تساويه؟",
-   "text_en": "The coloured part is ⁦ 75% ⁩ of the strip. Which card equals it?",
-   "audio_ar": "الملوّن ⁦ 75% ⁩ من الشريط. أي البطاقات تساويه؟",
-   "audio_en": "The coloured part is ⁦ 75% ⁩ of the strip. Which card equals it?",
+   "text_ar": "الملوّن ⁦ 75% ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "text_en": "The coloured part is ⁦ 75% ⁩ of the grid. Which card equals it?",
+   "audio_ar": "الملوّن ⁦ 75% ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "audio_en": "The coloured part is ⁦ 75% ⁩ of the grid. Which card equals it?",
    "wrong": {},
    "slot": null,
    "alt_of": null,
@@ -711771,12 +712596,11 @@
     "C": "3/10"
    },
    "model": {
-    "kind": "fstrip",
-    "n": 3,
-    "d": 4
+    "kind": "grid100",
+    "n": 75
    },
    "fact_seen_before": false,
-   "v": "560f9f3d2ddd9639"
+   "v": "d7ee5f3a1e905c59"
   },
   {
    "id": "7-4-2/regate/14",
@@ -711876,13 +712700,13 @@
     "d": 8,
     "f": 2
    },
-   "resource": "شريط مقسّم (بدل شبكة المئة)",
+   "resource": "شبكة المئة",
    "answer_type": "ج8",
    "answer": "A",
-   "text_ar": "الملوّن ⁦ 37.5% ⁩ من الشريط. أي البطاقات تساويه؟",
-   "text_en": "The coloured part is ⁦ 37.5% ⁩ of the strip. Which card equals it?",
-   "audio_ar": "الملوّن ⁦ 37.5% ⁩ من الشريط. أي البطاقات تساويه؟",
-   "audio_en": "The coloured part is ⁦ 37.5% ⁩ of the strip. Which card equals it?",
+   "text_ar": "الملوّن ⁦ 37.5% ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "text_en": "The coloured part is ⁦ 37.5% ⁩ of the grid. Which card equals it?",
+   "audio_ar": "الملوّن ⁦ 37.5% ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "audio_en": "The coloured part is ⁦ 37.5% ⁩ of the grid. Which card equals it?",
    "wrong": {},
    "slot": null,
    "alt_of": null,
@@ -711905,12 +712729,11 @@
     "C": "1/10"
    },
    "model": {
-    "kind": "fstrip",
-    "n": 3,
-    "d": 8
+    "kind": "grid100",
+    "n": 37.5
    },
    "fact_seen_before": false,
-   "v": "134f423975e56b01"
+   "v": "8fde28ee95ca0a1d"
   },
   {
    "id": "7-4-2/short/02",
@@ -715895,13 +716718,13 @@
     "d": 5,
     "f": 0
    },
-   "resource": "شريط مقسّم (بدل شبكة المئة)",
+   "resource": "شبكة المئة",
    "answer_type": "ج8",
    "answer": "A",
-   "text_ar": "الملوّن ⁦ 2/5 ⁩ من الشريط. أي البطاقات تساويه؟",
-   "text_en": "The coloured part is ⁦ 2/5 ⁩ of the strip. Which card equals it?",
-   "audio_ar": "الملوّن ⁦ 2/5 ⁩ من الشريط. أي البطاقات تساويه؟",
-   "audio_en": "The coloured part is ⁦ 2/5 ⁩ of the strip. Which card equals it?",
+   "text_ar": "الملوّن ⁦ 2/5 ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "text_en": "The coloured part is ⁦ 2/5 ⁩ of the grid. Which card equals it?",
+   "audio_ar": "الملوّن ⁦ 2/5 ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "audio_en": "The coloured part is ⁦ 2/5 ⁩ of the grid. Which card equals it?",
    "wrong": {},
    "slot": null,
    "alt_of": null,
@@ -715924,12 +716747,11 @@
     "C": "0.125"
    },
    "model": {
-    "kind": "fstrip",
-    "n": 2,
-    "d": 5
+    "kind": "grid100",
+    "n": 40
    },
    "fact_seen_before": false,
-   "v": "9e6f5e4124e2f917"
+   "v": "c99bf628a9fdb1c0"
   },
   {
    "id": "7-4-2/tryfirst/02",
@@ -715943,13 +716765,13 @@
     "d": 5,
     "f": 1
    },
-   "resource": "شريط مقسّم (بدل شبكة المئة)",
+   "resource": "شبكة المئة",
    "answer_type": "ج8",
    "answer": "A",
-   "text_ar": "الملوّن ⁦ 0.4 ⁩ من الشريط. أي البطاقات تساويه؟",
-   "text_en": "The coloured part is ⁦ 0.4 ⁩ of the strip. Which card equals it?",
-   "audio_ar": "الملوّن ⁦ 0.4 ⁩ من الشريط. أي البطاقات تساويه؟",
-   "audio_en": "The coloured part is ⁦ 0.4 ⁩ of the strip. Which card equals it?",
+   "text_ar": "الملوّن ⁦ 0.4 ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "text_en": "The coloured part is ⁦ 0.4 ⁩ of the grid. Which card equals it?",
+   "audio_ar": "الملوّن ⁦ 0.4 ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "audio_en": "The coloured part is ⁦ 0.4 ⁩ of the grid. Which card equals it?",
    "wrong": {},
    "slot": null,
    "alt_of": null,
@@ -715972,12 +716794,11 @@
     "C": "12.5%"
    },
    "model": {
-    "kind": "fstrip",
-    "n": 2,
-    "d": 5
+    "kind": "grid100",
+    "n": 40
    },
    "fact_seen_before": false,
-   "v": "05c83ab5953b9979"
+   "v": "3aaf3891116301ad"
   },
   {
    "id": "7-4-2/tryfirst/03",
@@ -716077,13 +716898,13 @@
     "d": 8,
     "f": 2
    },
-   "resource": "شريط مقسّم (بدل شبكة المئة)",
+   "resource": "شبكة المئة",
    "answer_type": "ج8",
    "answer": "A",
-   "text_ar": "الملوّن ⁦ 12.5% ⁩ من الشريط. أي البطاقات تساويه؟",
-   "text_en": "The coloured part is ⁦ 12.5% ⁩ of the strip. Which card equals it?",
-   "audio_ar": "الملوّن ⁦ 12.5% ⁩ من الشريط. أي البطاقات تساويه؟",
-   "audio_en": "The coloured part is ⁦ 12.5% ⁩ of the strip. Which card equals it?",
+   "text_ar": "الملوّن ⁦ 12.5% ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "text_en": "The coloured part is ⁦ 12.5% ⁩ of the grid. Which card equals it?",
+   "audio_ar": "الملوّن ⁦ 12.5% ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "audio_en": "The coloured part is ⁦ 12.5% ⁩ of the grid. Which card equals it?",
    "wrong": {},
    "slot": null,
    "alt_of": null,
@@ -716106,13 +716927,12 @@
     "C": "2/5"
    },
    "model": {
-    "kind": "fstrip",
-    "n": 1,
-    "d": 8
+    "kind": "grid100",
+    "n": 12.5
    },
    "round": 1,
    "fact_seen_before": true,
-   "v": "9b7d32ee504f3f7c"
+   "v": "dc83f8a17eac3f79"
   },
   {
    "id": "7-4-2/evidence/18",
@@ -716170,13 +716990,13 @@
     "d": 5,
     "f": 2
    },
-   "resource": "شريط مقسّم (بدل شبكة المئة)",
+   "resource": "شبكة المئة",
    "answer_type": "ج8",
    "answer": "A",
-   "text_ar": "الملوّن ⁦ 40% ⁩ من الشريط. أي البطاقات تساويه؟",
-   "text_en": "The coloured part is ⁦ 40% ⁩ of the strip. Which card equals it?",
-   "audio_ar": "الملوّن ⁦ 40% ⁩ من الشريط. أي البطاقات تساويه؟",
-   "audio_en": "The coloured part is ⁦ 40% ⁩ of the strip. Which card equals it?",
+   "text_ar": "الملوّن ⁦ 40% ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "text_en": "The coloured part is ⁦ 40% ⁩ of the grid. Which card equals it?",
+   "audio_ar": "الملوّن ⁦ 40% ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "audio_en": "The coloured part is ⁦ 40% ⁩ of the grid. Which card equals it?",
    "wrong": {},
    "slot": null,
    "alt_of": null,
@@ -716199,13 +717019,12 @@
     "C": "1/8"
    },
    "model": {
-    "kind": "fstrip",
-    "n": 2,
-    "d": 5
+    "kind": "grid100",
+    "n": 40
    },
    "round": 2,
    "fact_seen_before": true,
-   "v": "24de0be57339e2ab"
+   "v": "1f7c486f67051254"
   },
   {
    "id": "7-4-2/evidence/20",
@@ -716306,13 +717125,13 @@
     "d": 4,
     "f": 1
    },
-   "resource": "شريط مقسّم (بدل شبكة المئة)",
+   "resource": "شبكة المئة",
    "answer_type": "ج8",
    "answer": "A",
-   "text_ar": "الملوّن ⁦ 0.75 ⁩ من الشريط. أي البطاقات تساويه؟",
-   "text_en": "The coloured part is ⁦ 0.75 ⁩ of the strip. Which card equals it?",
-   "audio_ar": "الملوّن ⁦ 0.75 ⁩ من الشريط. أي البطاقات تساويه؟",
-   "audio_en": "The coloured part is ⁦ 0.75 ⁩ of the strip. Which card equals it?",
+   "text_ar": "الملوّن ⁦ 0.75 ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "text_en": "The coloured part is ⁦ 0.75 ⁩ of the grid. Which card equals it?",
+   "audio_ar": "الملوّن ⁦ 0.75 ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "audio_en": "The coloured part is ⁦ 0.75 ⁩ of the grid. Which card equals it?",
    "wrong": {},
    "slot": null,
    "alt_of": null,
@@ -716335,12 +717154,11 @@
     "C": "30%"
    },
    "model": {
-    "kind": "fstrip",
-    "n": 3,
-    "d": 4
+    "kind": "grid100",
+    "n": 75
    },
    "fact_seen_before": true,
-   "v": "ba37ff9c15434d03"
+   "v": "c7bbcfb6df3cd616"
   },
   {
    "id": "7-4-2/more/03",
@@ -716397,13 +717215,13 @@
     "d": 5,
     "f": 1
    },
-   "resource": "شريط مقسّم (بدل شبكة المئة)",
+   "resource": "شبكة المئة",
    "answer_type": "ج8",
    "answer": "A",
-   "text_ar": "الملوّن ⁦ 0.2 ⁩ من الشريط. أي البطاقات تساويه؟",
-   "text_en": "The coloured part is ⁦ 0.2 ⁩ of the strip. Which card equals it?",
-   "audio_ar": "الملوّن ⁦ 0.2 ⁩ من الشريط. أي البطاقات تساويه؟",
-   "audio_en": "The coloured part is ⁦ 0.2 ⁩ of the strip. Which card equals it?",
+   "text_ar": "الملوّن ⁦ 0.2 ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "text_en": "The coloured part is ⁦ 0.2 ⁩ of the grid. Which card equals it?",
+   "audio_ar": "الملوّن ⁦ 0.2 ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "audio_en": "The coloured part is ⁦ 0.2 ⁩ of the grid. Which card equals it?",
    "wrong": {},
    "slot": null,
    "alt_of": null,
@@ -716426,12 +717244,11 @@
     "C": "75%"
    },
    "model": {
-    "kind": "fstrip",
-    "n": 1,
-    "d": 5
+    "kind": "grid100",
+    "n": 20
    },
    "fact_seen_before": true,
-   "v": "6a7d161c3c80ec39"
+   "v": "7eb7effef1bcb980"
   },
   {
    "id": "7-4-2/more/05",
@@ -716488,13 +717305,13 @@
     "d": 8,
     "f": 1
    },
-   "resource": "شريط مقسّم (بدل شبكة المئة)",
+   "resource": "شبكة المئة",
    "answer_type": "ج8",
    "answer": "A",
-   "text_ar": "الملوّن ⁦ 0.125 ⁩ من الشريط. أي البطاقات تساويه؟",
-   "text_en": "The coloured part is ⁦ 0.125 ⁩ of the strip. Which card equals it?",
-   "audio_ar": "الملوّن ⁦ 0.125 ⁩ من الشريط. أي البطاقات تساويه؟",
-   "audio_en": "The coloured part is ⁦ 0.125 ⁩ of the strip. Which card equals it?",
+   "text_ar": "الملوّن ⁦ 0.125 ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "text_en": "The coloured part is ⁦ 0.125 ⁩ of the grid. Which card equals it?",
+   "audio_ar": "الملوّن ⁦ 0.125 ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "audio_en": "The coloured part is ⁦ 0.125 ⁩ of the grid. Which card equals it?",
    "wrong": {},
    "slot": null,
    "alt_of": null,
@@ -716517,12 +717334,11 @@
     "C": "40%"
    },
    "model": {
-    "kind": "fstrip",
-    "n": 1,
-    "d": 8
+    "kind": "grid100",
+    "n": 12.5
    },
    "fact_seen_before": true,
-   "v": "4db0af2a561b9b80"
+   "v": "6bd8cf60c4cb5f76"
   },
   {
    "id": "7-4-2/more/07",
@@ -716579,13 +717395,13 @@
     "d": 8,
     "f": 0
    },
-   "resource": "شريط مقسّم (بدل شبكة المئة)",
+   "resource": "شبكة المئة",
    "answer_type": "ج8",
    "answer": "A",
-   "text_ar": "الملوّن ⁦ 3/8 ⁩ من الشريط. أي البطاقات تساويه؟",
-   "text_en": "The coloured part is ⁦ 3/8 ⁩ of the strip. Which card equals it?",
-   "audio_ar": "الملوّن ⁦ 3/8 ⁩ من الشريط. أي البطاقات تساويه؟",
-   "audio_en": "The coloured part is ⁦ 3/8 ⁩ of the strip. Which card equals it?",
+   "text_ar": "الملوّن ⁦ 3/8 ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "text_en": "The coloured part is ⁦ 3/8 ⁩ of the grid. Which card equals it?",
+   "audio_ar": "الملوّن ⁦ 3/8 ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "audio_en": "The coloured part is ⁦ 3/8 ⁩ of the grid. Which card equals it?",
    "wrong": {},
    "slot": null,
    "alt_of": null,
@@ -716608,12 +717424,11 @@
     "C": "0.1"
    },
    "model": {
-    "kind": "fstrip",
-    "n": 3,
-    "d": 8
+    "kind": "grid100",
+    "n": 37.5
    },
    "fact_seen_before": true,
-   "v": "e3d4768529254496"
+   "v": "e40ffc22f4adb92a"
   },
   {
    "id": "7-4-2/more/09",
@@ -716670,13 +717485,13 @@
     "d": 5,
     "f": 0
    },
-   "resource": "شريط مقسّم (بدل شبكة المئة)",
+   "resource": "شبكة المئة",
    "answer_type": "ج8",
    "answer": "A",
-   "text_ar": "الملوّن ⁦ 1/5 ⁩ من الشريط. أي البطاقات تساويه؟",
-   "text_en": "The coloured part is ⁦ 1/5 ⁩ of the strip. Which card equals it?",
-   "audio_ar": "الملوّن ⁦ 1/5 ⁩ من الشريط. أي البطاقات تساويه؟",
-   "audio_en": "The coloured part is ⁦ 1/5 ⁩ of the strip. Which card equals it?",
+   "text_ar": "الملوّن ⁦ 1/5 ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "text_en": "The coloured part is ⁦ 1/5 ⁩ of the grid. Which card equals it?",
+   "audio_ar": "الملوّن ⁦ 1/5 ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "audio_en": "The coloured part is ⁦ 1/5 ⁩ of the grid. Which card equals it?",
    "wrong": {},
    "slot": null,
    "alt_of": null,
@@ -716699,12 +717514,11 @@
     "C": "0.75"
    },
    "model": {
-    "kind": "fstrip",
-    "n": 1,
-    "d": 5
+    "kind": "grid100",
+    "n": 20
    },
    "fact_seen_before": true,
-   "v": "05c56a479b20d4bf"
+   "v": "a12c42a5e7d3b3a8"
   },
   {
    "id": "7-4-2/more/11",
@@ -716761,13 +717575,13 @@
     "d": 4,
     "f": 0
    },
-   "resource": "شريط مقسّم (بدل شبكة المئة)",
+   "resource": "شبكة المئة",
    "answer_type": "ج8",
    "answer": "A",
-   "text_ar": "الملوّن ⁦ 3/4 ⁩ من الشريط. أي البطاقات تساويه؟",
-   "text_en": "The coloured part is ⁦ 3/4 ⁩ of the strip. Which card equals it?",
-   "audio_ar": "الملوّن ⁦ 3/4 ⁩ من الشريط. أي البطاقات تساويه؟",
-   "audio_en": "The coloured part is ⁦ 3/4 ⁩ of the strip. Which card equals it?",
+   "text_ar": "الملوّن ⁦ 3/4 ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "text_en": "The coloured part is ⁦ 3/4 ⁩ of the grid. Which card equals it?",
+   "audio_ar": "الملوّن ⁦ 3/4 ⁩ من الشبكة. أي البطاقات تساويه؟",
+   "audio_en": "The coloured part is ⁦ 3/4 ⁩ of the grid. Which card equals it?",
    "wrong": {},
    "slot": null,
    "alt_of": null,
@@ -716790,12 +717604,11 @@
     "C": "0.3"
    },
    "model": {
-    "kind": "fstrip",
-    "n": 3,
-    "d": 4
+    "kind": "grid100",
+    "n": 75
    },
    "fact_seen_before": true,
-   "v": "452a62abb1be797a"
+   "v": "bb17be8f8f40e109"
   },
   {
    "id": "7-4-3/lesson/01",

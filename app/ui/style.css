@@ -152,3 +152,9 @@ svg.k-clock .hand { stroke: var(--ink); stroke-linecap: round; }
 svg.k-clock .hand.hour { stroke-width: 10; }
 svg.k-clock .hand.minute { stroke-width: 6; stroke: var(--calm); }
 svg.k-clock .pin { fill: var(--ink); }
+/* منزلق المنازل (7-2-3): الفاصلة العشرية، وشبكتا المقارنة (7-2-2) */
+svg.k-places .point { fill: var(--ink); }
+svg.k-grids .cell, svg.k-grid100 .cell.half { stroke: var(--ink); }
+/* رؤوس أعمدة جدول المنازل: كانت بلون نصها نفسه فلا تُقرأ */
+svg.k-places .cell.head { fill: #e6edf7; }
+svg.k-places .size { font-size: 15px; fill: var(--ink); }
