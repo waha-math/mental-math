@@ -27,6 +27,53 @@ HOW = ('back', 'up', 'other')
 # requested: ضغط الطفل «أحتاج مساعدة» في بوابة أو فحص، ولا يُعطى فيهما دعم. تفسير: ليست في قائمة 3.1
 
 
+# ---------------------------------------------------------------- 5.3 أنواع الإجابة
+# جواب البند في المحتوى: عدد صحيح (ج1)، أو معرّف بطاقة نصًّا (ج8 وج11)، أو قاموس بنوعه t:
+#   dec (ج2): n و s، أي n ÷ 10^s. الإدخال نص أرقام بنقطة واحدة على الأكثر، يُقارن بلا أعداد عائمة: 3.7 = 3.70
+#   frac (ج3): n و d، و simplest. الإدخال [بسط، مقام]: يُقبل المكافئ، وأبسط صورة وحدها إن طلبها البند
+#   qr (ج4): q و r. الإدخال [خارج، باقٍ]
+#   dur (ج5): m دقائق. الإدخال [ساعات، دقائق] والدقائق أقل من 60
+#   money (ج6): p قروش. الإدخال [جنيهات، قروش] والقروش أقل من 100
+#   est (ج7): lo و hi (ومعهما ref للعرض). الإدخال عدد صحيح في المجال المقبول
+def parse_dec(v):
+    """نص عشري إلى (عدد صحيح، منازل)، أو None. أرقام 0 إلى 9 ونقطة واحدة على الأكثر، بلا علامة."""
+    if not isinstance(v, str) or v.count('.') > 1 or not v.replace('.', '') or not v.replace('.', '').isdigit() \
+            or not all(c in '0123456789.' for c in v):
+        return None
+    a, _, b = v.partition('.')
+    return int((a or '0') + b), len(b)
+
+
+def nat(x):
+    return isinstance(x, int) and not isinstance(x, bool) and x >= 0
+
+
+def same(v, answer):
+    """هل الإجابة المؤكَّدة v صحيحة لجواب البند answer (5.3)."""
+    if not isinstance(answer, dict):
+        return v == answer
+    t = answer['t']
+    if t == 'dec':
+        p = parse_dec(v)
+        return p is not None and p[0] * 10 ** answer['s'] == answer['n'] * 10 ** p[1]
+    if t == 'est':
+        return nat(v) and answer['lo'] <= v <= answer['hi']
+    if not (isinstance(v, list) and len(v) == 2 and nat(v[0]) and nat(v[1])):
+        return False
+    a, b = v
+    if t == 'frac':
+        if b == 0 or a * answer['d'] != answer['n'] * b:
+            return False
+        return not answer.get('simplest') or (a, b) == (answer['n'], answer['d'])
+    if t == 'qr':
+        return (a, b) == (answer['q'], answer['r'])
+    if t == 'dur':
+        return b < 60 and a * 60 + b == answer['m']
+    if t == 'money':
+        return b < 100 and a * 100 + b == answer['p']
+    raise ValueError('نوع جواب غير معروف: %r' % (t,))
+
+
 # ---------------------------------------------------------------- 3.1 الحقول الخمسة
 def fold_item(raw, answer, assess):
     """raw: قائمة أحداث البند بترتيبها: ('confirm', قيمة)، ('support', نوع)، ('interrupt',)، ('end',).
@@ -44,7 +91,7 @@ def fold_item(raw, answer, assess):
                 raise ValueError('نوع دعم غير معروف: %r' % (ev[1],))
             pending.append(ev[1])
         elif kind == 'confirm':
-            ok = ev[1] == answer
+            ok = same(ev[1], answer)
             if first is None:
                 first, before = ok, pending
                 if assess:
@@ -726,7 +773,41 @@ class DescribeRun(Activity):
         return []
 
 
-CLASSES = {c.__name__: c for c in (GateRun, ShortCheckRun, OpeningRun, EvidenceRun, CheckRun, RetentionRun, DescribeRun)}
+class ReadyRun(Activity):
+    """بوابة الجاهزية لمتطلب خارجي (5.1، قرار الأب في 26 نوفمبر): 3 بنود قبل فتح درس المهارة. تتوقف عند أول بند غير
+    صحيح مستقل فتُخفق، والصحيحة كلها اجتياز. الانقطاع أو التعرّض المباشر بلا نتيجة: تُعاد في جلسة لاحقة."""
+    name = 'ready'
+
+    def __init__(self, skill, ext, size=3):
+        super().__init__(skill)
+        self.ext, self.size, self.pos = ext, size, 0
+
+    def want(self):
+        if self.done:
+            return None
+        return dict(activity=self.name, role='readiness', pos=self.pos, alternate=0)
+
+    def unavailable(self):
+        self._finish(None)                          # لا بنود في الحزمة: لا نتيجة، ويبقى الدرس مغلقًا
+
+    def feed(self, outcome):
+        assert not self.done
+        self.shown['ready'] += 1
+        if outcome in ('interrupted', 'exposed'):
+            return self._finish('interrupted')
+        if outcome != 'correct':
+            return self._finish('fail')
+        self.pos += 1
+        if self.pos == self.size:
+            self._finish('pass')
+
+    def events(self):
+        return [] if self.result is None else [dict(type='ready_result', skill=self.skill, ext=self.ext,
+                                                    result=self.result)]
+
+
+CLASSES = {c.__name__: c for c in (GateRun, ShortCheckRun, OpeningRun, EvidenceRun, CheckRun, RetentionRun, DescribeRun,
+                                   ReadyRun)}
 ASSESSING = ('gate', 'short', 'check', 'retention')         # أنشطة التقييم: علاج تكرار الحقيقة فيها تأخير البند
 
 

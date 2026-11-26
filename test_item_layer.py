@@ -521,6 +521,38 @@ check('اجتاز 1-4-1 في اليوم 2: فحوص الاحتفاظ في الأ
       'مرتين. وانقطاع في الفحص الأول ينهيه بلا نتيجة فيُجرى في اليوم التالي، فتتأخر المواعد بعده يومًا. وخطآن في '
       'الثاني: 3 من 5 تُعلَّم «تحتاج تثبيتًا»، والمهارة باقية مستوفاة', a and b)
 
+print('\n24. بوابة الجاهزية لمتطلب خارجي (قرار الأب، 26 نوفمبر)')
+# المتوقع من القاعدة: 3 بنود بترتيبها؛ الصحيحة كلها اجتياز، وأول بند غير صحيح مستقل إخفاق يوقفها، والانقطاع أو التعرّض بلا
+# نتيجة (حدث «انقطعت» لا يُعدّ في المحرك). ونشاط محفوظ في منتصفه يُكمَل من حيث توقف
+from item_layer import ReadyRun, Activity  # noqa: E402
+
+
+def ready(outcomes, cut=None):
+    act, wants = ReadyRun('8-5-2', 'clock'), []
+    for k, o in enumerate(outcomes):
+        if cut == k:
+            act = Activity.from_dict(act.to_dict())
+        w = act.want()
+        if w is None:
+            break
+        wants.append(w['pos'])
+        act.feed(o)
+    return act.result, act.events(), wants, act.shown['ready']
+
+
+ok = 'correct'
+a = ready([ok, ok, ok]) == ('pass', [dict(type='ready_result', skill='8-5-2', ext='clock', result='pass')], [0, 1, 2], 3)
+b = ready([ok, 'wrong', ok]) == ('fail', [dict(type='ready_result', skill='8-5-2', ext='clock', result='fail')], [0, 1], 2)
+c = ready(['help']) [0] == 'fail' and ready(['supported'])[0] == 'fail'
+d = ready([ok, 'interrupted'])[:2] == ('interrupted', [dict(type='ready_result', skill='8-5-2', ext='clock',
+                                                            result='interrupted')]) and ready(['exposed'])[0] == 'interrupted'
+f = ready([ok, ok, ok], cut=2) == ready([ok, ok, ok])
+u = ReadyRun('8-5-2', 'clock')
+u.unavailable()
+g = u.done and u.events() == []
+check('بوابة الجاهزية: ثلاثة بنود بترتيبها، والصحيحة كلها اجتياز، وأول بند غير صحيح مستقل إخفاق يوقفها، والانقطاع بلا '
+      'نتيجة تُعدّ. والمحفوظة في منتصفها تُكمَل، وبلا بنود لا حدث', a and b and c and d and f and g)
+
 if not all(results):
     print('أخفق اختبار.')
     sys.exit(1)

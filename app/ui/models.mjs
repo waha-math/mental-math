@@ -229,7 +229,7 @@ function round(m) {
   for (let j = 0; j <= 10; j++) svg.append(el('line', { x1: pad + j * step, y1: y - (j % 5 ? 10 : 20), x2: pad + j * step, y2: y + (j % 5 ? 10 : 20), class: 'link' }));
   svg.append(txt(pad, y + 50, String(m.lo), 'num'));
   svg.append(txt(W - pad, y + 50, String(m.hi), 'num'));
-  const x = pad + (m.v - m.lo) * step;
+  const x = pad + ((m.v - m.lo) / (m.hi - m.lo)) * (W - 2 * pad);       // عشرة أو مئة أو ألف بين العلامتين
   svg.append(el('circle', { cx: x, cy: y, r: 14, class: 'red' }));
   svg.append(txt(x, y - 48, String(m.v), 'num'));
   if (m.dist) {
@@ -263,7 +263,169 @@ function bar(m) {
   }
   return svg;
 }
-const KINDS = { dots, frame, path, discs, bond, cup, frames2, beads, jumps, tens, tens2, round, slide, bar };
+// المرحلة 4: مصفوفة نقاط (rows × cols). shade أعمدة ملوّنة من اليسار (نصف جدول 10)، cross أعمدة مشطوبة من اليمين
+// (جدول 9)، split خطّان بعد العمود والصف (المربع عند 5). لا عدد مكتوبًا عليها
+function arr(m) {
+  const c = 30, pad = 16, W = pad * 2 + m.cols * c, H = pad * 2 + m.rows * c;
+  const svg = svgOf(Math.max(W, 120), H, 'arr', { rows: m.rows, cols: m.cols, shade: m.shade ?? 0, cross: m.cross ?? 0,
+    split: m.split ?? 0 });
+  for (let r = 0; r < m.rows; r++) {
+    for (let k = 0; k < m.cols; k++) {
+      const x = pad + k * c + c / 2, y = pad + r * c + c / 2;
+      const crossed = m.cross && k >= m.cols - m.cross;
+      svg.append(el('circle', { cx: x, cy: y, r: 10, class: m.shade && k < m.shade ? 'red' : crossed ? 'counter off' : 'counter' }));
+      if (crossed) svg.append(el('line', { x1: x - 11, y1: y - 11, x2: x + 11, y2: y + 11, class: 'cross' }));
+    }
+  }
+  if (m.split) {
+    svg.append(el('line', { x1: pad + m.split * c, y1: 4, x2: pad + m.split * c, y2: H - 4, class: 'split' }));
+    if (m.rows > m.split) svg.append(el('line', { x1: 4, y1: pad + m.split * c, x2: W - 4, y2: pad + m.split * c, class: 'split' }));
+  }
+  return svg;
+}
+// القسمة: كومة تمر لم تُوزَّع (total)، وأطباق فارغة (plates) يوزّعها الطفل في ذهنه
+function share(m) {
+  const per = 12, c = 22, rows = Math.ceil(m.total / per), W = Math.max(per * c + 40, m.plates * 74 + 20);
+  const H = 30 + rows * c + 100, svg = svgOf(W, H, 'share', { total: m.total, plates: m.plates });
+  for (let j = 0; j < m.total; j++) svg.append(el('circle', { cx: 30 + (j % per) * c, cy: 24 + Math.floor(j / per) * c, r: 8, class: 'date' }));
+  for (let k = 0; k < m.plates; k++) svg.append(el('ellipse', { cx: 46 + k * 74, cy: H - 40, rx: 32, ry: 18, class: 'plate' }));
+  return svg;
+}
+// المرحلة 5: جدول المنازل بأرقام العدد، من اليسار إلى اليمين. shift: كم منزلة ينتقل العدد (موجب يسارًا في الضرب،
+// وسالب يمينًا في القسمة)، سهم فوق الجدول بلا ناتج
+function places(m) {
+  const n = Math.max(m.digits.length + Math.max(m.shift ?? 0, 0), 4), c = 84, W = n * c + 40, H = m.shift ? 230 : 170;
+  const svg = svgOf(W, H, 'places', { digits: m.digits.map(String), shift: m.shift ?? 0 });
+  const names = ['آحاد', 'عشرات', 'مئات', 'آلاف', 'عشرات الآلاف', 'مئات الآلاف'];
+  const top = m.shift ? 70 : 10;
+  for (let k = 0; k < n; k++) {
+    const x = 20 + k * c;
+    svg.append(el('rect', { x, y: top, width: c, height: 40, class: 'cell head' }));
+    svg.append(txt(x + c / 2, top + 20, names[n - 1 - k] ?? '', 'size'));
+    svg.append(el('rect', { x, y: top + 40, width: c, height: 80, class: 'cell' }));
+  }
+  const off = n - m.digits.length - Math.max(m.shift ?? 0, 0);
+  m.digits.forEach((d, k) => svg.append(txt(20 + (off + k) * c + c / 2, top + 80, String(d), 'num')));
+  if (m.shift) {
+    const x1 = 20 + (off + m.digits.length / 2) * c, x2 = x1 - m.shift * c;
+    svg.append(el('path', { d: `M ${x1} 50 Q ${(x1 + x2) / 2} 0 ${x2} 50`, class: 'jump' }));
+    svg.append(el('path', { d: `M ${x2} 50 l ${m.shift > 0 ? 4 : -4} -14 l ${m.shift > 0 ? 10 : -10} 6 z`, class: 'head' }));
+  }
+  return svg;
+}
+// المساحة: مستطيل بضلعيه مكتوبين، وداخله المجهول
+function area(m) {
+  const svg = svgOf(560, 320, 'area', { a: String(m.a), b: String(m.b) });
+  svg.append(el('rect', { x: 90, y: 40, width: 420, height: 230, class: 'cell' }));
+  svg.append(txt(300, 22, String(m.a), 'num'));
+  svg.append(txt(50, 155, String(m.b), 'num'));
+  svg.append(txt(300, 155, BOX, 'num ask'));
+  return svg;
+}
+// المراحل 6 و8: مستطيل مقسوم. أطوال أجزاء ضلعيه مكتوبة (top فوق، side يسارًا)، والمناطق بلا نواتجها. cross شريط مشطوب
+// من آخر الأعلى (التعويض)، و corner ركن ينقص من المربع (فرق المربعين)، و keep: المنطقة الأولى وحدها ملوّنة والباقي
+// يُنزع (قرب 100)
+function grid(m) {
+  const W = 620, H = 380, x0 = 90, y0 = 60, w = W - x0 - 20, h = H - y0 - 20;
+  const T = m.top.reduce((a, b) => a + b, 0), S = m.side.reduce((a, b) => a + b, 0);
+  const svg = svgOf(W, H, 'grid', { top: m.top.map(String), side: m.side.map(String), cross: m.cross ?? 0, corner: m.corner ?? 0 });
+  let x = x0;
+  m.top.forEach((t, i) => {
+    const dx = w * t / T;
+    let y = y0;
+    m.side.forEach((sd, j) => {
+      const dy = h * sd / S;
+      svg.append(el('rect', { x, y, width: dx, height: dy, class: 'cell' + (m.keep && (i > 0 || j > 0) ? ' off' : '') }));
+      if (i === 0) svg.append(txt(x0 - 40, y + dy / 2, String(sd), 'size'));
+      y += dy;
+    });
+    svg.append(txt(x + dx / 2, y0 - 26, String(t), 'size'));
+    x += dx;
+  });
+  if (m.cross) {
+    const dx = Math.max(w * m.cross / T, 14);
+    svg.append(el('rect', { x: x0 + w - dx, y: y0, width: dx, height: h, class: 'strip-off' }));
+    svg.append(txt(x0 + w - dx / 2, y0 - 26, '−' + m.cross, 'size'));
+  }
+  if (m.corner) {
+    const d = w * m.corner / T, e = h * m.corner / S;
+    svg.append(el('rect', { x: x0 + w - d, y: y0 + h - e, width: d, height: e, class: 'strip-off' }));
+  }
+  return svg;
+}
+// التنصيف والمضاعفة: المستطيل قبل القصّ، ثم بعد وضع النصف بجانب الآخر، وضلعه الطويل مجهول
+function halve(m) {
+  const svg = svgOf(700, 300, 'halve', { before: [String(m.a), String(m.b)], after: [String(m.a2), BOX] });
+  svg.append(el('rect', { x: 40, y: 60, width: 180, height: 200, class: 'cell' }));
+  svg.append(el('line', { x1: 40, y1: 160, x2: 220, y2: 160, class: 'split' }));
+  svg.append(txt(130, 36, String(m.b), 'size'));
+  svg.append(txt(18, 160, String(m.a), 'size'));
+  svg.append(el('rect', { x: 300, y: 110, width: 360, height: 100, class: 'cell' }));
+  svg.append(el('line', { x1: 480, y1: 110, x2: 480, y2: 210, class: 'split' }));
+  svg.append(txt(480, 86, BOX, 'size ask'));
+  svg.append(txt(278, 160, String(m.a2), 'size'));
+  return svg;
+}
+// القسمة بتجزئة المقسوم: شريط بجزأين بطوليهما، والقاسم فوقه
+function strip(m) {
+  const T = m.parts.reduce((a, b) => a + b, 0), W = 660;
+  const svg = svgOf(W, 200, 'strip', { parts: m.parts.map(String), by: String(m.by) });
+  let x = 30;
+  m.parts.forEach((p) => {
+    const dx = (W - 60) * p / T;
+    svg.append(el('rect', { x, y: 70, width: dx, height: 70, class: 'cell' }));
+    svg.append(txt(x + dx / 2, 105, String(p), 'size'));
+    x += dx;
+  });
+  svg.append(txt(W / 2 - 24, 30, '÷', 'num'));
+  svg.append(txt(W / 2 + 14, 30, String(m.by), 'num'));
+  return svg;
+}
+// الكسر: شريط d أجزاء، الملوّن n. d2: شريط ثانٍ مطابق بأجزاء أدق للمكافئ. whole: قيمة الشريط مكتوبة. times: عدد الأشرطة
+function fstrip(m) {
+  const rows = m.d2 ? 2 : Math.min(m.times ?? 1, 1), W = 680, H = 60 + (m.d2 ? 2 : 1) * 90;
+  const svg = svgOf(W, H, 'fstrip', { n: m.n, d: m.d, d2: m.d2 ?? 0, whole: m.whole ?? null, times: m.times ?? 0 });
+  const draw = (y, d, shaded) => {
+    for (let k = 0; k < d; k++) {
+      svg.append(el('rect', { x: 30 + k * (W - 60) / d, y, width: (W - 60) / d, height: 60, class: k < shaded ? 'cell on' : 'cell' }));
+    }
+  };
+  draw(40, m.d, m.n);
+  if (m.d2) draw(130, m.d2, 0);
+  if (m.whole != null) svg.append(txt(W / 2, 20, String(m.whole), 'size'));
+  return svg;
+}
+// شبكة المئة (الواحد): الملوّن n مربعًا صغيرًا. ra و rb (ضرب عشريين): مستطيل ra أعشار في rb أعشار
+function grid100(m) {
+  const c = 26, svg = svgOf(c * 10 + 20, c * 10 + 20, 'grid100', { n: m.n });
+  for (let k = 0; k < 100; k++) {
+    const col = k % 10, row = Math.floor(k / 10);
+    const on = m.ra ? col < m.rb && row < m.ra : k < m.n;
+    svg.append(el('rect', { x: 10 + col * c, y: 10 + row * c, width: c, height: c, class: on ? 'cell on' : 'cell' }));
+  }
+  return svg;
+}
+// وجه الساعة لبوابة الجاهزية (قراءة الساعة، 8-5-2): أرقام 1 إلى 12، والعقرب القصير بين ساعتيه بقدر الدقائق
+function clock(m) {
+  const C = 160, R = 140, svg = svgOf(2 * C, 2 * C, 'clock', { h: m.h, m: m.m });
+  svg.append(el('circle', { cx: C, cy: C, r: R, class: 'face' }));
+  const at = (turn, r) => [C + r * Math.sin(2 * Math.PI * turn), C - r * Math.cos(2 * Math.PI * turn)];
+  for (let k = 1; k <= 12; k++) {
+    const [x, y] = at(k / 12, R - 26);
+    svg.append(txt(x, y, String(k), 'num'));
+  }
+  for (let k = 0; k < 60; k++) {
+    const [x1, y1] = at(k / 60, R - (k % 5 ? 6 : 12)), [x2, y2] = at(k / 60, R);
+    svg.append(el('line', { x1, y1, x2, y2, class: 'tick' }));
+  }
+  const [hx, hy] = at(((m.h % 12) + m.m / 60) / 12, R * 0.5), [mx, my] = at(m.m / 60, R * 0.8);
+  svg.append(el('line', { x1: C, y1: C, x2: hx, y2: hy, class: 'hand hour', 'data-turn': ((m.h % 12) * 60 + m.m) / 720 }));
+  svg.append(el('line', { x1: C, y1: C, x2: mx, y2: my, class: 'hand minute', 'data-turn': m.m / 60 }));
+  svg.append(el('circle', { cx: C, cy: C, r: 7, class: 'pin' }));
+  return svg;
+}
+const KINDS = { dots, frame, path, discs, bond, cup, frames2, beads, jumps, tens, tens2, round, slide, bar, arr, share, places,
+  area, grid, halve, strip, fstrip, grid100, clock };
 
 // نموذج البند كما يطلبه موردُه (resource)، أو null إن كان «بلا نموذج» أو لا رسم له بعد
 export function modelFor(item) {

@@ -14,7 +14,7 @@
 | 3-5-2 الطرح بالإكمال | 7 | 5 | 8 | 6 | 40 | 27 | 27 | 3 | 60 | 30 | 0 |
 | 3-5-3 مسائل طرح مختلطة بأي من الطريقتين | 9 | 5 | 2 | 6 | 10 | 10 | 10 | 3 | 60 | 30 | 4 |
 
-المجموع 9364 بندًا. لكل بند: معرّف، دور، نوع دليل، أداء مطلوب، أعداد، مورد مسموح، نوع إجابة، جواب، نص وصوت بالعربية والإنجليزية، وإجابات خاطئة متوقعة بوصفها المحايد.
+المجموع 26389 بندًا. لكل بند: معرّف، دور، نوع دليل، أداء مطلوب، أعداد، مورد مسموح، نوع إجابة، جواب، نص وصوت بالعربية والإنجليزية، وإجابات خاطئة متوقعة بوصفها المحايد.
 
 ## 2. التصحيح
 
@@ -279,6 +279,209 @@
 | 3-8-2/evidence/09 | عدد حبات التمر 44، نقسمها بالتساوي بين طفلين. كم يأخذ كل طفل؟ | 44 dates are shared equally between two children. How many does each child get? | 22 |
 | 3-8-3/lesson/01 | شريط طوله 50 نقصّه نصفين متساويين. كم طول كل نصف؟ | A strip 50 long is cut into two equal halves. How long is each half? | 25 |
 | 3-8-3/lesson/04 | نصف 50 = ▢ | Half of 50 = ▢ | 25 |
+| 4-1-1/lesson/01 | ⁦ 5 × 3 ⁩ كم نقطة في المصفوفة؟ | ⁦ 5 × 3 ⁩ How many dots are in the array? | 15 |
+| 4-1-1/lesson/04 | ⁦ 4 × 2 = 2 + 2 + 2 + 2 = ▢ ⁩ | ⁦ 4 × 2 = 2 + 2 + 2 + 2 = ▢ ⁩ | 8 |
+| 4-1-1/evidence/09 | عدد الصفوف في الحديقة 2، وفي كل صف عدد من الأشجار هو 2. كم عدد الأشجار كلها؟ | A garden has 2 rows with 2 trees in each row. How many trees are there? | 4 |
+| 4-1-2/lesson/01 | ⁦ 3 × 7 = 21 ⁩ ⁦ 7 × 3 = ▢ ⁩ | ⁦ 3 × 7 = 21 ⁩ ⁦ 7 × 3 = ▢ ⁩ | 21 |
+| 4-1-2/lesson/04 | ⁦ 8 × 3 = 3 × ▢ ⁩ | ⁦ 8 × 3 = 3 × ▢ ⁩ | 8 |
+| 4-1-2/evidence/05 | هل هذا صحيح؟ ⁦ 8 × 6 = 6 × 9 ⁩ | Is this true? ⁦ 8 × 6 = 6 × 9 ⁩ | no |
+| 4-1-3/lesson/01 | ⁦ 1 × 5 = ▢ ⁩ | ⁦ 1 × 5 = ▢ ⁩ | 5 |
+| 4-1-3/evidence/05 | هل هذا صحيح؟ ⁦ 10 × 1 = 10 ⁩ | Is this true? ⁦ 10 × 1 = 10 ⁩ | yes |
+| 4-2-1/lesson/01 | ⁦ 8 × 2 ⁩ كم نقطة في المصفوفة؟ | ⁦ 8 × 2 ⁩ How many dots are in the array? | 16 |
+| 4-2-1/lesson/04 | ⁦ 3 × 2 = ▢ ⁩ | ⁦ 3 × 2 = ▢ ⁩ | 6 |
+| 4-2-2/lesson/01 | ⁦ 9 × 10 ⁩ كم العدد؟ (كل حزمة عشرة) | ⁦ 9 × 10 ⁩ What is the number? (each bundle is ten) | 90 |
+| 4-2-3/lesson/01 | ⁦ 3 × 5 ⁩ في كل صف عشر نقاط، والملوّن نصفها. كم نقطة ملوّنة؟ | ⁦ 3 × 5 ⁩ Each row has ten dots and half are coloured. How many dots are coloured? | 15 |
+| 4-2-3/lesson/04 | ⁦ 2 × 5 = ▢ ÷ 2 ⁩ | ⁦ 2 × 5 = ▢ ÷ 2 ⁩ | 20 |
+| 4-3-1/lesson/01 | ⁦ 24 ÷ 4 = ▢ ⁩ | ⁦ 24 ÷ 4 = ▢ ⁩ | 6 |
+| 4-3-1/lesson/04 | ⁦ 6 × 4 = 12 + ▢ ⁩ | ⁦ 6 × 4 = 12 + ▢ ⁩ | 12 |
+| 4-4-1/lesson/01 | ⁦ 6 × 3 = ▢ ⁩ | ⁦ 6 × 3 = ▢ ⁩ | 18 |
+| 4-4-1/lesson/04 | ⁦ 7 × 3 = 14 + ▢ ⁩ | ⁦ 7 × 3 = 14 + ▢ ⁩ | 7 |
+| 4-5-1/lesson/01 | ⁦ 3 × 9 ⁩ في كل صف عشر نقاط، شُطب منها واحدة. كم نقطة بقيت؟ | ⁦ 3 × 9 ⁩ Each row has ten dots and one is crossed out. How many dots are left? | 27 |
+| 4-5-1/lesson/04 | ⁦ 10 × 9 = 100 − ▢ ⁩ | ⁦ 10 × 9 = 100 − ▢ ⁩ | 10 |
+| 4-5-1/lesson/06 | ⁦ 9 × 4 = ▢ ⁩ | ⁦ 9 × 4 = ▢ ⁩ | 36 |
+| 4-6-1/lesson/01 | ⁦ 8 × 8 ⁩ كم نقطة في المربع؟ | ⁦ 8 × 8 ⁩ How many dots are in the square? | 64 |
+| 4-6-1/lesson/04 | ⁦ 5 × 5 = ▢ ⁩ | ⁦ 5 × 5 = ▢ ⁩ | 25 |
+| 4-6-2/lesson/01 | ⁦ 7 × 5 = ▢ ⁩ | ⁦ 7 × 5 = ▢ ⁩ | 35 |
+| 4-6-2/lesson/04 | ⁦ 5 × 7 = 25 + ▢ ⁩ | ⁦ 5 × 7 = 25 + ▢ ⁩ | 10 |
+| 4-6-3/lesson/01 | ⁦ 8 × 8 = ▢ ⁩ | ⁦ 8 × 8 = ▢ ⁩ | 64 |
+| 4-6-3/evidence/05 | هل هذا صحيح؟ ⁦ 6 × 8 = 48 ⁩ | Is this true? ⁦ 6 × 8 = 48 ⁩ | yes |
+| 4-7-1/lesson/01 | ⁦ 72 ÷ 8 ⁩ نوزع النقاط على الأطباق بالتساوي. كم في كل طبق؟ | ⁦ 72 ÷ 8 ⁩ Share the dots equally on the plates. How many on each plate? | 9 |
+| 4-7-1/lesson/04 | ⁦ ▢ × 4 = 32 ⁩ | ⁦ ▢ × 4 = 32 ⁩ | 8 |
+| 4-7-1/opening/01 | عدد حبات التمر 6، نوزعها بالتساوي على أطفال عددهم 3. كم يأخذ كل طفل؟ | 6 dates are shared equally among 3 children. How many does each child get? | 2 |
+| 4-7-2/lesson/01 | ⁦ 19 ÷ 9 ⁩ نوزع على الأطباق بالتساوي. كم في كل طبق، وكم يبقى؟ | ⁦ 19 ÷ 9 ⁩ Share equally on the plates. How many on each plate, and how many are left? | {'t': 'qr', 'q': 2, 'r': 1} |
+| 4-7-2/lesson/04 | ⁦ 11 ÷ 3 = ▢ ⁩ الخارج؟ والباقي؟ | ⁦ 11 ÷ 3 = ▢ ⁩ Quotient? Remainder? | {'t': 'qr', 'q': 3, 'r': 2} |
+| 4-7-2/evidence/09 | عدد حبات التمر 68، نوزعها بالتساوي على أطفال عددهم 9. كم يأخذ كل طفل، وكم يبقى؟ | 68 dates are shared equally among 9 children. How many does each child get, and how many are left? | {'t': 'qr', 'q': 7, 'r': 5} |
+| 4-8-1/lesson/01 | ⁦ 3 × 3 = ▢ ⁩ | ⁦ 3 × 3 = ▢ ⁩ | 9 |
+| 4-8-1/evidence/05 | عدد الأطباق 3، وعلى كل طبق عدد من حبات التمر هو 5. كم حبة تمر على الأطباق كلها؟ | There are 3 plates with 5 dates on each. How many dates are there altogether? | 15 |
+| 4-8-2/lesson/01 | ⁦ 60 ÷ 6 = ▢ ⁩ | ⁦ 60 ÷ 6 = ▢ ⁩ | 10 |
+| 4-8-2/evidence/05 | عدد حبات التمر 48، نوزعها بالتساوي على أطفال عددهم 6. كم يأخذ كل طفل؟ | 48 dates are shared equally among 6 children. How many does each child get? | 8 |
+| 4-8-3/lesson/01 | ⁦ 12 × 6 = ▢ ⁩ | ⁦ 12 × 6 = ▢ ⁩ | 72 |
+| 4-8-3/lesson/04 | ⁦ 13 × 5 = 50 + ▢ ⁩ | ⁦ 13 × 5 = 50 + ▢ ⁩ | 15 |
+| 4-8-4/lesson/01 | ⁦ 2 + 3 × 6 = ▢ ⁩ | ⁦ 2 + 3 × 6 = ▢ ⁩ | 20 |
+| 4-8-4/evidence/05 | هل هذا صحيح؟ ⁦ 7 + 8 × 9 = 79 ⁩ | Is this true? ⁦ 7 + 8 × 9 = 79 ⁩ | yes |
+| 5-1-1/lesson/01 | ما العدد في جدول المنازل؟ | What number is in the place value table? | 9733 |
+| 5-1-1/lesson/04 | ⁦ 4479 = 4000 + ▢ + 70 + 9 ⁩ | ⁦ 4479 = 4000 + ▢ + 70 + 9 ⁩ | 400 |
+| 5-1-2/lesson/01 | ⁦ 353 × 10 ⁩ كم يصير العدد بعد أن ينتقل في جدول المنازل؟ | ⁦ 353 × 10 ⁩ What does the number become after it moves in the place value table? | 3530 |
+| 5-1-2/lesson/04 | ⁦ 38 × 10 = ▢ ⁩ | ⁦ 38 × 10 = ▢ ⁩ | 380 |
+| 5-1-3/lesson/01 | ⁦ 290 ÷ 10 ⁩ كم يصير العدد بعد أن ينتقل في جدول المنازل؟ | ⁦ 290 ÷ 10 ⁩ What does the number become after it moves in the place value table? | 29 |
+| 5-1-3/lesson/04 | ⁦ 4300 ÷ 100 = ▢ ⁩ | ⁦ 4300 ÷ 100 = ▢ ⁩ | 43 |
+| 5-2-1/lesson/01 | ⁦ 346 + 207 = ▢ ⁩ | ⁦ 346 + 207 = ▢ ⁩ | 553 |
+| 5-2-1/lesson/04 | ⁦ 424 + 105 = 500 + 20 + ▢ ⁩ | ⁦ 424 + 105 = 500 + 20 + ▢ ⁩ | 9 |
+| 5-2-2/lesson/01 | ⁦ 697 + 298 = ▢ ⁩ | ⁦ 697 + 298 = ▢ ⁩ | 995 |
+| 5-2-2/lesson/04 | ⁦ 873 − 399 = 873 − 400 + ▢ ⁩ | ⁦ 873 − 399 = 873 − 400 + ▢ ⁩ | 1 |
+| 5-2-2/evidence/09 | هل هذا صحيح؟ ⁦ 741 − 399 = 741 − 400 − 1 ⁩ | Is this true? ⁦ 741 − 399 = 741 − 400 − 1 ⁩ | no |
+| 5-2-3/lesson/01 | ⁦ 910 − 233 ⁩ من 233 إلى 910 قفزتان. كم مجموعهما؟ | ⁦ 910 − 233 ⁩ From 233 to 910 in two jumps. What do they add up to? | 677 |
+| 5-2-3/lesson/04 | من 277 إلى 300 قفزة ▢ | From 277 to 300 is a jump of ▢ | 23 |
+| 5-2-3/lesson/06 | ⁦ 434 − 266 = ▢ ⁩ | ⁦ 434 − 266 = ▢ ⁩ | 168 |
+| 5-2-3/evidence/13 | عدد المقاعد في المسرح 812، جلس الناس في 717 منها. كم مقعدًا بقي فارغًا؟ | A theatre has 812 seats and people sat in 717. How many seats are empty? | 95 |
+| 5-3-1/lesson/01 | من 875 إلى 1000 قفزتان. كم مجموعهما؟ | From 875 to 1000 in two jumps. What do they add up to? | 125 |
+| 5-3-1/lesson/04 | من 861 إلى 900 قفزة 39، ومن 900 إلى 1000 قفزة ▢ | From 861 to 900 is a jump of 39, and from 900 to 1000 is a jump of ▢ | 100 |
+| 5-3-1/lesson/06 | ⁦ 868 + ▢ = 1000 ⁩ | ⁦ 868 + ▢ = 1000 ⁩ | 132 |
+| 5-3-2/lesson/01 | ⁦ 1000 − 730 = ▢ ⁩ | ⁦ 1000 − 730 = ▢ ⁩ | 270 |
+| 5-3-2/lesson/04 | في ⁦ 1000 − 640 ⁩ الرقم الأيمن غير الصفري 4 يُكمَّل إلى 10: ▢ | In ⁦ 1000 − 640 ⁩ the rightmost nonzero digit 4 is completed to 10: ▢ | 6 |
+| 5-3-2/evidence/09 | هل هذا صحيح؟ ⁦ 1000 − 360 = 640 ⁩ | Is this true? ⁦ 1000 − 360 = 640 ⁩ | yes |
+| 5-3-3/lesson/01 | ثمن الدراجة 391 جنيهًا، ودفعنا 500 جنيه. كم الباقي بالجنيه؟ | The bike costs 391 pounds and we pay 500 pounds. How much change, in pounds? | 109 |
+| 5-4-1/lesson/01 | ⁦ 40 × 70 ⁩ ما مساحة المستطيل؟ | ⁦ 40 × 70 ⁩ What is the area of the rectangle? | 2800 |
+| 5-4-1/lesson/04 | ⁦ 40 × 60 = ▢ ⁩ | ⁦ 40 × 60 = ▢ ⁩ | 2400 |
+| 5-4-1/evidence/09 | هل هذا صحيح؟ ⁦ 50 × 50 = 2500 ⁩ | Is this true? ⁦ 50 × 50 = 2500 ⁩ | yes |
+| 5-4-2/lesson/01 | ⁦ 140 ÷ 7 = ▢ ⁩ | ⁦ 140 ÷ 7 = ▢ ⁩ | 20 |
+| 5-4-2/lesson/04 | ⁦ 6000 ÷ 30 = 600 ÷ ▢ ⁩ | ⁦ 6000 ÷ 30 = 600 ÷ ▢ ⁩ | 3 |
+| 5-5-1/lesson/01 | إلى أي عشرة نقرّب 9041؟ | Round 9041 to the nearest ten. | 9040 |
+| 5-5-1/lesson/04 | 1210 مقرَّبًا إلى أقرب ألف = ▢ | 1210 rounded to the nearest thousand = ▢ | 1000 |
+| 5-5-2/lesson/01 | قدّر: ⁦ 238 + 679 ≈ ▢ ⁩ | Estimate: ⁦ 238 + 679 ≈ ▢ ⁩ | {'t': 'est', 'lo': 826, 'hi': 1008, 'ref': 900} |
+| 5-5-2/evidence/05 | ثمن حقيبة 934 جنيهًا، وثمن حذاء 927 جنيهًا. كم جنيهًا ندفع تقريبًا؟ | A bag costs 934 pounds and shoes cost 927 pounds. About how much do we pay? | {'t': 'est', 'lo': 1675, 'hi': 2047, 'ref': 1800} |
+| 5-5-3/lesson/01 | قدّر: ⁦ 48 × 82 ≈ ▢ ⁩ | Estimate: ⁦ 48 × 82 ≈ ▢ ⁩ | {'t': 'est', 'lo': 3346, 'hi': 4526, 'ref': 4000} |
+| 5-5-3/evidence/05 | ثمن الكتاب 53 جنيهًا، واشترينا كتبًا عددها 52. كم ندفع تقريبًا؟ | A book costs 53 pounds and we buy 52 books. About how much do we pay? | {'t': 'est', 'lo': 2343, 'hi': 3169, 'ref': 2500} |
+| 5-5-4/lesson/01 | الجواب 135 عن ⁦ 54 + 79 ⁩. هل هو معقول؟ | The answer 135 to ⁦ 54 + 79 ⁩. Is it reasonable? | yes |
+| 6-1-1/lesson/01 | ⁦ 12 × 9 ⁩ كم المجموع؟ | ⁦ 12 × 9 ⁩ What is the total? | 108 |
+| 6-1-1/lesson/04 | ⁦ 24 × 6 = 120 + ▢ ⁩ | ⁦ 24 × 6 = 120 + ▢ ⁩ | 24 |
+| 6-1-1/lesson/06 | ⁦ 39 × 4 = ▢ ⁩ | ⁦ 39 × 4 = ▢ ⁩ | 156 |
+| 6-1-1/evidence/13 | ثمن الكرة 33 جنيهًا، واشترينا كرات عددها 7. كم ندفع؟ | A ball costs 33 pounds and we buy 7 balls. How much do we pay? | 231 |
+| 6-1-2/lesson/01 | ⁦ 511 × 7 = ▢ ⁩ | ⁦ 511 × 7 = ▢ ⁩ | 3577 |
+| 6-1-2/lesson/04 | ⁦ 336 × 7 = 2100 + 210 + ▢ ⁩ | ⁦ 336 × 7 = 2100 + 210 + ▢ ⁩ | 42 |
+| 6-2-1/lesson/01 | ⁦ 39 × 7 ⁩ كم المجموع بعد نزع الشريط؟ | ⁦ 39 × 7 ⁩ What is the total after the strip is removed? | 273 |
+| 6-2-1/lesson/04 | ⁦ 18 × 7 = 140 − ▢ ⁩ | ⁦ 18 × 7 = 140 − ▢ ⁩ | 14 |
+| 6-2-1/lesson/06 | ⁦ 79 × 5 = ▢ ⁩ | ⁦ 79 × 5 = ▢ ⁩ | 395 |
+| 6-2-2/evidence/09 | هل هذا صحيح؟ ⁦ 41 × 8 = 320 + 8 ⁩ | Is this true? ⁦ 41 × 8 = 320 + 8 ⁩ | yes |
+| 6-3-1/lesson/01 | ⁦ 46 × 45 ⁩ نقصّ المستطيل نصفين ونضع النصف بجانب الآخر. ⁦ 23 × ▢ ⁩ | Cut the rectangle in half and put the halves side by side. ⁦ 46 × 45 ⁩ ⁦ 23 × ▢ ⁩ | 90 |
+| 6-3-1/lesson/04 | ⁦ 28 × 15 = 14 × ▢ ⁩ | ⁦ 28 × 15 = 14 × ▢ ⁩ | 30 |
+| 6-3-1/lesson/06 | ⁦ 14 × 35 = ▢ ⁩ | ⁦ 14 × 35 = ▢ ⁩ | 490 |
+| 6-3-2/lesson/01 | ⁦ 28 × 50 = ▢ ⁩ | ⁦ 28 × 50 = ▢ ⁩ | 1400 |
+| 6-3-2/lesson/04 | ⁦ 16 × 50 = ▢ ÷ 2 ⁩ | ⁦ 16 × 50 = ▢ ÷ 2 ⁩ | 1600 |
+| 6-3-3/lesson/01 | ⁦ 64 × 25 = ▢ ⁩ | ⁦ 64 × 25 = ▢ ⁩ | 1600 |
+| 6-3-3/lesson/04 | ⁦ 88 × 25 = ▢ × 100 ⁩ | ⁦ 88 × 25 = ▢ × 100 ⁩ | 22 |
+| 6-3-3/evidence/09 | هل هذا صحيح؟ ⁦ 80 × 25 = 2000 ⁩ | Is this true? ⁦ 80 × 25 = 2000 ⁩ | yes |
+| 6-4-1/lesson/01 | ⁦ 35 × 42 = ▢ ⁩ | ⁦ 35 × 42 = ▢ ⁩ | 1470 |
+| 6-4-1/lesson/04 | ⁦ 25 × 38 = 50 × ▢ ⁩ | ⁦ 25 × 38 = 50 × ▢ ⁩ | 19 |
+| 6-4-2/lesson/01 | ⁦ 65 × 11 = ▢ ⁩ | ⁦ 65 × 11 = ▢ ⁩ | 715 |
+| 6-4-2/lesson/04 | ⁦ 31 × 11 = 310 + ▢ ⁩ | ⁦ 31 × 11 = 310 + ▢ ⁩ | 31 |
+| 6-4-2/evidence/09 | هل هذا صحيح؟ ⁦ 57 × 11 = 627 ⁩ | Is this true? ⁦ 57 × 11 = 627 ⁩ | yes |
+| 6-4-3/lesson/01 | ⁦ 16 × 12 = ▢ ⁩ | ⁦ 16 × 12 = ▢ ⁩ | 192 |
+| 6-4-3/lesson/04 | ⁦ 24 × 12 = 240 + ▢ ⁩ | ⁦ 24 × 12 = 240 + ▢ ⁩ | 48 |
+| 6-5-1/lesson/01 | ⁦ 27 × 13 = ▢ ⁩ | ⁦ 27 × 13 = ▢ ⁩ | 351 |
+| 6-5-1/lesson/04 | ⁦ 26 × 18 = 260 + ▢ ⁩ | ⁦ 26 × 18 = 260 + ▢ ⁩ | 208 |
+| 6-5-1/evidence/09 | في القاعة صفوف عددها 13، وفي كل صف 32 مقعدًا. كم مقعدًا في القاعة؟ | A hall has 13 rows with 32 seats in each row. How many seats are there? | 416 |
+| 6-5-2/lesson/01 | ⁦ 34 × 13 ⁩ كم مجموع المناطق الأربع؟ | ⁦ 34 × 13 ⁩ What do the four parts add up to? | 442 |
+| 6-5-2/evidence/05 | هل هذا صحيح؟ ⁦ 32 × 21 = 600 + 40 + 30 ⁩ | Is this true? ⁦ 32 × 21 = 600 + 40 + 30 ⁩ | no |
+| 6-6-1/lesson/01 | ⁦ 576 ÷ 6 ⁩ قسمنا الشريط جزأين يقبل كلٌّ منهما القسمة على 6. كم الخارج؟ | ⁦ 576 ÷ 6 ⁩ The strip is split into two parts that both divide by 6. What is the quotient? | 96 |
+| 6-6-1/lesson/04 | ⁦ 657 ÷ 9 = 70 + ▢ ⁩ | ⁦ 657 ÷ 9 = 70 + ▢ ⁩ | 3 |
+| 6-6-1/lesson/06 | ⁦ 768 ÷ 8 = ▢ ⁩ | ⁦ 768 ÷ 8 = ▢ ⁩ | 96 |
+| 6-6-1/evidence/13 | عدد الأقلام 456، نضعها في علب بالتساوي، وعدد العلب 8. كم في كل علبة؟ | 456 pencils are put equally into 8 boxes. How many are in each box? | 57 |
+| 6-6-2/lesson/01 | ⁦ 150 ÷ 25 = ▢ ⁩ | ⁦ 150 ÷ 25 = ▢ ⁩ | 6 |
+| 6-6-2/lesson/04 | ⁦ 450 ÷ 5 = 900 ÷ 10 = ▢ ⁩ | ⁦ 450 ÷ 5 = 900 ÷ 10 = ▢ ⁩ | 90 |
+| 6-6-3/lesson/01 | ⁦ 223 ÷ 8 = ▢ ⁩ الخارج؟ والباقي؟ | ⁦ 223 ÷ 8 = ▢ ⁩ Quotient? Remainder? | {'t': 'qr', 'q': 27, 'r': 7} |
+| 6-6-3/evidence/05 | عدد الأقلام 220، نضعها في علب بالتساوي، وعدد العلب 6. كم في كل علبة، وكم يبقى خارجها؟ | 220 pencils are put equally into 6 boxes. How many go in each box, and how many are left over? | {'t': 'qr', 'q': 36, 'r': 4} |
+| 6-7-1/lesson/01 | هل يقبل العدد 244 القسمة على 2؟ | Is 244 divisible by 2? | yes |
+| 6-7-1/evidence/05 | العدد 990 يقبل القسمة على 10 لأن آخر رقم فيه 0. هل هذا صحيح؟ | 990 is divisible by 10 because its last digit is 0. Is this true? | yes |
+| 6-7-2/lesson/01 | هل يقبل العدد 1396 القسمة على 8؟ | Is 1396 divisible by 8? | no |
+| 6-7-2/evidence/05 | العدد 988 يقبل القسمة على 4 لأن آخر رقمين فيه 88. هل هذا صحيح؟ | 988 is divisible by 4 because its last two digits are 88. Is this true? | yes |
+| 6-7-3/lesson/01 | ما مجموع أرقام العدد 423؟ | What is the digit sum of 423? | 9 |
+| 6-7-3/lesson/04 | هل يقبل العدد 487 القسمة على 6؟ | Is 487 divisible by 6? | no |
+| 6-7-3/evidence/09 | العدد 905 يقبل القسمة على 3 لأن مجموع أرقامه 14. هل هذا صحيح؟ | 905 is divisible by 3 because its digit sum is 14. Is this true? | no |
+| 6-7-4/lesson/01 | هل يقبل العدد 121 القسمة على 11؟ | Is 121 divisible by 11? | yes |
+| 6-7-4/evidence/05 | العدد 861 يقبل القسمة على 11 لأن فرق مجموعي منازله المتناوبة 3. هل هذا صحيح؟ | 861 is divisible by 11 because its alternating digit sum difference is 3. Is this true? | no |
+| 7-1-1/lesson/01 | ما الكسر الملوّن من الشريط؟ | What fraction of the strip is coloured? | {'t': 'frac', 'n': 7, 'd': 10} |
+| 7-1-1/lesson/04 | اكتب الكسر: خمسة أسداس | Write the fraction: five sixths | {'t': 'frac', 'n': 5, 'd': 6} |
+| 7-1-1/evidence/05 | هل الملوّن ثلاثة أثمان الشريط؟ | Is the coloured part three eighths of the strip? | yes |
+| 7-1-2/lesson/01 | ⁦ 1/2 = ▢/4 ⁩ الشريطان متطابقان. | ⁦ 1/2 = ▢/4 ⁩ The two strips are the same length. | 2 |
+| 7-1-2/lesson/04 | ⁦ 1/2 = ▢/6 ⁩ | ⁦ 1/2 = ▢/6 ⁩ | 3 |
+| 7-1-2/evidence/05 | هل هذا صحيح؟ ⁦ 2/3 = 6/9 ⁩ | Is this true? ⁦ 2/3 = 6/9 ⁩ | yes |
+| 7-1-3/lesson/01 | نصف 8؟ الشريط كله 8. | What is half of 8? The whole strip is 8. | 4 |
+| 7-1-3/lesson/04 | ثُمن 72 = ▢ | an eighth of 72 = ▢ | 9 |
+| 7-1-3/evidence/09 | في العلبة 22 قلمًا، نصف منها أحمر. كم قلمًا أحمر؟ | A box has 22 pencils and half of them are red. How many are red? | 11 |
+| 7-1-4/lesson/01 | سبعة أعشار 110 = ▢ | seven tenths of 110 = ▢ | 77 |
+| 7-1-4/lesson/04 | ثلثا 21: ثلث 21 = 7، فـثلثا 21 = ▢ | two thirds of 21: a third of 21 = 7, so two thirds of 21 = ▢ | 14 |
+| 7-1-4/evidence/09 | عدد الطلاب 55، ذهب أربعة أخماس منهم في الرحلة. كم طالبًا ذهب؟ | There are 55 students and four fifths of them went on the trip. How many went? | 44 |
+| 7-1-5/lesson/01 | ⁦ 1 − 2/5 = ▢ ⁩ اكتب الناتج كسرًا. | ⁦ 1 − 2/5 = ▢ ⁩ Write the answer as a fraction. | {'t': 'frac', 'n': 3, 'd': 5} |
+| 7-1-5/lesson/04 | ⁦ 1 − 4/5 = ▢ ⁩ اكتب الناتج كسرًا. | ⁦ 1 − 4/5 = ▢ ⁩ Write the answer as a fraction. | {'t': 'frac', 'n': 1, 'd': 5} |
+| 7-2-1/lesson/01 | ما العدد العشري الذي يمثله الملوّن؟ (الشبكة كلها واحد) | What decimal does the coloured part show? (the whole grid is one) | {'t': 'dec', 'n': 61, 's': 2} |
+| 7-2-1/lesson/04 | 8 جنيهات و71 قرشًا = ▢ جنيه | 8 pounds and 71 piastres = ▢ pounds | {'t': 'dec', 'n': 871, 's': 2} |
+| 7-2-2/lesson/01 | أيهما أكبر؟ الشبكة كلها واحد. | Which is greater? The whole grid is one. | B |
+| 7-2-2/lesson/04 | أيهما أكبر؟ | Which is greater? | A |
+| 7-2-3/lesson/01 | ⁦ 30.5 × 10 ⁩ كم يصير العدد بعد أن ينتقل في جدول المنازل؟ | ⁦ 30.5 × 10 ⁩ What does the number become after it moves in the place value table? | {'t': 'dec', 'n': 305, 's': 0} |
+| 7-2-3/lesson/04 | ⁦ 50.1 × 10 = ▢ ⁩ | ⁦ 50.1 × 10 = ▢ ⁩ | {'t': 'dec', 'n': 501, 's': 0} |
+| 7-2-4/lesson/01 | ما العدد العشري؟ 222 جزءًا من ألف | What decimal is 222 thousandths? | {'t': 'dec', 'n': 222, 's': 3} |
+| 7-2-4/lesson/04 | ⁦ 0.233 = 0.2 + 0.03 + ▢ ⁩ | ⁦ 0.233 = 0.2 + 0.03 + ▢ ⁩ | {'t': 'dec', 'n': 3, 's': 3} |
+| 7-3-1/lesson/01 | ⁦ 3.6 + 4.7 = ▢ ⁩ | ⁦ 3.6 + 4.7 = ▢ ⁩ | {'t': 'dec', 'n': 83, 's': 1} |
+| 7-3-1/lesson/04 | ⁦ 3.9 + 1.9 = 3.9 + 0.1 + ▢ ⁩ | ⁦ 3.9 + 1.9 = 3.9 + 0.1 + ▢ ⁩ | {'t': 'dec', 'n': 18, 's': 1} |
+| 7-3-1/evidence/09 | طول الحبل الأول 7.8 متر، والثاني 1.5 متر. كم طولهما معًا بالمتر؟ | One rope is 7.8 m long and another is 1.5 m. How long are they together? | {'t': 'dec', 'n': 93, 's': 1} |
+| 7-3-2/lesson/01 | ⁦ 6.7 − 5.9 = ▢ ⁩ | ⁦ 6.7 − 5.9 = ▢ ⁩ | {'t': 'dec', 'n': 8, 's': 1} |
+| 7-3-2/lesson/04 | ⁦ 4.1 − 0.9 = 4.1 − 1 + ▢ ⁩ | ⁦ 4.1 − 0.9 = 4.1 − 1 + ▢ ⁩ | {'t': 'dec', 'n': 1, 's': 1} |
+| 7-3-2/evidence/09 | كان مع منى 4.9 لتر من العصير، فشربوا 2.9 لتر. كم لترًا بقي؟ | Mona had 4.9 litres of juice and they drank 2.9. How many litres are left? | {'t': 'dec', 'n': 2, 's': 0} |
+| 7-3-3/lesson/01 | ⁦ 20 − 1.05 = ▢ ⁩ اكتب الباقي جنيهات وقروشًا. | ⁦ 20 − 1.05 = ▢ ⁩ Write the change in pounds and piastres. | {'t': 'money', 'p': 1895} |
+| 7-3-3/lesson/04 | من 4.75 جنيه إلى 5 جنيهات: كم قرشًا؟ | From 4.75 pounds to 5 pounds: how many piastres? | 25 |
+| 7-3-3/evidence/09 | ثمن الكراسة 4.75 جنيه، ومعنا ورقة 5 جنيهات. كم يعيد البائع؟ | A notebook costs 4.75 pounds and we pay with 5 pounds. How much change? | {'t': 'money', 'p': 25} |
+| 7-4-1/lesson/01 | الملوّن ⁦ 0.5 ⁩ من الشريط. أي البطاقات تساويه؟ | The coloured part is ⁦ 0.5 ⁩ of the strip. Which card equals it? | A |
+| 7-4-1/lesson/04 | أي البطاقات تساوي ⁦ 1/4 ⁩؟ | Which card equals ⁦ 1/4 ⁩? | A |
+| 7-4-3/lesson/01 | ⁦ 0.5 × 8 = ▢ ⁩ | ⁦ 0.5 × 8 = ▢ ⁩ | 4 |
+| 7-4-3/lesson/04 | ⁦ 0.25 ⁩ هي ربع، فـ⁦ 0.25 × 16 ⁩ = ربع 16 = ▢ | ⁦ 0.25 ⁩ is one quarter, so ⁦ 0.25 × 16 ⁩ = one quarter of 16 = ▢ | 4 |
+| 7-5-1/lesson/01 | 5% من 100 = ▢ | 5% of 100 = ▢ | 5 |
+| 7-5-2/lesson/01 | 60% من 920 = ▢ | 60% of 920 = ▢ | 552 |
+| 7-5-2/lesson/04 | ⁦ 75% من 760 = 532 + ▢ ⁩ | ⁦ 75% of 760 = 532 + ▢ ⁩ | 38 |
+| 7-5-2/evidence/09 | في المدرسة 640 طالبًا، 75% منهم يلعبون الكرة. كم طالبًا يلعب الكرة؟ | A school has 640 students and 75% play football. How many play football? | 480 |
+| 7-6-1/lesson/01 | ثمن 730 زاد 20%. كم صار؟ | Price 730 goes up by 20%. What is it now? | 876 |
+| 7-6-1/lesson/04 | خصم 50% من 430: الخصم ▢ | 50% off 430: the discount is ▢ | 215 |
+| 7-6-1/evidence/09 | ثمن القميص بالجنيه 730، وعليه خصم 20%. كم جنيهًا ندفع؟ | A shirt costs 730 pounds with 20% off. How much do we pay? | 584 |
+| 7-6-2/lesson/01 | 12% من 25 = ▢ | 12% of 25 = ▢ | 3 |
+| 7-6-2/evidence/05 | هل هذا صحيح؟ ⁦ 4% من 50 = 50% من 6 ⁩ | Is this true? ⁦ 4% of 50 = 50% of 6 ⁩ | no |
+| 7-6-3/lesson/01 | ⁦ 0.9 × 0.6 ⁩ مربع الوحدة: كم الجزء المظلّل؟ | ⁦ 0.9 × 0.6 ⁩ In the unit square, how much is shaded? | {'t': 'dec', 'n': 54, 's': 2} |
+| 7-6-3/lesson/04 | ⁦ 0.7 × 0.2 = ▢ ⁩ | ⁦ 0.7 × 0.2 = ▢ ⁩ | {'t': 'dec', 'n': 14, 's': 2} |
+| 7-6-3/evidence/09 | هل هذا صحيح؟ ⁦ 0.4 × 0.7 = 2.8 ⁩ | Is this true? ⁦ 0.4 × 0.7 = 2.8 ⁩ | no |
+| 7-6-4/lesson/01 | ⁦ 7 ÷ 0.5 ⁩ في كل واحد نصفان. كم؟ | ⁦ 7 ÷ 0.5 ⁩ Each one has two halves. How many? | 14 |
+| 7-6-4/lesson/04 | ⁦ 48 ÷ 0.25 = ▢ ⁩ | ⁦ 48 ÷ 0.25 = ▢ ⁩ | 192 |
+| 7-6-4/evidence/09 | هل هذا صحيح؟ ⁦ 47 ÷ 0.25 = 189 ⁩ | Is this true? ⁦ 47 ÷ 0.25 = 189 ⁩ | no |
+| 8-1-1/lesson/01 | ⁦ 45 × 45 ⁩ كم مساحة المربع؟ | ⁦ 45 × 45 ⁩ What is the area of the square? | 2025 |
+| 8-1-1/lesson/04 | ⁦ 85 × 85 = 80 × 90 + ▢ ⁩ | ⁦ 85 × 85 = 80 × 90 + ▢ ⁩ | 25 |
+| 8-1-1/lesson/06 | ⁦ 65 × 65 = ▢ ⁩ | ⁦ 65 × 65 = ▢ ⁩ | 4225 |
+| 8-1-2/lesson/01 | ⁦ 59 × 59 = ▢ ⁩ | ⁦ 59 × 59 = ▢ ⁩ | 3481 |
+| 8-1-2/lesson/04 | ⁦ 69 × 69 = 4900 − 70 − ▢ ⁩ | ⁦ 69 × 69 = 4900 − 70 − ▢ ⁩ | 69 |
+| 8-1-3/lesson/01 | ⁦ 89 × 89 = ▢ ⁩ | ⁦ 89 × 89 = ▢ ⁩ | 7921 |
+| 8-1-3/lesson/04 | ⁦ 24 × 24 = 400 + 160 + ▢ ⁩ | ⁦ 24 × 24 = 400 + 160 + ▢ ⁩ | 16 |
+| 8-1-3/evidence/09 | هل هذا صحيح؟ ⁦ 86 × 86 = 7396 ⁩ | Is this true? ⁦ 86 × 86 = 7396 ⁩ | yes |
+| 8-2-1/lesson/01 | ⁦ 15 × 25 ⁩ نقصّ شريطًا وننقله فيصير مربعًا ينقصه ركن. كم المساحة؟ | ⁦ 15 × 25 ⁩ Cut a strip and move it: a square missing a corner. What is the area? | 375 |
+| 8-2-1/lesson/04 | ⁦ 38 × 42 = 40 × 40 − ▢ ⁩ | ⁦ 38 × 42 = 40 × 40 − ▢ ⁩ | 4 |
+| 8-2-1/lesson/06 | ⁦ 35 × 45 = ▢ ⁩ | ⁦ 35 × 45 = ▢ ⁩ | 1575 |
+| 8-2-1/evidence/13 | هل هذا صحيح؟ ⁦ 88 × 92 = 8104 ⁩ | Is this true? ⁦ 88 × 92 = 8104 ⁩ | no |
+| 8-3-1/lesson/01 | ⁦ 92 × 92 ⁩ مساحة مئة في مئة يُنزع منها شريطان ويُعاد الركن. كم المساحة؟ | ⁦ 92 × 92 ⁩ A 100 by 100 square with two strips removed and the corner put back. What is the area? | 8464 |
+| 8-3-1/lesson/04 | ⁦ 94 × 97 = 100 × 91 + ▢ ⁩ | ⁦ 94 × 97 = 100 × 91 + ▢ ⁩ | 18 |
+| 8-3-1/lesson/06 | ⁦ 93 × 93 = ▢ ⁩ | ⁦ 93 × 93 = ▢ ⁩ | 8649 |
+| 8-3-3/evidence/09 | هل هذا صحيح؟ ⁦ 106 × 109 = 100 × 115 + 64 ⁩ | Is this true? ⁦ 106 × 109 = 100 × 115 + 64 ⁩ | no |
+| 8-4-1/lesson/01 | هل يمكن أن يكون ⁦ 519 × 26 = 13495 ⁩؟ | Could ⁦ 519 × 26 = 13495 ⁩ be right? | no |
+| 8-4-1/evidence/05 | ⁦ 926 × 12 = 111122 ⁩ يُرفض لأن رقمه الأخير لا يوافق. هل هذا صحيح؟ | ⁦ 926 × 12 = 111122 ⁩ is rejected because its last digit does not match. Is this true? | no |
+| 8-4-2/lesson/01 | هل يجتاز ⁦ 522 × 48 = 25057 ⁩ فحص التسعة؟ | Does ⁦ 522 × 48 = 25057 ⁩ pass the nines check? | no |
+| 8-4-2/lesson/04 | ما باقي قسمة 891 على 9؟ | What is the remainder of 891 divided by 9? | 0 |
+| 8-4-3/lesson/01 | الناتج 9066 عن ⁦ 748 × 12 ⁩ يجتاز فحص الرقم الأخير وفحص التسعة. هل هو الناتج الصحيح؟ | The answer 9066 to ⁦ 748 × 12 ⁩ passes the last digit check and the nines check. Is it the correct answer? | no |
+| 8-5-1/lesson/01 | سعر 8 كيلو من البرتقال بالجنيه 416. كم سعر الكيلو؟ | 8 kg of oranges cost 416 pounds. What is the price of one kg? | 52 |
+| 8-5-2/lesson/01 | نجمع 50 دقيقة وساعتين و55 دقيقة. كم المدة كلها؟ | 0 h 50 min plus 2 h 55 min. What is the total time? | {'t': 'dur', 'm': 225} |
+| 8-5-2/evidence/05 | بدأت الرحلة وسارت 3 ساعات و35 دقيقة، ثم ساعة و55 دقيقة. كم دامت؟ | The trip lasted 3 h 35 min, then 1 h 55 min more. How long in total? | {'t': 'dur', 'm': 330} |
+| 8-5-2/ready/01 | كم الساعة؟ | What time is it? | A |
+| 8-5-2/ready/03 | كم دقيقة في الساعة الواحدة؟ | How many minutes are in one hour? | 60 |
+| 8-5-3/lesson/01 | سيارة سرعتها 126 كيلومترًا في الساعة سارت 40 دقيقة. كم كيلومترًا قطعت؟ | A car goes 126 km per hour for 40 minutes. How many km does it go? | 84 |
+| 8-5-4/lesson/01 | ثمن العلبة 9.5 جنيه، واشترينا علبًا عددها 81. كم جنيهًا ندفع تقريبًا؟ | A box costs 9.5 pounds and we buy 81 boxes. About how much do we pay? | {'t': 'est', 'lo': 654, 'hi': 884, 'ref': 800} |
+| 8-5-4/evidence/05 | ثمن العلبة 7.8 جنيه، وعددها 21. قال أحمد: ندفع نحو 1600 جنيه. هل تقديره معقول؟ | A box costs 7.8 pounds and we buy 21. Ahmed says we pay about 1600 pounds. Is that reasonable? | no |
+| 8-6-1/lesson/01 | ⁦ 125 × 16 = ▢ ⁩ | ⁦ 125 × 16 = ▢ ⁩ | 2000 |
+| 8-6-1/evidence/05 | هل هذا صحيح؟ ⁦ 25 × 32 = 800 ⁩ | Is this true? ⁦ 25 × 32 = 800 ⁩ | yes |
+| 8-6-2/lesson/01 | بأي طريقة حُسبت؟ ⁦ 49 × 7 = 350 − 7 = 343 ⁩ | Which method was used? ⁦ 49 × 7 = 350 − 7 = 343 ⁩ | comp |
 
 ## 6. الأوصاف المحايدة للإجابات الخاطئة
 
@@ -316,6 +519,7 @@
 | `how.title` | كيف حسبتها؟ | How did you work it out? |
 | `check.intro` | عشرة أسئلة بلا مساعدة. خذ وقتك. | Ten questions without help. Take your time. |
 | `gate.intro` | أسئلة قصيرة لنعرف من أين نبدأ. | A few questions to find where to start. |
+| `ready.intro` | قبل الدرس: ثلاثة أسئلة عن الساعة. | Before the lesson: three questions about the clock. |
 | `card.compare.A` | الحل أ | Solution A |
 | `card.compare.B` | الحل ب | Solution B |
 | `card.compare.same` | متساويان | The same |

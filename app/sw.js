@@ -1,7 +1,7 @@
 // مولَّد من build_sw.py، لا يُعدَّل يدويًا.
 // عامل الخدمة: التطبيق يعمل دون اتصال بعد أول فتح. كل إصدار في مخزن مؤقت باسمه، يُملأ كله أو لا يُثبَّت.
 // الإصدار الجديد ينتظر حتى تُغلق كل نوافذ القديم، أو حتى يطلب البالغ التحديث: فلا تجمع صفحة واحدة بين ملفات إصدارين.
-const VERSION = '086c1c86ec81a5d2';
+const VERSION = '1fb070f28b9e05e3';
 const CACHE = 'mental-math-' + VERSION;
 const URLS = [
   'backup.mjs',
@@ -16,6 +16,7 @@ const URLS = [
   'scheduler.mjs',
   'stepper.mjs',
   'store.mjs',
+  'ui/answers.mjs',
   'ui/app.mjs',
   'ui/config.mjs',
   'ui/dashboard.mjs',

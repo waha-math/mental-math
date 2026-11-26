@@ -14,9 +14,26 @@ import persist
 from item_layer import HOW
 from scheduler import Void
 
-ASSESS = ('gate', 'short', 'check', 'retention', 'describe')            # بنود التقييم: تنتهي بأول تأكيد
+ASSESS = ('gate', 'short', 'check', 'retention', 'describe', 'ready')            # بنود التقييم: تنتهي بأول تأكيد
 SHOWN = ('lesson', 'practice')                              # بنود العرض: لا سجل لها
 TEACH_SUPPORT = ('hint', 'extra_model', 'someone')          # الدعم المسموح في بنود التعليم
+
+
+def _nat(x):
+    return isinstance(x, int) and not isinstance(x, bool) and x >= 0
+
+
+def typed_ok(item, v):
+    """قيمة التأكيد بنوع جواب البند (5.3): العشري نص أرقام بنقطة واحدة على الأكثر، والكسر وخارج القسمة وباقيها والمدة
+    والمبلغ زوج عددين صحيحين غير سالبين، والتقدير والعدد عدد صحيح. الحكم بعدها same في طبقة البنود."""
+    a = item.get('answer') if isinstance(item, dict) else None
+    t = a.get('t') if isinstance(a, dict) else None
+    if t == 'dec':
+        return isinstance(v, str) and 0 < len(v) <= 12 and v.count('.') <= 1 and v.replace('.', '').isdigit() \
+            and all('0' <= c <= '9' for c in v.replace('.', ''))
+    if t in ('frac', 'qr', 'dur', 'money'):
+        return isinstance(v, list) and len(v) == 2 and all(_nat(x) for x in v)
+    return isinstance(v, int) and not isinstance(v, bool)
 
 
 class Stepper:
@@ -105,13 +122,12 @@ class Stepper:
                 return 'بطاقة غير معروفة'
             return None if not any(x[0] in ('how', 'confirm') for x in self.raw) else 'البطاقة مرة واحدة قبل التأكيد'
         if kind == 'confirm':
-            if len(ev) == 2 and isinstance(ev[1], str):     # بند بطاقة (ج8): التأكيد بمعرّف إحدى بطاقاته
-                cards = self.pending[0].get('cards') if isinstance(self.pending[0], dict) else None
-                return None if cards and ev[1] in cards else 'بطاقة ليست من بطاقات البند'
-            if isinstance(self.pending[0], dict) and self.pending[0].get('cards'):
+            cards = self.pending[0].get('cards') if isinstance(self.pending[0], dict) else None
+            if cards:                                       # بند بطاقة (ج8): التأكيد بمعرّف إحدى بطاقاته
+                if len(ev) == 2 and isinstance(ev[1], str):
+                    return None if ev[1] in cards else 'بطاقة ليست من بطاقات البند'
                 return 'بند البطاقة يُجاب ببطاقة'
-            ok = len(ev) == 2 and isinstance(ev[1], int) and not isinstance(ev[1], bool)
-            return None if ok else 'التأكيد يحمل عددًا صحيحًا واحدًا'
+            return None if len(ev) == 2 and typed_ok(self.pending[0], ev[1]) else 'التأكيد لا يطابق نوع جواب البند'
         if kind == 'support':
             if len(ev) != 2:
                 return 'طلب الدعم يحمل نوعه'

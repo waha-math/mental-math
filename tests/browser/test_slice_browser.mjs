@@ -13,6 +13,7 @@ import { readFile } from 'node:fs/promises';
 import { readFileSync } from 'node:fs';
 import { extname, join, normalize, resolve } from 'node:path';
 import { chromium } from 'playwright-core';
+import { rightOf, wrongOf, type, emptied } from './answer_input.mjs';
 import { Engine, canonical } from '../../app/engine.mjs';
 import { Scheduler } from '../../app/scheduler.mjs';
 import { ContentSource } from '../../app/items.mjs';
@@ -32,7 +33,11 @@ const TYPES = { ...{"1-1-1": ["ف1", "ف3"], "1-1-2": ["ف1", "ف3"], "1-2-1": [
 const STAGE3 = ["3-1-1", "3-1-2", "3-1-3", "3-1-4", "3-2-1", "3-2-2", "3-2-3", "3-3-1", "3-3-2", "3-4-1", "3-4-2", "3-5-1", "3-5-2", "3-5-3", "3-6-1", "3-6-2", "3-6-3", "3-6-4", "3-7-1", "3-7-2", "3-8-1", "3-8-2", "3-8-3"];
 const STAGE3_TYPES = {"3-1-1": ["ف1", "ف3"], "3-1-2": ["ف1", "ف3"], "3-1-3": ["ف1", "ف3"], "3-1-4": ["ف1", "ف3"], "3-2-1": ["ف1", "ف3"], "3-2-2": ["ف2", "ف3", "ف4"], "3-2-3": ["ف2", "ف3", "ف4"], "3-3-1": ["ف1", "ف2", "ف3"], "3-3-2": ["ف1", "ف2", "ف3", "ف4"], "3-4-1": ["ف1", "ف3"], "3-4-2": ["ف2", "ف3", "ف5"], "3-5-1": ["ف1", "ف2", "ف3"], "3-5-2": ["ف1", "ف2", "ف3", "ف4"], "3-5-3": ["ف3"], "3-6-1": ["ف2", "ف3"], "3-6-2": ["ف2", "ف3", "ف5"], "3-6-3": ["ف1", "ف2", "ف3"], "3-6-4": ["ف1", "ف2", "ف3"], "3-7-1": ["ف1", "ف2", "ف3"], "3-7-2": ["ف4"], "3-8-1": ["ف2", "ف3"], "3-8-2": ["ف2", "ف3", "ف4"], "3-8-3": ["ف1", "ف3"]};
 Object.assign(TYPES, STAGE3_TYPES);
-const OLDER = { group: 'older', scope: [...STAGE1, ...STAGE3], cap: 600, day_cap: 86400,
+// المراحل 4 إلى 8 للكبيرين، بما بُني منها (units_ext.py)
+const LATER = ["4-1-1", "4-1-2", "4-1-3", "4-2-1", "4-2-2", "4-2-3", "4-3-1", "4-3-2", "4-4-1", "4-4-2", "4-5-1", "4-5-2", "4-6-1", "4-6-2", "4-6-3", "4-7-1", "4-7-2", "4-8-1", "4-8-2", "4-8-3", "4-8-4", "5-1-1", "5-1-2", "5-1-3", "5-2-1", "5-2-2", "5-2-3", "5-3-1", "5-3-2", "5-3-3", "5-4-1", "5-4-2", "5-5-1", "5-5-2", "5-5-3", "5-5-4", "6-1-1", "6-1-2", "6-2-1", "6-2-2", "6-3-1", "6-3-2", "6-3-3", "6-4-1", "6-4-2", "6-4-3", "6-5-1", "6-5-2", "6-6-1", "6-6-2", "6-6-3", "6-7-1", "6-7-2", "6-7-3", "6-7-4", "7-1-1", "7-1-2", "7-1-3", "7-1-4", "7-1-5", "7-2-1", "7-2-2", "7-2-3", "7-2-4", "7-3-1", "7-3-2", "7-3-3", "7-4-1", "7-4-2", "7-4-3", "7-5-1", "7-5-2", "7-6-1", "7-6-2", "7-6-3", "7-6-4", "8-1-1", "8-1-2", "8-1-3", "8-2-1", "8-3-1", "8-3-2", "8-3-3", "8-4-1", "8-4-2", "8-4-3", "8-5-1", "8-5-2", "8-5-3", "8-5-4", "8-6-1", "8-6-2"];
+const LATER_TYPES = {"4-1-1": ["ف1", "ف3", "ف4"], "4-1-2": ["ف1", "ف5"], "4-1-3": ["ف3", "ف5"], "4-2-1": ["ف1", "ف3"], "4-2-2": ["ف1", "ف3"], "4-2-3": ["ف1", "ف2", "ف3"], "4-3-1": ["ف2", "ف3"], "4-3-2": ["ف2", "ف3"], "4-4-1": ["ف2", "ف3"], "4-4-2": ["ف2", "ف3"], "4-5-1": ["ف1", "ف2", "ف3"], "4-5-2": ["ف2", "ف3"], "4-6-1": ["ف1", "ف3"], "4-6-2": ["ف2", "ف3"], "4-6-3": ["ف3", "ف5"], "4-7-1": ["ف1", "ف2", "ف4"], "4-7-2": ["ف1", "ف3", "ف4"], "4-8-1": ["ف3", "ف4"], "4-8-2": ["ف3", "ف4"], "4-8-3": ["ف2", "ف3"], "4-8-4": ["ف3", "ف5"], "5-1-1": ["ف1", "ف3"], "5-1-2": ["ف1", "ف3"], "5-1-3": ["ف1", "ف3"], "5-2-1": ["ف2", "ف3"], "5-2-2": ["ف2", "ف3", "ف5"], "5-2-3": ["ف1", "ف2", "ف3", "ف4"], "5-3-1": ["ف1", "ف2", "ف3"], "5-3-2": ["ف2", "ف3", "ف5"], "5-3-3": ["ف4"], "5-4-1": ["ف1", "ف3", "ف5"], "5-4-2": ["ف2", "ف3"], "5-5-1": ["ف1", "ف3"], "5-5-2": ["ف3", "ف4"], "5-5-3": ["ف3", "ف4"], "5-5-4": ["ف5"], "6-1-1": ["ف1", "ف2", "ف3", "ف4"], "6-1-2": ["ف2", "ف3"], "6-2-1": ["ف1", "ف2", "ف3"], "6-2-2": ["ف2", "ف3", "ف5"], "6-3-1": ["ف1", "ف2", "ف3"], "6-3-2": ["ف2", "ف3"], "6-3-3": ["ف2", "ف3", "ف5"], "6-4-1": ["ف2", "ف3"], "6-4-2": ["ف2", "ف3", "ف5"], "6-4-3": ["ف2", "ف3"], "6-5-1": ["ف2", "ف3", "ف4"], "6-5-2": ["ف1", "ف5"], "6-6-1": ["ف1", "ف2", "ف3", "ف4"], "6-6-2": ["ف2", "ف3"], "6-6-3": ["ف3", "ف4"], "6-7-1": ["ف3", "ف5"], "6-7-2": ["ف3", "ف5"], "6-7-3": ["ف1", "ف3", "ف5"], "6-7-4": ["ف3", "ف5"], "7-1-1": ["ف1", "ف5"], "7-1-2": ["ف1", "ف5"], "7-1-3": ["ف1", "ف3", "ف4"], "7-1-4": ["ف2", "ف3", "ف4"], "7-1-5": ["ف1", "ف3"], "7-2-1": ["ف1", "ف3"], "7-2-2": ["ف1", "ف5"], "7-2-3": ["ف1", "ف3"], "7-2-4": ["ف1", "ف3"], "7-3-1": ["ف2", "ف3", "ف4"], "7-3-2": ["ف2", "ف3", "ف4"], "7-3-3": ["ف2", "ف3", "ف4"], "7-4-1": ["ف1", "ف3"], "7-4-2": ["ف1", "ف3"], "7-4-3": ["ف2", "ف3"], "7-5-1": ["ف1", "ف3"], "7-5-2": ["ف2", "ف3", "ف4"], "7-6-1": ["ف2", "ف3", "ف4"], "7-6-2": ["ف3", "ف5"], "7-6-3": ["ف1", "ف3", "ف5"], "7-6-4": ["ف1", "ف3", "ف5"], "8-1-1": ["ف1", "ف2", "ف3"], "8-1-2": ["ف2", "ف3"], "8-1-3": ["ف2", "ف3", "ف5"], "8-2-1": ["ف1", "ف2", "ف3", "ف5"], "8-3-1": ["ف1", "ف2", "ف3"], "8-3-2": ["ف2", "ف3"], "8-3-3": ["ف2", "ف3", "ف5"], "8-4-1": ["ف3", "ف5"], "8-4-2": ["ف2", "ف3"], "8-4-3": ["ف5"], "8-5-1": ["ف4"], "8-5-2": ["ف3", "ف4"], "8-5-3": ["ف4"], "8-5-4": ["ف4", "ف5"], "8-6-1": ["ف3", "ف5"], "8-6-2": ["ف5"]};
+Object.assign(TYPES, LATER_TYPES);
+const OLDER = { group: 'older', scope: [...STAGE1, ...STAGE3, ...LATER], cap: 600, day_cap: 86400,
   decisions: [['3-5-1', ['3-3-2', '3-2-3']], ['3-5-2', ['3-2-1', '3-3-1', '2-5-2']]] };
 const PROF = { young: { child: 'young', avatar: '🦊', group: 'young', scope: STAGE1, cap: 360, day_cap: 86400,
   decisions: [['1-4-1', ['1-3-3']]] }, older1: { child: 'older1', avatar: '🐬', ...OLDER },
@@ -177,7 +182,7 @@ const shownItem = async (page) => {
       said: window.MM_TEST.spoken[window.MM_TEST.spoken.length - 1] ?? null };
   });
 };
-const type = async (page, n) => { for (const d of String(n)) await page.click(`[data-key="${d}"]`); };
+// أنواع الجواب (5.3): القيمة الصحيحة والخاطئة وكتابتها في answer_input.mjs
 const tick = (page) => page.evaluate((s) => { window.MM_TEST.clock.mono += s * 1000; }, SECS);
 const settled = (page) => page.waitForFunction(() => {
   const a = document.getElementById('app').dataset.screen, t = document.querySelector('.task');
@@ -209,6 +214,13 @@ function inspect(v) {
     tens: () => ({ tens: k.tens, ones: k.ones, plus: k.plus ?? 0, minus: k.minus ?? 0 }), tens2: () => ({ a: k.a, b: k.b }),
     round: () => (k.dist ? { lo: k.lo, hi: k.hi, v: k.v, dist: [String(k.v - k.lo), String(k.hi - k.v)] } : { lo: k.lo, hi: k.hi, v: k.v }), slide: () => ({ rows: [[k.b, k.a], [k.b + k.d, k.a + k.d]], d: k.d }),
     bar: () => ({ whole: String(k.whole), parts: ['▢', '▢'] }),
+    arr: () => ({ rows: k.rows, cols: k.cols, shade: k.shade ?? 0, cross: k.cross ?? 0, split: k.split ?? 0 }),
+    share: () => ({ total: k.total, plates: k.plates }),
+    places: () => ({ digits: k.digits.map(String), shift: k.shift ?? 0 }), area: () => ({ a: String(k.a), b: String(k.b) }),
+    grid: () => ({ top: k.top.map(String), side: k.side.map(String), cross: k.cross ?? 0, corner: k.corner ?? 0 }),
+    halve: () => ({ before: [String(k.a), String(k.b)], after: [String(k.a2), '▢'] }),
+    strip: () => ({ parts: k.parts.map(String), by: String(k.by) }),
+    fstrip: () => ({ n: k.n, d: k.d, d2: k.d2 ?? 0, whole: k.whole ?? null, times: k.times ?? 0 }), grid100: () => ({ n: k.n }), clock: () => ({ h: k.h, m: k.m }),
     jumps: () => ({ stations: [k.start, ...k.stations].map((x, j) => (j > 0 && Array.isArray(k.hide) && k.hide[0] === 'station'
       && k.hide[1] === j - 1 ? '▢' : String(x))), jumps: k.jumps.map((x, j) => (Array.isArray(k.hide) && k.hide[0] === 'jump' && k.hide[1] === j ? '▢'
       : (k.line === 'back' ? '−' : '+') + x)) }),
@@ -246,7 +258,6 @@ function inspect(v) {
 // البوابات إلى 1-4-1 كما كان قبل أن يتسع نطاق الصغير إلى المرحلة 1 (UNITS-PLAN.md)
 const KNOWN = new Set(STAGE1.slice(0, STAGE1.indexOf('1-4-1')));
 const SHOT = new Set();
-const wrongOf = (it) => (it.cards ? it.cards.find((c) => c !== it.answer) : it.answer === 9 ? 8 : it.answer + 1);
 async function play(page, { stopAt = null, until = null } = {}) {
   const seen = [];
   for (;;) {
@@ -270,7 +281,7 @@ async function play(page, { stopAt = null, until = null } = {}) {
       if (it.cards) {                                                    // بطاقة، ثم يُعرض الجواب
         await page.click(`#cards [data-card="${it.answer}"]`);
         await page.waitForSelector('#next');
-      } else if (role !== 'lesson.watch') await type(page, it.answer), await page.click('[data-key="ok"]');
+      } else if (role !== 'lesson.watch') await type(page, rightOf(it)), await page.click('[data-key="ok"]');
       await page.click('#next');
       rEvent(['end'], true);
     } else if (v.kind === 'assess') {
@@ -280,7 +291,7 @@ async function play(page, { stopAt = null, until = null } = {}) {
         rEvent(['confirm', c], true);
         continue;
       }
-      const a = KNOWN.has(it.skill) ? it.answer : wrongOf(it);
+      const a = KNOWN.has(it.skill) ? rightOf(it) : wrongOf(it);
       await type(page, a);
       await page.click('[data-key="ok"]');
       if (it.how) {                                                      // «كيف حسبتها؟» قبل التأكيد (17.25)
@@ -297,7 +308,7 @@ async function play(page, { stopAt = null, until = null } = {}) {
       }
       await page.click(`#cards [data-card="${it.answer}"]`);
       await page.waitForSelector('#next');
-      rEvent(['confirm', it.answer], false);
+      rEvent(['confirm', it.cards ? it.answer : rightOf(it)], false);
       await page.click('#next');
       rEvent(['end'], true);
     } else {
@@ -307,12 +318,12 @@ async function play(page, { stopAt = null, until = null } = {}) {
         await page.click('[data-key="ok"]');
         await page.waitForSelector('[data-key="ok"]:disabled');
         rEvent(['confirm', w], false);
-        await page.waitForFunction(() => document.getElementById('answer').textContent === '');
+        await emptied(page);
       }
-      await type(page, it.answer);
+      await type(page, rightOf(it));
       await page.click('[data-key="ok"]');
       await page.waitForSelector('#next');
-      rEvent(['confirm', it.answer], false);
+      rEvent(['confirm', it.cards ? it.answer : rightOf(it)], false);
       await page.click('#next');
       rEvent(['end'], true);
     }

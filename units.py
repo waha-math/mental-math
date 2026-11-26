@@ -11,6 +11,7 @@ slice-content.md، وهي اختيار يُراجع.
 import random
 
 from item_layer import gate_plan, short_types, opening_types
+import units_ext as X                                       # المراحل 4 إلى 8: سجلّ الأداءات والمهارات
 
 LRI, PDI, MINUS, BOX = '⁦', '⁩', '−', '▢'
 
@@ -746,6 +747,8 @@ WHOLE = {'1-3-1': range(2, 6), '1-3-2': range(6, 10), '1-3-3': range(3, 11)}
 
 
 def domain(skill, perf):
+    if perf in X.DOMAINS:
+        return X.DOMAINS[perf](skill)
     d = dom(perf)
     if d == 'w':
         return [dict(w=w, a=a) for w in WHOLE[skill] for a in range(1, w)]
@@ -758,6 +761,8 @@ def domain(skill, perf):
 
 def fact(skill, perf, n):
     """الحقيقة الحسابية للبند (3.5): بها يُفحص ألا تتجاور حقيقتان متماثلتان."""
+    if perf in X.FACTS:
+        return X.FACTS[perf](n)
     if 'n' in n:
         # المجال الصغير (1-1، خمس كميات): الكمية نفسها تتكرر بصيغة مختلفة (3.5)، فالصيغة جزء من الحقيقة: ترتيب النقاط،
         # أو الإطار، أو المعادلة
@@ -926,6 +931,10 @@ SKILLS = {
     '3-8-3': S(['ف1', 'ف3'], {'ف1': 'bar', 'ف3': 'half_tens', 'solve': 'half_tens'},
                [(4, '10 أو 30', lambda n: n['w'] <= 30), (3, '50', lambda n: n['w'] == 50), (3, '70 أو 90', lambda n: n['w'] >= 70)]),
 }
+SKILLS.update(sorted(X.SKILLS.items(), key=lambda kv: tuple(map(int, kv[0].split('-')))))
+PERFS.update(X.PERFS)
+RESOURCE.update(X.RESOURCE)
+CARD_PERFS.update(X.CARD_PERFS)
 MORE_PRACTICE = 12
 PRE_TEACH = ('gate', 'regate', 'opening', 'short', 'tryfirst')
 UNTAUGHT = {'3-1-4': lambda n: n['v'] % 10 != 5}            # التساوي يُعلَّم في الدرس (قرار الأب، 25 نوفمبر)
@@ -972,16 +981,21 @@ class Picker:
         raise RuntimeError('لا أعداد تحقق الشرط: %s %s' % (skill, perf))
 
 
+ANSWER_TYPE = dict(dec='ج2', frac='ج3', qr='ج4', dur='ج5', money='ج6', est='ج7')
+
+
 def make(skill, group, role, ev, perf, n, count, slot=None, alt_of=None):
     count[(skill, group)] = count.get((skill, group), 0) + 1
     ar, en, ans, model = PERFS[perf](n)
     it = dict(id='%s/%s/%02d' % (skill, group, count[(skill, group)]), skill=skill, group=group, role=role, evidence=ev,
               performance=perf, numbers=n, resource=RESOURCE[perf],
-              answer_type='ج8' if perf in CARD_PERFS else 'ج1', answer=ans, text_ar=ar, text_en=en, audio_ar=ar,
+              answer_type='ج8' if perf in CARD_PERFS else ANSWER_TYPE[ans['t']] if isinstance(ans, dict) else 'ج1', answer=ans, text_ar=ar, text_en=en, audio_ar=ar,
               audio_en=en, wrong={}, slot=slot, alt_of=alt_of, graded=True, fact=fact(skill, perf, n))
     if perf in CARD_PERFS:
         it['card_set'] = CARD_PERFS[perf]
         it['cards'] = ['yes', 'no']
+        if perf in X.CARD_FN:                               # بطاقات بأعداد البند (ج8): أي العددين أكبر، أو المكافئ
+            it['cards'], it['card_labels'] = X.CARD_FN[perf](n)
     if model is not None:
         if role in ('lesson.watch', 'lesson.model') and model.get('flash'):
             model = dict(model, flash=False)                # في الشرح يبقى النموذج ظاهرًا، والومضة بعده
@@ -1043,6 +1057,8 @@ def build(seed=20261119):
                     put(skill, g, 'gate.alternate', t, P[t])
         for t in short_types(types):
             put(skill, 'short', 'short_check', t, P.get(t, solve))
+        for perf in X.READY.get(skill, ()):                 # بوابة جاهزية المتطلب الخارجي (5.1): قبل فتح الدرس
+            put(skill, 'ready', 'readiness', None, perf)
         for attempt in ('A', 'B', 'C'):
             for k, (_d, pred) in enumerate(slot_order(skill), 1):
                 m = put(skill, 'check' + attempt, 'check', 'ف3', solve, pred, slot=k)
@@ -1088,6 +1104,8 @@ def build(seed=20261119):
 def truth(it):
     """الجواب من الأعداد، بلا render."""
     n, p = it['numbers'], it['performance']
+    if p in X.TRUTHS:
+        return X.TRUTHS[p](n)
     if p in ('dots_flash', 'five_flash', 'ten_flash', 'five_plus'):
         return n['n']
     if p == 'path_gap':
@@ -1189,7 +1207,7 @@ def check(it):
     ans = truth(it)
     if ans != it['answer']:
         bad.append('جواب لا يطابق إعادة الحساب')
-    if isinstance(ans, int) and not 0 <= ans <= 100:
+    if isinstance(ans, int) and not 0 <= ans <= (X.ANSWER_MAX if it['performance'] in X.PERFS else 100):
         bad.append('جواب خارج المجال')
     m = it.get('model')
     n = it['numbers']
@@ -1215,6 +1233,8 @@ def check(it):
               'round': lambda: m['lo'] <= m['v'] <= m['hi'] and ans in (m['lo'], m['hi']) and m['v'] == n['v'],
               'slide': lambda: m['a'] - m['b'] == ans and (m['b'] + m['d']) % 10 == 0,
               'bar': lambda: m['whole'] == 2 * ans}.get(k)
+        if ok is None and k in X.MODEL_OK:
+            ok = (lambda: X.MODEL_OK[k](m, n, ans))
         if ok is None or not ok():
             bad.append('رسم يخالف أعداد البند أو جوابه')
     for txt in (it['text_ar'], it['text_en']):
@@ -1332,6 +1352,12 @@ def unstick(items, rounds=10):
             pred = slot_pred(it['skill'], it['slot']) if it['group'].startswith('check') else (lambda n: True)
             opts = [n for n in domain(it['skill'], it['performance'])
                     if pred(n) and tuple(fact(it['skill'], it['performance'], n)) not in avoid]
+            if not opts:
+                # المجال الصغير (خانة بأربع حقائق في جداول المرحلة 4) لا يتسع لتجنّب ما بعده في مرحلته وما يجاوره معًا.
+                # التأخير يحتاج الأول وحده (حقيقة لا تساوي ما بعده)، والتجاور يصلحه repair في الدورة التالية من build
+                after_f = {tuple(x['fact']) for x in phase_after(own, it)}
+                opts = [n for n in domain(it['skill'], it['performance'])
+                        if pred(n) and tuple(fact(it['skill'], it['performance'], n)) not in after_f]
             if opts:
                 rerender(it, dict(rng.choice(opts)))
     return left
@@ -1341,6 +1367,8 @@ def rerender(it, n):
     ar, en, ans, model = PERFS[it['performance']](n)
     it.update(numbers=n, text_ar=ar, text_en=en, audio_ar=ar, audio_en=en, answer=ans,
               fact=fact(it['skill'], it['performance'], n))
+    if it['performance'] in X.CARD_FN:
+        it['cards'], it['card_labels'] = X.CARD_FN[it['performance']](n)
     if model is not None:
         if it['role'] in ('lesson.watch', 'lesson.model') and model.get('flash'):
             model = dict(model, flash=False)

@@ -241,6 +241,25 @@ export class Link {
     await this.save();
   }
 
+  // المتطلب الخارجي (5.1): قرار المعلم أنه متحقق، بدل بوابة الجاهزية. والجلسة مغلقة
+  async decideReady(ext, reason) {
+    if (this.sc.cur !== null) throw new Error('جلسة مفتوحة: يُسجَّل القرار بعد ختمها');
+    const ev = { type: 'teacher_ready', ext, reason };
+    const v = this.e.preflight({ ...ev, id: 'ask' });
+    if (!v.ok) throw new Error(`رُفض القرار في ${ext}: ${v.code}`);
+    this.sc.send(ev);
+    await this.save();
+  }
+
+  async revokeReady(ext) {
+    if (this.sc.cur !== null) throw new Error('جلسة مفتوحة: يُلغى القرار بعد ختمها');
+    const d = this.e.decisions('ready', ext)[0];
+    if (!d) throw new Error(`لا قرار سارٍ في ${ext}`);
+    const r = this.sc.send({ type: 'teacher_revoke', decision: d.id });
+    if (!r.ok) throw new Error(`رُفض الإلغاء: ${r.code}`);
+    await this.save();
+  }
+
   // قرارات الفتح المسجّلة في الملف: قرارات معلم، لا أدلة إتقان
   decisions() {
     return this.e === null ? [] : this.e.s.decisions.filter((x) => x.kind === 'open')

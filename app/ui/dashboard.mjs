@@ -15,9 +15,26 @@ const STATE = {
 // دليل الطريقة (قرار الأب، 25 نوفمبر): نوع الدليل الذي يؤدي فيه الطفل خطوة تميّز الطريقة. ف2 حيث هو في صف المهارة،
 // و3-4-1 بلا ف2: بند نموذجه يطلب جمع العشرات (خطوة التجزئة)
 const METHOD_F1 = new Set(['3-4-1']);
+// المتطلب الخارجي (5.1): حاله لمهارة، من المحرك. «جاهز» باجتياز بوابة الجاهزية أو بقرار المعلم، والإخفاقان يلزمان القرار
+export function externals(e, skill, names) {
+  return (e.ext[skill] || []).map((x) => {
+    const tried = e.readyAttempts(x);
+    const by = e.decisions('ready', x).length ? 'decision' : tried.some((a) => a.result === 'pass') ? 'gate' : null;
+    return { ext: x, name: names[x] ?? x, by, fails: tried.filter((a) => a.result === 'fail').length };
+  });
+}
+
+export function externalText(x, limit) {
+  if (x.by === 'decision') return `${x.name}: متحقق بقرار المعلم، وليس دليل إتقان`;
+  if (x.by === 'gate') return `${x.name}: اجتاز بوابة الجاهزية`;
+  if (x.fails >= limit) return `${x.name}: أخفق في بوابة الجاهزية ${x.fails === 2 ? 'مرتين' : x.fails + ' مرات'}، والدرس مغلق حتى قرارك`;
+  if (x.fails) return `${x.name}: أخفق في بوابة الجاهزية مرة، وتُعاد في جلسة لاحقة`;
+  return `${x.name}: بوابة الجاهزية قبل فتح الدرس، أو قرارك`;
+}
+
 const plainText = (t) => String(t).replace(/[\u2066-\u2069]/g, '').trim();
 
-export function summarize(e, sc, profile, pack) {
+export function summarize(e, sc, profile, pack, names = {}) {
   const BY = new Map(pack.items.map((i) => [i.id, i]));
   const days = [...new Set(e.s.order.map((s) => e.s.sessions[s].day))].sort((a, b) => a - b);
   const all = profile.scope.map((skill) => {
@@ -59,12 +76,13 @@ export function summarize(e, sc, profile, pack) {
       supported: recs.filter((r) => (r.support ?? []).some((x) => x !== 'requested')).length,
       how,
       describe: desc.length ? { correct: desc.filter((r) => r.final === 'correct').length, total: desc.length } : null,
-      method, checkFacts,
+      method, checkFacts, external: externals(e, skill, names),
     };
   });
   // النطاق صار المراحل 1 إلى 3 (50 مهارة): صفوف اللوحة لما جرى فيه شيء وحده. وما تحت قرار البداية بلا دليل من الطفل يُذكر
   // في سطر واحد «تُخطيت بقرار تحديد نقطة البداية»، فلا يُقرأ إتقانًا ولا يختفي. ما له دليل يبقى صفًّا بحالته من الدليل
-  const touched = (x) => x.state !== 'none' || x.teacher || x.items > 0 || x.checks.length || x.retention.length;
+  const touched = (x) => x.state !== 'none' || x.teacher || x.items > 0 || x.checks.length || x.retention.length
+    || x.external.some((y) => y.by !== null || y.fails > 0);
   const below = new Set(profile.scope.filter((x) => e.decisions('open', x).length).flatMap((x) => [...e.anc[x]]));
   const skills = all.filter(touched);
   const skipped = all.filter((x) => !touched(x) && below.has(x.skill)).map((x) => x.skill);

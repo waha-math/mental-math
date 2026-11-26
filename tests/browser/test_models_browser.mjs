@@ -50,12 +50,19 @@ const out = await page.evaluate(async ([url, items]) => {
       g.append(box);
       const r = svg.getBoundingClientRect();
       const texts = [...svg.querySelectorAll('text')].map((t) => t.textContent);
-      return { id: it.id, kind: it.model.kind, w: r.width, h: r.height, texts, shown: svg.dataset.shown ?? null, cls: svg.getAttribute('class') };
+      // العقربان: زاوية كل منهما من الثانية عشرة باتجاه عقارب الساعة، مقيسة من إحداثيات الخط المرسوم
+      const hands = [...svg.querySelectorAll('line.hand')].map((l) => {
+        const [x1, y1, x2, y2] = ['x1', 'y1', 'x2', 'y2'].map((a) => +l.getAttribute(a));
+        return [l.classList.contains('hour') ? 'hour' : 'minute', ((Math.atan2(x2 - x1, y1 - y2) * 180 / Math.PI) + 360) % 360,
+          Math.hypot(x2 - x1, y2 - y1)];
+      });
+      return { id: it.id, kind: it.model.kind, w: r.width, h: r.height, texts, shown: svg.dataset.shown ?? null, cls: svg.getAttribute('class'), hands };
     } catch (e) { return { id: it.id, kind: it.model.kind, err: String(e) }; }
   });
 }, [`http://127.0.0.1:${port}/app/ui/models.mjs`, sample]);
 
 const by = new Map(sample.map((it) => [it.id, it]));
+const canonical12 = (a) => JSON.stringify([...a].sort());
 const kinds = new Set();
 for (const o of out) {
   const it = by.get(o.id);
@@ -71,6 +78,15 @@ for (const o of out) {
   const vals = [];
   (function walk(v) { if (Array.isArray(v)) v.forEach(walk); else if (v && typeof v === 'object') Object.values(v).forEach(walk); else if (typeof v === 'string' && v) vals.push(v); })(JSON.parse(o.shown));
   if (vals.some((v) => !o.texts.includes(v))) bad.push('data-shown يذكر نصًّا غير مرسوم: ' + shown);
+  if (o.kind === 'clock') {
+    // المتوقع من الوقت: الطويل 6 درجات لكل دقيقة، والقصير 30 لكل ساعة ونصف درجة لكل دقيقة، والقصير أقصر
+    const m = it.model, want = { minute: m.m * 6, hour: ((m.h % 12) * 30 + m.m * 0.5) % 360 };
+    const got = Object.fromEntries(o.hands.map(([k, a, len]) => [k, [a, len]]));
+    const near = (a, b) => Math.min(Math.abs(a - b), 360 - Math.abs(a - b)) < 0.5;
+    if (o.hands.length !== 2 || !near(got.minute[0], want.minute) || !near(got.hour[0], want.hour)
+      || !(got.hour[1] < got.minute[1])) bad.push('العقربان: ' + JSON.stringify(o.hands));
+    if (canonical12(o.texts) !== canonical12(Array.from({ length: 12 }, (_, j) => String(j + 1)))) bad.push('أرقام الوجه');
+  }
   check(`${o.id} (${o.kind})`, bad.length === 0, bad.join('، '));
 }
 for (const k of kinds) {

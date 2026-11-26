@@ -35,7 +35,7 @@
 import json
 import os
 import sys
-from collections import Counter, deque
+from collections import Counter, defaultdict, deque
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, ROOT)
@@ -162,65 +162,89 @@ def subsets(xs):
     return out
 
 
+_CACHE = {}                                                 # نتيجة كل مهارة بمفتاح بنودها كاملة
+
+
 def collect(items, types, stuck=None):
     """types: أنواع دليل كل مهارة. يعيد الأزواج الممكنة أثناء التشغيل، وعدد الأنشطة المستكشفة. stuck: تُجمع فيه
-    بنود أنشطة التقييم التي لا يجد التأخير لها موضعًا إن كررت حقيقة ما قبلها عند الدخول (بند، دوره، الوصف)."""
+    بنود أنشطة التقييم التي لا يجد التأخير لها موضعًا إن كررت حقيقة ما قبلها عند الدخول (بند، دوره، الوصف).
+    استكشاف المهارة لا يقرأ إلا بنودها (المصدر يطلب بالمهارة)، فنتيجته تُحفظ بمفتاح نص بنودها وأنواعها، ولا يُعاد إلا
+    لمهارة تغيّرت بنودها. الإصلاح (units.repair و unstick) يعيد الجمع مرات كثيرة ويغيّر بنود مهارات قليلة."""
     by_id = {i['id']: i for i in items}
     pairs, explored = set(), 0
+    mine = defaultdict(list)
+    for i in items:
+        mine[i['skill']].append(i)
     for skill, ts in types.items():
-        src = ContentSource(items)
-
-        def run(act, outcomes, label):
-            nonlocal explored
-            explored += 1
-            f, l = set(), set()
-            explore(act, src, outcomes, label, pairs, f, l, stuck=stuck if outcomes is ASSESS else None)
-            return f, l
-
-        def shown(activity, **more):
-            ids, k = [], 0
-            while True:
-                it = src(skill, dict(activity=activity, pos=k, **more))
-                if it is None:
-                    return ids
-                ids.append(it['id'])
-                k += 1
-
-        lesson, practice = shown('lesson'), shown('practice', more=True)   # التدريب ثم التدريب الإضافي بعده
-        for name, ids in (('الدرس', lesson), ('التدريب', practice)):
-            pairs.update((a, b, 'shown', name) for a, b in zip(ids, ids[1:]))
-        open_last = set()
-        _f, l = run(OpeningRun(skill, ts, typed=True), TEACH, 'افتتاح الدرس، البندان الثابتان')
-        open_last |= {i for i, result in l if result != 'skip'}     # الدرس لا يلي افتتاحًا انتهى بتخطٍّ أو اختصار
-        for t1 in ts:
-            for t2 in ts:
-                _f, l = run(OpeningRun(skill, ts, try_types=[t1, t2], typed=True), TEACH,
-                            'افتتاح الدرس، نوعا الخطأ %s ثم %s' % (t1, t2))
-                open_last |= {i for i, result in l if result != 'skip'}
-        ev_first = set()
-        for rnd in (1, 2):
-            for proven in subsets(ts):
-                if len(proven) == len(ts):
-                    continue
-                f, _l = run(EvidenceRun(skill, ts, proven=proven, round=rnd), TEACH,
-                            'دليل الفهم، الجولة %d%s' % (rnd, '، ثبت من قبل: ' + ' '.join(proven) if proven else ''))
-                ev_first |= f
-        for attempt in (1, 2):
-            for tolerant in (True, False):
-                run(GateRun(skill, ts, tolerant=tolerant, attempt=attempt), ASSESS,
-                    '%s%s' % ('البوابة' if attempt == 1 else 'إعادة البوابة', '' if tolerant else '، غير متسامحة'))
-        run(ShortCheckRun(skill, ts), ASSESS, 'التحقق القصير')
-        for k, attempt in enumerate('ABC'):
-            run(CheckRun(skill, '%s/check/%d' % (skill, k + 1), 1, attempt=attempt), ASSESS,
-                'فحص الاستقلال، المحاولة %s' % attempt)
-        for rnd in (1, 2, 3):
-            run(RetentionRun(skill, rnd), ASSESS, 'فحص الاحتفاظ، الجولة %d' % rnd)
-            if src(skill, dict(RetentionRun(skill, rnd, attempt=2).want(), peek=True)) is not None:
-                run(RetentionRun(skill, rnd, attempt=2), ASSESS, 'فحص الاحتفاظ، الجولة %d ببنودها البديلة' % rnd)
-        if lesson:
-            pairs.update((a, lesson[0], 'junction', 'آخر الافتتاح ثم أول الدرس') for a in open_last)
-            pairs.update((lesson[-1], b, 'junction', 'آخر الدرس ثم أول دليل الفهم') for b in ev_first)
+        key = (skill, tuple(ts), json.dumps(mine[skill], ensure_ascii=False, sort_keys=True))
+        if key not in _CACHE:
+            p, st = set(), set()
+            n = _explore_skill(skill, ts, mine[skill], p, st)
+            _CACHE[key] = (frozenset(p), n, frozenset(st))
+        p, n, st = _CACHE[key]
+        pairs |= p
+        explored += n
+        if stuck is not None:
+            stuck |= st
     return pairs, by_id, explored
+
+
+def _explore_skill(skill, ts, items, pairs, stuck):
+    """أنشطة مهارة واحدة بفروعها كلها. يضيف إلى pairs و stuck، ويعيد عدد الأنشطة المستكشفة."""
+    explored = 0
+    src = ContentSource(items)
+
+    def run(act, outcomes, label):
+        nonlocal explored
+        explored += 1
+        f, l = set(), set()
+        explore(act, src, outcomes, label, pairs, f, l, stuck=stuck if outcomes is ASSESS else None)
+        return f, l
+
+    def shown(activity, **more):
+        ids, k = [], 0
+        while True:
+            it = src(skill, dict(activity=activity, pos=k, **more))
+            if it is None:
+                return ids
+            ids.append(it['id'])
+            k += 1
+
+    lesson, practice = shown('lesson'), shown('practice', more=True)   # التدريب ثم التدريب الإضافي بعده
+    for name, ids in (('الدرس', lesson), ('التدريب', practice)):
+        pairs.update((a, b, 'shown', name) for a, b in zip(ids, ids[1:]))
+    open_last = set()
+    _f, l = run(OpeningRun(skill, ts, typed=True), TEACH, 'افتتاح الدرس، البندان الثابتان')
+    open_last |= {i for i, result in l if result != 'skip'}     # الدرس لا يلي افتتاحًا انتهى بتخطٍّ أو اختصار
+    for t1 in ts:
+        for t2 in ts:
+            _f, l = run(OpeningRun(skill, ts, try_types=[t1, t2], typed=True), TEACH,
+                        'افتتاح الدرس، نوعا الخطأ %s ثم %s' % (t1, t2))
+            open_last |= {i for i, result in l if result != 'skip'}
+    ev_first = set()
+    for rnd in (1, 2):
+        for proven in subsets(ts):
+            if len(proven) == len(ts):
+                continue
+            f, _l = run(EvidenceRun(skill, ts, proven=proven, round=rnd), TEACH,
+                        'دليل الفهم، الجولة %d%s' % (rnd, '، ثبت من قبل: ' + ' '.join(proven) if proven else ''))
+            ev_first |= f
+    for attempt in (1, 2):
+        for tolerant in (True, False):
+            run(GateRun(skill, ts, tolerant=tolerant, attempt=attempt), ASSESS,
+                '%s%s' % ('البوابة' if attempt == 1 else 'إعادة البوابة', '' if tolerant else '، غير متسامحة'))
+    run(ShortCheckRun(skill, ts), ASSESS, 'التحقق القصير')
+    for k, attempt in enumerate('ABC'):
+        run(CheckRun(skill, '%s/check/%d' % (skill, k + 1), 1, attempt=attempt), ASSESS,
+            'فحص الاستقلال، المحاولة %s' % attempt)
+    for rnd in (1, 2, 3):
+        run(RetentionRun(skill, rnd), ASSESS, 'فحص الاحتفاظ، الجولة %d' % rnd)
+        if src(skill, dict(RetentionRun(skill, rnd, attempt=2).want(), peek=True)) is not None:
+            run(RetentionRun(skill, rnd, attempt=2), ASSESS, 'فحص الاحتفاظ، الجولة %d ببنودها البديلة' % rnd)
+    if lesson:
+        pairs.update((a, lesson[0], 'junction', 'آخر الافتتاح ثم أول الدرس') for a in open_last)
+        pairs.update((lesson[-1], b, 'junction', 'آخر الدرس ثم أول دليل الفهم') for b in ev_first)
+    return explored
 
 
 def violations(pairs, by_id, marked=False):

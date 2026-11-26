@@ -371,8 +371,8 @@ for seed in range(160):
     name, know, start, group = old.PROFILES[seed % len(old.PROFILES)]
     random.seed(seed)
     child = old.Child(know)
-    answer = lambda item, want, c=child: {True: 'correct', False: 'wrong', None: 'help'}[c.item(item['skill'],
-                                                                                                want['type'])]
+    answer = lambda item, want, c=child: 'correct' if want['activity'] == 'ready' else \
+        {True: 'correct', False: 'wrong', None: 'help'}[c.item(item['skill'], want['type'])]   # المتطلب الخارجي معروف للمحاكى
     e = te.Engine(NET, group=group, regate=rng.random() < 0.7)
     secs = rng.choice([20, 30, 45, 60])
     sc = sch.Scheduler(e, TYPES, engine_sim.abstract_source, answer, group=group, start=start,

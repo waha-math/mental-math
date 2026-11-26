@@ -12,7 +12,8 @@
 //
 // المرجع هو scheduler.py: كل قرار هنا يطابقه في متجهات app/scheduler_vectors.json (app/test_scheduler_conformance.mjs).
 import { OPEN_CHECK } from './engine.mjs';
-import { CALC, Activity, GateRun, ShortCheckRun, OpeningRun, EvidenceRun, CheckRun, RetentionRun, DescribeRun, driveSteps, runSync, gatePlan,
+import { DATA } from './engine_data.mjs';
+import { CALC, Activity, GateRun, ShortCheckRun, OpeningRun, EvidenceRun, CheckRun, RetentionRun, DescribeRun, ReadyRun, driveSteps, runSync, gatePlan,
   foldItem, exposure, evidence, indicators, leftOut }
   from './items.mjs';
 
@@ -164,7 +165,7 @@ export class Scheduler {
     if (['gate_result', 'short_check_result', 'open_lesson', 'resume_lesson', 'lesson_opening_result',
       'understanding_proved', 'check_started', 'independence_result', 'check_resumed', 'check_held',
       'recheck_result', 'retention_result', 'retention_help', 'retention_referred', 'consolidation_started',
-      'consolidation_done', 'session_end'].includes(payload.type) && !('session' in ev)) {
+      'consolidation_done', 'session_end', 'ready_result'].includes(payload.type) && !('session' in ev)) {
       ev.session = this.cur;
     }
     const r = this.e.apply(ev);
@@ -187,6 +188,7 @@ export class Scheduler {
     this.stage = { kind, recall: false, gate: null, gate_done: false, done: 0, budget: ITEM_BUDGET, shorts: 0,
       shorts_done: false, teach: false, lesson: null, after: null, w: null, what: null };
     this.send({ type: 'session_start', session: this.cur, kind, day: this.day });
+    this.drop_ready();
   }
 
   end() {
@@ -539,7 +541,49 @@ export class Scheduler {
     return kind;
   }
 
+  // وضع دالة الأهلية في الجلسة الجارية: استثناء جلسة البدء فيها وحدها
+  mode() {
+    return this.cur !== null && this.e.s.sessions[this.cur].kind === 'start' ? 'start' : 'follow';
+  }
+
+  // المتطلب الخارجي (5.1): إن كان وحده ما يمنع فتح درس s وبوابة جاهزيته ممكنة الآن، فرمزه. وإلا null. بلا جلسة جارية
+  // يكفي ألا يكون أخفق فيها مرتين
+  ready_owed(s, mode = null, st = null) {
+    const v = this.e.eligible(s, mode || this.mode(), st);
+    if (v.ok || v.code !== 'external') return null;
+    const x = v.missing;
+    if (this.cur === null) {
+      return this.e.readyAttempts(x).filter((a) => a.result === 'fail').length < DATA.ready.fails ? x : null;
+    }
+    const r = this.e.preflight({ type: 'ready_result', id: 'ask', session: this.cur, skill: s, ext: x, result: 'pass' });
+    return r.ok ? x : null;
+  }
+
+  // دالة الأهلية تجيز الفتح، أو يجيزه اجتياز بوابة الجاهزية التي تُجرى قبله
+  openable(s, mode = 'follow', st = null) {
+    return this.e.eligible(s, mode, st).ok || this.ready_owed(s, mode, st) !== null;
+  }
+
+  // بوابة الجاهزية لمتطلب خارجي قبل فتح الدرس (قرار الأب، 26 نوفمبر). نتيجتها، أو null بلا بنود
+  *g_ready(s) {
+    const x = this.ready_owed(s);
+    const act = this.take('ready', s) || new ReadyRun({ skill: s, ext: x });   // بوابة قطعها السقف تُكمَل من حيث توقفت
+    (yield* this.g_run_act(act, 'ready'));
+    this.emit(act);
+    this.log.push([this.sessions, 'ready_' + (act.result ?? 'none'), s]);
+    return act.result;
+  }
+
+  // بوابة جاهزية محفوظة لم تعد لازمة (تحقق المتطلب بقرار المعلم، أو لم يعد الدرس يُفتح): تُسقط
+  drop_ready() {
+    for (const c of this.saved.filter((x) => x.kind === 'ready')) {
+      if (this.ready_owed(c.skill) === null) this.drop_carry('ready_not_owed', c);
+    }
+  }
+
   *g_open_lesson(s) {
+    this.drop_ready();
+    if (this.ready_owed(s) !== null && (yield* this.g_ready(s)) !== 'pass') return null;   // الدرس مغلق
     if (!this.send({ type: 'open_lesson', skill: s }).ok) return null;
     return (yield* this.g_opening(s));
   }
@@ -670,7 +714,8 @@ export class Scheduler {
     if (this.gates_run === 0 && this.inscope.has(this.start) && isNone(st[this.start])) return this.start;
     const inScope = (set) => [...set].filter((a) => this.inscope.has(a)).sort((a, b) => this.idx[a] - this.idx[b]);
     if (c !== null) {
-      if (this.e.eligible(c, 'follow', st).ok) return null;   // نقطة العمل محسومة
+      const v0 = this.e.eligible(c, 'follow', st);
+      if (v0.ok || v0.code === 'external') return null;   // نقطة العمل محسومة، والمتطلب الخارجي وحده لا يُبحث له في الأسلاف
       const fresh = inScope(this.anc[c]).filter(freshOk);
       if (fresh.length) {
         const split = (a) => {
@@ -787,9 +832,12 @@ export class Scheduler {
         this.items_before = diag();
       }
       if (w !== null && sg.lesson === null) {
-        if (this.e.eligible(w, 'start').ok) {
-          sg.lesson = w;
-          what = (yield* this.g_open_lesson(w)) || 'none';
+        if (this.openable(w, 'start')) {
+          // بوابة الجاهزية قبل أن يُسجَّل الدرس درسَ الجلسة: بعد إخفاقها لا درس يُستأنف عند التكملة
+          if (this.ready_owed(w) === null || (yield* this.g_ready(w)) === 'pass') {
+            sg.lesson = w;
+            what = (yield* this.g_open_lesson(w)) || 'none';
+          }
         } else {
           what = 'use';
           const [st, , gated] = this.view();
@@ -909,7 +957,7 @@ export class Scheduler {
     const [st, helped] = this.view();
     for (const s of this.ids) {
       if ((st[s] === 'stumbled' || (helped.has(s) && (isNone(st[s]) || st[s] === 'deferred')))
-        && !(s in this.e.s.opened) && this.e.eligible(s, 'follow', st).ok) {
+        && !(s in this.e.s.opened) && this.openable(s, 'follow', st)) {
         return s;
       }
     }
@@ -1273,6 +1321,7 @@ export class Scheduler {
     const o = this.pick_lesson();
     if (o !== null && !stage.seen.includes(o)) {
       stage.seen.push(o);
+      if (this.ready_owed(o) !== null && (yield* this.g_ready(o)) !== 'pass') return true;   // الدرس مغلق
       if (this.send({ type: 'open_lesson', skill: o }).ok) {   // يرفضه المحرك إن فُتح اليوم درس (lesson_today)
         (yield* this.g_opening(o));
         return true;
@@ -1380,7 +1429,7 @@ export class Scheduler {
 // سلسلة الاستدعاء التي تعرض بنودًا مولّدات (g_*): تعطي [البند، المطلوب] وتستقبل ما كانت answer تعيده. والدوال
 // بأسمائها السابقة أغلفة متزامنة تشغّل المولّد بـ this.answer، فلا يتغير شيء لمن يستدعيها. والواجهة تشغّل المولّد
 // نفسه خطوة خطوة. حالة المولّد ليست مصدر الاستعادة: المتابعة بعد الإغلاق تُبنى من الحالة المحفوظة.
-export const STEPPED = ['describe', 'run_act', 'show', 'consolidate', 'lesson_body', 'open_lesson', 'gate', 'short', 'opening', 'evidence', 'check', 'retention_check', 'recall', 'search', 'working_point', 'start_session', 'follow', 'teach', 'resume', 'run', 'follow_learning', 'resume_mine', 'extra', 'extra_body', 'extra_step'];
+export const STEPPED = ['ready', 'describe', 'run_act', 'show', 'consolidate', 'lesson_body', 'open_lesson', 'gate', 'short', 'opening', 'evidence', 'check', 'retention_check', 'recall', 'search', 'working_point', 'start_session', 'follow', 'teach', 'resume', 'run', 'follow_learning', 'resume_mine', 'extra', 'extra_body', 'extra_step'];
 for (const name of STEPPED) {
   Scheduler.prototype[name] = function sync(...args) {
     return runSync(this['g_' + name](...args), (item, w) => this.answer(item, w));

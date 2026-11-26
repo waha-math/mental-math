@@ -25,6 +25,33 @@ const clone = (x) => JSON.parse(JSON.stringify(x));
 const get = (o, k, d) => (Object.prototype.hasOwnProperty.call(o, k) ? o[k] : d);
 
 // ---------------------------------------------------------------- 3.1 الحقول الخمسة
+// 5.3 أنواع الإجابة (كما في المرجع): عدد صحيح، أو بطاقة نصًّا، أو قاموس بنوعه t: dec و frac و qr و dur و money و est
+export function parseDec(v) {
+  if (typeof v !== 'string' || !/^[0-9]*\.?[0-9]*$/.test(v) || !v.replace('.', '')) return null;
+  const [a, b = ''] = v.split('.');
+  return [BigInt((a || '0') + b), b.length];
+}
+const nat = (x) => Number.isInteger(x) && x >= 0;
+export function same(v, answer) {
+  if (answer === null || typeof answer !== 'object') return v === answer;
+  const t = answer.t;
+  if (t === 'dec') {
+    const p = parseDec(v);
+    return p !== null && p[0] * 10n ** BigInt(answer.s) === BigInt(answer.n) * 10n ** BigInt(p[1]);
+  }
+  if (t === 'est') return nat(v) && answer.lo <= v && v <= answer.hi;
+  if (!(Array.isArray(v) && v.length === 2 && nat(v[0]) && nat(v[1]))) return false;
+  const [a, b] = v;
+  if (t === 'frac') {
+    if (b === 0 || a * answer.d !== answer.n * b) return false;
+    return !answer.simplest || (a === answer.n && b === answer.d);
+  }
+  if (t === 'qr') return a === answer.q && b === answer.r;
+  if (t === 'dur') return b < 60 && a * 60 + b === answer.m;
+  if (t === 'money') return b < 100 && a * 100 + b === answer.p;
+  throw new Error('نوع جواب غير معروف: ' + JSON.stringify(t));
+}
+
 // raw: أحداث البند بترتيبها: ['confirm', قيمة]، ['support', نوع]، ['interrupt']، ['end'].
 // assess: بند بوابة أو فحص أو تحقق، ينتهي بأول تأكيد ولا محاولات بعده.
 // يعيد الحقول الخمسة ومعها support_unanswered: الدعم الذي جاء بعد آخر إجابة مؤكَّدة ولم تتبعه إجابة. يُحفظ كل دعم
@@ -39,7 +66,7 @@ export function foldItem(raw, answer, assess) {
       if (!SUPPORT.includes(ev[1])) throw new Error('نوع دعم غير معروف: ' + JSON.stringify(ev[1]));
       pending.push(ev[1]);
     } else if (kind === 'confirm') {
-      const ok = ev[1] === answer;
+      const ok = same(ev[1], answer);
       if (first === null) {
         first = ok;
         before = pending;
@@ -785,7 +812,42 @@ export class DescribeRun extends Activity {
   events() { return []; }
 }
 
-export const CLASSES = { GateRun, ShortCheckRun, OpeningRun, EvidenceRun, CheckRun, RetentionRun, DescribeRun };
+// بوابة الجاهزية لمتطلب خارجي (5.1، قرار الأب في 26 نوفمبر): 3 بنود قبل فتح درس المهارة. تتوقف عند أول بند غير صحيح
+// مستقل فتُخفق، والصحيحة كلها اجتياز. الانقطاع أو التعرّض المباشر بلا نتيجة: تُعاد في جلسة لاحقة
+export class ReadyRun extends Activity {
+  static pyName = 'ReadyRun';
+  get name() { return 'ready'; }
+
+  constructor({ skill, ext, size = 3 }) {
+    super(skill);
+    this.ext = ext;
+    this.size = size;
+    this.pos = 0;
+  }
+
+  want() {
+    if (this.done) return null;
+    return { activity: this.name, role: 'readiness', pos: this.pos, alternate: 0 };
+  }
+
+  unavailable() { this._finish(null); }
+
+  feed(outcome) {
+    if (this.done) throw new Error('النشاط انتهى');
+    this._count('ready');
+    if (outcome === 'interrupted' || outcome === 'exposed') return this._finish('interrupted');
+    if (outcome !== 'correct') return this._finish('fail');
+    this.pos += 1;
+    if (this.pos === this.size) this._finish('pass');
+    return undefined;
+  }
+
+  events() {
+    return this.result === null ? [] : [{ type: 'ready_result', skill: this.skill, ext: this.ext, result: this.result }];
+  }
+}
+
+export const CLASSES = { GateRun, ShortCheckRun, OpeningRun, EvidenceRun, CheckRun, RetentionRun, DescribeRun, ReadyRun };
 export const ASSESSING = ['gate', 'short', 'check', 'retention'];   // أنشطة التقييم: علاج تكرار الحقيقة فيها تأخير البند
 export const ALT_PEEK = 8;                        // أقصى عدد بدائل يُسأل عنها لنوع عند تأخير بند
 
@@ -959,6 +1021,8 @@ export class ContentSource {
       else it = at(this._typed(skill, g, 'gate.compensation', w.type), w.pos);
     } else if (a === 'short') {
       it = at(this._list(skill, 'short', 'short_check'), w.pos);
+    } else if (a === 'ready') {                   // بوابة الجاهزية لمتطلب خارجي: بنودها الثلاثة بترتيبها
+      it = at(this._list(skill, 'ready', 'readiness'), w.pos);
     } else if (a === 'describe') {                // الفحص الوصفي للمقارنة: بنوده الأربعة بترتيبها
       it = at(this._list(skill, 'compare', 'descriptive_check'), w.pos);
     } else if (a === 'opening') {

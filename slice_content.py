@@ -91,6 +91,7 @@ UI = {
     'how.title': ('كيف حسبتها؟', 'How did you work it out?'),
     'check.intro': ('عشرة أسئلة بلا مساعدة. خذ وقتك.', 'Ten questions without help. Take your time.'),
     'gate.intro': ('أسئلة قصيرة لنعرف من أين نبدأ.', 'A few questions to find where to start.'),
+    'ready.intro': ('قبل الدرس: ثلاثة أسئلة عن الساعة.', 'Before the lesson: three questions about the clock.'),
 }
 # الوصف المحايد للإجابة الخاطئة (4.3): يذكر الفرق أو الشكل الظاهر ولا يسمّي سببًا. ومعه السؤال التشخيصي.
 DESCRIBE = {

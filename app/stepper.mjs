@@ -12,9 +12,19 @@ import { itemEnds, snapshot } from './persist.mjs';
 import { Void } from './scheduler.mjs';
 import { HOW } from './items.mjs';
 
-export const ASSESS = ['gate', 'short', 'check', 'retention', 'describe'];   // بنود التقييم: تنتهي بأول تأكيد
+export const ASSESS = ['gate', 'short', 'check', 'retention', 'describe', 'ready'];   // بنود التقييم: تنتهي بأول تأكيد
 export const SHOWN = ['lesson', 'practice'];                     // بنود العرض: لا سجل لها
 export const TEACH_SUPPORT = ['hint', 'extra_model', 'someone']; // الدعم المسموح في بنود التعليم
+
+// قيمة التأكيد بنوع جواب البند (5.3): العشري نص أرقام بنقطة واحدة على الأكثر، والكسر وخارج القسمة وباقيها والمدة والمبلغ
+// زوج عددين صحيحين غير سالبين، والتقدير والعدد عدد صحيح. الحكم بعدها same في طبقة البنود
+const nat = (x) => Number.isInteger(x) && x >= 0;
+export function typedOk(item, v) {
+  const a = item && item.answer, t = a !== null && typeof a === 'object' ? a.t : null;
+  if (t === 'dec') return typeof v === 'string' && v.length > 0 && v.length <= 12 && /^[0-9]+(\.[0-9]+)?$|^[0-9]*\.[0-9]+$|^[0-9]+\.$/.test(v);
+  if (['frac', 'qr', 'dur', 'money'].includes(t)) return Array.isArray(v) && v.length === 2 && v.every(nat);
+  return Number.isInteger(v);
+}
 
 export class Stepper {
   constructor(engine, sc, clock = null) {
@@ -108,12 +118,12 @@ export class Stepper {
       return this.raw.some((x) => x[0] === 'how' || x[0] === 'confirm') ? 'البطاقة مرة واحدة قبل التأكيد' : null;
     }
     if (kind === 'confirm') {
-      if (ev.length === 2 && typeof ev[1] === 'string') {   // بند بطاقة (ج8): التأكيد بمعرّف إحدى بطاقاته
-        const cards = this.pending[0] && this.pending[0].cards;
-        return cards && cards.includes(ev[1]) ? null : 'بطاقة ليست من بطاقات البند';
+      const cards = this.pending[0] && this.pending[0].cards;
+      if (cards) {                                  // بند بطاقة (ج8): التأكيد بمعرّف إحدى بطاقاته
+        if (ev.length === 2 && typeof ev[1] === 'string') return cards.includes(ev[1]) ? null : 'بطاقة ليست من بطاقات البند';
+        return 'بند البطاقة يُجاب ببطاقة';
       }
-      if (this.pending[0] && this.pending[0].cards) return 'بند البطاقة يُجاب ببطاقة';
-      return ev.length === 2 && Number.isInteger(ev[1]) ? null : 'التأكيد يحمل عددًا صحيحًا واحدًا';
+      return ev.length === 2 && typedOk(this.pending[0], ev[1]) ? null : 'التأكيد لا يطابق نوع جواب البند';
     }
     if (kind === 'support') {
       if (ev.length !== 2) return 'طلب الدعم يحمل نوعه';

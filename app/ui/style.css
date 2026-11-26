@@ -128,3 +128,27 @@ svg.m .rod { fill: #f3c969; stroke: var(--ink); stroke-width: 3; }
 svg.m .rod.add { fill: #8fc3e8; }
 svg.m .rodline { stroke: var(--ink); stroke-width: 1.5; }
 svg.m .cross { stroke: #d9534f; stroke-width: 7; stroke-linecap: round; }
+/* أنواع الإجابة (5.3): خانتان للزوج، وصف خامس في اللوحة للنقطة أو «⇄» */
+.pad.extra { grid-template-rows: repeat(5, minmax(0, 1fr)); }
+.answer.pair { display: flex; gap: 0.6rem; align-items: center; justify-content: center; direction: ltr; }
+.answer.pair.k-frac { flex-direction: column; gap: 0.15rem; }
+.answer.pair .bar { display: block; width: 4.5rem; border-top: 3px solid var(--ink); }
+.answer .field { min-width: 4.5rem; padding: 0.1rem 0.5rem; border: 2px solid var(--line, #ccc); border-radius: 10px;
+  background: #fff; display: flex; flex-direction: column; align-items: center; font: inherit; }
+.answer .field.at { border-color: var(--accent, #2a7); }
+.answer .field small { font-size: 0.45em; }
+svg.m .counter.off { opacity: 0.35; }
+svg.m .split { stroke: var(--ink); stroke-width: 3; stroke-dasharray: 6 5; }
+svg.m .date { fill: #8a5a2b; }
+svg.m .plate { fill: #fff; stroke: var(--ink); stroke-width: 3; }
+svg.m .cell.on { fill: #f3c969; }
+svg.m .cell.off { fill: #eee; stroke-dasharray: 6 5; }
+svg.m .strip-off { fill: rgba(217, 83, 79, 0.25); stroke: #d9534f; stroke-width: 3; stroke-dasharray: 6 4; }
+/* وجه الساعة (بوابة الجاهزية لـ 8-5-2) */
+svg.k-clock .face { fill: #fffdf7; stroke: var(--ink); stroke-width: 6; }
+svg.k-clock .tick { stroke: var(--ink); stroke-width: 2; }
+svg.k-clock text { font-size: 30px; }
+svg.k-clock .hand { stroke: var(--ink); stroke-linecap: round; }
+svg.k-clock .hand.hour { stroke-width: 10; }
+svg.k-clock .hand.minute { stroke-width: 6; stroke: var(--calm); }
+svg.k-clock .pin { fill: var(--ink); }

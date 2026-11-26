@@ -3,12 +3,15 @@
 // ما تقرره الشاشة شكلٌ فقط: متى يظهر النموذج بعد خطأ في التعلّم (4.1)، ومتى يظهر زر «التالي».
 import { openDB } from '../store.mjs';
 import { Link, Blocked, familyDay, loadDevice, saveDevice, pinHash, checkRecord, readRecord } from './link.mjs';
-import { summarize, dayText } from './dashboard.mjs';
+import { summarize, dayText, externals, externalText } from './dashboard.mjs';
+import { DATA } from '../engine_data.mjs';
 import { load as loadRecord } from '../store.mjs';
 import { readAll, makeBackup, checkBackup, importBackup, undoInfo, undoImport } from '../backup.mjs';
 import { PROFILES, TZ, DEVICE, SKILLS } from './config.mjs';
 import { spoken, browserSpeaker, androidSpeaker } from './speech.mjs';
 import { modelFor, supportFor, comparePair } from './models.mjs';
+import { kindOf, PAIR, FIELDS, valueOf, format, shown } from './answers.mjs';
+import { same } from '../items.mjs';
 
 const T = globalThis.MM_TEST ?? {};
 const FLASH_MS = 1500;                  // مدة الومضة (1-1)، قيمة ابتدائية تُراجع بتجربة الأطفال     // منفذ الاختبار: speaker و now و mono و hooks و db
@@ -223,8 +226,11 @@ async function item() {
   const v = link.view();
   const { item: it, want, kind, seq } = v;
   const watch = want.role === 'lesson.watch' || it.role === 'lesson.watch';
-  const s = { typed: '', tries: v.raw.filter((x) => x[0] === 'confirm').length, solved: false, support: false, ready: false,
-    sheet: null, how: v.raw.some((x) => x[0] === 'how') };
+  const ak = kindOf(it.answer), pair = PAIR.includes(ak);       // نوع الجواب (5.3): عدد، عشري، أو زوج بخانتين
+  const s = { typed: '', fields: ['', ''], at: 0, tries: v.raw.filter((x) => x[0] === 'confirm').length, solved: false,
+    support: false, ready: false, sheet: null, how: v.raw.some((x) => x[0] === 'how') };
+  const empty = () => valueOf(ak, s) === null;
+  const clear = () => { s.typed = ''; s.fields = ['', '']; s.at = 0; };
 
   const send = async (ev) => {
     const r = await guard(() => link.press(seq, ev));
@@ -236,8 +242,8 @@ async function item() {
   onLang = () => { draw(); speakItem(); };
 
   const confirm = async () => {
-    if (!s.ready || s.solved || s.typed === '') return;
-    const val = Number(s.typed);
+    if (!s.ready || s.solved || empty()) return;
+    const val = valueOf(ak, s);
     if (kind === 'assess' && it.how && !s.how) {   // «كيف حسبتها؟» (10.2): اختيار يُسجَّل قبل التأكيد، بلا تصحيح
       say(ui('how.title'));
       s.sheet = h('div', { id: 'how' }, h('h1', {}, ui('how.title')), h('div', { class: 'row' },
@@ -267,11 +273,11 @@ async function item() {
       if (r !== 'open') { if (r === 'void' || r === 'next') after(); return; }
     }
     s.tries += 1;
-    if (val === it.answer) {
+    if (same(val, it.answer)) {
       s.solved = true;
     } else {                            // 4.1: لا علامة خطأ. يعود النموذج مجهّزًا بالمسألة، ويحاول الطفل ثانية
       s.support = true;
-      s.typed = '';
+      clear();
       say(supportFor(it) ? STR.lookFrame : STR.tryAgain);
     }
     draw();
@@ -319,17 +325,32 @@ async function item() {
     draw();
   };
 
+  // الأرقام حتى ستة (8-3-3: 11128)، والنقطة مرة في العشري، و«⇄» تنقل بين خانتي الزوج (ويُنقر على الخانة أيضًا)
   const key = (d) => {
     if (!s.ready || s.solved || watch) return;
-    if (d === 'del') s.typed = s.typed.slice(0, -1);
-    else if (s.typed.length < 3) s.typed = (s.typed === '0' ? '' : s.typed) + d;
+    if (d === 'swap') { s.at = 1 - s.at; draw(); return; }
+    const cur = pair ? s.fields[s.at] : s.typed;
+    let nxt = cur;
+    if (d === 'del') nxt = cur.slice(0, -1);
+    else if (d === '.') nxt = ak === 'dec' && !cur.includes('.') && cur.length < 6 ? (cur || '0') + '.' : cur;
+    else if (cur.length < 6) nxt = (cur === '0' ? '' : cur) + d;
+    if (pair) s.fields[s.at] = nxt; else s.typed = nxt;
     draw();
   };
+  const field = (k) => h('button', { class: 'field' + (s.at === k && !watch ? ' at' : ''), 'data-field': String(k),
+    disabled: !s.ready || s.solved || watch, on: { click: () => { s.at = k; draw(); } } },
+  h('span', { class: 'v' }, watch ? '' : s.fields[k] || '\u00a0'), h('small', {}, FIELDS[lang][ak][k]));
+  const answerBox = () => (pair && !watch
+    ? h('div', { class: 'answer pair k-' + ak, id: 'answer', 'data-value': shown(ak, s) }, field(0),
+      ak === 'frac' ? h('span', { class: 'bar' }) : null, field(1))
+    : h('div', { class: 'answer', id: 'answer', 'data-value': shown(ak, s) }, watch ? format(it.answer, lang) : s.typed));
 
   // بند المقارنة في الدرس: يختار الطفل بطاقة، ثم يُعرض الجواب لأن السؤال له جواب يُتحقق منه (ر7)، ولا سجل لبند عرض.
   // وفي الفحص الوصفي (بند تقييم) تُسجَّل البطاقة جوابًا، ولا يُعرض جواب
   const cards = it.cards ?? null;
-  const CARDSET = pack.cards[it.card_set ?? 'compare'];     // بطاقات البند: مقارنة الحلين، أو نعم ولا (ج11)
+  const CARDSET = it.card_labels                          // بطاقات البند: مقارنة الحلين، أو نعم ولا (ج11)، أو بأعداده (ج8)
+    ? Object.fromEntries(Object.entries(it.card_labels).map(([k, v]) => [k, typeof v === 'string' ? { ar: v, en: v } : v]))
+    : pack.cards[it.card_set ?? 'compare'];
   const pick = async (k) => {
     if (!s.ready || s.solved) return;
     if (kind === 'assess') {            // الفحص الوصفي: البطاقة جواب يُسجَّل، بلا جواب يُعرض ولا تغذية راجعة (4.1)
@@ -375,14 +396,17 @@ async function item() {
         cards ? h('div', { class: 'cards', id: 'cards' }, cards.map((k) => h('button', { 'data-card': k,
           class: s.solved && k === it.answer ? 'right' : s.picked === k ? 'picked' : null, disabled: !s.ready || s.solved,
           on: { click: () => pick(k) } }, (s.solved && k === it.answer ? '✓ ' : '') + L(CARDSET[k]))))
-          : [h('div', { class: 'answer', id: 'answer' }, watch ? String(it.answer) : s.typed),
-            h('div', { class: 'pad' },
+          : [answerBox(),
+            h('div', { class: 'pad' + (ak === 'dec' || pair ? ' extra' : '') },
           ['1', '2', '3', '4', '5', '6', '7', '8', '9'].map((d) => h('button', { 'data-key': d, disabled: padOff,
             on: { click: () => key(d) } }, d)),
           h('button', { 'data-key': 'del', disabled: padOff, 'aria-label': 'حذف', on: { click: () => key('del') } }, '⌫'),
           h('button', { 'data-key': '0', disabled: padOff, on: { click: () => key('0') } }, '0'),
-          h('button', { class: 'ok', 'data-key': 'ok', disabled: padOff || s.typed === '', 'aria-label': 'تأكيد',
-            on: { click: confirm } }, '✓'))])),
+          h('button', { class: 'ok', 'data-key': 'ok', disabled: padOff || empty(), 'aria-label': 'تأكيد',
+            on: { click: confirm } }, '✓'),
+          ak === 'dec' ? h('button', { 'data-key': '.', disabled: padOff, on: { click: () => key('.') } }, '.') : null,
+          pair ? h('button', { 'data-key': 'swap', disabled: padOff, 'aria-label': FIELDS[lang][ak].join(' / '),
+            on: { click: () => key('swap') } }, '⇄') : null)])),
       s.sheet && h('div', { class: 'sheet', id: 'sheet' }, s.sheet));
     showSave();
   }
@@ -400,7 +424,7 @@ async function item() {
   }, FLASH_MS);
   const intro = want.activity !== lastActivity && pack.ui[want.activity + '.intro'];
   lastActivity = want.activity;
-  say((intro ? L(intro) + ' ' : '') + (it['audio_' + lang] ?? it.audio_ar) + (watch ? ' ' + it.answer : ''));
+  say((intro ? L(intro) + ' ' : '') + (it['audio_' + lang] ?? it.audio_ar) + (watch ? ' ' + format(it.answer, lang) : ''));
 }
 
 // ---------------------------------------------------------------- الختام
@@ -519,6 +543,24 @@ function adultPanel(reason, detail = null) {
           adultPanel(reason, detail);
         } } }, 'ابدأ أيضًا من: ', skillText(d.skill)))] : null));
   }
+  if (link && link.e !== null && p) {            // المتطلب الخارجي (5.1): قرار المعلم بدل بوابة الجاهزية، أو إلغاؤه
+    const ext = p.scope.flatMap((skill) => externals(link.e, skill, DATA.external_names).map((x) => ({ ...x, skill })));
+    if (ext.length) {
+      const why3 = h('textarea', { id: 'ready-reason', rows: '2' });
+      sections.push(h('section', { id: 'external' }, h('p', {}, 'معرفة من خارج المنهج يحتاجها درس:'),
+        ext.map((x) => h('p', { class: 'ext', 'data-ext': x.ext, 'data-by': x.by ?? '' }, codes(`${x.skill}: `), externalText(x, DATA.ready.fails),
+          x.by === 'decision' ? h('button', { 'data-revoke-ready': x.ext, disabled: link.sc.cur !== null, on: { click: async () => {
+            try { await link.revokeReady(x.ext); } catch (err) { msg.textContent = String(err.message ?? err); return; }
+            adultPanel(reason, detail);
+          } } }, 'ألغِ القرار') : null)),
+        ext.some((x) => x.by === null) ? [h('label', {}, 'لماذا؟ (للقرار)', why3), ext.filter((x) => x.by === null).map((x) => h('button', {
+          'data-ready': x.ext, disabled: link.sc.cur !== null, on: { click: async () => {
+            if (!why3.value.trim()) { msg.textContent = 'السبب مطلوب'; return; }
+            try { await link.decideReady(x.ext, why3.value.trim()); } catch (err) { msg.textContent = String(err.message ?? err); return; }
+            adultPanel(reason, detail);
+          } } }, `يعرف ${x.name} (قرار المعلم)`))] : null));
+    }
+  }
   for (const f of (link ? link.flagged() : [])) {
     sections.push(h('section', { 'data-flag': f.session }, h('p', { class: 'warn' },
       `الجلسة ${f.session}: تاريخ الجهاز يومها بعيد عن آخر جلسة. القرارات المعتمدة على التاريخ معلّقة حتى تؤكده.`),
@@ -550,7 +592,7 @@ function boardSection() {
       let b;
       try {
         const { e, sc } = readRecord(rec, { profile: p, pack, tz: TZ, now: nowMs });
-        b = summarize(e, sc, p, pack);
+        b = summarize(e, sc, p, pack, DATA.external_names);
       } catch (err) {
         box.append(h('div', { class: 'board-child', 'data-child': id }, head, h('p', { class: 'warn' }, `تعذّرت قراءة الملف: ${err.detail ?? err}`)));
         continue;
@@ -561,7 +603,9 @@ function boardSection() {
           '«كيف حسبتها؟»', 'الفحص الوصفي', 'الطريقة'].map((x) => h('th', {}, x))),
         b.skills.map((k) => h('tr', { 'data-skill': k.skill, 'data-state': k.state },
           h('td', {}, codes(`${k.skill} ${k.name}`)),
-          h('td', {}, k.label, k.teacher ? h('small', {}, ' · فُتحت بقرار معلم، وليس دليل إتقان') : null),
+          h('td', {}, k.label, k.teacher ? h('small', {}, ' · فُتحت بقرار معلم، وليس دليل إتقان') : null,
+            k.external.map((x) => h('small', { class: 'external', 'data-ext': x.ext, 'data-by': x.by ?? '', 'data-fails': String(x.fails) },
+              ' · ' + externalText(x, DATA.ready.fails)))),
           h('td', {}, k.checks.map((c) => CHECK[c] ?? c).join('، ') || '—', k.checkFacts ? h('small', { class: 'facts' },
             ` · ${k.checkFacts.items} ${k.checkFacts.items > 10 ? 'بندًا' : 'بنود'} تغطي ${k.checkFacts.facts} ${k.checkFacts.facts > 10 || k.checkFacts.facts < 3 ? 'حقيقة' : 'حقائق'}`,
             k.checkFacts.wrong.length ? `؛ أخطأ في: ${k.checkFacts.wrong.map(([t, n]) => (n === 2 ? `${t} (مرتين)` : n > 2 ? `${t} (${n} مرات)` : t)).join('، ')}` : '') : null),

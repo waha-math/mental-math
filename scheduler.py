@@ -32,8 +32,9 @@ import itertools
 from collections import Counter
 
 from item_layer import (CALC, Activity, GateRun, ShortCheckRun, OpeningRun, EvidenceRun, CheckRun, RetentionRun, DescribeRun,
+                        ReadyRun,
                         drive_steps, run_sync, gate_plan, fold_item, exposure, evidence, indicators, left_out)
-from transition_engine import OPEN_CHECK
+from transition_engine import OPEN_CHECK, READY_FAILS
 
 GATES_PER_SEARCH = {'older': 2, 'young': 1}
 ITEM_BUDGET = 20          # بنود البوابات المخططة في جلسة بحث للكبيرين
@@ -145,7 +146,7 @@ class Scheduler:
                                'lesson_opening_result', 'understanding_proved', 'check_started',
                                'independence_result', 'check_resumed', 'check_held', 'recheck_result',
                                'retention_result', 'retention_help', 'retention_referred', 'consolidation_started',
-                               'consolidation_done', 'session_end'):
+                               'consolidation_done', 'session_end', 'ready_result'):
             ev.setdefault('session', self.cur)
         r = self.e.apply(ev)
         if not r['ok']:
@@ -168,6 +169,7 @@ class Scheduler:
         self.stage = dict(kind=kind, recall=False, gate=None, gate_done=False, done=0, budget=ITEM_BUDGET, shorts=0,
                           shorts_done=False, teach=False, lesson=None, after=None, w=None, what=None)
         self.send(dict(type='session_start', session=self.cur, kind=kind, day=self.day))
+        self.drop_ready()
 
     def end(self):
         if self.day_cap is not None:                        # زمن اليوم: يُجمع عند ختم كل جلسة
@@ -488,7 +490,45 @@ class Scheduler:
             (yield from self.g_lesson_body(s))
         return kind
 
+    def mode(self):
+        """وضع دالة الأهلية في الجلسة الجارية: استثناء جلسة البدء فيها وحدها."""
+        return 'start' if self.cur is not None and self.e.s['sessions'][self.cur]['kind'] == 'start' else 'follow'
+
+    def ready_owed(self, s, mode=None, st=None):
+        """المتطلب الخارجي (5.1): إن كان وحده ما يمنع فتح درس s وبوابة جاهزيته ممكنة الآن، فرمزه. وإلا None. بلا جلسة
+        جارية يكفي ألا يكون أخفق فيها مرتين."""
+        v = self.e.eligible(s, mode or self.mode(), st)
+        if v['ok'] or v['code'] != 'external':
+            return None
+        x = v['missing']
+        if self.cur is None:
+            return x if sum(1 for a in self.e.ready_attempts(x) if a['result'] == 'fail') < READY_FAILS else None
+        ok_ = self.e.preflight(dict(type='ready_result', id='ask', session=self.cur, skill=s, ext=x, result='pass'))
+        return x if ok_['ok'] else None
+
+    def openable(self, s, mode='follow', st=None):
+        """دالة الأهلية تجيز الفتح، أو يجيزه اجتياز بوابة الجاهزية التي تُجرى قبله."""
+        return self.e.eligible(s, mode, st)['ok'] or self.ready_owed(s, mode, st) is not None
+
+    def g_ready(self, s):
+        """بوابة الجاهزية لمتطلب خارجي قبل فتح الدرس (قرار الأب، 26 نوفمبر). نتيجتها، أو None بلا بنود."""
+        x = self.ready_owed(s)
+        act = self.take('ready', s) or ReadyRun(s, x)      # بوابة قطعها السقف تُكمَل من حيث توقفت
+        (yield from self.g_run_act(act, 'ready'))
+        self.emit(act)
+        self.log.append((self.sessions, 'ready_%s' % (act.result or 'none'), s))
+        return act.result
+
+    def drop_ready(self):
+        """بوابة جاهزية محفوظة لم تعد لازمة (تحقق المتطلب بقرار المعلم، أو لم يعد الدرس يُفتح): تُسقط."""
+        for c in [c for c in self.saved if c['kind'] == 'ready']:
+            if self.ready_owed(c['skill']) is None:
+                self.drop_carry('ready_not_owed', c)
+
     def g_open_lesson(self, s):
+        self.drop_ready()
+        if self.ready_owed(s) is not None and (yield from self.g_ready(s)) != 'pass':
+            return None                                     # لم يتحقق المتطلب الخارجي: الدرس مغلق
         if not self.send(dict(type='open_lesson', skill=s))['ok']:
             return None
         return (yield from self.g_opening(s))
@@ -621,7 +661,8 @@ class Scheduler:
         if self.gates_run == 0 and self.start in self.inscope and st[self.start] is None:
             return self.start
         if c is not None:
-            if self.e.eligible(c, 'follow', st)['ok']:
+            v = self.e.eligible(c, 'follow', st)
+            if v['ok'] or v['code'] == 'external':          # المتطلب الخارجي وحده لا يُبحث له في الأسلاف
                 return None                                 # نقطة العمل محسومة
             fresh = [a for a in sorted(self.anc[c] & self.inscope, key=self.idx.get) if fresh_ok(a)]
             if fresh:
@@ -731,9 +772,11 @@ class Scheduler:
                 w = (yield from self.g_working_point())
                 self.items_before = sum(self.n[c] for c in DIAG)
             if w is not None and sg['lesson'] is None:
-                if self.e.eligible(w, 'start')['ok']:
-                    sg['lesson'] = w
-                    what = (yield from self.g_open_lesson(w)) or 'none'
+                if self.openable(w, 'start'):
+                    # بوابة الجاهزية قبل أن يُسجَّل الدرس درسَ الجلسة: بعد إخفاقها لا درس يُستأنف عند التكملة
+                    if self.ready_owed(w) is None or (yield from self.g_ready(w)) == 'pass':
+                        sg['lesson'] = w
+                        what = (yield from self.g_open_lesson(w)) or 'none'
                 else:
                     what = 'use'
                     st, helped, gated = self.view()
@@ -848,7 +891,7 @@ class Scheduler:
         st, helped, gated = self.view()
         for s in self.ids:
             if (st[s] == 'stumbled' or (s in helped and st[s] in (None, 'deferred'))) and s not in self.e.s['opened'] \
-                    and self.e.eligible(s, 'follow', st)['ok']:
+                    and self.openable(s, 'follow', st):
                 return s
         return None
 
@@ -1204,6 +1247,8 @@ class Scheduler:
         o = self.pick_lesson()
         if o is not None and o not in stage['seen']:
             stage['seen'].append(o)
+            if self.ready_owed(o) is not None and (yield from self.g_ready(o)) != 'pass':
+                return True                                 # عُرضت بوابة الجاهزية ولم تُجتز: الدرس مغلق
             if self.send(dict(type='open_lesson', skill=o))['ok']:   # يرفضه المحرك إن فُتح اليوم درس (lesson_today)
                 (yield from self.g_opening(o))
                 return True
@@ -1297,7 +1342,7 @@ class Scheduler:
 # سلسلة الاستدعاء التي تعرض بنودًا مولّدات (g_*): تعطي (البند، المطلوب) وتستقبل ما كانت answer تعيده. والدوال
 # بأسمائها السابقة أغلفة متزامنة تشغّل المولّد بـ self.answer، فلا يتغير شيء لمن يستدعيها. والواجهة تشغّل المولّد
 # نفسه خطوة خطوة. حالة المولّد ليست مصدر الاستعادة: المتابعة بعد الإغلاق تُبنى من الحالة المحفوظة.
-STEPPED = ('describe', 'run_act', 'show', 'consolidate', 'lesson_body', 'open_lesson', 'gate', 'short', 'opening', 'evidence', 'check', 'retention_check', 'recall', 'search', 'working_point', 'start_session', 'follow', 'teach', 'resume', 'run', 'follow_learning', 'resume_mine', 'extra', 'extra_body', 'extra_step')
+STEPPED = ('ready', 'describe', 'run_act', 'show', 'consolidate', 'lesson_body', 'open_lesson', 'gate', 'short', 'opening', 'evidence', 'check', 'retention_check', 'recall', 'search', 'working_point', 'start_session', 'follow', 'teach', 'resume', 'run', 'follow_learning', 'resume_mine', 'extra', 'extra_body', 'extra_step')
 
 
 def _sync(name):
