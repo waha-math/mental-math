@@ -39,6 +39,23 @@ def load_network(path, stages='12345678'):
     return ids, pre
 
 
+# المتطلب الخارجي (5.1، قرار الأب في 26 نوفمبر: «الاثنان»): معرفة من خارج المنهج، يُتحقق منها ببوابة جاهزية من 3 بنود
+# أو بقرار المعلم، وتبقى المهارة مغلقة للتعلّم حتى أحدهما. الرمز مفتاحه في الأحداث، والاسم كما في عمود «تتطلب»
+EXTERNAL_NAMES = {'clock': 'قراءة الساعة'}
+EXTERNAL = {'8-5-2': ('clock',)}
+READY_ITEMS, READY_FAILS = 3, 2                            # بنود بوابة الجاهزية، والإخفاقات قبل أن يلزم قرار المعلم
+
+
+def load_external(path):
+    """المتطلبات الخارجية من عمود «تتطلب» في الخريطة (بعد «خ:»)، بالرموز. يُقارن بـ EXTERNAL في الاختبار."""
+    code = {v: k for k, v in EXTERNAL_NAMES.items()}
+    out = {}
+    for sid, _t, _m, req, ev, _a in ROW.findall(open(path, encoding='utf-8').read()):
+        for name in re.findall(r'خ:\s*([^،|]+)', req):
+            out.setdefault(sid, []).append(code[name.strip()])
+    return {k: tuple(v) for k, v in out.items()}
+
+
 EXEMPT, STUMBLE, UNDERSTOOD, INDEPENDENT, SHORT_OK, RECHECK = (
     'exempt', 'stumble', 'understood', 'independent', 'short_ok', 'recheck')
 SATISFIED = ('exempt', 'met')
@@ -109,6 +126,11 @@ REASONS = {
     'not_referred': 'لا جولة احتفاظ محالة إلى البالغ لهذه المهارة',
     'consolidation_first': 'جولة فحص الاحتفاظ تنتظر تثبيتًا لم يكتمل بعد طلب مساعدة فيها',
     'no_consolidation': 'لا تثبيت مستحق لهذه المهارة، أو لم يبدأ في هذه الجلسة',
+    'external': 'متطلب خارجي لم يُتحقق منه: بوابة الجاهزية أو قرار المعلم',
+    'unknown_external': 'ليس متطلبًا خارجيًا لهذه المهارة',
+    'already_ready': 'المتطلب الخارجي متحقق: اجتاز بوابة جاهزيته أو بقرار المعلم',
+    'ready_today': 'بوابة الجاهزية مرة في الجلسة',
+    'ready_limit': 'أخفق في بوابة الجاهزية مرتين: يلزم قرار المعلم',
 }
 
 RESULTS = ('pass', 'fail', 'help')
@@ -143,6 +165,9 @@ SCHEMA = {
     'retention_release': {'skill': str, 'reason': str},
     'consolidation_started': {'session': str, 'skill': str},
     'consolidation_done': {'session': str, 'skill': str, 'items?': [str]},
+    'ready_result': {'session': str, 'skill': str, 'ext': str, 'result': ('pass', 'fail', 'interrupted'),
+                     'items?': [str]},
+    'teacher_ready': {'ext': str, 'reason': str},
 }
 
 
@@ -247,6 +272,15 @@ TABLE = [
     ('teacher_defer', 'تأجيل تدريس بقرار المعلم', 'سبب مكتوب. لا دليل مباشر للمهارات المسماة',
      'قرار سارٍ: تُعرض «مؤجَّلة بقرار المعلم» ما لم تنتظر', 'unknown_skill، bad_decision، not_deferrable',
      'لا يفتح ما بعدها. يبقى لها التحقق القصير'),
+    ('ready_result', 'نتيجة بوابة الجاهزية لمتطلب خارجي',
+     'جلسة مفتوحة. المتطلب خارجي لهذه المهارة ولم يتحقق، ومتطلباتها الداخلية تجيز الفتح. لم تُجرَ بوابته في '
+     'هذه الجلسة، وأخفق فيها أقل من مرتين في الجلسات غير المبطلة. لا تستهلك حصة: تسبق فتح الدرس',
+     'تُسجَّل محاولة بنتيجتها. اجتاز: يتحقق المتطلب فتجيز دالة الأهلية الفتح. أخفق أو انقطعت: يبقى الدرس مغلقًا',
+     'no_session، unknown_skill، unknown_external، already_ready، ready_today، ready_limit، prerequisite',
+     'لا يغيّر الحالات. إبطال جلستها يُسقط تحققها فيُعلَّق الدرس المفتوح'),
+    ('teacher_ready', 'قرار المعلم: المتطلب الخارجي متحقق', 'متطلب خارجي معروف، والسبب مكتوب، ولا قرار سارٍ له',
+     'قرار سارٍ يتحقق به المتطلب. يُلغى بإلغاء القرار', 'unknown_external، bad_decision، already_ready',
+     'لا يغيّر الحالات. إلغاؤه يعلّق الدرس المفتوح إن لم تُجتز البوابة'),
     ('teacher_revoke', 'إلغاء قرار', 'القرار سارٍ', 'يصير غير سارٍ ويبقى في التاريخ', 'no_decision',
      'الدرس الذي فقد مسوّغه يُعلَّق'),
     ('recheck_result', 'نتيجة إعادة التحقق',
@@ -324,8 +358,9 @@ CONTINUE = dict(gate='gate_result', short='short_check_result', opening='lesson_
 
 
 class Engine:
-    def __init__(self, net, group='older', regate=True, versions=None):
+    def __init__(self, net, group='older', regate=True, versions=None, external=None):
         self.ids, self.pre = net
+        self.ext = {k: tuple(v) for k, v in (EXTERNAL if external is None else external).items() if k in self.pre}
         self._items = []                                   # بنود الحدث الجاري، تُحفظ مع دليله
         self.idx = {s: n for n, s in enumerate(self.ids)}
         self.kids = {s: [c for c in self.ids if s in self.pre[c]] for s in self.ids}
@@ -521,7 +556,18 @@ class Engine:
             if mode == 'start' and self.valid_evidence(p, SHORT_OK):
                 continue                                   # استثناء جلسة البدء وحدها
             return no('prerequisite', p)
+        for x in self.ext.get(skill, ()):                  # المتطلب الخارجي بعد الداخلية: بوابته أو قرار المعلم
+            if not self.ext_ready(x):
+                return no('external', x)
         return ok()
+
+    def ready_attempts(self, ext):
+        """محاولات بوابة الجاهزية في الجلسات غير المبطلة، بلا المنقطعة."""
+        return [a for a in self.s['attempts'] if a['what'] == 'ready' and a['ext'] == ext
+                and a['result'] != 'interrupted' and not self.s['sessions'][a['session']]['invalid']]
+
+    def ext_ready(self, ext):
+        return bool(self.decisions('ready', ext)) or any(a['result'] == 'pass' for a in self.ready_attempts(ext))
 
     def _reconcile(self):
         """بعد كل حدث مقبول: الدرس المفتوح الذي فقد مسوّغه يُعلَّق، والذي عاد مسوّغه يُستأنف."""
@@ -844,6 +890,12 @@ class Engine:
             return self._lesson(ev, ('opening', 'skipped', 'full')) or ok()
         if kind == 'describe':                              # الفحص الوصفي: لا حدث له، فشرطه الجلسة الجارية وحدها
             return self._need(ev) or ok()
+        if kind == 'ready':                                 # بوابة الجاهزية: شرطها شرط نتيجتها، لأول متطلب خارجي ناقص
+            ses = self._session(ev)
+            v = self.eligible(skill, 'start' if ses is not None and ses['kind'] == 'start' else 'follow')
+            ev['ext'] = v.get('missing') if not v['ok'] and v['code'] == 'external' else \
+                next(iter(self.ext.get(skill, ())), '')
+            return self.can_ready_result(ev)
         return getattr(self, 'can_' + CONTINUE[kind])(ev)
 
     def can_lesson_opening_result(self, ev):
@@ -1014,6 +1066,42 @@ class Engine:
             self._add(ev['skill'], INDEPENDENT, 'check', ev['session'], check=ev['check_id'])
 
     # ---------------------------------------------------------------- قرارات المعلم
+    def can_ready_result(self, ev):
+        bad = self._need(ev)
+        if bad:
+            return bad
+        skill, x = ev['skill'], ev['ext']
+        if x not in self.ext.get(skill, ()):
+            return no('unknown_external')
+        if self.ext_ready(x):
+            return no('already_ready')
+        ses = self._session(ev)
+        v = self.eligible(skill, 'start' if ses['kind'] == 'start' else 'follow')
+        if v['ok'] or v['code'] != 'external' or v['missing'] != x:
+            return v if not v['ok'] else no('already_ready')
+        tried = self.ready_attempts(x)
+        if any(a['session'] == ev['session'] for a in tried):
+            return no('ready_today')
+        if sum(1 for a in tried if a['result'] == 'fail') >= READY_FAILS:
+            return no('ready_limit')
+        return ok()
+
+    def do_ready_result(self, ev):
+        self._attempt(skill=ev['skill'], what='ready', ext=ev['ext'], result=ev['result'], session=ev['session'])
+
+    def can_teacher_ready(self, ev):
+        if not any(ev['ext'] in v for v in self.ext.values()):
+            return no('unknown_external')
+        if not ev.get('reason'):
+            return no('bad_decision')
+        if self.decisions('ready', ev['ext']):
+            return no('already_ready')
+        return ok()
+
+    def do_teacher_ready(self, ev):
+        self.s['decisions'].append(dict(id=ev['id'], kind='ready', skills=[ev['ext']], standing=True,
+                                        reason=ev['reason'], seq=self.s['seq']))
+
     def can_teacher_open(self, ev):
         skill = ev['skill']
         if skill not in self.idx:

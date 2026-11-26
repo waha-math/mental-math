@@ -17,6 +17,8 @@ export const DATA = {
   "check_abandoned",
   "teacher_open",
   "teacher_defer",
+  "ready_result",
+  "teacher_ready",
   "teacher_revoke",
   "recheck_result",
   "invalidate_session",
@@ -27,6 +29,14 @@ export const DATA = {
   "consolidation_done",
   "retention_release"
  ],
+ "external": {
+  "8-5-2": [
+   "clock"
+  ]
+ },
+ "external_names": {
+  "clock": "قراءة الساعة"
+ },
  "migration": 1,
  "network": {
   "ids": [
@@ -713,9 +723,14 @@ export const DATA = {
    "teach": 1
   }
  },
+ "ready": {
+  "fails": 2,
+  "items": 3
+ },
  "reasons": {
   "already_active": "الدرس أو محاولة الفحص نشط في هذه الجلسة",
   "already_open": "درس المهارة مفتوح",
+  "already_ready": "المتطلب الخارجي متحقق: اجتاز بوابة جاهزيته أو بقرار المعلم",
   "already_satisfied": "المهارة مجتازة أو مستوفاة",
   "bad_decision": "قرار المعلم ناقص: السبب، أو متطلب غير مستوفى لم يُذكر في المتجاوَز",
   "bad_event": "الحدث ناقص أو فيه حقل بنوع أو قيمة غير مسموحة",
@@ -729,6 +744,7 @@ export const DATA = {
   "consolidation_first": "جولة فحص الاحتفاظ تنتظر تثبيتًا لم يكتمل بعد طلب مساعدة فيها",
   "date_unconfirmed": "تاريخ الجلسة يحتاج تأكيد الوالد: جاء قبل يوم آخر جلسة أو بعده بأكثر من 30 يومًا",
   "event_id_conflict": "المعرّف نفسه وصل من قبل بمحتوى مختلف",
+  "external": "متطلب خارجي لم يُتحقق منه: بوابة الجاهزية أو قرار المعلم",
   "extra_session": "الجلسة الإضافية تعليم وتدريب: لا فحص استقلال ولا فحص احتفاظ فيها",
   "gate_limit": "للمهارة بوابة وإعادة واحدة على الأكثر",
   "internal_error": "تعطّل التنفيذ، وأُعيدت الحالة كما كانت قبل الطلب",
@@ -750,6 +766,8 @@ export const DATA = {
   "quota_gate": "استُهلكت بوابات هذه الجلسة، أو لا بوابة في هذا النوع من الجلسات",
   "quota_short": "استُهلكت التحققات القصيرة في هذه الجلسة",
   "quota_teach": "استُهلكت الحصة التعليمية الواحدة في هذه الجلسة",
+  "ready_limit": "أخفق في بوابة الجاهزية مرتين: يلزم قرار المعلم",
+  "ready_today": "بوابة الجاهزية مرة في الجلسة",
   "regate_not_allowed": "الإعادة بعد فتح الدرس واختصاره، وفي جلسة لاحقة، وإن سُمح بها",
   "retention_done": "أُجريت فحوص الاحتفاظ الثلاثة لهذه المهارة",
   "retention_early": "لم يحِن موعد فحص الاحتفاظ: الفاصل يُحسب من يوم الاجتياز ثم من يوم الفحص السابق",
@@ -759,6 +777,7 @@ export const DATA = {
   "session_order": "نوع الجلسة لا يأتي في هذا الموضع: بحث (4 على الأكثر) ثم بدء واحدة ثم متابعة أو إضافية",
   "suspended": "الوصول إلى المهارة معلَّق حتى إعادة التحقق أو قرار المعلم",
   "understanding_first": "فحص الاستقلال بعد ثبوت الفهم",
+  "unknown_external": "ليس متطلبًا خارجيًا لهذه المهارة",
   "unknown_skill": "المهارة ليست في المحتوى المسلَّم",
   "version_unavailable": "إصدار تعريفات بنود الفحص غير متاح"
  },
@@ -855,6 +874,18 @@ export const DATA = {
    "session": "str",
    "skill": "str"
   },
+  "ready_result": {
+   "ext": "str",
+   "items?": "strlist",
+   "result": [
+    "enum",
+    "pass",
+    "fail",
+    "interrupted"
+   ],
+   "session": "str",
+   "skill": "str"
+  },
   "recheck_result": {
    "items?": "strlist",
    "ok": "bool",
@@ -916,6 +947,10 @@ export const DATA = {
    "bypass": "strlist",
    "reason": "str",
    "skill": "str"
+  },
+  "teacher_ready": {
+   "ext": "str",
+   "reason": "str"
   },
   "teacher_revoke": {
    "decision": "str"

@@ -11,7 +11,9 @@ import { DATA } from './engine_data.mjs';
 
 const { schema: SCHEMA, reasons: REASONS, quota: QUOTA, search_cap: SEARCH_CAP } = DATA;
 const { gaps: RETENTION_GAPS, items: RETENTION_ITEMS, ok: RETENTION_OK } = DATA.retention;
-const MIGRATION = DATA.migration;              // نسخة ترحيل الحالة المحفوظة (المراجعة 12)
+const MIGRATION = DATA.migration;
+const EXTERNAL = DATA.external;                // المتطلب الخارجي (5.1): رموزه لكل مهارة
+const READY_FAILS = DATA.ready.fails;              // نسخة ترحيل الحالة المحفوظة (المراجعة 12)
 
 const EXEMPT = 'exempt', STUMBLE = 'stumble', UNDERSTOOD = 'understood', INDEPENDENT = 'independent',
   SHORT_OK = 'short_ok', RECHECK = 'recheck';
@@ -51,9 +53,11 @@ function fits(v, rule) {
 }
 
 export class Engine {
-  constructor(net = DATA.network, { group = 'older', regate = true, versions = null } = {}) {
+  constructor(net = DATA.network, { group = 'older', regate = true, versions = null, external = null } = {}) {
     this.ids = net.ids;
     this.pre = net.pre;
+    this.ext = {};
+    for (const [k, v] of Object.entries(external === null ? EXTERNAL : external)) if (has(this.pre, k)) this.ext[k] = [...v];
     this._items = [];
     this.idx = {};
     this.ids.forEach((s, n) => { this.idx[s] = n; });
@@ -271,7 +275,20 @@ export class Engine {
       if (mode === 'start' && this.validEvidence(p, SHORT_OK).length) continue;   // استثناء جلسة البدء وحدها
       return no('prerequisite', p);
     }
+    for (const x of this.ext[skill] || []) {   // المتطلب الخارجي بعد الداخلية: بوابته أو قرار المعلم
+      if (!this.extReady(x)) return no('external', x);
+    }
     return ok();
+  }
+
+  // محاولات بوابة الجاهزية في الجلسات غير المبطلة، بلا المنقطعة
+  readyAttempts(ext) {
+    return this.s.attempts.filter((a) => a.what === 'ready' && a.ext === ext && a.result !== 'interrupted'
+      && !this.s.sessions[a.session].invalid);
+  }
+
+  extReady(ext) {
+    return this.decisions('ready', ext).length > 0 || this.readyAttempts(ext).some((a) => a.result === 'pass');
   }
 
   // بعد كل حدث مقبول: الدرس المفتوح الذي فقد مسوّغه يُعلَّق، والذي عاد مسوّغه يُستأنف
@@ -594,6 +611,12 @@ export class Engine {
     const ev = { session, skill, check_id, correct: 0 };
     if (kind === 'show') return this._lesson(ev, ['opening', 'skipped', 'full']) || ok();
     if (kind === 'describe') return this._need(ev) || ok();   // الفحص الوصفي: لا حدث له، فشرطه الجلسة الجارية
+    if (kind === 'ready') {                       // بوابة الجاهزية: شرطها شرط نتيجتها، لأول متطلب خارجي ناقص
+      const ses = this._session(ev);
+      const v = this.eligible(skill, ses && ses.kind === 'start' ? 'start' : 'follow');
+      ev.ext = !v.ok && v.code === 'external' ? v.missing : (this.ext[skill] || [''])[0];
+      return this.can_ready_result(ev);
+    }
     return this['can_' + CONTINUE[kind]](ev);
   }
 
@@ -759,6 +782,39 @@ export class Engine {
     c.closed_seq = this.s.seq;
     this._attempt({ skill: ev.skill, what: 'independence', result: ev.result, session: ev.session, check: ev.check_id });
     if (ev.result === 'pass') this._add(ev.skill, INDEPENDENT, 'check', ev.session, { check: ev.check_id });
+  }
+
+  // ---------------------------------------------------------------- المتطلب الخارجي
+  can_ready_result(ev) {
+    const bad = this._need(ev);
+    if (bad) return bad;
+    const skill = ev.skill, x = ev.ext;
+    if (!(this.ext[skill] || []).includes(x)) return no('unknown_external');
+    if (this.extReady(x)) return no('already_ready');
+    const ses = this._session(ev);
+    const v = this.eligible(skill, ses.kind === 'start' ? 'start' : 'follow');
+    if (v.ok || v.code !== 'external' || v.missing !== x) return !v.ok ? v : no('already_ready');
+    const tried = this.readyAttempts(x);
+    if (tried.some((a) => a.session === ev.session)) return no('ready_today');
+    if (tried.filter((a) => a.result === 'fail').length >= READY_FAILS) return no('ready_limit');
+    return ok();
+  }
+
+  do_ready_result(ev) {
+    this._attempt({ skill: ev.skill, what: 'ready', ext: ev.ext, result: ev.result, session: ev.session });
+  }
+
+  can_teacher_ready(ev) {
+    if (!Object.values(this.ext).some((v) => v.includes(ev.ext))) return no('unknown_external');
+    if (!ev.reason) return no('bad_decision');
+    if (this.decisions('ready', ev.ext).length) return no('already_ready');
+    return ok();
+  }
+
+  do_teacher_ready(ev) {
+    this.s.decisions.push({
+      id: ev.id, kind: 'ready', skills: [ev.ext], standing: true, reason: ev.reason, seq: this.s.seq,
+    });
   }
 
   // ---------------------------------------------------------------- قرارات المعلم

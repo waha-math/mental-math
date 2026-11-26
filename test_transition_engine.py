@@ -13,7 +13,7 @@ import itertools
 import random
 import sys
 
-from transition_engine import Engine, load_network, QUOTA, SEARCH_CAP
+from transition_engine import Engine, load_network, load_external, EXTERNAL, QUOTA, SEARCH_CAP
 
 NET = load_network(sys.argv[1])
 IDS, PRE = NET
@@ -1175,6 +1175,62 @@ g = g and ret(e2, 'S4', correct=5)['ok']
 check('الجلسة الإضافية: بعد جلسة البدء وفي يوم جلسة سبقتها. يُكمَل فيها الدرس ويُقبل دليل الفهم، ولا فحص استقلال ولا فحص احتفاظ. '
       'ودرس جديد واحد في يوم الأسرة، والحصة غير معدودة. والتدريب فيها بعد إخفاق الفحص يُحسب جلسة تدريب، فتُقبل الإعادة في اليوم التالي',
       a and b and c and d and f and g)
+
+print('\n35. المتطلب الخارجي (قرار الأب، 26 نوفمبر: بوابة الجاهزية وقرار المعلم كلاهما)')
+# المتوقع من القاعدة (5.1): 8-5-2 مغلقة للتعلّم حتى تُجتاز بوابة «قراءة الساعة» أو يقرر المعلم. البوابة مرة في الجلسة، ولا
+# تُجرى قبل أن تجيز المتطلبات الداخلية، وبعد إخفاقين في جلسات غير مبطلة يلزم القرار. إلغاء القرار أو إبطال جلسة الاجتياز
+# يعلّق الدرس المفتوح، واجتياز البوابة بعدها يستأنفه
+e = Engine(NET)
+a = load_external(sys.argv[1]) == EXTERNAL == {'8-5-2': ('clock',)}
+start(e, 'S0', 'search')
+b = (refused(e, 'ready_result', 'prerequisite', '3-2-2', session='S0', skill='8-5-2', ext='clock', result='pass')
+     and ev(e, 'gate_result', session='S0', skill='3-2-2', result='pass')['ok'])
+end(e, 'S0')
+start(e, 'S1', 'start')
+v = e.eligible('8-5-2', 'start')
+b = b and (not v['ok'] and v['code'] == 'external' and v['missing'] == 'clock'
+           and refused(e, 'open_lesson', 'external', 'clock', session='S1', skill='8-5-2')
+           and refused(e, 'ready_result', 'unknown_external', None, session='S1', skill='8-5-2', ext='coins',
+                       result='pass')
+           and refused(e, 'ready_result', 'unknown_external', None, session='S1', skill='3-2-2', ext='clock',
+                       result='pass')
+           and ev(e, 'ready_result', session='S1', skill='8-5-2', ext='clock', result='interrupted')['ok']
+           and ev(e, 'ready_result', session='S1', skill='8-5-2', ext='clock', result='fail', items=['i1', 'i2'])['ok']
+           and refused(e, 'ready_result', 'ready_today', None, session='S1', skill='8-5-2', ext='clock', result='pass')
+           and refused(e, 'open_lesson', 'external', 'clock', session='S1', skill='8-5-2')
+           and e.derive()['8-5-2'] is None)
+end(e, 'S1')
+start(e, 'S2', 'follow')
+c = ev(e, 'ready_result', session='S2', skill='8-5-2', ext='clock', result='fail')['ok']
+end(e, 'S2')
+start(e, 'S3', 'follow')
+c = c and (refused(e, 'ready_result', 'ready_limit', None, session='S3', skill='8-5-2', ext='clock', result='pass')
+           and refused(e, 'teacher_ready', 'bad_event', None, ext='clock', reason='')
+           and refused(e, 'teacher_ready', 'unknown_external', None, ext='coins', reason='يعرف')
+           and ev(e, 'teacher_ready', ext='clock', reason='يقرأ الساعة')['ok']
+           and refused(e, 'teacher_ready', 'already_ready', None, ext='clock', reason='مرة ثانية')
+           and refused(e, 'ready_result', 'already_ready', None, session='S3', skill='8-5-2', ext='clock', result='pass')
+           and ev(e, 'open_lesson', session='S3', skill='8-5-2')['ok'])
+dec = e.decisions('ready', 'clock')[0]['id']
+r = ev(e, 'teacher_revoke', decision=dec)
+c = c and r['ok'] and r['suspended'] == ['8-5-2'] and e.s['suspended']['8-5-2']['missing'] == 'clock'
+c = c and refused(e, 'ready_result', 'ready_limit', None, session='S3', skill='8-5-2', ext='clock', result='pass')
+end(e, 'S3')
+# إبطال جلسة إخفاق يعيد البوابة ممكنة، واجتيازها يستأنف الدرس المعلَّق
+d = ev(e, 'invalidate_session', target='S2')['ok']
+start(e, 'S4', 'follow')
+r = ev(e, 'ready_result', session='S4', skill='8-5-2', ext='clock', result='pass')
+d = d and r['ok'] and r['suspended'] == [] and e.eligible('8-5-2')['ok']
+end(e, 'S4')
+r = ev(e, 'invalidate_session', target='S4')
+d = d and r['ok'] and r['suspended'] == ['8-5-2']
+# الحفظ والاستعادة وإعادة تشغيل السجل تعطي الحالة نفسها
+f = (Engine.restore(NET, e.dump()).dump() == e.dump()
+     and Engine.replay(NET, e.s['log']).derive() == e.derive()
+     and Engine.replay(NET, e.s['log']).s['suspended'].keys() == e.s['suspended'].keys())
+check('المتطلب الخارجي: 8-5-2 مغلقة حتى بوابة الجاهزية أو قرار المعلم. البوابة بعد المتطلبات الداخلية، مرة في الجلسة، '
+      'وبعد إخفاقين يلزم القرار. إلغاء القرار أو إبطال جلسة الاجتياز يعلّق الدرس، وإبطال جلسة إخفاق يعيد البوابة ممكنة',
+      a and b and c and d and f)
 
 if not all(results):
     print('أخفق اختبار.')

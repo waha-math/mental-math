@@ -390,6 +390,8 @@ data = dict(
     reasons=te.REASONS, quota=te.QUOTA, search_cap=te.SEARCH_CAP,
     retention=dict(gaps=list(te.RETENTION_GAPS), items=te.RETENTION_ITEMS, ok=te.RETENTION_OK),
     migration=te.MIGRATION,
+    external={k: list(v) for k, v in te.EXTERNAL.items()}, external_names=te.EXTERNAL_NAMES,
+    ready=dict(items=te.READY_ITEMS, fails=te.READY_FAILS),
     events=[t[0] for t in te.TABLE])
 open('app/engine_data.mjs', 'w', encoding='utf-8').write(
     '// مولَّد من transition_engine.py بالأمر: python3 export_conformance.py <الخريطة>. لا يُعدَّل باليد.\n'
