@@ -213,7 +213,7 @@ class LearningChild:
             if a == 'lesson':
                 self.known.add(item['skill'])
             return 'correct'
-        assess = a in ('gate', 'short', 'check', 'retention')
+        assess = a in ('gate', 'short', 'check', 'retention', 'describe')
         tail = [] if assess else [('end',)]
         if item['id'] in self.slips:
             raw = self.slips.pop(item['id'])
@@ -234,11 +234,11 @@ def flow(e):
 
 
 def scenario(scope, group, start, decisions, knows=(), slips=None, same_fact=True, before=None, sessions=30,
-             **sched):
+             items=None, **sched):
     e = Engine(NET, group=group)
     for k, (skill, bypass) in enumerate(decisions):
         e.apply(dict(id='d%d' % k, type='teacher_open', skill=skill, bypass=bypass, reason='قرار الشريحة في 10.2'))
-    src = ContentSource(ITEMS, allow_same_fact=same_fact)
+    src = ContentSource(ITEMS if items is None else items, allow_same_fact=same_fact)
     child = LearningChild(knows, slips)
     records = []
     sc = Scheduler(e, TYPES, src, child, group=group, start=start, scope=set(scope), learning=True,
@@ -313,15 +313,15 @@ check('زلّتان في بوابة 3-5-3 لطفل يعرفها: «جرّب أو
 
 # د) انقطاع في خانة لا عدد آخر يحقق شرطها في المجال الصغير. بقرار الأب (3.6): تُعاد الحقيقة نفسها ويُسجَّل ذلك
 def abandon_when_held(sc):
-    old_teach = sc.teach
+    old_teach = sc.g_teach                                  # الحصة مولّد خطوات منذ المرحلة 0: يُبدَّل المولّد
 
     def teach():
         held = [k for k, c in sc.e.s['checks'].items() if c['state'] == 'held' and sc.cur and
                 c['held_session'] != sc.cur]
         for k in held:                                     # المعلم يرى الفحص المعلَّق فيتركه
             sc.send(dict(type='check_abandoned', check_id=k, reason='انقطاعان في خانة واحدة'))
-        return old_teach()
-    sc.teach = teach
+        return (yield from old_teach())
+    sc.g_teach = teach
 
 
 cut = item_of('1-4-1', 'checkA', 'check', slot=7)                         # خانة «خمسة أقراص»
@@ -352,12 +352,14 @@ check('انقطاع في خانة «خمسة أقراص»: بقرار الأب �
 cut = item_of('1-4-1', 'checkA', 'check', slot=3)
 wrongs = {item_of('1-4-1', g, 'check', slot=k): [('confirm', -1)] for g in ('checkB', 'checkC') for k in (1, 2)}
 slips = dict({cut: [('support', 'requested'), ('interrupt',)]}, **wrongs)
-e, sc, child, src, recs = scenario(['1-4-1'], 'young', None, [('1-4-1', ['1-3-3'])], slips=slips, sessions=10)
+# محتوى بلا المحاولات الإضافية (د وما بعدها)، كما كان قبل قرار الأب في 27 نوفمبر: الرابعة بلا بنود فتُعلَّق
+THREE = [i for i in ITEMS if not (i['group'].startswith('check') and i['group'][5:] not in 'ABC')]
+e, sc, child, src, recs = scenario(['1-4-1'], 'young', None, [('1-4-1', ['1-3-3'])], slips=slips, sessions=10, items=THREE)
 f = [x for x in sessions_of(e) if x[1] in ('check_started', 'independence_result', 'resume_lesson')]
 held = [x for x in sc.log if x[1] == 'check_held']
 check('طلب دعم في الخانة 3 يغلق المحاولة أ «انتهت بطلب دعم»، والمحاولة ب في اليوم التالي بلا تدريب. خطآن فيها: '
       '8 من 10 لم تُجتز، فجلسة تدريب، ثم المحاولة ج في يوم لاحق ببنودها. خطآن فيها أيضًا، فجلسة تدريب، ثم محاولة رابعة '
-      'لا بنود لها في المحتوى، فتُعلَّق للمعلم',
+      'لا بنود لها في محتوى بثلاث محاولات، فتُعلَّق للمعلم',
       f == [('S3', 'check_started', '1-4-1', ''), ('S3', 'independence_result', '1-4-1', 'help'),
             ('S4', 'check_started', '1-4-1', ''), ('S4', 'independence_result', '1-4-1', 'fail'),
             ('S5', 'resume_lesson', '1-4-1', ''),
@@ -366,6 +368,14 @@ check('طلب دعم في الخانة 3 يغلق المحاولة أ «انته
       and sc.refused == [] and held == [(8, 'check_held', '1-4-1')]
       and any('/checkC/' in i for i in src.served)
       and (e.s['checks']['1-4-1/check/4']['state'], e.s['checks']['1-4-1/check/4']['hold_reason']) == ('held', 'no_items'))
+# بالمحتوى كاملًا (قرار الأب، 27 نوفمبر: «نصوص جديدة كل مرة»): الرابعة بنصوص المحاولة د، والطفل يصيب فيها فيجتاز
+e, sc, child, src, recs = scenario(['1-4-1'], 'young', None, [('1-4-1', ['1-3-3'])], slips=slips, sessions=10)
+f = [x for x in sessions_of(e) if x[1] in ('check_started', 'independence_result', 'resume_lesson')]
+check('والمحتوى بست محاولات: الرابعة بنصوص د في جلستها، ويجتازها، ولا تعليق',
+      f[-2:] == [('S8', 'check_started', '1-4-1', ''), ('S8', 'independence_result', '1-4-1', 'pass')]
+      and not [x for x in sc.log if x[1] == 'check_held']
+      and {i.split('/')[1] for i in src.served if '/check' in i} >= {'checkA', 'checkB', 'checkC', 'checkD'}
+      and not any('/checkE/' in i for i in src.served))
 
 # و) قيد الإعادة في المجدول (6.1): مهارة انتهت بوابتها بطلب دعم، ثم صارت مؤجَّلة وأخطأ تحققها القصير، لا تُقترح
 #    بوابتها حتى يُفتح درسها ويُختصر. كشفت هذه الحالةَ المحاكاةُ الكاملة: بدونها كرّر المجدول اقتراحًا يرفضه المحرك
@@ -499,7 +509,7 @@ check('السقف يسع 5 بنود: الدرس يُقطع بعد خامس بن�
 
 # ك) فحوص الاحتفاظ في المسار (3.7، بقرار الأب في ك8)، بجلسة كل يوم
 def deferred(rnd):
-    return [i['id'] for i in ITEMS if i['skill'] == '1-4-1' and i['group'] == 'deferred' and i['slot'] == rnd]
+    return [i['id'] for i in ITEMS if i['skill'] == '1-4-1' and i['role'] == 'deferred_check' and i['slot'] == rnd]
 
 
 def rows(e):
@@ -520,6 +530,38 @@ b = (rows(e) == [(1, 'S11', 10, 9, 8, 5, False), (2, 'S32', 31, 31, 21, 3, True)
 check('اجتاز 1-4-1 في اليوم 2: فحوص الاحتفاظ في الأيام 9 ثم 30 ثم 90، كل منها ببنود جولته الخمسة، ولم يُعرض بند '
       'مرتين. وانقطاع في الفحص الأول ينهيه بلا نتيجة فيُجرى في اليوم التالي، فتتأخر المواعد بعده يومًا. وخطآن في '
       'الثاني: 3 من 5 تُعلَّم «تحتاج تثبيتًا»، والمهارة باقية مستوفاة', a and b)
+
+print('\n24. بوابة الجاهزية لمتطلب خارجي (قرار الأب، 26 نوفمبر)')
+# المتوقع من القاعدة: 3 بنود بترتيبها؛ الصحيحة كلها اجتياز، وأول بند غير صحيح مستقل إخفاق يوقفها، والانقطاع أو التعرّض بلا
+# نتيجة (حدث «انقطعت» لا يُعدّ في المحرك). ونشاط محفوظ في منتصفه يُكمَل من حيث توقف
+from item_layer import ReadyRun, Activity  # noqa: E402
+
+
+def ready(outcomes, cut=None):
+    act, wants = ReadyRun('8-5-2', 'clock'), []
+    for k, o in enumerate(outcomes):
+        if cut == k:
+            act = Activity.from_dict(act.to_dict())
+        w = act.want()
+        if w is None:
+            break
+        wants.append(w['pos'])
+        act.feed(o)
+    return act.result, act.events(), wants, act.shown['ready']
+
+
+ok = 'correct'
+a = ready([ok, ok, ok]) == ('pass', [dict(type='ready_result', skill='8-5-2', ext='clock', result='pass')], [0, 1, 2], 3)
+b = ready([ok, 'wrong', ok]) == ('fail', [dict(type='ready_result', skill='8-5-2', ext='clock', result='fail')], [0, 1], 2)
+c = ready(['help']) [0] == 'fail' and ready(['supported'])[0] == 'fail'
+d = ready([ok, 'interrupted'])[:2] == ('interrupted', [dict(type='ready_result', skill='8-5-2', ext='clock',
+                                                            result='interrupted')]) and ready(['exposed'])[0] == 'interrupted'
+f = ready([ok, ok, ok], cut=2) == ready([ok, ok, ok])
+u = ReadyRun('8-5-2', 'clock')
+u.unavailable()
+g = u.done and u.events() == []
+check('بوابة الجاهزية: ثلاثة بنود بترتيبها، والصحيحة كلها اجتياز، وأول بند غير صحيح مستقل إخفاق يوقفها، والانقطاع بلا '
+      'نتيجة تُعدّ. والمحفوظة في منتصفها تُكمَل، وبلا بنود لا حدث', a and b and c and d and f and g)
 
 if not all(results):
     print('أخفق اختبار.')

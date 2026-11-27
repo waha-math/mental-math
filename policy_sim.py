@@ -48,7 +48,9 @@ ALTERNATIVES = [
 def one(know, start, group, seed, tolerant=True, regate=True, teacher=False, trust=False, try_from_gate=True, **kw):
     random.seed(seed)
     child = old.Child(know, **kw)
-    answer = lambda item, want: {True: 'correct', False: 'wrong', None: 'help'}[child.item(item['skill'], want['type'])]
+    # بوابة الجاهزية لمتطلب خارجي (قراءة الساعة): الطفل المحاكى يعرفه. المحاكاة تقيس المنهج، والمتطلب الخارجي خارجه
+    answer = lambda item, want: 'correct' if want['activity'] == 'ready' else \
+        {True: 'correct', False: 'wrong', None: 'help'}[child.item(item['skill'], want['type'])]
     e = Engine(NET, group=group, regate=regate)
     deferred = sorted(old.STAGES_12, key=IDS.index) if teacher else []
     if deferred:

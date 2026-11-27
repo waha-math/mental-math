@@ -23,6 +23,10 @@ from content_source import ContentSource  # noqa: E402
 from item_layer import fold_item, indicators, RetentionRun  # noqa: E402
 import persist  # noqa: E402
 
+# الاستعادة في يوم أسرة جديد تختم الجلسة المفتوحة (المرحلة 0ج). هذه الحالات كُتبت للجلسة التالية بعد الاستعادة،
+# فتمرّ بهذا المسار. والكود السابق للمرحلة 0 لا يعرف today، فلا يُمرَّر له
+NEXT_DAY = dict(today=10 ** 6) if 'today' in __import__('inspect').signature(persist.restore).parameters else {}
+
 MAP = args[0]
 NET = load_network(MAP)
 TYPES = {'1-4-1': ['ف1', 'ف3']}                             # من صف المهارة في الخريطة
@@ -40,7 +44,7 @@ class Child:
             if a == 'lesson':
                 self.known.add(item['skill'])
             return 'correct'
-        assess = a in ('gate', 'short', 'check', 'retention')
+        assess = a in ('gate', 'short', 'check', 'retention', 'describe')
         ans = item['answer'] if item['skill'] in self.known else item['answer'] + 1
         return [('confirm', ans)] + ([] if assess else [('end',)]), item['answer'], assess
 
@@ -63,7 +67,8 @@ def setup():
 
 def reopen(rec):
     src = ContentSource(ITEMS)
-    return persist.restore(json.loads(json.dumps(rec)), NET, TYPES, src, Child(['1-4-1']), item_seconds=secs, records=[])
+    return persist.restore(json.loads(json.dumps(rec)), NET, TYPES, src, Child(['1-4-1']), item_seconds=secs, records=[],
+                           **NEXT_DAY)
 
 
 def crafted():
@@ -211,7 +216,9 @@ def case_02e():
     except persist.Inconsistent as x:
         return ['رُفض السجل: %s' % x]
     bad = []
-    if [n[0] for n in notes] != ['unsettled_item', 'current_saved', 'reconciled', 'session_closed'] or sc2.saved:
+    # R17-01: المحاولة تُركت قبل الاستعادة، فبندها الجاري تاريخ مستبعد (void_item) لا يُعطى للنشاط ولا يدخل العدّاد.
+    # قبل R17-01 كان يُختم «غير محسوم» ويُعطى للنشاط المتروك ثم يُسوّى
+    if [n[0] for n in notes] != ['void_item', 'current_saved', 'reconciled', 'session_closed'] or sc2.saved:
         bad.append('الاستعادة الأولى: %r، والمخزن %r' % (notes, sc2.saved))
     if notes3 or persist.snapshot(e3, sc3) != persist.snapshot(e2, sc2):
         bad.append('الاستعادة الثانية غيّرت اللقطة: %r' % notes3)

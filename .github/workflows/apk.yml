@@ -1,0 +1,118 @@
+# يبني نسخة الأسرة (release) موقّعة بالمفتاح الثابت وينشرها إصدارًا على صفحة Releases، بعد أن ينجح اختبار التحديث
+# والاستعادة على محاكي أندرويد.
+#
+# أسرار المستودع (Settings ← Secrets and variables ← Actions):
+#   MM_KEYSTORE_B64 و MM_KEYSTORE_PASSWORD و MM_KEY_ALIAS و MM_KEY_PASSWORD
+# والبصمة المعتمدة لشهادة التوقيع في android/release-cert.sha256 (علنية). يتوقف النشر إن غاب سر أو غابت البصمة أو
+# اختلفت بصمة الملف المبني عنها: لا يُنشر ملف بتوقيع مؤقت.
+name: apk
+on:
+  push:
+    branches: [phase0]
+    paths: ['app/**', 'slice-content.json', 'android/**', 'tests/android/**', '.github/workflows/apk.yml']
+  workflow_dispatch:
+permissions:
+  contents: write
+env:
+  BT: '34.0.0'
+jobs:
+  # التحديث والاستعادة على المحاكي، بمفتاحين مؤقتين يولَّدان هنا ويُرميان (tests/android/update_test.mjs)
+  update-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: '17' }
+      - uses: gradle/actions/setup-gradle@v4
+        with: { gradle-version: '8.7' }
+      - uses: actions/setup-node@v4
+        with: { node-version: '22' }
+      - run: npm ci
+      - name: أصول التطبيق
+        run: bash android/assets.sh
+      - name: ثلاث حزم A و B (مفتاح واحد، النسختان 1 و2) و C (مفتاح آخر)
+        run: |
+          for k in one two; do
+            keytool -genkeypair -keystore $RUNNER_TEMP/$k.jks -storetype PKCS12 -alias t -keyalg RSA -keysize 2048 \
+              -validity 30 -dname "CN=test $k" -storepass testpass -keypass testpass
+          done
+          b() { (cd android && MM_KEYSTORE=$RUNNER_TEMP/$1.jks MM_KEYSTORE_PASSWORD=testpass MM_KEY_ALIAS=t \
+                 MM_KEY_PASSWORD=testpass MM_VERSION_CODE=$2 MM_INSPECT=1 gradle --no-daemon -q assembleRelease) \
+                && cp android/app/build/outputs/apk/release/app-release.apk $RUNNER_TEMP/$3.apk; }
+          b one 1 A && b one 2 B && b two 3 C
+          ls -la $RUNNER_TEMP/*.apk
+      - name: ملف طفل فيه فحص معلّق
+        run: node tests/android/fixture.mjs > $RUNNER_TEMP/fixture.json
+      - name: KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules && sudo udevadm trigger --name-match=kvm
+      - uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          target: google_apis
+          arch: x86_64
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim
+          script: node tests/android/update_test.mjs $RUNNER_TEMP/A.apk $RUNNER_TEMP/B.apk $RUNNER_TEMP/C.apk $RUNNER_TEMP/fixture.json
+
+  publish:
+    needs: update-test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: '17' }
+      - uses: gradle/actions/setup-gradle@v4
+        with: { gradle-version: '8.7' }
+      - name: الأسرار والبصمة المعتمدة
+        env:
+          B64: ${{ secrets.MM_KEYSTORE_B64 }}
+          P1: ${{ secrets.MM_KEYSTORE_PASSWORD }}
+          P2: ${{ secrets.MM_KEY_ALIAS }}
+          P3: ${{ secrets.MM_KEY_PASSWORD }}
+        run: |
+          miss=""
+          [ -n "$B64" ] || miss="$miss MM_KEYSTORE_B64"
+          [ -n "$P1" ] || miss="$miss MM_KEYSTORE_PASSWORD"
+          [ -n "$P2" ] || miss="$miss MM_KEY_ALIAS"
+          [ -n "$P3" ] || miss="$miss MM_KEY_PASSWORD"
+          if [ -n "$miss" ]; then echo "::error::لا نشر: أسرار غائبة:$miss"; exit 1; fi
+          if [ ! -s android/release-cert.sha256 ]; then echo "::error::لا نشر: لا بصمة معتمدة في android/release-cert.sha256"; exit 1; fi
+          echo "$B64" | base64 -d > $RUNNER_TEMP/mm.jks
+          echo "MM_KEYSTORE=$RUNNER_TEMP/mm.jks" >> $GITHUB_ENV
+      - name: أصول التطبيق
+        run: bash android/assets.sh
+      - name: البناء
+        working-directory: android
+        env:
+          MM_KEYSTORE_PASSWORD: ${{ secrets.MM_KEYSTORE_PASSWORD }}
+          MM_KEY_ALIAS: ${{ secrets.MM_KEY_ALIAS }}
+          MM_KEY_PASSWORD: ${{ secrets.MM_KEY_PASSWORD }}
+        run: gradle --no-daemon assembleRelease
+      - name: بصمة الشهادة تطابق المعتمدة
+        run: |
+          F=android/app/build/outputs/apk/release/app-release.apk
+          $ANDROID_HOME/build-tools/$BT/apksigner verify --print-certs $F > $RUNNER_TEMP/certs.txt
+          cat $RUNNER_TEMP/certs.txt
+          got=$(grep -m1 'certificate SHA-256 digest' $RUNNER_TEMP/certs.txt | awk '{print $NF}' | tr 'A-F' 'a-f')
+          want=$(tr -d ' :\n\r' < android/release-cert.sha256 | tr 'A-F' 'a-f')
+          if [ "$got" != "$want" ]; then echo "::error::لا نشر: بصمة الشهادة $got لا تطابق المعتمدة $want"; exit 1; fi
+          name=mental-math-${{ github.run_number }}.apk
+          cp $F $name
+          echo "APK=$name" >> $GITHUB_ENV
+          echo "CERT=$got" >> $GITHUB_ENV
+          echo "SUM=$(sha256sum $name | cut -d' ' -f1)" >> $GITHUB_ENV
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: apk-${{ github.run_number }}
+          target_commitish: ${{ github.sha }}
+          name: نسخة الأسرة ${{ github.run_number }}
+          body: |
+            نسخة الأسرة (release) من الالتزام ${{ github.sha }}، ورقم نسختها ${{ github.run_number }}.
+            بصمة الملف (SHA-256): ${{ env.SUM }}
+            بصمة شهادة التوقيع (SHA-256): ${{ env.CERT }}
+            نجح قبلها اختبار التحديث والاستعادة على محاكي أندرويد في التشغيل نفسه.
+          files: ${{ env.APK }}
+          make_latest: true

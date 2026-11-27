@@ -29,7 +29,7 @@ class Child {
       if (a === 'lesson') this.known.add(item.skill);
       return 'correct';
     }
-    const assess = ['gate', 'short', 'check', 'retention'].includes(a);
+    const assess = ['gate', 'short', 'check', 'retention', 'describe'].includes(a);
     const ans = this.known.has(item.skill) ? item.answer : item.answer + 1;
     return [[['confirm', ans], ...(assess ? [] : [['end']])], item.answer, assess];
   }
@@ -65,7 +65,7 @@ function live() {
 function openInto(rec, arr) {
   const src = new ContentSource(ITEMS), child = new Child(['1-4-1']);
   return persist.restore(rec, { types: TYPES, source: (s, w) => src.pick(s, w), answer: (i, w) => child.call(i, w),
-    item_seconds: secs, records: arr });
+    item_seconds: secs, records: arr, today: 10 ** 6 });   // يوم جديد يختم الجلسة المفتوحة (المرحلة 0ج)
 }
 
 function refused(mutate, label, anyError = false) {

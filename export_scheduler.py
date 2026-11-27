@@ -39,7 +39,7 @@ NET = te.load_network(MAP)
 OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'app', 'scheduler_vectors.json')
 STATE = ('saved', 'parked', 'carried_items', 'intent', 'pending', 'proven', 'attempt', 'ev_round', 'last_items', 'n',
          'gates_run', 'searches', 'sessions', 'day', 'cur', 'log', 'refused', 'stalled', 'elapsed', 'start_at',
-         'items_before', 'start_w', 'start_what')
+         'items_before', 'start_w', 'start_what', 'stage', 'last')     # stage و last: حالة الجلسة المفتوحة (R23-02)
 traces, tables = [], dict(types=[], items=[])
 
 
@@ -269,9 +269,10 @@ class RandomChild:
         a = want['activity']
         if a in ('lesson', 'practice'):
             return 'correct'
-        assess = a in ('gate', 'short', 'check', 'retention')
+        assess = a in ('gate', 'short', 'check', 'retention', 'describe')
         ans, x = item['answer'], self.rng.random()
-        wrong = ans + 1 if ans < 99 else ans - 1
+        # بند بطاقة (الفحص الوصفي): الخطأ بطاقة أخرى. بلا استهلاك من المولّد العشوائي، فلا تتغير المسارات الأخرى
+        wrong = next(c for c in item['cards'] if c != ans) if isinstance(ans, str) else ans + 1 if ans < 99 else ans - 1
         tail = [] if assess else [('end',)]
         if x < self.p_cut:
             return [('interrupt',)], ans, assess
@@ -302,8 +303,33 @@ class Teacher:
                 e.apply(dict(id='a%d-%s' % (self.n, cid), type='check_abandoned', check_id=cid, reason='قرار المعلم'))
 
 
-n0 = len(traces)
-for seed in range(240):
+class Colliding:
+    """مصدر يرصد دخول نشاط تقييم بعد بند من نشاط آخر للمهارة نفسها في الجلسة نفسها (آخر بند عُرض في المجدول). force:
+    يجعل أول بند يُطلب عند هذا الدخول يحمل حقيقة ذلك البند، في المسار كله (عند السؤال عنه دون عرضه أيضًا)، فيقع
+    التصادم الذي يعالجه تأخير بند التقييم. hits: كم دخولًا رُصد. deferred: كم مرة طُلب بعده بند غيره."""
+    def __init__(self, inner, force):
+        self.inner, self.force, self.sc, self.hits, self.deferred, self.over, self.seen = inner, force, None, 0, 0, {}, {}
+
+    def __call__(self, skill, w):
+        it = self.inner(skill, w)
+        if it is None:
+            return it
+        x = self.sc.last if self.sc is not None else None
+        if (not w.get('peek') and w['activity'] in ('gate', 'short', 'check', 'retention') and x and x['counts']
+                and x['skill'] == skill and x['activity'] != w['activity'] and x['session'] == self.sc.cur):
+            key = (x['session'], skill, w['activity'], x['item'])       # دخول واحد: أول بند يُطلب فيه هو الذي يُفرض
+            if key not in self.seen:
+                self.seen[key] = it['id']
+                self.hits += 1
+                if self.force and list(x['fact']) != list(it['fact']):
+                    self.over[it['id']] = list(x['fact'])
+            elif self.seen[key] is not None and it['id'] != self.seen[key]:
+                self.deferred += 1                                      # طُلب غيره: أُخّر
+                self.seen[key] = None
+        return dict(it, fact=list(self.over[it['id']])) if it['id'] in self.over else it
+
+
+def learning_trace(seed, force=False):
     rng = random.Random(seed)
     scope, group, start, decisions = UNITS[seed % 2]
     e = te.Engine(NET, group=group)
@@ -312,10 +338,12 @@ for seed in range(240):
     cap = rng.choice([None, None, 120, 180, 240, 300, 420])
     secs = rng.choice([30, 45, 60])
     child = RandomChild(rng, rng.choice([0.05, 0.15, 0.3]), rng.choice([0.0, 0.05, 0.1]), rng.choice([0.0, 0.03, 0.08]))
-    sc = sch.Scheduler(e, TYPES, ContentSource(ITEMS, allow_same_fact=rng.random() < 0.8), child, group=group,
+    src = Colliding(ContentSource(ITEMS, allow_same_fact=rng.random() < 0.8), force)
+    sc = sch.Scheduler(e, TYPES, src, child, group=group,
                        start=start, scope=set(scope), learning=True, records=[], cap=cap,
                        item_seconds=(lambda w, s=secs: s) if cap else None, retention=rng.random() < 0.5,
                        try_from_gate=rng.random() < 0.8, tolerant=rng.random() < 0.8)
+    src.sc = sc
     teacher = Teacher(rng, sc, rng.choice([0.0, 0.05, 0.15]))
     sc.search()
     sc.start_session()
@@ -329,6 +357,11 @@ for seed in range(240):
         last = sc.e.s['order'][-1]
         if sc.e.s['sessions'][last]['clock'] and rng.random() < 0.6:
             sc.e.apply(dict(id='c%s' % last, type='date_confirmed', target=last))
+    return src
+
+
+n0 = len(traces)
+entered = [seed for seed in range(240) if learning_trace(seed).hits]
 counts['مسارات تعلّم عشوائية'] = len(traces) - n0
 
 # ---------------------------------------------------------------- 4. التشخيص بسقف وقت
@@ -338,8 +371,8 @@ for seed in range(160):
     name, know, start, group = old.PROFILES[seed % len(old.PROFILES)]
     random.seed(seed)
     child = old.Child(know)
-    answer = lambda item, want, c=child: {True: 'correct', False: 'wrong', None: 'help'}[c.item(item['skill'],
-                                                                                                want['type'])]
+    answer = lambda item, want, c=child: 'correct' if want['activity'] == 'ready' else \
+        {True: 'correct', False: 'wrong', None: 'help'}[c.item(item['skill'], want['type'])]   # المتطلب الخارجي معروف للمحاكى
     e = te.Engine(NET, group=group, regate=rng.random() < 0.7)
     secs = rng.choice([20, 30, 45, 60])
     sc = sch.Scheduler(e, TYPES, engine_sim.abstract_source, answer, group=group, start=start,
@@ -347,6 +380,20 @@ for seed in range(160):
                        compat=rng.random() < 0.2)
     sc.run()
 counts['تشخيص بسقف وقت'] = len(traces) - n0
+
+# ---------------------------------------------------------------- 5. تأخير بند التقييم
+# في آخر الملف، لتبقى أرقام المسارات السابقة كما هي. المسارات التي دخل فيها نشاط تقييم بعد نشاط آخر للمهارة نفسها في الجلسة نفسها تُعاد ببذرتها، وأول بند التقييم يحمل
+# حقيقة ما قبله: التأخير يقع في مسار كامل، وأسئلته عن البنود اللاحقة (peek) تُسجَّل في الشريط فيعيدها التطبيق بترتيبها
+n0 = len(traces)
+forced = [learning_trace(seed, force=True) for seed in entered]
+# بعد 25 نوفمبر (البحث بالحاجة مع قرار البداية، 17.30) لا يقع هذا الدخول في البذور 0 إلى 1199: مهارات القرار تُفحص
+# بوابتها أولًا فلا تُؤجَّل، فلا تحقق قصير لها يسبق فحصها. فالقسم فارغ، ويُذكر ذلك في الملخص. التأخير نفسه مطابَق بين
+# المرجع والتطبيق في tests/test_defer (حالات مشتركة في tests/defer_cases.json)
+if entered and not sum(x.deferred for x in forced):
+    raise SystemExit('دخول بلا تأخير: المسارات %r، والتأخيرات %r' % (entered, [x.deferred for x in forced]))
+counts['مسارات تأخير بند التقييم'] = len(traces) - n0
+DEFER_NOTE = 'دخول نشاط تقييم بعد نشاط آخر للمهارة: %d مسارًا (البذور %s). وبالتصادم المفروض: %d تأخيرًا' % (
+    len(entered), ' '.join(map(str, entered)), sum(x.deferred for x in forced))
 
 hooked = sum(1 for t in traces if t.get('hooked'))
 traces = [t for t in traces if t['ops'] and not t.get('hooked')]
@@ -363,4 +410,5 @@ print('نداءات من الخارج: %d في %d دالة: %s' % (sum(ops.value
     '%s %d' % kv for kv in sorted(ops.items(), key=lambda kv: -kv[1]))))
 print('الشريط: %d نداء لمصدر البنود، %d للطفل، %d لمدة البند. بنود مختلفة: %d' % (
     tape['src'], tape['ans'], tape['sec'], len(tables['items'])))
+print(DEFER_NOTE)
 print('الحجم: %.1f ميغابايت' % (os.path.getsize(OUT) / 1e6))

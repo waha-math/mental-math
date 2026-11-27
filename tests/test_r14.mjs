@@ -29,7 +29,7 @@ class Child {
       if (a === 'lesson') this.known.add(item.skill);
       return 'correct';
     }
-    const assess = ['gate', 'short', 'check', 'retention'].includes(a);
+    const assess = ['gate', 'short', 'check', 'retention', 'describe'].includes(a);
     const ans = this.known.has(item.skill) ? item.answer : item.answer + 1;
     return [[['confirm', ans], ...(assess ? [] : [['end']])], item.answer, assess];
   }
@@ -50,7 +50,7 @@ function setup() {
 function reopen(rec) {
   const src = new ContentSource(ITEMS), child = new Child(['1-4-1']);
   return persist.restore(JSON.parse(JSON.stringify(rec)), { types: TYPES, source: (s, w) => src.pick(s, w),
-    answer: (i, w) => child.call(i, w), item_seconds: secs, records: [] });
+    answer: (i, w) => child.call(i, w), item_seconds: secs, records: [], today: 10 ** 6 });
 }
 
 function crafted() {
@@ -176,7 +176,9 @@ function case02e() {
     r3 = reopen(persist.snapshot(r2.engine, r2.scheduler));
   } catch (x) { return [`رُفض السجل: ${x.message}`]; }
   const bad = [];
-  if (!same(r2.notes.map((n) => n[0]), ['unsettled_item', 'current_saved', 'reconciled', 'session_closed'])
+  // R17-01: المحاولة تُركت قبل الاستعادة، فبندها الجاري تاريخ مستبعد (void_item) لا يُعطى للنشاط ولا يدخل العدّاد.
+  // قبل R17-01 كان يُختم «غير محسوم» ويُعطى للنشاط المتروك ثم يُسوّى
+  if (!same(r2.notes.map((n) => n[0]), ['void_item', 'current_saved', 'reconciled', 'session_closed'])
     || r2.scheduler.saved.length) bad.push('الاستعادة الأولى ليست كما يُتوقع');
   if (r3.notes.length || !same(persist.snapshot(r3.engine, r3.scheduler), persist.snapshot(r2.engine, r2.scheduler))) {
     bad.push('الاستعادة الثانية غيّرت اللقطة');

@@ -1,0 +1,20 @@
+المتجهات من الكود الحالي مقابل الالتزام 5b70237
+  conformance_vectors.json: مطابق بايتًا ببايت
+  item_vectors.json: مطابق بايتًا ببايت
+  scheduler_vectors.json: مختلف
+    المسارات: 613، والمختلف منها 3. ما عدا المسارات مطابق: True
+    المسار 303: أول اختلاف في العملية 4 (follow_learning). قرارات خارجية قبلها: ['invalidate_session S1']
+      حقول الحالة المختلفة: parked، n، log، refused
+      آخر سجل المجدول، الآن: [4, "carry_parked:suspended", "1-4-2"]
+      آخر سجل المجدول، قبل: [4, "lesson", "1-4-2"]
+      اقتراحات رفضها المحرك، الآن 0 وقبل 1
+    المسار 363: أول اختلاف في العملية 6 (follow_learning). قرارات خارجية قبلها: ['invalidate_session S1']
+      حقول الحالة المختلفة: parked، n، log، refused، elapsed
+      آخر سجل المجدول، الآن: [5, "carry_parked:suspended", "1-4-2"]
+      آخر سجل المجدول، قبل: [5, "lesson", "1-4-2"]
+      اقتراحات رفضها المحرك، الآن 0 وقبل 1
+    المسار 443: أول اختلاف في العملية 4 (follow_learning). قرارات خارجية قبلها: ['invalidate_session S1']
+      حقول الحالة المختلفة: saved، parked، n، log، elapsed
+      آخر سجل المجدول، الآن: [4, "carry_parked:suspended", "1-4-2"]
+      آخر سجل المجدول، قبل: [4, "capped", "1-4-2"]
+      اقتراحات رفضها المحرك، الآن 0 وقبل 0

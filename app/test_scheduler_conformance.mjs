@@ -17,7 +17,7 @@ const digest = (e) => createHash('sha256').update(canonical({ s: e.s, d: e.deriv
 const same = (a, b) => canonical(a) === canonical(b);
 const STATE = ['saved', 'parked', 'carried_items', 'intent', 'pending', 'proven', 'attempt', 'ev_round', 'last_items',
   'n', 'gates_run', 'searches', 'sessions', 'day', 'cur', 'log', 'refused', 'stalled', 'elapsed', 'start_at',
-  'items_before', 'start_w', 'start_what'];
+  'items_before', 'start_w', 'start_what', 'stage', 'last'];   // stage و last: حالة الجلسة المفتوحة (R23-02)
 const results = [];
 
 function check(name, cond) {

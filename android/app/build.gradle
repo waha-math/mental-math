@@ -1,0 +1,47 @@
+// غلاف أندرويد للتطبيق: WebView يعرض app/ من أصول الحزمة، ونطق أندرويد بدل نطق المتصفح، وحفظ النسخة الاحتياطية
+// في التنزيلات. الأصول تُنسخ في سير العمل (.github/workflows/apk.yml)، لا تُحفظ هنا.
+plugins { id 'com.android.application' }
+
+def keystore = System.getenv('MM_KEYSTORE')                 // مفتاح ثابت إن وُجد: التحديث يُثبَّت فوق السابق وتبقى البيانات
+
+android {
+    namespace 'net.wahamath.mentalmath'
+    compileSdk 34
+    defaultConfig {
+        applicationId 'net.wahamath.mentalmath'
+        minSdk 24
+        targetSdk 34
+        // رقم النسخة يزيد من بناء إلى بناء (أندرويد لا يثبّت تحديثًا رقمه أصغر). اختبار التحديث يعطيه صريحًا
+        def code = System.getenv('MM_VERSION_CODE') ?: System.getenv('GITHUB_RUN_NUMBER') ?: '1'
+        versionCode(code as Integer)
+        versionName "0.1.${code}"
+        // فحص WebView من خارجه (أدوات Chrome) لاختبار التحديث على المحاكي وحده. نسخة الأسرة تُبنى بلا MM_INSPECT
+        buildConfigField 'boolean', 'MM_INSPECT', System.getenv('MM_INSPECT') == '1' ? 'true' : 'false'
+    }
+    buildFeatures { buildConfig true }
+    signingConfigs {
+        if (keystore) {
+            stable {
+                storeFile file(keystore)
+                storePassword System.getenv('MM_KEYSTORE_PASSWORD')
+                keyAlias System.getenv('MM_KEY_ALIAS')
+                keyPassword System.getenv('MM_KEY_PASSWORD')
+            }
+        }
+    }
+    // نسخة الأسرة release موقّعة بالمفتاح الثابت. بلا مفتاح يخرج الملف غير موقّع، وسير العمل لا ينشره
+    buildTypes {
+        release {
+            minifyEnabled false
+            if (keystore) signingConfig signingConfigs.stable
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
+
+dependencies {
+    implementation 'androidx.webkit:webkit:1.11.0'
+}

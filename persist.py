@@ -28,16 +28,29 @@
 import copy
 import json
 
-from item_layer import Activity, fold_item, classify
-from scheduler import Scheduler
+from item_layer import Activity, fold_item, classify, evidence
+from scheduler import Scheduler, exposed
 
-SCHEMA = 2                                                  # 2: ومعه سجل محاولات البنود (المراجعة 14)
+SCHEMA = 5                    # 2: سجل محاولات البنود (المراجعة 14). 3: موضع الجلسة الجارية (المرحلة 0). 4: هوية المحتوى (ك1).
+                              # 5: سجل البند يحمل جلسته وإصدار حزمته وقيم إجاباته (ك2)
 OPTS = ('group', 'start', 'scope', 'learning', 'tolerant', 'compat', 'content_version', 'no_short', 'try_from_gate',
-        'cap', 'retention')
+        'cap', 'retention', 'content')
 STATE = ('saved', 'parked', 'carried_items', 'intent', 'pending', 'proven', 'attempt', 'ev_round', 'last_items', 'n',
          'gates_run', 'searches', 'sessions', 'day', 'cur', 'log', 'refused', 'stalled', 'elapsed', 'start_at',
-         'items_before', 'start_w', 'start_what')
+         'items_before', 'start_w', 'start_what', 'stage')
 TERMINAL = ('end', 'interrupt')
+
+
+class ContentChanged(Exception):
+    """اللقطة فيها نشاط جارٍ بدأ بحزمة محتوى غير المتاحة الآن (ك1). لا يُستأنف ببنك آخر بصمت: إما أن تُتاح الحزمة
+    القديمة (packs)، أو يُطلب إعادة بدء صريحة (restart=True) تحفظ ما وقع وتُسقط الأنشطة الجارية.
+    bound: هوية الحزمة التي رُبطت بها المحاولة. offered: هوية المتاحة. pending: (النوع، المهارة) لكل نشاط جارٍ."""
+    def __init__(self, bound, offered, pending):
+        Exception.__init__(self, 'نشاط جارٍ بدأ بإصدار المحتوى %s، والمتاح %s: %s' % (
+            None if bound is None else '%s (%s)' % (bound['version'], bound['digest'][:12]),
+            '%s (%s)' % (offered['version'], offered['digest'][:12]),
+            '، '.join('%s %s' % x for x in pending)))
+        self.bound, self.offered, self.pending = bound, offered, pending
 
 
 class Inconsistent(Exception):
@@ -52,7 +65,10 @@ def plain(x):
 def options(sc):
     o = dict(group=sc.group, start=sc.start, scope=None if len(sc.ids) == len(sc.e.ids) else list(sc.ids),
              learning=sc.learning, tolerant=sc.tolerant, compat=sc.compat, content_version=sc.content_version,
+             content=plain(sc.content),
              no_short=sorted(sc.no_short), try_from_gate=sc.try_from_gate, cap=sc.cap, retention=sc.retention)
+    if sc.day_cap is not None:                              # حد وقت اليوم: يُحفظ حين يُضبط، فلا تتغير اللقطات القائمة
+        o['day_cap'] = sc.day_cap
     return o
 
 
@@ -60,6 +76,11 @@ def state_of(sc):
     d = {k: plain(getattr(sc, k)) for k in STATE}
     d['n'] = {k: v for k, v in d['n'].items() if v}
     d['next_id'] = next_id(sc)
+    if sc.last is not None:                                 # آخر بند عُرض في الجلسة المفتوحة (R22-01)
+        d['last'] = plain(sc.last)
+    for k in ('used', 'free', 'described'):                 # وقت اليوم وما دُرّب في إضافياته والفحص الوصفي: حين وُجدت
+        if getattr(sc, k) is not None:
+            d[k] = plain(getattr(sc, k))
     return d
 
 
@@ -134,14 +155,44 @@ def check_consistent(engine, st):
     return bad
 
 
-def restore(record, net, types, source, answer, item_seconds=None, records=None, content_versions=None):
-    """يعيد (المحرك، المجدول، ملاحظات). يرفع Inconsistent إن خالف المجدولُ المحرك."""
+def restore(record, net, types, source, answer, item_seconds=None, records=None, content_versions=None, today=None,
+            content=None, packs=None, restart=False):
+    """يعيد (المحرك، المجدول، ملاحظات). يرفع Inconsistent إن خالف المجدولُ المحرك.
+
+    هوية المحتوى (ك1). content: هوية الحزمة التي منها source، dict(version, digest). إن أُعطيت قورنت بالهوية
+    المحفوظة في اللقطة:
+    - واحدة: لا شيء.
+    - مختلفة ولا نشاط جارٍ: تُربط المحاولة بالحزمة المتاحة (ملاحظة content_upgraded).
+    - مختلفة وفي اللقطة نشاط جارٍ (بند معروض، أو نشاط محفوظ أو مركون):
+      - packs فيها مصدر الحزمة القديمة ببصمتها: يُستأنف منها، بتعريفات بنودها كما كانت، وتبقى المحاولة مربوطة بها.
+      - وإلا يُرفع ContentChanged ولا يتغير شيء. وبـrestart=True تُعاد البداية صراحةً: البند المعروض يُكتب سجله
+        مستبعدًا بسبب content_changed (أحداثه تبقى)، والأنشطة الجارية تُسقط بمدخل في سجل المجدول، ومحاولات الفحص
+        المعلّقة بالإصدار القديم تصير needs_restart في المحرك، وتُربط المحاولة بالحزمة المتاحة.
+    بلا content لا مقارنة: المستدعي لا يعرف هوية محتواه (المحاكاة والاختبارات المجردة)."""
     from transition_engine import Engine
     if record.get('schema') != SCHEMA:
         raise Inconsistent('نسخة سجل غير معروفة: %r' % record.get('schema'))
-    e = Engine.restore(net, record['engine'], content_versions)
     o = dict(record['scheduler']['opts'])
     o['scope'] = None if o['scope'] is None else set(o['scope'])
+    bound, fresh = o.get('content'), False
+    if content is not None:
+        content = dict(version=content['version'], digest=content['digest'])
+        stx = record['scheduler']['state']
+        pending = ([(record['current']['kind'], record['current']['skill'])] if record.get('current') else []) + [
+            (c['kind'], c['skill']) for c in list(stx['saved']) + list(stx['parked'].values())]
+        if bound == content:
+            pass
+        elif not pending:
+            o['content'], o['content_version'] = content, content['version']
+        elif bound is not None and packs and bound['digest'] in packs:
+            source = packs[bound['digest']]                 # الحزمة التي بدأ بها النشاط: تعريفات بنودها كما كانت
+        elif restart:
+            fresh = True
+            o['content'], o['content_version'] = content, content['version']
+            content_versions = {content['version']}         # فحص معلّق بإصدار آخر: needs_restart في المحرك
+        else:
+            raise ContentChanged(bound, content, pending)
+    e = Engine.restore(net, record['engine'], content_versions)
     # الحالة المرشحة تُبنى في نسخ مستقلة، ولا يتغير شيء مما مرّره المستدعي إلا بعد نجاح كل المراحل (R15-01)
     if record.get('records') is not None:                  # سجل محاولات البنود كما حُفظ
         local = copy.deepcopy(record['records'])
@@ -150,42 +201,106 @@ def restore(record, net, types, source, answer, item_seconds=None, records=None,
     sc = Scheduler(e, types, source, answer, records=local, item_seconds=item_seconds, **o)
     st = copy.deepcopy(record['scheduler']['state'])
     notes = []
+
+    def linked(j):
+        # رابطة السجل الذي تكتبه الاستعادة وما وقع فيه، كما يكتبهما المجدول في الجلسة (Scheduler.stamp، ك2)
+        return dict(dict(id='i%d' % len(sc.records), session=st['cur'],
+                         pack=None if o.get('content') is None else o['content']['version']),
+                    **evidence([tuple(ev) for ev in j['raw']], j['answer'], j.get('v')))
+    if content is not None and bound != content and o['content'] == content and not fresh:
+        notes.append(('content_upgraded', None if bound is None else bound['version'], content['version']))
     cur = copy.deepcopy(record.get('current'))
+    if fresh:                                               # إعادة بدء صريحة بعد تغيّر المحتوى (ك1)
+        if cur and cur['kind'] != 'show' and cur.get('journal'):
+            j = cur['journal']                              # ما وقع في البند المعروض يبقى، مستبعدًا من التقييم
+            rec = fold_item([tuple(ev) for ev in j['raw']] + [('interrupt',)], j['answer'], j['assess'])
+            if sc.records is not None:
+                sc.records.append(dict(rec, **linked(j), skill=cur['skill'], activity=Activity.from_dict(cur['act']).name,
+                                       role=j['want'].get('role'),
+                                       item=j.get('item'), unsettled=True, void='content_changed'))
+            notes.append(('void_item', cur['skill'], j.get('item'), 'content_changed'))
+        for c in ([cur] if cur else []) + list(st['saved']) + list(st['parked'].values()):
+            st['log'].append([st['sessions'], 'carry_dropped:content_changed', c['skill']])
+            notes.append(('content_restart', c['kind'], c['skill']))
+        st['saved'], st['parked'], st['carried_items'], cur = [], {}, [], None
+        notes.append(('content_changed', None if bound is None else bound['version'], content['version']))
     if cur:                                                 # النشاط الجاري يُضم إلى المخزن قبل التسوية والفحص
         if cur['kind'] == 'show':
             entry = dict(kind='show', skill=cur['skill'], activity=cur['activity'], pos=cur['pos'], items=[])
+            if cur.get('consolidate'):                      # عرض التثبيت بعد طلب مساعدة في فحص احتفاظ (ت3)
+                entry['consolidate'] = True
         else:
             act = Activity.from_dict(cur['act'])
             items = list(cur['items'])
             j = cur.get('journal')
             if j:                                           # البند الجاري: يُختم بانقطاع، «غير محسوم»
                 rec = fold_item([tuple(ev) for ev in j['raw']] + [('interrupt',)], j['answer'], j['assess'])
-                act.feed(classify(rec))
-                if j.get('item'):
-                    items.append(j['item'])
+                # إن تغيّرت صلاحية النشاط قبل الاستعادة فالبند تاريخ يُحفظ مع سبب استبعاده، ولا يُعطى للنشاط ولا يدخل
+                # عدّادًا (R17-01). الحكم حكم المحرك في الجلسة المفتوحة، كما في الجلسة الحية
+                v = e.may_continue(cur['kind'], e.s['current'], act.skill, getattr(act, 'check_id', None)) \
+                    if hasattr(e, 'may_continue') and e.s['current'] is not None else dict(ok=True)
+                more = dict(skill=act.skill, activity=act.name, role=j['want'].get('role'), item=j.get('item'),
+                            unsettled=True)
+                # ما حمله طلب البند من وسوم يبقى في سجله كما يبقى لو خُتم في الجلسة (drive_steps)
+                if j['want'].get('fact_just_seen'):
+                    more['fact_just_seen'] = j['want']['fact_just_seen']
+                if j['want'].get('ahead_of'):
+                    more['ahead_of'] = list(j['want']['ahead_of'])
+                if j['want'].get('repeated'):
+                    more['repeated_after_void'] = True
+                if j['want'].get('replaces'):
+                    more['replaces'] = j['want']['replaces']
+                if v['ok']:
+                    shown = dict(act.shown)
+                    act.feed(classify(rec))
+                    for k, n in act.shown.items():          # البند المختوم هنا يدخل العدّاد كما لو خُتم في الجلسة (R16-03)
+                        if n > shown.get(k, 0):
+                            st['n'][k] = st['n'].get(k, 0) + n - shown.get(k, 0)
+                    if j.get('item'):
+                        items.append(j['item'])
+                    notes.append(('unsettled_item', act.skill, j.get('item'), classify(rec)))
+                else:
+                    act.voided(j.get('item'), exposed(j['raw']))    # التعرّض باقٍ وإن استُبعد البند (R18-01)
+                    more['void'] = v['code']
+                    notes.append(('void_item', act.skill, j.get('item'), v['code']))
                 if sc.records is not None:
-                    sc.records.append(dict(rec, skill=act.skill, activity=act.name, role=j['want'].get('role'),
-                                           item=j.get('item'), unsettled=True))
-                notes.append(('unsettled_item', act.skill, j.get('item'), classify(rec)))
+                    sc.records.append(dict(rec, **dict(linked(j), **more)))
+                # البند خُتم هنا، فهو آخر بند عُرض في الجلسة (R23-01)، بقاعدة التعرّض نفسها في Scheduler.seen: خُتم
+                # بانقطاع، فيُحتسب تعرّضًا إن أُكدت فيه إجابة أو طُلب فيه دعم. لقطة قديمة بلا حقيقة البند: لا يُعرف
+                st['last'] = None if j.get('fact') is None or st['cur'] is None else dict(
+                    session=st['cur'], skill=act.skill, activity=act.name, item=j.get('item'), fact=list(j['fact']),
+                    counts=exposed(j['raw']))
             entry = dict(kind=cur['kind'], skill=act.skill, act=act.to_dict(), items=items)
-        st['saved'].append(entry)
-        notes.append(('current_saved', cur['kind'], cur['skill']))
+        if cur['kind'] == 'describe':                       # الوصفي لا يُستأنف: بنده الجاري خُتم، وما أُجيب منه مسجَّل
+            notes.append(('describe_dropped', cur['skill']))
+        else:
+            st['saved'].append(entry)
+            notes.append(('current_saved', cur['kind'], cur['skill']))
     notes += reconcile(e, st)
     bad = check_consistent(e, st)
     if bad:
         raise Inconsistent('؛ '.join(bad))
     for k in STATE:
         setattr(sc, k, st[k])
+    sc.last = st.get('last') if st['cur'] is not None else None
+    sc.used, sc.free, sc.described = st.get('used'), st.get('free'), st.get('described')
     from collections import Counter
     sc.n = Counter(st['n'])
     import itertools
     sc._ids = itertools.count(st['next_id'])
-    if e.s['current'] is not None:                          # التطبيق أُغلق في جلسة لم تُختم
+    # الجلسة التعليمية غير فتح التطبيق: إغلاقه لا يختمها، فتُكمَل بهويتها ووقتها وحصصها (المرحلة 0ج). تُختم هنا
+    # فقط إن انتقل يوم الأسرة: today يوم الأسرة عند الفتح، وبلا قيمة تبقى الجلسة مفتوحة
+    if e.s['current'] is not None and today is not None and today != e.s['sessions'][e.s['current']]['day']:
         ses = e.s['current']
         r = e.apply(dict(id='restore-end-%s' % ses, type='session_end', session=ses))
         if not r['ok']:
             raise Inconsistent('تعذر ختم الجلسة %s: %s' % (ses, r.get('code')))
-        sc.cur = None
+        if sc.stage is not None and sc.stage.get('free'):  # تدريب حر قطعه انتهاء اليوم: لا يأخذ حصة جلسة لاحقة
+            for c in [c for c in sc.saved if c['kind'] == 'show' and c['skill'] == sc.stage['free']
+                      and c.get('activity') == 'practice']:
+                sc.saved.remove(c)
+                notes.append(('free_practice_dropped', c['skill']))
+        sc.cur = sc.stage = sc.last = None                  # الجلسة خُتمت: لا «آخر بند» لها بعد (R23-01)
         notes.append(('session_closed', ses))
     if records is not None and local is not None:          # نجحت الاستعادة: تُحدَّث مصفوفة المستدعي بهويتها
         records[:] = local

@@ -1,0 +1,11 @@
+على fdd26b9 (قبل الإصلاح): python3 -I tests/probe_retention_help.py <شجرة fdd26b9> <خريطتها>
+طلب المساعدة في البند 1-4-1/deferred/01 في الجلسة S13
+ما عُرض بعده في الجلسة: ['retention', 'retention', 'retention', 'retention']
+نتائج الاحتفاظ في المحرك: [(1, 4, 5, 'retention', False)]
+ما سُجّل على الجولة غير النتيجة: []
+
+على هذا الالتزام:
+طلب المساعدة في البند 1-4-1/deferred/01 في الجلسة S13
+ما عُرض بعده في الجلسة: ['practice', 'practice', 'practice', 'practice', 'practice', 'practice']
+نتائج الاحتفاظ في المحرك: []
+ما سُجّل على الجولة غير النتيجة: ['help', 'consolidating', 'consolidated']

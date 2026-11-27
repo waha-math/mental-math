@@ -50,7 +50,7 @@ class Child:
             if a == 'lesson':
                 self.known.add(item['skill'])
             return 'correct'
-        assess = a in ('gate', 'short', 'check', 'retention')
+        assess = a in ('gate', 'short', 'check', 'retention', 'describe')
         ans = item['answer'] if item['skill'] in self.known else item['answer'] + 1
         return [('confirm', ans)] + ([] if assess else [('end',)]), item['answer'], assess
 
@@ -91,12 +91,16 @@ def mid_check(journal_raw):
     return e, sc, src, cur
 
 
+# الاستعادة في يوم أسرة جديد تختم الجلسة المفتوحة (المرحلة 0ج). هذه الحالات كُتبت للجلسة التالية بعد الاستعادة،
+# فتمرّ بهذا المسار. والكود السابق للمرحلة 0 لا يعرف today، فلا يُمرَّر له
+NEXT_DAY = dict(today=10 ** 6) if 'today' in __import__('inspect').signature(persist.restore).parameters else {}
+
 def reopen(rec):
     child = Child()
     child.known.add('1-4-1')                                # الطفل نفسه: تعلّم المهارة في S2
     src = ContentSource(ITEMS)
     src.served = []
-    e, sc, notes = persist.restore(rec, NET, TYPES, src, child, item_seconds=secs, records=[])
+    e, sc, notes = persist.restore(rec, NET, TYPES, src, child, item_seconds=secs, records=[], **NEXT_DAY)
     return e, sc, src, notes
 
 

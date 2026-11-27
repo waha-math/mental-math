@@ -222,7 +222,7 @@ for c in list(il.CLASSES.values()):
 _unavailable = il.Activity.unavailable
 il.Activity.unavailable = lambda self: act_op(self, 'unavailable', lambda: _unavailable(self))
 
-_fold, _indicators, _drive, _pick = il.fold_item, il.indicators, il.drive, cs.ContentSource.__call__
+_fold, _indicators, _drive_steps, _pick = il.fold_item, il.indicators, il.drive_steps, cs.ContentSource.__call__
 
 
 def fold_item(raw, answer, assess):
@@ -253,11 +253,14 @@ def pick(self, skill, w):
         raise
 
 
-def drive(act, source, answer, records=None, pause=None):
+def drive_steps(act, source, records=None, pause=None, **more):       # ما يُضاف إلى drive_steps يمرّ كما هو
+    """يسجّل تشغيل المولّد كما كان يسجّل drive: الغلاف المتزامن والمجدول يمران به كلاهما."""
     rec = dict(start=act.to_dict(), steps=[], pauses=[])
     step = {}
 
     def src(skill, w):
+        if w.get('peek'):                                   # سؤال عن بند دون عرضه (تأخير بند التقييم): ليس خطوة
+            return source(skill, w)
         item = source(skill, w)
         step.clear()
         step.update(w=jsonable(w), item=jsonable(item))
@@ -265,8 +268,7 @@ def drive(act, source, answer, records=None, pause=None):
             rec['steps'].append(dict(step))
         return item
 
-    def ans(item, w):
-        got = answer(item, w)
+    def note(got):
         step['got'] = got if isinstance(got, str) else jsonable([[list(e) for e in got[0]], got[1], got[2]])
         rec['steps'].append(dict(step))
         return got
@@ -276,7 +278,13 @@ def drive(act, source, answer, records=None, pause=None):
         rec['pauses'].append(r)
         return r
     mine = []
-    out = _drive(act, src, ans, mine, stop if pause else None)
+    gen = _drive_steps(act, src, mine, stop if pause else None, **more)
+    try:
+        req = next(gen)
+        while True:
+            req = gen.send(note((yield req)))
+    except StopIteration as done:
+        out = done.value
     if records is not None:
         records.extend(mine)
     rec.update(end=act.to_dict(), records=jsonable(mine), paused=bool(pause),
@@ -286,7 +294,7 @@ def drive(act, source, answer, records=None, pause=None):
     return out
 
 
-il.fold_item, il.indicators, il.drive, cs.ContentSource.__call__ = fold_item, indicators, drive, pick
+il.fold_item, il.indicators, il.drive_steps, cs.ContentSource.__call__ = fold_item, indicators, drive_steps, pick
 
 for script in ('test_transition_engine.py', 'test_item_layer.py', 'tests/test_r10.py', 'tests/test_r11.py'):
     sys.argv = [script, MAP]
@@ -342,7 +350,11 @@ for _ in range(3000):
         elif r < .10:
             a = il.Activity.from_dict(a.to_dict())
         else:
-            a.feed('correct' if easy and rng.random() < .8 else rng.choice(OUTCOMES))
+            o = 'correct' if easy and rng.random() < .8 else rng.choice(OUTCOMES)
+            # ت2: «أداء بعد تعرض مباشر» نتيجة تصدرها drive_steps لأنشطة التقييم وحدها، فتُعطى لها هنا لتُطابَق في اللغتين
+            if a.name in il.ASSESSING and rng.random() < .06:
+                o = 'exposed'
+            a.feed(o)
     a.events()
     if isinstance(a, il.CheckRun):
         a.start_event()
@@ -378,6 +390,8 @@ data = dict(
     reasons=te.REASONS, quota=te.QUOTA, search_cap=te.SEARCH_CAP,
     retention=dict(gaps=list(te.RETENTION_GAPS), items=te.RETENTION_ITEMS, ok=te.RETENTION_OK),
     migration=te.MIGRATION,
+    external={k: list(v) for k, v in te.EXTERNAL.items()}, external_names=te.EXTERNAL_NAMES,
+    ready=dict(items=te.READY_ITEMS, fails=te.READY_FAILS),
     events=[t[0] for t in te.TABLE])
 open('app/engine_data.mjs', 'w', encoding='utf-8').write(
     '// مولَّد من transition_engine.py بالأمر: python3 export_conformance.py <الخريطة>. لا يُعدَّل باليد.\n'

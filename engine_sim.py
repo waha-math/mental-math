@@ -103,7 +103,9 @@ def abstract_source(skill, want):
 def run_new(know, start, group, seed, compat, tolerant=True, regate=True, **kw):
     random.seed(seed)
     child = old.Child(know, **kw)
-    answer = lambda item, want: {True: 'correct', False: 'wrong', None: 'help'}[child.item(item['skill'], want['type'])]
+    # بوابة الجاهزية لمتطلب خارجي (قراءة الساعة): الطفل المحاكى يعرفه. المحاكاة تقيس المنهج، والمتطلب الخارجي خارجه
+    answer = lambda item, want: 'correct' if want['activity'] == 'ready' else \
+        {True: 'correct', False: 'wrong', None: 'help'}[child.item(item['skill'], want['type'])]
     e = Engine(NET, group=group, regate=regate)
     sc = Scheduler(e, TYPES, abstract_source, answer, group=group, start=start, compat=compat, tolerant=tolerant)
     sc.run()

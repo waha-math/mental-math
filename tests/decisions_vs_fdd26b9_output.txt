@@ -1,0 +1,13 @@
+المسارات: 617 الآن و617 قبل
+قرارات المجدول (سجله وعدد جلساته وعملياته) تختلف في 3 مسارًا: [319, 362, 391]
+المدخلات (ما عُرض وما أُجيب به) تختلف في 5 مسارًا: [15, 16, 319, 362, 391]
+  ما اختلف في المسارات المتساوية الطول، بمعرّف البند: {'1-4-1/deferred/11': 4, 'طول الشريط': 3}
+  المسار 319 (1-4-1 1-4-2): أول اختلاف في الشريط عند 249. سجل المجدول 57 مدخلًا الآن و54 قبل
+    الآن: جواب [["support", "requested"], ["interrupt"]]، practice 1-4-1/practice/01، جواب "correct"، practice 1-4-1/practice/02، جواب "correct"
+    قبل: جواب [["support", "requested"], ["interrupt"]]، retention 1-4-1/deferred/04، جواب [["confirm", 7]]، retention 1-4-1/deferred/05، جواب [["confirm", 2]]
+  المسار 362 (3-5-1 3-5-2 3-5-3): أول اختلاف في الشريط عند 240. سجل المجدول 45 مدخلًا الآن و43 قبل
+    الآن: retention 3-5-2/deferred/10، جواب [["support", "someone"], ["confirm", 23]]، practice 3-5-2/practice/01، جواب "correct"، practice 3-5-2/practice/02، جواب "correct"، practice 3-5-2/practice/03، جواب "correct"
+    قبل: retention 3-5-2/deferred/10، جواب [["support", "someone"], ["confirm", 23]]، check None، check None، check None، check None، check None، check None
+  المسار 391 (1-4-1 1-4-2): أول اختلاف في الشريط عند 224. سجل المجدول 47 مدخلًا الآن و46 قبل
+    الآن: retention 1-4-1/deferred/07، جواب [["support", "extra_model"], ["confirm", 5]]، practice 1-4-1/practice/01، جواب "correct"، practice 1-4-1/practice/02، جواب "correct"، practice 1-4-1/practice/03، جواب "correct"
+    قبل: retention 1-4-1/deferred/07، جواب [["support", "extra_model"], ["confirm", 5]]، retention 1-4-1/deferred/08، جواب [["confirm", 1]]، retention 1-4-1/deferred/09، جواب [["confirm", 8]]، retention 1-4-1/deferred/10، جواب [["confirm", 3]]
