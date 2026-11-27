@@ -40,9 +40,9 @@ def check(title, got, want):
 
 print('=== بطاقة «كيف حسبتها؟»، المرجع')
 HOW_ITEMS = sorted(i['id'] for i in ITEMS if i.get('how'))
-check('المحتوى: البطاقة على بند الخانة 8 وبديله في محاولات فحص 3-5-3 الثلاث، ولا غيرها',
+check('المحتوى: البطاقة على بند الخانة 8 وبديله في محاولات فحص 3-5-3 الست، ولا غيرها',
       [HOW_ITEMS, sorted({(i['skill'], i['slot'], i['role']) for i in ITEMS if i.get('how')})],
-      [['3-5-3/checkA/15', '3-5-3/checkA/16', '3-5-3/checkB/15', '3-5-3/checkB/16', '3-5-3/checkC/15', '3-5-3/checkC/16'],
+      [['3-5-3/check%s/%d' % (a, k) for a in 'ABCDEF' for k in (15, 16)],
        [('3-5-3', 8, 'check'), ('3-5-3', 8, 'check.alternate')]])
 
 # ---------------------------------------------------------------- 1) عقد الحدث

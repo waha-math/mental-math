@@ -234,7 +234,9 @@ def _explore_skill(skill, ts, items, pairs, stuck):
             run(GateRun(skill, ts, tolerant=tolerant, attempt=attempt), ASSESS,
                 '%s%s' % ('البوابة' if attempt == 1 else 'إعادة البوابة', '' if tolerant else '، غير متسامحة'))
     run(ShortCheckRun(skill, ts), ASSESS, 'التحقق القصير')
-    for k, attempt in enumerate('ABC'):
+    for k, attempt in enumerate('ABCDEF'):              # محاولات الفحص الست (3.6)، ما وُجدت بنوده منها
+        if not src.by.get((skill, 'check' + attempt, 'check')):
+            continue
         run(CheckRun(skill, '%s/check/%d' % (skill, k + 1), 1, attempt=attempt), ASSESS,
             'فحص الاستقلال، المحاولة %s' % attempt)
     for rnd in (1, 2, 3):

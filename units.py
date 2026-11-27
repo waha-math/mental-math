@@ -1083,7 +1083,24 @@ def build(seed=20261119):
             break
     if left or stuck:
         raise RuntimeError('بقي ما لا يُصلح: تتابع %d، وبلا موضع تأخير %r' % (len(left), stuck[:5]))
-    path = ['lesson', 'opening', 'practice', 'evidence', 'checkA', 'checkB', 'checkC', 'deferred', 'more']
+    # محاولات فحص إضافية (قرار الأب، 27 نوفمبر: «نصوص جديدة كل مرة»، 3.6): بعد كل ما سبق وإصلاحه، فلا يتغير بند سابق،
+    # ولا يُصلَح التتابع والتأخير إلا في الجديد
+    new = set()
+    for skill, sp in SKILLS.items():
+        solve = sp['perf']['solve']
+        for attempt in EXTRA_ATTEMPTS:
+            for k, (_d, pred) in enumerate(slot_order(skill), 1):
+                m = put(skill, 'check' + attempt, 'check', 'ف3', solve, pred, slot=k)
+                new.add(m['id'])
+                new.add(put(skill, 'check' + attempt, 'check.alternate', 'ف3', solve, pred, slot=k, alt_of=m['id'])['id'])
+    for _ in range(4):
+        left, stuck = repair(items, only=new), unstick(items, only=new)
+        if not left and not stuck:
+            break
+    if left or stuck:
+        raise RuntimeError('المحاولات الإضافية: تتابع %d، وبلا موضع تأخير %r' % (len(left), stuck[:5]))
+    path = ['lesson', 'opening', 'practice', 'evidence', 'checkA', 'checkB', 'checkC', 'deferred', 'more'] + \
+        ['check' + a for a in EXTRA_ATTEMPTS]               # آخرًا: لا يغيّر وسم بند سابق
     for skill in SKILLS:                                    # هل سبق عرض الحقيقة نفسها في مسار التعلّم؟ (3.5)
         seen = set()
         for g in path:
@@ -1255,7 +1272,9 @@ def slot_pred(skill, slot):
     return slot_order(skill)[slot - 1][1]
 
 
-def repair(items, rounds=20):
+EXTRA_ATTEMPTS = ('D', 'E', 'F')                           # محاولات الفحص بعد الثلاث الأولى (قرار الأب، 27 نوفمبر)
+
+def repair(items, rounds=20, only=None):
     """يشغّل أنشطة طبقة البنود بكل فروعها (content_sequence.collect) على مهارات المولّد، ويغيّر أعداد البند الثاني من كل
     زوج متجاور بالحقيقة نفسها: يُختار له من مجال أدائه، وبشرط خانته في الفحص، ما لا تساوي حقيقتُه حقيقةَ أي بند يجاوره
     قبله أو بعده. يتكرر حتى لا يبقى زوج أو لا يبقى ما يُختار. يعيد الأزواج الباقية."""
@@ -1277,6 +1296,8 @@ def repair(items, rounds=20):
             if a in changed or b in changed:
                 continue
             for it in (by_id[b], by_id[a]):                 # الثاني أولًا، ثم الأول إن لم يبق للثاني ما يُختار
+                if only is not None and it['id'] not in only:   # only: لا يُغيَّر إلا هذه (المحاولات الإضافية)
+                    continue
                 avoid = {tuple(by_id[x]['fact']) for x in near.get(it['id'], ()) if x in by_id}
                 pred = slot_pred(it['skill'], it['slot']) if it['group'].startswith('check') else (lambda n: True)
                 opts = [n for n in domain(it['skill'], it['performance'])
@@ -1309,7 +1330,8 @@ def phase_ends(items):
             out.add(src.by[(skill, g, 'gate')][-1]['id'])
             out.update(src._typed(skill, g, 'gate.compensation', t)[1]['id'] for t in ts)
         out.add(src.by[(skill, 'short', 'short_check')][2]['id'])
-        out.update(i['id'] for a in 'ABC' for i in src.by[(skill, 'check' + a, 'check')] if i['slot'] == 10)
+        out.update(i['id'] for a in 'ABC' + ''.join(EXTRA_ATTEMPTS) for i in src.by.get((skill, 'check' + a, 'check'), ())
+                   if i['slot'] == 10)
         for rnd in (1, 2, 3):
             out.add([i for i in src.by[(skill, 'deferred', 'deferred_check')] if i['slot'] == rnd][-1]['id'])
     return out
@@ -1325,7 +1347,7 @@ def phase_after(items, it):
     return same[same.index(it) + 1:]
 
 
-def unstick(items, rounds=10):
+def unstick(items, rounds=10, only=None):
     """بند تقييم أصلي يكرر حقيقة ما قبله عند الدخول يُؤخَّر إلى أقرب موضع في مرحلته لا تجاور فيه حقيقتُه ما حوله. فإن لم
     يكن له موضع وهو ليس آخر مرحلته عُرض موسومًا. هذه الحالة تُمنع هنا كما يمنعها مولّد الشريحة: تُغيَّر أعداده فلا تساوي
     حقيقتُه حقيقة أي بند بعده في مرحلته ولا حقيقة بند يجاوره. يعيد البنود الباقية."""
@@ -1338,7 +1360,8 @@ def unstick(items, rounds=10):
     for _ in range(rounds):
         stuck = set()
         pairs, _by, _n = collect(own, TYPES, stuck)
-        left = sorted({i for i, _r, _l in stuck if 'alternate' not in by_id[i]['role'] and i not in ends})
+        left = sorted({i for i, _r, _l in stuck if 'alternate' not in by_id[i]['role'] and i not in ends
+                       and (only is None or i in only)})
         if not left:
             return []
         near = {}

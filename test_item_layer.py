@@ -234,11 +234,11 @@ def flow(e):
 
 
 def scenario(scope, group, start, decisions, knows=(), slips=None, same_fact=True, before=None, sessions=30,
-             **sched):
+             items=None, **sched):
     e = Engine(NET, group=group)
     for k, (skill, bypass) in enumerate(decisions):
         e.apply(dict(id='d%d' % k, type='teacher_open', skill=skill, bypass=bypass, reason='قرار الشريحة في 10.2'))
-    src = ContentSource(ITEMS, allow_same_fact=same_fact)
+    src = ContentSource(ITEMS if items is None else items, allow_same_fact=same_fact)
     child = LearningChild(knows, slips)
     records = []
     sc = Scheduler(e, TYPES, src, child, group=group, start=start, scope=set(scope), learning=True,
@@ -352,12 +352,14 @@ check('انقطاع في خانة «خمسة أقراص»: بقرار الأب �
 cut = item_of('1-4-1', 'checkA', 'check', slot=3)
 wrongs = {item_of('1-4-1', g, 'check', slot=k): [('confirm', -1)] for g in ('checkB', 'checkC') for k in (1, 2)}
 slips = dict({cut: [('support', 'requested'), ('interrupt',)]}, **wrongs)
-e, sc, child, src, recs = scenario(['1-4-1'], 'young', None, [('1-4-1', ['1-3-3'])], slips=slips, sessions=10)
+# محتوى بلا المحاولات الإضافية (د وما بعدها)، كما كان قبل قرار الأب في 27 نوفمبر: الرابعة بلا بنود فتُعلَّق
+THREE = [i for i in ITEMS if not (i['group'].startswith('check') and i['group'][5:] not in 'ABC')]
+e, sc, child, src, recs = scenario(['1-4-1'], 'young', None, [('1-4-1', ['1-3-3'])], slips=slips, sessions=10, items=THREE)
 f = [x for x in sessions_of(e) if x[1] in ('check_started', 'independence_result', 'resume_lesson')]
 held = [x for x in sc.log if x[1] == 'check_held']
 check('طلب دعم في الخانة 3 يغلق المحاولة أ «انتهت بطلب دعم»، والمحاولة ب في اليوم التالي بلا تدريب. خطآن فيها: '
       '8 من 10 لم تُجتز، فجلسة تدريب، ثم المحاولة ج في يوم لاحق ببنودها. خطآن فيها أيضًا، فجلسة تدريب، ثم محاولة رابعة '
-      'لا بنود لها في المحتوى، فتُعلَّق للمعلم',
+      'لا بنود لها في محتوى بثلاث محاولات، فتُعلَّق للمعلم',
       f == [('S3', 'check_started', '1-4-1', ''), ('S3', 'independence_result', '1-4-1', 'help'),
             ('S4', 'check_started', '1-4-1', ''), ('S4', 'independence_result', '1-4-1', 'fail'),
             ('S5', 'resume_lesson', '1-4-1', ''),
@@ -366,6 +368,14 @@ check('طلب دعم في الخانة 3 يغلق المحاولة أ «انته
       and sc.refused == [] and held == [(8, 'check_held', '1-4-1')]
       and any('/checkC/' in i for i in src.served)
       and (e.s['checks']['1-4-1/check/4']['state'], e.s['checks']['1-4-1/check/4']['hold_reason']) == ('held', 'no_items'))
+# بالمحتوى كاملًا (قرار الأب، 27 نوفمبر: «نصوص جديدة كل مرة»): الرابعة بنصوص المحاولة د، والطفل يصيب فيها فيجتاز
+e, sc, child, src, recs = scenario(['1-4-1'], 'young', None, [('1-4-1', ['1-3-3'])], slips=slips, sessions=10)
+f = [x for x in sessions_of(e) if x[1] in ('check_started', 'independence_result', 'resume_lesson')]
+check('والمحتوى بست محاولات: الرابعة بنصوص د في جلستها، ويجتازها، ولا تعليق',
+      f[-2:] == [('S8', 'check_started', '1-4-1', ''), ('S8', 'independence_result', '1-4-1', 'pass')]
+      and not [x for x in sc.log if x[1] == 'check_held']
+      and {i.split('/')[1] for i in src.served if '/check' in i} >= {'checkA', 'checkB', 'checkC', 'checkD'}
+      and not any('/checkE/' in i for i in src.served))
 
 # و) قيد الإعادة في المجدول (6.1): مهارة انتهت بوابتها بطلب دعم، ثم صارت مؤجَّلة وأخطأ تحققها القصير، لا تُقترح
 #    بوابتها حتى يُفتح درسها ويُختصر. كشفت هذه الحالةَ المحاكاةُ الكاملة: بدونها كرّر المجدول اقتراحًا يرفضه المحرك

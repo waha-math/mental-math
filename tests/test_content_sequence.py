@@ -174,7 +174,7 @@ for skill, ts in types.items():
         want6.add(src6.by[(skill, grp, 'gate')][-1]['id'])
         want6.update(src6._typed(skill, grp, 'gate.compensation', t)[1]['id'] for t in ts)
     want6.add(src6.by[(skill, 'short', 'short_check')][2]['id'])
-    want6.update(i['id'] for a in 'ABC' for i in src6.by[(skill, 'check' + a, 'check')] if i['slot'] == 10)
+    want6.update(i['id'] for a in 'ABCDEF' for i in src6.by.get((skill, 'check' + a, 'check'), ()) if i['slot'] == 10)
     for rnd in (1, 2, 3):
         want6.add([i for i in src6.by[(skill, 'deferred', 'deferred_check')] if i['slot'] == rnd][-1]['id'])
 got6 = {i for i, _r, _l in stuck if 'alternate' not in by_id[i]['role']}
@@ -194,12 +194,14 @@ print('        أزواج تبقى بلا علاج بعد تأخير وانقط�
 after_exposed = sorted({(a, b) for a, b, h, _l, _f in cs.marked(pairs, by_id) if h.startswith('exposed')
                         and a.split('/')[0] not in units.SKILLS})
 only_cut = [p for p in rest if p not in after_exposed]
-expect('7. ما يبقى موسومًا: بعد تأخير وانقطاع، أوله بديل دائمًا، 14 زوجًا. وبعد «أداء بعد تعرض مباشر» (ت2)، ثانيه بديل '
-       'خانة الفحص دائمًا، 3 أزواج. وكله في الوحدة 1-4 (الأعداد مقيسة)',
+# الأعداد مقيسة: 14 و3 بثلاث محاولات فحص، و19 و6 بست (قرار الأب، 27 نوفمبر). الزيادة كلها في محاولات الوحدة 1-4
+# الإضافية، وحقائقها خمس: بدائل خاناتها تعيد الحقيقة نفسها بقرار الأب (3.6)
+expect('7. ما يبقى موسومًا: بعد تأخير وانقطاع، أوله بديل دائمًا، 19 زوجًا. وبعد «أداء بعد تعرض مباشر» (ت2)، ثانيه بديل '
+       'خانة الفحص دائمًا، 6 أزواج. وكله في الوحدة 1-4 (الأعداد مقيسة)',
        [sorted({by_id[a]['role'] for a, _b in only_cut}), len(only_cut),
         sorted({by_id[b]['role'] for _a, b in after_exposed}), len(after_exposed),
         sorted({a.split('/')[0] for a, _b in rest})],
-       [['check.alternate', 'gate.alternate'], 14, ['check.alternate'], 3, ['1-4-1', '1-4-2']])
+       [['check.alternate', 'gate.alternate'], 19, ['check.alternate'], 6, ['1-4-1', '1-4-2']])
 
 # 5) المحتوى قبل الإصلاح
 try:

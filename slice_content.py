@@ -638,6 +638,43 @@ def respace_small(items):
     return changed
 
 
+def small_check(bank, skill, ai, attempt, plan_142):
+    """محاولة فحص لمهارة من الوحدة 1-4 (المجال الصغير): خاناتها العشر وبدائلها. ai: رقم المحاولة من 0، يدير الأعداد بين
+    المحاولات. بعد المحاولة الثالثة تعود الأعداد دورتها (حقائق الوحدة خمس) ببنود جديدة الهوية (3.6)."""
+    k, taken, tail = 0, set(), []                   # tail: آخر ما قد يُعرض قبل هذه المجموعة، بندًا وبديلًا
+    for c, _d, perf, values in SLOTS_SMALL[skill]:
+        vals = list(values)
+        if skill == '1-4-2' and len(vals) == 3:     # كل عدد مرة واحدة في المحاولة، وتتبدل بين المحاولات (3.5)
+            pick = [plan_142[ai % len(plan_142)][k]]
+        elif len(vals) == 2 and c == 1 and set(vals) == {0, 10}:
+            pick = [vals[ai % 2]]                   # الحالة الأخرى في المحاولة التالية
+        else:
+            r = ai % len(vals)
+            for shift in range(len(vals)):          # أول المجموعة لا يتمّ عشرةً مع آخر ما سبقها (3.5)
+                pick = (vals[r + shift:] + vals[:r + shift])[:c]
+                if all(pick[0] + t != 10 for t in tail):
+                    break
+            else:
+                raise RuntimeError('لا ترتيب لخانات %s يحقق التتابع' % skill)
+        spare = [v for v in values if v not in pick and v not in taken]
+        for v in pick:
+            k += 1
+            taken.add(v) if skill == '1-4-2' else None
+            key = 'e' if perf == 'frame_counters' else 'n'
+            m = bank.add(skill, 'check' + attempt, 'check', 'ف3' if perf != 'frame_empty' else 'ف1',
+                         perf, slot=k, **{key: v})
+            if spare and skill == '1-4-1':
+                alt = spare[0] if c == 1 else spare[-1]
+                tail = [v, alt]
+                bank.add(skill, 'check' + attempt, 'check.alternate', m['evidence'], perf, slot=k,
+                         alt_of=m['id'], note='بديل مشترك لخانات مجموعته' if c > 1 else None, **{key: alt})
+            else:
+                tail = [v]
+                bank.add(skill, 'check' + attempt, 'check.alternate', m['evidence'], perf, slot=k,
+                         alt_of=m['id'], note='لا قيمة أخرى تحقق شرط الخانة: إعادة عرض الحقيقة نفسها بعد '
+                         'الانقطاع، بقرار الأب (3.6)', **{key: v})
+
+
 def build_small(bank, rng):
     plan_142 = check_plan_142()
     for skill in ('1-4-1', '1-4-2'):
@@ -686,38 +723,7 @@ def build_small(bank, rng):
         for t in [und[0], 'ف3', 'ف3']:
             put('short', 'short_check', t, P[t])
         for ai, attempt in enumerate(('A', 'B', 'C')):
-            k, taken, tail = 0, set(), []                   # tail: آخر ما قد يُعرض قبل هذه المجموعة، بندًا وبديلًا
-            for c, _d, perf, values in SLOTS_SMALL[skill]:
-                vals = list(values)
-                if skill == '1-4-2' and len(vals) == 3:     # كل عدد مرة واحدة في المحاولة، وتتبدل بين المحاولات (3.5)
-                    pick = [plan_142[ai][k]]
-                elif len(vals) == 2 and c == 1 and set(vals) == {0, 10}:
-                    pick = [vals[ai % 2]]                   # الحالة الأخرى في المحاولة التالية
-                else:
-                    r = ai % len(vals)
-                    for shift in range(len(vals)):          # أول المجموعة لا يتمّ عشرةً مع آخر ما سبقها (3.5)
-                        pick = (vals[r + shift:] + vals[:r + shift])[:c]
-                        if all(pick[0] + t != 10 for t in tail):
-                            break
-                    else:
-                        raise RuntimeError('لا ترتيب لخانات %s يحقق التتابع' % skill)
-                spare = [v for v in values if v not in pick and v not in taken]
-                for v in pick:
-                    k += 1
-                    taken.add(v) if skill == '1-4-2' else None
-                    key = 'e' if perf == 'frame_counters' else 'n'
-                    m = bank.add(skill, 'check' + attempt, 'check', 'ف3' if perf != 'frame_empty' else 'ف1',
-                                 perf, slot=k, **{key: v})
-                    if spare and skill == '1-4-1':
-                        alt = spare[0] if c == 1 else spare[-1]
-                        tail = [v, alt]
-                        bank.add(skill, 'check' + attempt, 'check.alternate', m['evidence'], perf, slot=k,
-                                 alt_of=m['id'], note='بديل مشترك لخانات مجموعته' if c > 1 else None, **{key: alt})
-                    else:
-                        tail = [v]
-                        bank.add(skill, 'check' + attempt, 'check.alternate', m['evidence'], perf, slot=k,
-                                 alt_of=m['id'], note='لا قيمة أخرى تحقق شرط الخانة: إعادة عرض الحقيقة نفسها بعد '
-                                 'الانقطاع، بقرار الأب (3.6)', **{key: v})
+            small_check(bank, skill, ai, attempt, plan_142)
         other = {'1-4-1': ('frame_empty', 'n', 10), '1-4-2': ('missing_second', 'n', 10)}[skill]
         bank.add(skill, 'deferred', 'deferred_check', 'ف3', other[0], slot=1,
                  note='الحالة التي لم ترد في المحاولة الأولى', **{other[1]: other[2]})
@@ -767,6 +773,41 @@ def more_small(bank):
                 n['ctx'], ctx = CTX10[ctx % len(CTX10)], ctx + 1
             it = bank.add(skill, 'more', 'practice.more', None, perf, **n)
             prev, k = small_fact(it), k + 1
+
+
+def extra_checks(bank, used):
+    """محاولات الفحص بعد الثلاث الأولى (قرار الأب، 27 نوفمبر: «نصوص جديدة كل مرة»، 3.6)، لمهارات الشريحة. بعد كل ما
+    سبق، فلا يتغير بند سابق. الوحدة 3-5 بأزواج أعداد لم تُستعمل، والوحدة 1-4 بدورة أعدادها ببنود جديدة الهوية."""
+    plan_142 = check_plan_142()
+    for skill in SLOTS_SMALL:
+        for j, attempt in enumerate(units.EXTRA_ATTEMPTS):
+            # أول دورة أعداد يتحقق بها التتابع بين المجموعات (3.5)، بدءًا من رقم المحاولة. ما لم يتحقق يُمحى ويُجرَّب التالي
+            for ai in range(3 + j, 3 + j + 9):
+                n0, c0 = len(bank.items), bank.count[(skill, 'check' + attempt)]
+                try:
+                    small_check(bank, skill, ai, attempt, plan_142)
+                    break
+                except RuntimeError:
+                    del bank.items[n0:]
+                    bank.count[(skill, 'check' + attempt)] = c0
+            else:
+                raise RuntimeError('لا ترتيب لخانات %s في المحاولة %s' % (skill, attempt))
+    pool = [(a, b) for a in range(21, 100) for b in range(11, a) if b % 10 and (a, b) not in used]
+    random.Random(SEED + 27).shuffle(pool)
+    for skill in SLOTS:
+        for attempt in units.EXTRA_ATTEMPTS:
+            k = 0
+            for c, _d, pred in SLOTS[skill]:
+                for _ in range(c):
+                    k += 1
+                    pair = []
+                    for _r in range(2):
+                        ab = next(x for x in pool if x not in used and pred(*x))
+                        used.add(ab)
+                        pair.append(ab)
+                    m = bank.add(skill, 'check' + attempt, 'check', 'ف3', 'solve', slot=k, a=pair[0][0], b=pair[0][1])
+                    bank.add(skill, 'check' + attempt, 'check.alternate', 'ف3', 'solve', slot=k, alt_of=m['id'],
+                             a=pair[1][0], b=pair[1][1])
 
 
 # ---------------------------------------------------------------- التحقق المستقل
@@ -853,7 +894,7 @@ def validate(items):
     for skill in SLOTS:                                     # الخانات في المجال الكبير
         facts = Counter((it['numbers']['a'], it['numbers']['b']) for it in items if it['skill'] == skill)
         bad['حقيقة مكررة في مهارة مجالها كبير'] += sum(1 for v in facts.values() if v > 1)
-        for attempt in ('A', 'B', 'C'):
+        for attempt in 'ABCDEF':
             its = by[(skill, 'check' + attempt)]
             preds = [f for c, _d, f in SLOTS[skill] for _ in range(c)]
             bad['محاولة بلا 10 خانات'] += int(sorted(i['slot'] for i in its if i['role'] == 'check')
@@ -866,7 +907,7 @@ def validate(items):
     for skill, spec in SLOTS_SMALL.items():                 # الخانات في المجال الصغير
         flat = [(perf, values) for c, _d, perf, values in spec for _ in range(c)]
         cases = []
-        for attempt in ('A', 'B', 'C'):
+        for attempt in 'ABCDEF':
             its = by[(skill, 'check' + attempt)]
             mains = sorted((i for i in its if i['role'] == 'check'), key=lambda i: i['slot'])
             bad['محاولة بلا 10 خانات'] += int([i['slot'] for i in mains] != list(range(1, 11)))
@@ -879,7 +920,7 @@ def validate(items):
             if skill == '1-4-2':
                 nums = sorted(i['numbers']['n'] for i in mains[:9])
                 bad['الأعداد 1 إلى 9 ليست كلها مرة واحدة'] += int(nums != list(range(1, 10)))
-            if attempt != 'C':                              # الحالتان على المحاولتين الأوليين، والثالثة تعيد إحداهما
+            if attempt in 'AB':                             # الحالتان على المحاولتين الأوليين، وما بعدهما يعيد إحداهما
                 cases.append(mains[7 if skill == '1-4-1' else 9]['numbers']['n'])
         bad['حالتا الصفر والعشرة لم تتوزعا على المحاولتين'] += int(sorted(cases) != [0, 10])
     for skill, want in GATE_LEN.items():
@@ -942,13 +983,13 @@ def markdown(items, bad, cases, accepted):
            'النصوص هنا عربية؛ الإنجليزية في الملف نفسه لكل بند، وجدول القوالب باللغتين في القسم 7.', '',
            '**الحالة:** محتوى مكتوب ومفحوص آليًا. لم يُعرض على طفل، ولم يُسجَّل صوته، ولم يراجعه معلم.', '',
            '## 1. ما في البنك', '',
-           '| المهارة | الدرس | الافتتاح | «جرّب أولًا» لكل نوع | التدريب | دليل الفهم بجولتيه | البوابة وتعويضها وبدائلها | إعادة البوابة | تحقق قصير | محاولات الفحص الثلاث وبدائلها | مؤجل | وصفي |',
+           '| المهارة | الدرس | الافتتاح | «جرّب أولًا» لكل نوع | التدريب | دليل الفهم بجولتيه | البوابة وتعويضها وبدائلها | إعادة البوابة | تحقق قصير | محاولات الفحص الست وبدائلها | مؤجل | وصفي |',
            '| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |']
     for skill in GATE_LEN:
         n = lambda g: len(by[(skill, g)])
         out.append('| %s %s | %d | %d | %d | %d | %d | %d | %d | %d | %d | %d | %d |' % (
             skill, UI['skill.' + skill][0], n('lesson'), n('opening'), n('tryfirst'), n('practice'), n('evidence'), n('gate'), n('regate'),
-            n('short'), n('checkA') + n('checkB') + n('checkC'), n('deferred'), n('compare')))
+            n('short'), sum(n('check' + x) for x in 'ABCDEF'), n('deferred'), n('compare')))
     out += ['', 'المجموع %d بندًا. لكل بند: معرّف، دور، نوع دليل، أداء مطلوب، أعداد، مورد مسموح، نوع إجابة، '
             'جواب، نص وصوت بالعربية والإنجليزية، وإجابات خاطئة متوقعة بوصفها المحايد.' % len(items), '',
             '## 2. التصحيح', '',
@@ -1047,7 +1088,8 @@ def markdown(items, bad, cases, accepted):
 
 LABEL = {'lesson.watch': 'شاهِد', 'lesson.model': 'بالنموذج', 'lesson.fade': 'يخفت', 'lesson.nomodel': 'بلا نموذج',
          'lesson.compare': 'مقارنة', 'practice': 'تدريب', 'practice.more': 'تدريب إضافي'}
-PATH = ['lesson', 'opening', 'practice', 'evidence', 'checkA', 'checkB', 'checkC', 'deferred', 'more']   # الإضافي آخرًا: لا يغيّر وسم بند سابق
+PATH = ['lesson', 'opening', 'practice', 'evidence', 'checkA', 'checkB', 'checkC', 'deferred', 'more',
+        'checkD', 'checkE', 'checkF']   # الإضافي آخرًا: لا يغيّر وسم بند سابق
 
 
 def mark_seen(items):
@@ -1088,12 +1130,14 @@ if __name__ == '__main__':
     rng = random.Random(SEED)
     bank = Bank()
     build_small(bank, rng)
-    build_big(bank, rng, set())
+    used = set()
+    build_big(bank, rng, used)
     for it in bank.items:
         if it['group'] == 'evidence':
             it.setdefault('round', 1)
     respaced = respace_small(bank.items)
     more_small(bank)
+    extra_checks(bank, used)
     mark_seen(bank.items)
     bank.items += units.build()                              # بقية المراحل 1 إلى 3 (UNITS-PLAN.md)، بعد الشريحة كلها
     for it in bank.items:                                   # كل بند يحمل حقيقته: يقرؤها المجدول للتتابع بين الأنشطة
